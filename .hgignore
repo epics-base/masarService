@@ -6,6 +6,5 @@ O.*
 bin
 include
 lib
-doc
 
 syntax: regexp
