@@ -1,0 +1,11 @@
+QtC-pvAccess.creator.user
+
+syntax: glob
+O.*
+.DS_Store
+bin
+include
+lib
+doc
+
+syntax: regexp
