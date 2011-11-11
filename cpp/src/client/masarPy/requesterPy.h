@@ -19,7 +19,7 @@
 #include <string>
 #include <cstdio>
 
-namespace epics { namespace masarService {
+namespace epics { namespace masar {
 
 class RequesterPy :
     public epics::pvService::GatherMonitorRequester,

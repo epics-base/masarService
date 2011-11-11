@@ -2,14 +2,12 @@
 TOP = ..
 include $(TOP)/configure/CONFIG
 
-DIRS += clientCPP
-clientApp_DEPEND_DIRS = configure
+DIRS += client
 
-DIRS += serverCPP
-serverApp_DEPEND_DIRS = configure
+DIRS += server
 
 DIRS += dslPYIRMIS
-dslPYIRMISApp_DEPEND_DIRS = configure
+dslPYIRMIS_DEPEND_DIRS = server
 
 include $(TOP)/configure/RULES_DIRS
 

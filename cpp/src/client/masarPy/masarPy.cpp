@@ -8,7 +8,7 @@
 
 #include "gatherDataPy.h"
 
-namespace epics { namespace maserService {
+namespace epics { namespace masar {
 
 using namespace epics::pvData;
 using namespace epics::pvAccess;

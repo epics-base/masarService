@@ -9,6 +9,6 @@
 import os
 import subprocess,shlex
 hostArch = os.environ["EPICS_HOST_ARCH"]
-value = "/bin/ln -s ../bin/" + hostArch + "/maserPython.so maserPy.so"
+value = "/bin/ln -s ../../bin/" + hostArch + "/maserServiceServer.so maserPy.so"
 args = shlex.split(value)
 result = subprocess.check_call(args)

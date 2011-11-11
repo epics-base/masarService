@@ -5,15 +5,15 @@ USR_INCLUDES += -I${PYTHON_BASE}/include/${PYTHON}
 
 INC += dsl.h
 
-CLIENT = $(TOP)/src/serverCPP/
+SERVER = $(TOP)/src/server/
 
-SRC_DIRS += $(CLIENT)/scc
+SRC_DIRS += $(SERVER)/scc
 #INC += xxx.h
-#LIBSRCS += maserPy.cpp
+#LIBSRCS += xxx.cpp
 
-SRC_DIRS += $(CLIENT)/service
+SRC_DIRS += $(SERVER)/service
 #INC += xxx.h
-#LIBSRCS += maserPy.cpp
+#LIBSRCS +=  xxx.cpp
 
 
 LIBRARY = maserServiceServer

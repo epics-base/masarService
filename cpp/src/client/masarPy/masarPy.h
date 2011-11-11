@@ -11,7 +11,7 @@
 #include "requesterPy.h"
 
 
-namespace epics { namespace masarService { 
+namespace epics { namespace masar { 
 
 class MasarPy {
 public:

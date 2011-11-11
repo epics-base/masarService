@@ -3,7 +3,7 @@ include $(TOP)/configure/CONFIG
 
 USR_INCLUDES += -I${PYTHON_BASE}/include/${PYTHON}
 
-CLIENT = $(TOP)/src/clientCPP/
+CLIENT = $(TOP)/src/client/
 
 SRC_DIRS += $(CLIENT)/masarPy
 INC += masarPy.h  

@@ -9,7 +9,7 @@
 #include "requesterPy.h"
 #include <stdexcept>
 
-namespace epics { namespace masarService {
+namespace epics { namespace masar {
 
 using namespace epics::pvData;
 
