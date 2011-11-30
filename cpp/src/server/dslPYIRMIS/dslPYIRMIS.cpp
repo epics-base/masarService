@@ -25,15 +25,15 @@ class DSL_IRMIS :
     public DSL,
     public std::tr1::enable_shared_from_this<DSL_IRMIS>
 {
-    public:
+public:
     POINTER_DEFINITIONS(DSL_IRMIS);
-        DSL_IRMIS();
-        virtual ~DSL_IRMIS();
-        virtual void destroy();
-        virtual PVStructure::shared_pointer request(
-             PVStructure::shared_pointer const & pvArgument);
-        bool init();
-    private:
+    DSL_IRMIS();
+    virtual ~DSL_IRMIS();
+    virtual void destroy();
+    virtual PVStructure::shared_pointer request(
+         PVStructure::shared_pointer const & pvArgument);
+    bool init();
+private:
     DSL_IRMIS::shared_pointer getPtrSelf()
     {
         return shared_from_this();
@@ -44,12 +44,19 @@ class DSL_IRMIS :
 DSL_IRMIS::DSL_IRMIS()
 : prequest(0)
 {
-    Py_Initialize();
+   PyThreadState *py_tstate = NULL;
+   Py_Initialize();
+   PyEval_InitThreads();
+   py_tstate = PyGILState_GetThisThreadState();
+   PyEval_ReleaseThread(py_tstate);
 }
 
 DSL_IRMIS::~DSL_IRMIS()
 {
-    Py_XDECREF(prequest);
+    PyGILState_STATE gstate = PyGILState_Ensure();
+        if(prequest!=0) Py_XDECREF(prequest);
+    PyGILState_Release(gstate);
+    PyGILState_Ensure();
     Py_Finalize();
 }
 
@@ -109,11 +116,8 @@ void DSL_IRMIS::destroy() {}
 PVStructure::shared_pointer DSL_IRMIS::request(
              PVStructure::shared_pointer const & pvArgument)
 {
-String buf;
-pvArgument->toString(&buf);
-printf("argument\n%s\n",buf.c_str());
     char * xxx = 0;
-    char *arg1 = "this is a test";
+    const char *arg1 = "this is a test";
     PyGILState_STATE gstate = PyGILState_Ensure();
         PyObject * arg = Py_BuildValue("(s)",arg1);
         PyObject *result = PyEval_CallObject(prequest,arg);
@@ -131,7 +135,7 @@ printf("argument\n%s\n",buf.c_str());
     return pvArgument;
 }
 
-DSL::shared_pointer createDSL()
+DSL::shared_pointer createDSL_IRMIS()
 {
    DSL_IRMIS *dsl = new DSL_IRMIS();
    if(!dsl->init()) {

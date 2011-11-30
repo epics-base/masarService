@@ -15,7 +15,7 @@
 #include <pv/pvIntrospect.h>
 #include <pv/pvData.h>
 
-#include <pv/dsl.h>
+#include <pv/dslPYIRMIS.h>
 
 using namespace epics::pvData;
 using namespace epics::masar;
@@ -44,7 +44,7 @@ static StructureConstPtr createStructure()
 
 int main(int argc,char *argv[])
 {
-    DSL::shared_pointer dsl = createDSL();
+    DSL::shared_pointer dsl = createDSL_IRMIS();
     if(dsl.get()==0) {
         printf("createDSL failed\n");
         return -1;

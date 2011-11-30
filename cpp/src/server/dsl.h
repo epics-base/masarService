@@ -42,12 +42,6 @@ public:
         epics::pvData::PVStructure::shared_pointer const & pvArgument) = 0;
 };
 
-/**
- * Create the DSL.
- * Note that an application can only use a single implementation
- * of DSL. Thus each implementation must have a separate shared library
- */
-extern DSL::shared_pointer createDSL();
 }}
 #endif  /* DSL_H */
 

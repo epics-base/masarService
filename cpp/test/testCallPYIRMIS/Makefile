@@ -4,8 +4,10 @@ include $(TOP)/configure/CONFIG
 
 PROD_HOST += testCallPYIRMIS
 testCallPYIRMIS_SRCS += testCallPYIRMIS.cpp
-testCallPYIRMIS_LIBS += dslPYIRMIS pvData Com
+testCallPYIRMIS_LIBS += nt pvIOC pvAccess pvData Com masarService
+testCallPYIRMIS_LIBS += $(PYTHON)
 
+$(PYTHON)_DIR = $(PYTHON_BASE)/lib/$(PYTHON)/config
 
 include $(TOP)/configure/RULES
 #----------------------------------------

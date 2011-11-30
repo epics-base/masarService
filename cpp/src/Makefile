@@ -6,9 +6,6 @@ DIRS += client
 
 DIRS += server
 
-DIRS += dslPYIRMIS
-dslPYIRMIS_DEPEND_DIRS = server
-
 include $(TOP)/configure/RULES_DIRS
 
 
