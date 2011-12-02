@@ -17,11 +17,9 @@
 #include <stdexcept>
 #include <memory>
 
-#include <pv/ntfield.h>
-#include <pv/nttable.h>
-#include <pv/ntnameValuePair.h>
+#include <pv/nt.h>
 
-#include <masarService.h>
+#include <pv/masarService.h>
 
 
 namespace epics { namespace masar { 
@@ -57,7 +55,8 @@ void MasarService::request(
         NTNameValuePair ntNameValuePair(pvArgument);
         PVString *function = ntNameValuePair.getFunction();
         //Guobao look at function and decide what to do
-        PVStructureArray * pvNameValuePairs = ntNameValuePair.getNameValuePairs();
+        PVStringArray * pvNames = ntNameValuePair.getNames();
+        PVStringArray * pvValues = ntNameValuePair.getValues();
     } else {
         channelRPCRequester->message("illegal argument",errorMessage);
     }

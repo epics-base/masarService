@@ -25,7 +25,7 @@
 
 #include <pv/pvDatabase.h>
 #include <pv/pvServiceProvider.h>
-#include <masarService.h>
+#include <pv/masarService.h>
 
 using namespace std;
 using namespace epics::pvData;

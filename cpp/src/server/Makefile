@@ -10,6 +10,7 @@ LIBRARY = masarService
 SERVER = $(TOP)/src/server/
 
 SRC_DIRS += $(SERVER)/service
+INC += masarService.h
 LIBSRCS += masarService.cpp
 LIBSRCS += masarServiceMain.cpp
 
