@@ -15,8 +15,12 @@ INC += requesterPy.h
 #INC += xxx.h
 #LIBSRCS += masarPVA.cpp
 
+SRC_DIRS += $(CLIENT)gatherV3Double
+INC += gatherV3Double.h
+LIBSRCS += gatherV3Double.cpp
 
-LIBRARY = masarServiceClient
+
+LIBRARY = masarClient
 
 masarServiceClient_LIBS += pvAccess pvData Com
 

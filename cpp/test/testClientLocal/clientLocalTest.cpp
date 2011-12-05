@@ -22,7 +22,6 @@
 #include <pv/pvAccess.h>
 #include <pv/nt.h>
 
-#include <pv/pvDatabase.h>
 #include <pv/masarService.h>
 
 using namespace std;
@@ -53,12 +52,6 @@ public:
 
 private:
     LocalRPC::shared_pointer getPtrSelf()
-
-
-
-
-
-
     {
         return shared_from_this();
     }
@@ -99,11 +92,11 @@ int main(int argc,char *argv[])
     LocalRPC::shared_pointer rpc
         = LocalRPC::shared_pointer(new LocalRPC(service));
     PVStructure::shared_pointer pvNameValue
-        = NTNameValuePair::create(true,false,false);
-    NTNameValuePair ntNameValuePair(pvNameValue);
-    PVString * pvFunction = ntNameValuePair.getFunction();
-    PVStringArray *pvNames = ntNameValuePair.getNames();
-    PVStringArray *pvValues = ntNameValuePair.getValues();
+        = NTNameValue::create(true,false,false);
+    NTNameValue ntNameValue(pvNameValue);
+    PVString * pvFunction = ntNameValue.getFunction();
+    PVStringArray *pvNames = ntNameValue.getNames();
+    PVStringArray *pvValues = ntNameValue.getValues();
     int n = 2;
     String name[] = {String("name 0"),String("name 1")};
     String value[] = {String("value 0"),String("value 1")};

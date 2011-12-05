@@ -5,7 +5,7 @@ USR_INCLUDES += -I${PYTHON_BASE}/include/${PYTHON}
 
 INC += dsl.h
 
-LIBRARY = masarService
+LIBRARY = masarServer
 
 SERVER = $(TOP)/src/server/
 
@@ -23,7 +23,7 @@ maserService_LIBS += $(PYTHON)
 
 PROD_HOST += masarServiceRun
 masarServiceRun_OBJS += masarServiceMain
-masarServiceRun_LIBS += nt pvIOC pvAccess pvData Com masarService
+masarServiceRun_LIBS += nt pvIOC pvAccess pvData Com masarServer
 masarServiceRun_LIBS += $(PYTHON)
 
 $(PYTHON)_DIR = $(PYTHON_BASE)/lib/$(PYTHON)/config

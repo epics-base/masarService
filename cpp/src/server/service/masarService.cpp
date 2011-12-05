@@ -50,13 +50,13 @@ void MasarService::request(
     builder += "pvArgument ";
 //pvArgument->toString(&builder);
 //printf("%s\n",builder.c_str());
-    bool isNameValue = NTNameValuePair::isNTNameValuePair(pvArgument.get());
+    bool isNameValue = NTNameValue::isNTNameValue(pvArgument.get());
     if(isNameValue) {
-        NTNameValuePair ntNameValuePair(pvArgument);
-        PVString *function = ntNameValuePair.getFunction();
+        NTNameValue ntNameValue(pvArgument);
+        PVString *function = ntNameValue.getFunction();
         //Guobao look at function and decide what to do
-        PVStringArray * pvNames = ntNameValuePair.getNames();
-        PVStringArray * pvValues = ntNameValuePair.getValues();
+        PVStringArray * pvNames = ntNameValue.getNames();
+        PVStringArray * pvValues = ntNameValue.getValues();
     } else {
         channelRPCRequester->message("illegal argument",errorMessage);
     }
