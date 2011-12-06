@@ -27,39 +27,13 @@
 using namespace std;
 using namespace epics::pvData;
 
-int main(int argc,char *argv[])
+void testGet(bool debug,GatherV3Double::shared_pointer gather)
 {
-    bool debug = false;
-    if(argc>1) {
-        char * arg = argv[1];
-        if(strcmp(arg,"debug")==0) {
-           printf("debug is true\n");
-           debug = true;
-        }
-    }
     String builder;
-    int n = 1000;
-    if(debug) n = 2;
-    String channelName[n];
-    char name[40];
-    for(int i=0; i<n; i++) {
-        sprintf(name,"gatherExample%4.4d",i);
-        channelName[i] = String(name);
-    }
-    GatherV3Double::shared_pointer gather = GatherV3Double::shared_pointer(
-        new GatherV3Double(channelName,n));
     PVStructure::shared_pointer nttable = gather->getNTTable();
+    bool result = gather->get();
+    if(!result) printf("connect failed\n%s\n",gather->getMessage().c_str());
     if(debug) {
-        builder.clear();
-        nttable->toString(&builder);
-        printf("nttable initial\n%s\n",builder.c_str());
-    }
-    bool result = gather->connect(5.0);
-    if(debug) printf("connect %s\n",(result ? "true" : "false"));
-    assert(result);
-    result = gather->get();
-    if(debug) {
-        printf("get %s\n",(result ? "true" : "false"));
         builder.clear();
         nttable->toString(&builder);
         printf("nttable\n%s\n",builder.c_str());
@@ -87,6 +61,58 @@ int main(int argc,char *argv[])
         channelNames->toString(&builder);
         printf("channelNames: %s\n",builder.c_str());
     }
+}
+
+void testConnect(bool debug,GatherV3Double::shared_pointer gather)
+{
+    bool result = gather->connect(5.0);
+    if(!result) {
+        printf("connect failed\n%s\n",gather->getMessage().c_str());
+        printf("This test requires the test V3 database"
+           " of the gather service.\n"); 
+        printf("It must be started before running"
+           " this test\n");
+    }
+    assert(result);
+    testGet(debug,gather);
+    testGet(debug,gather);
+    gather->disconnect();
+}
+
+void test(bool debug)
+{
+    String builder;
+    int n = 1000;
+    if(debug) n = 2;
+    String channelName[n];
+    char name[40];
+    for(int i=0; i<n; i++) {
+        sprintf(name,"gatherExample%4.4d",i);
+        channelName[i] = String(name);
+    }
+    GatherV3Double::shared_pointer gather = GatherV3Double::shared_pointer(
+        new GatherV3Double(channelName,n));
+    PVStructure::shared_pointer nttable = gather->getNTTable();
+    if(debug) {
+        builder.clear();
+        nttable->toString(&builder);
+        printf("nttable initial\n%s\n",builder.c_str());
+    }
+    testConnect(debug,gather);
+    testConnect(debug,gather);
+}
+
+int main(int argc,char *argv[])
+{
+    bool debug = false;
+    if(argc>1) {
+        char * arg = argv[1];
+        if(strcmp(arg,"debug")==0) {
+           printf("debug is true\n");
+           debug = true;
+        }
+    }
+    test(debug);
     return(0);
 }
 

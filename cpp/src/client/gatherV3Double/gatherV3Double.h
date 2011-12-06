@@ -34,25 +34,84 @@
 
 namespace epics { namespace pvData { 
 
+/**
+ * Gather an array of V3 scalar double values.
+ * The complete set of data is presented as an NTTable.
+ * The NTTable has the optional fields alarm and timeStamp.
+ * @author mrk
+ *
+ */
 class GatherV3Double :
     public std::tr1::enable_shared_from_this<GatherV3Double>
 {
 public:
     POINTER_DEFINITIONS(GatherV3Double);
+    /**
+     * Constructor
+     * @param channelNames   The array of channelNames to gather
+     * @param numberChannels The number of channels to gather.
+     */
     GatherV3Double(String channelNames[],int numberChannels);
+    /**
+     * Destructor
+     */
     ~GatherV3Double();
+    /**
+     * Connect to the V3 channels.
+     * @param timeOut Timeout is seconds to wait.
+     * @returns (false,true) If (not connected, is connected) to all channels.
+     * If false that all channels are cleared and connect must be reissued.
+     */
     bool connect(double timeOut);
+    /**
+     * Disconnect from the V3 channels.
+     */
     void disconnect();
+    /**
+     * get the current values of the V3 channels.
+     * NOTE: get MUST be called by the same thread that calls connect.
+     * @returns (false,true) If (all, not all ) gets were successful.
+     * If false getMessage can be called to get the reason.
+     * If any channel is disconnected then false is returned.
+     */
     bool get();
+    /**
+     * get the reason why a connect or get failed.
+     * @returns the message.
+     */
     String getMessage();
+    /**
+     * The data is saved as an NTTable with alarm and timeStamp. Get it.
+     * @returns the NTTable.
+     */
     PVStructure::shared_pointer getNTTable();
+    /**
+     * Get the array of values for each V3 channel.
+     * @returns The array.
+     */
     PVDoubleArray  *getValue();
+    /**
+     * Get the array of delta times for each V3 channel.
+     * This is the time difference relative to the NTTable timeStamp.
+     * @returns The array.
+     */
     PVDoubleArray  *getDeltaTime();
+    /**
+     * Get the array of severity value for each V3 channel.
+     * @returns The array.
+     */
     PVIntArray     *getSeverity();
+    /**
+     * Get the array of connection status for each V3 channel.
+     * @returns The array.
+     */
     PVBooleanArray *getIsConnected();
+    /**
+     * Get the array of channel names for each V3 channel.
+     * @returns The array.
+     */
     PVStringArray  *getChannelName();
 private:
-    static void createContext();
     GatherV3Double::shared_pointer getPtrSelf()
     {
         return shared_from_this();

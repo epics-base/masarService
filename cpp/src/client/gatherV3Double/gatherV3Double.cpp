@@ -6,6 +6,9 @@
  */
 /* Author Marty Kraimer 2011.11 */
 
+#include <epicsExit.h>
+#include <alarm.h>
+
 #include <pv/gatherV3Double.h>
 
 namespace epics { namespace pvData {
@@ -23,7 +26,7 @@ enum State {
     idle,
     connecting,
     connected,
-    geting,
+    getting,
 };
 
 struct GatherV3DoublePvt
@@ -53,8 +56,10 @@ struct GatherV3DoublePvt
     int numberConnected;
     int numberCallbacks;
     bool requestOK;
+    epicsThreadId threadId;
 };
 
+// concatenate a new message onto message
 static void messageCat(
     GatherV3DoublePvt *pvt,const char *cafunc,int castatus,int channel)
 {
@@ -64,7 +69,7 @@ static void messageCat(
     int len = name.length();
     char buf[len+30];
     //following prevents compiler warning message
-    sprintf(buf,"%s %s for channel %s",
+    sprintf(buf,"%s %s for channel %s\n",
         cafunc,
         ca_message(castatus),
         name.c_str());
@@ -76,7 +81,6 @@ static void connectionCallback(struct connection_handler_args args)
     chid        chid = args.chid;
     ChannelID *id = static_cast<ChannelID *>(ca_puser(chid));
     GatherV3DoublePvt * pvt = id->pvt;
-    Lock xx(pvt->mutex);
     int offset = id->offset;
     
     BooleanArrayData data;
@@ -86,6 +90,7 @@ static void connectionCallback(struct connection_handler_args args)
     if(isConnected==newState) {
         throw std::runtime_error("Why extra connection callback");
     }
+    Lock xx(pvt->mutex);
     data.data[offset] = newState;
     if(newState) {
         pvt->numberConnected++;
@@ -102,8 +107,8 @@ static void getCallback ( struct event_handler_args args )
     chid        chid = args.chid;
     ChannelID *id = static_cast<ChannelID *>(ca_puser(chid));
     GatherV3DoublePvt * pvt = id->pvt;
-//    Lock xx(pvt->mutex);
     int offset = id->offset;
+    Lock xx(pvt->mutex);
     pvt->numberCallbacks++;
     if ( args.status != ECA_NORMAL ) {
           messageCat(pvt,"getCallback",args.status,offset);
@@ -118,6 +123,12 @@ static void getCallback ( struct event_handler_args args )
     const struct dbr_time_double * pTD =
          ( const struct dbr_time_double * ) args.dbr;
     dbr_short_t    severity = pTD->severity;
+    dbr_short_t    status = pTD->status;
+    if(pvt->alarm.getSeverity()<severity) {
+        pvt->alarm.setSeverity(static_cast<AlarmSeverity>(severity));
+        pvt->alarm.setStatus(static_cast<AlarmStatus>(status));
+        pvt->alarm.setMessage(epicsAlarmConditionStrings[status]);
+    }
     epicsTimeStamp stamp = pTD->stamp;
     dbr_double_t   value = pTD->value;
     DoubleArrayData data;
@@ -140,20 +151,9 @@ static void getCallback ( struct event_handler_args args )
     }
 }
 
-void GatherV3Double::createContext()
-{
-    static bool isCreated = false;
-    static Mutex mutex;
-    Lock xx(mutex);
-    if(isCreated) return;
-    isCreated = true;
-    SEVCHK(ca_context_create(ca_enable_preemptive_callback),"ca_context_create");
-}
-
 GatherV3Double::GatherV3Double(String channelNames[],int numberChannels)
 : pvt(0)
 {
-    createContext();
     int n = 5;
     FieldConstPtr fields[n];
     FieldCreate *fieldCreate = getFieldCreate();
@@ -218,10 +218,12 @@ GatherV3Double::GatherV3Double(String channelNames[],int numberChannels)
     pvt->numberConnected = 0;
     pvt->numberCallbacks = 0;
     pvt->requestOK = false;
+    pvt->threadId = 0;
 }
 
 GatherV3Double::~GatherV3Double()
 {
+    if(pvt->state!=idle) disconnect();
     for(int i=0; i<pvt->numberChannels; i++) {
         ChannelID *pChannelID = pvt->apchannelID[i];
         delete pChannelID;
@@ -231,10 +233,12 @@ GatherV3Double::~GatherV3Double()
 
 bool GatherV3Double::connect(double timeOut)
 {
-//    Lock xx(pvt->mutex);
     if(pvt->state!=idle) {
-        throw std::runtime_error("GatherV3Double::connect illegal state\n");
+        throw std::runtime_error(
+            "GatherV3Double::connect only legal when state is idle\n");
     }
+    SEVCHK(ca_context_create(ca_enable_preemptive_callback),"ca_context_create");
+    pvt->threadId = epicsThreadGetIdSelf();
     pvt->state = connecting;
     pvt->numberConnected = 0;
     pvt->numberCallbacks = 0;
@@ -263,8 +267,13 @@ bool GatherV3Double::connect(double timeOut)
     }
     if(pvt->numberConnected!=pvt->numberChannels) {
         char buf[30];
-        sprintf(buf,"%d channels are not connected. returning to idle state",
-            (pvt->numberChannels - pvt->numberConnected));
+        sprintf(buf,"%d channels of %d are not connected.\nReturning to idle state.",
+            (pvt->numberChannels - pvt->numberConnected),
+             pvt->numberChannels);
+        pvt->message = String(buf);
+        pvt->alarm.setMessage(pvt->message);
+        pvt->alarm.setSeverity(invalidAlarm);
+        pvt->alarm.setStatus(clientStatus);
         disconnect();
     }
     return false;
@@ -274,24 +283,40 @@ void GatherV3Double::disconnect()
 {
     Lock xx(pvt->mutex);
     if(pvt->state==idle) return;
+    if(pvt->threadId!=epicsThreadGetIdSelf()) {
+        throw std::runtime_error(
+            "GatherV3Double::disconnect must be same thread that called connect\n");
+    }
     pvt->state = idle;
+    BooleanArrayData bdata;
+    pvt->pvisConnected->get(0,pvt->numberChannels,&bdata);
+    bool *pbool = bdata.data;
     for(int i=0; i< pvt->numberChannels; i++) {
         chid theChid = pvt->apchannelID[i]->theChid;
-        int result = ca_clear_channel(theChid);
+        ca_clear_channel(theChid);
+        pbool[i] = false;
     }
+    ca_context_destroy();
 }
 
 bool GatherV3Double::get()
 {
-    Lock xx(pvt->mutex);
     if(pvt->state!=connected) {
         throw std::runtime_error("GatherV3Double::get illegal state\n");
     }
-    pvt->state = geting;
+    if(pvt->threadId!=epicsThreadGetIdSelf()) {
+        throw std::runtime_error(
+            "GatherV3Double::get must be same thread that called connect\n");
+    }
+    pvt->state = getting;
     pvt->numberCallbacks = 0;
     pvt->requestOK = true;
     pvt->message = String();
     pvt->event.tryWait();
+    pvt->timeStamp.getCurrent();
+    pvt->alarm.setMessage("");
+    pvt->alarm.setSeverity(noAlarm);
+    pvt->alarm.setStatus(noStatus);
     for(int i=0; i< pvt->numberChannels; i++) {
         chid theChid = pvt->apchannelID[i]->theChid;
         int result = ca_get_callback(
@@ -309,7 +334,11 @@ bool GatherV3Double::get()
     if(!result) {
         pvt->message += "timeout";
         pvt->requestOK = false;
+        pvt->alarm.setMessage(pvt->message);
+        pvt->alarm.setSeverity(invalidAlarm);
+        pvt->alarm.setStatus(clientStatus);
     }
+    pvt->state = connected;
     return pvt->requestOK;
 }
 

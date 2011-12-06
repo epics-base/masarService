@@ -8,5 +8,6 @@ lib
 ./O.*
 ./*.pyc
 ./*.so
+./documentation/html
 
 syntax: regexp
