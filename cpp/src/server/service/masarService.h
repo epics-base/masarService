@@ -12,7 +12,7 @@
 #include <memory>
 
 #include <pv/service.h>
-#include <pv/dslPYIRMIS.h>
+#include <pv/dslPY.h>
 
 namespace epics { namespace masar { 
 
@@ -35,7 +35,7 @@ private:
     {
         return shared_from_this();
     }
-    DSL::shared_pointer dslIrmis;
+    DSL::shared_pointer dslRdb;
 };
 
 }}

@@ -3,16 +3,16 @@ include $(TOP)/configure/CONFIG
 
 USR_INCLUDES += -I${PYTHON_BASE}/include/${PYTHON}
 
-PYIRMIS = $(TOP)/src/dslPYIRMIS
+DSLPY = $(TOP)/src/dslPY
 
-SRC_DIRS += $(PYIRMIS)/dsl
+SRC_DIRS += $(DSLPY)/dsl
 LIBSRCS += dsl.cpp
 
-LIBRARY = dslPYIRMIS
+LIBRARY = dslPY
 
-dslPYIRMIS_LIBS += pvData Com
+dslPY_LIBS += pvData Com
 
-dslPYIRMIS_LIBS += $(PYTHON)
+dslPY_LIBS += $(PYTHON)
 # Location of the python libraries
 $(PYTHON)_DIR = $(PYTHON_BASE)/lib/$(PYTHON)/config
 

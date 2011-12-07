@@ -21,27 +21,27 @@ namespace epics { namespace masar {
 
 using namespace epics::pvData;
 
-class DSL_IRMIS :
+class DSL_RDB :
     public DSL,
-    public std::tr1::enable_shared_from_this<DSL_IRMIS>
+    public std::tr1::enable_shared_from_this<DSL_RDB>
 {
 public:
-    POINTER_DEFINITIONS(DSL_IRMIS);
-    DSL_IRMIS();
-    virtual ~DSL_IRMIS();
+    POINTER_DEFINITIONS(DSL_RDB);
+    DSL_RDB();
+    virtual ~DSL_RDB();
     virtual void destroy();
     virtual PVStructure::shared_pointer request(
          PVStructure::shared_pointer const & pvArgument);
     bool init();
 private:
-    DSL_IRMIS::shared_pointer getPtrSelf()
+    DSL_RDB::shared_pointer getPtrSelf()
     {
         return shared_from_this();
     }
     PyObject * prequest;
 };
 
-DSL_IRMIS::DSL_IRMIS()
+DSL_RDB::DSL_RDB()
 : prequest(0)
 {
    PyThreadState *py_tstate = NULL;
@@ -51,7 +51,7 @@ DSL_IRMIS::DSL_IRMIS()
    PyEval_ReleaseThread(py_tstate);
 }
 
-DSL_IRMIS::~DSL_IRMIS()
+DSL_RDB::~DSL_RDB()
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
         if(prequest!=0) Py_XDECREF(prequest);
@@ -60,21 +60,21 @@ DSL_IRMIS::~DSL_IRMIS()
     Py_Finalize();
 }
 
-bool DSL_IRMIS::init()
+bool DSL_RDB::init()
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-        PyObject * module = PyImport_ImportModule("dslPYIRMIS");
+        PyObject * module = PyImport_ImportModule("dslPY");
         if(module==0) {
-            String message("dslPYIRMIS");
+            String message("dslPY");
             message += " does not exist or is not a python module";
-            printf("DSL_IRMIS::init %s\n",message.c_str());
+            printf("DSL_RDB::init %s\n",message.c_str());
             return false;
         }
         PyObject *pclass = PyObject_GetAttrString(module, "DSL");
         if(pclass==0) {
             String message("class DSL");
             message += " does not exist";
-            printf("DSL_IRMIS::init %s\n",message.c_str());
+            printf("DSL_RDB::init %s\n",message.c_str());
             Py_XDECREF(module);
             return false;
         }
@@ -89,7 +89,7 @@ bool DSL_IRMIS::init()
         if(pinstance==0) {
             String message("class DSL");
             message += " constructor failed";
-            printf("DSL_IRMIS::init %s\n",message.c_str());
+            printf("DSL_RDB::init %s\n",message.c_str());
             Py_XDECREF(pclass);
             Py_XDECREF(module);
             return false;
@@ -98,7 +98,7 @@ bool DSL_IRMIS::init()
         if(prequest==0) {
             String message("DSL::request");
             message += " could not attach to method";
-            printf("DSL_IRMIS::init %s\n",message.c_str());
+            printf("DSL_RDB::init %s\n",message.c_str());
             Py_XDECREF(pinstance);
             Py_XDECREF(pclass);
             Py_XDECREF(module);
@@ -111,9 +111,9 @@ bool DSL_IRMIS::init()
     return true;
 }
 
-void DSL_IRMIS::destroy() {}
+void DSL_RDB::destroy() {}
 
-PVStructure::shared_pointer DSL_IRMIS::request(
+PVStructure::shared_pointer DSL_RDB::request(
              PVStructure::shared_pointer const & pvArgument)
 {
     char * xxx = 0;
@@ -135,15 +135,15 @@ PVStructure::shared_pointer DSL_IRMIS::request(
     return pvArgument;
 }
 
-DSL::shared_pointer createDSL_IRMIS()
+DSL::shared_pointer createDSL_RDB()
 {
-   DSL_IRMIS *dsl = new DSL_IRMIS();
+   DSL_RDB *dsl = new DSL_RDB();
    if(!dsl->init()) {
         delete dsl;
-        return DSL_IRMIS::shared_pointer();
+        return DSL_RDB::shared_pointer();
         
    }
-   return DSL_IRMIS::shared_pointer(dsl);
+   return DSL_RDB::shared_pointer(dsl);
 }
 
 }}

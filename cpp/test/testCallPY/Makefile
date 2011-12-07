@@ -2,10 +2,10 @@ TOP=../..
 
 include $(TOP)/configure/CONFIG
 
-PROD_HOST += testCallPYIRMIS
-testCallPYIRMIS_SRCS += testCallPYIRMIS.cpp
-testCallPYIRMIS_LIBS += nt pvIOC pvAccess pvData Com masarServer
-testCallPYIRMIS_LIBS += $(PYTHON)
+PROD_HOST += testCallPY
+testCallPY_SRCS += testCallPY.cpp
+testCallPY_LIBS += nt pvIOC pvAccess pvData Com masarServer
+testCallPY_LIBS += $(PYTHON)
 
 $(PYTHON)_DIR = $(PYTHON_BASE)/lib/$(PYTHON)/config
 

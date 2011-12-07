@@ -14,9 +14,9 @@ INC += masarService.h
 LIBSRCS += masarService.cpp
 LIBSRCS += masarServiceMain.cpp
 
-SRC_DIRS += $(SERVER)/dslPYIRMIS
-INC += dslPYIRMIS.h
-LIBSRCS += dslPYIRMIS.cpp
+SRC_DIRS += $(SERVER)/dslPY
+INC += dslPY.h
+LIBSRCS += dslPY.cpp
 
 maserService_LIBS += Com pvData pvAccess pvIOC nt
 maserService_LIBS += $(PYTHON)

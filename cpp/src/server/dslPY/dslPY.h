@@ -1,4 +1,4 @@
-/* dslPYIRMIS.h */
+/* dslPY.h */
 /**
  * Copyright - See the COPYRIGHT that is included with this distribution.
  * EPICS pvDataCPP is distributed subject to a Software License Agreement found
@@ -8,8 +8,8 @@
  */
 /* Author Marty Kraimer 2011.11 */
 
-#ifndef DSLPYIRMIS_H
-#define DSLPYIRMIS_H
+#ifndef DSLPY_H
+#define DSLPY_H
 
 #include <string>
 #include <stdexcept>
@@ -26,9 +26,9 @@ namespace epics { namespace masar{
  * Note that an application can only use a single implementation
  * of DSL. Thus each implementation must have a separate shared library
  */
-extern DSL::shared_pointer createDSL_IRMIS();
+extern DSL::shared_pointer createDSL_RDB();
 
 }}
-#endif  /* DSLPYIRMIS_H */
+#endif  /* DSLPY_H */
 
 

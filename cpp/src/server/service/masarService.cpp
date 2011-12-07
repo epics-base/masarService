@@ -29,7 +29,7 @@ using namespace epics::pvAccess;
 using namespace epics::pvIOC;
 
 MasarService::MasarService()
-: dslIrmis(createDSL_IRMIS())
+: dslRdb(createDSL_RDB())
 {}
 
 MasarService::~MasarService()
@@ -60,11 +60,11 @@ void MasarService::request(
     } else {
         channelRPCRequester->message("illegal argument",errorMessage);
     }
-    // Now what to do? What to pass to dslIrmis?
-    PVStructure::shared_pointer result = dslIrmis->request(pvArgument);
+    // Now what to do? What to pass to dslRdb?
+    PVStructure::shared_pointer result = dslRdb->request(pvArgument);
     // GUOBAO WHAT TO DO?
     // Following just makes up an NTTable
-    // You start with this and dslPYIRMIS
+    // You start with this and dslPY
 
     FieldCreate * fieldCreate = getFieldCreate();
     NTField *ntField = NTField::get();
