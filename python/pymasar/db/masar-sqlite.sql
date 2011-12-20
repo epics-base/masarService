@@ -2,7 +2,7 @@ PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
 DROP TABLE IF EXISTS "alias";
 CREATE TABLE "alias" (
-  "alias_id" int(11) NOT NULL ,
+  "alias_id" INTEGER ,
   "pv_id" int(11) NOT NULL DEFAULT '0',
   "alias" varchar(50) DEFAULT NULL,
   PRIMARY KEY ("alias_id")
@@ -10,7 +10,7 @@ CREATE TABLE "alias" (
 );
 DROP TABLE IF EXISTS "masar_data";
 CREATE TABLE "masar_data" (
-  "masar_data_id" int(11) NOT NULL ,
+  "masar_data_id" INTEGER ,
   "service_event_id" int(11) NOT NULL DEFAULT '0',
   "pv_name" varchar(50) DEFAULT NULL,
   "value" varchar(50) DEFAULT NULL,
@@ -23,14 +23,14 @@ CREATE TABLE "masar_data" (
 );
 DROP TABLE IF EXISTS "pv";
 CREATE TABLE "pv" (
-  "pv_id" int(11) NOT NULL ,
+  "pv_id" INTEGER ,
   "pv_name" varchar(128) NOT NULL,
   "description" text,
   PRIMARY KEY ("pv_id")
 );
 DROP TABLE IF EXISTS "pv__pvgroup";
 CREATE TABLE "pv__pvgroup" (
-  "pv__pvgroup_id" int(11) NOT NULL ,
+  "pv__pvgroup_id" INTEGER ,
   "pv_id" int(11) NOT NULL DEFAULT '0',
   "pv_group_id" int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY ("pv__pvgroup_id")
@@ -39,7 +39,7 @@ CREATE TABLE "pv__pvgroup" (
 );
 DROP TABLE IF EXISTS "pv_attr";
 CREATE TABLE "pv_attr" (
-  "pv_attr_id" int(11)  NOT NULL ,
+  "pv_attr_id" INTEGER ,
   "pv_id" int(11) NOT NULL DEFAULT '0',
   "pv_attrtype_id" int(11) DEFAULT NULL,
   "pv_attr" varchar(255) DEFAULT NULL,
@@ -49,14 +49,14 @@ CREATE TABLE "pv_attr" (
 );
 DROP TABLE IF EXISTS "pv_attrtype";
 CREATE TABLE "pv_attrtype" (
-  "pv_attrtype_id" int(11) NOT NULL ,
+  "pv_attrtype_id" INTEGER ,
   "pv_attrtype_name" varchar(50) DEFAULT NULL,
   "pv_attrtype_desc" varchar(255) DEFAULT NULL,
   PRIMARY KEY ("pv_attrtype_id")
 );
 DROP TABLE IF EXISTS "pv_group";
 CREATE TABLE "pv_group" (
-  "pv_group_id" int(11) NOT NULL ,
+  "pv_group_id" INTEGER ,
   "pv_group_name" varchar(50) DEFAULT NULL,
   "pv_group_func" varchar(50) DEFAULT NULL,
   "pvg_creation_date" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -65,7 +65,7 @@ CREATE TABLE "pv_group" (
 );
 DROP TABLE IF EXISTS "pv_rel";
 CREATE TABLE "pv_rel" (
-  "pv_rel_id" int(11) NOT NULL ,
+  "pv_rel_id" INTEGER ,
   "rel_type" varchar(50) DEFAULT NULL,
   "parent_pv_id" int(11) NOT NULL DEFAULT '0',
   "child_pv_id" int(11) NOT NULL DEFAULT '0',
@@ -75,7 +75,7 @@ CREATE TABLE "pv_rel" (
 );
 DROP TABLE IF EXISTS "pvgroup__serviceconfig";
 CREATE TABLE "pvgroup__serviceconfig" (
-  "pvgroup__serviceconfig_id" int(11) NOT NULL ,
+  "pvgroup__serviceconfig_id" INTEGER ,
   "pv_group_id" int(11) NOT NULL DEFAULT '0',
   "service_config_id" int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY ("pvgroup__serviceconfig_id")
@@ -84,7 +84,7 @@ CREATE TABLE "pvgroup__serviceconfig" (
 );
 DROP TABLE IF EXISTS "renamed_pv";
 CREATE TABLE "renamed_pv" (
-  "renamed_pv_id" int(11) NOT NULL ,
+  "renamed_pv_id" INTEGER ,
   "pv_id" int(11) DEFAULT '0',
   "new_pv_name" varchar(50) DEFAULT NULL,
   "old_pv_name" varchar(50) DEFAULT NULL,
@@ -95,14 +95,14 @@ CREATE TABLE "renamed_pv" (
 );
 DROP TABLE IF EXISTS "service";
 CREATE TABLE "service" (
-  "service_id" int(11) NOT NULL ,
+  "service_id" INTEGER ,
   "service_name" varchar(50) DEFAULT NULL,
   "service_desc" varchar(255) DEFAULT NULL,
   PRIMARY KEY ("service_id")
 );
 DROP TABLE IF EXISTS "service_config";
 CREATE TABLE "service_config" (
-  "service_config_id" int(11) NOT NULL ,
+  "service_config_id" INTEGER ,
   "service_id" int(11) NOT NULL DEFAULT '0',
   "service_config_name" varchar(50) DEFAULT NULL,
   "service_config_desc" varchar(255) DEFAULT NULL,
@@ -113,7 +113,7 @@ CREATE TABLE "service_config" (
 );
 DROP TABLE IF EXISTS "service_config_prop";
 CREATE TABLE "service_config_prop" (
-  "service_config_prop_id" int(11) NOT NULL ,
+  "service_config_prop_id" INTEGER ,
   "service_config_id" int(11) NOT NULL DEFAULT '0',
   "service_config_prop_name" varchar(2555) DEFAULT NULL,
   "service_config_prop_value" varchar(255) DEFAULT NULL,
@@ -122,7 +122,7 @@ CREATE TABLE "service_config_prop" (
 );
 DROP TABLE IF EXISTS "service_event";
 CREATE TABLE "service_event" (
-  "service_event_id" int(11) NOT NULL ,
+  "service_event_id" INTEGER ,
   "service_config_id" int(11) NOT NULL DEFAULT '0',
   "service_event_user_tag" varchar(255) DEFAULT NULL,
   "service_event_UTC_time" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -132,7 +132,7 @@ CREATE TABLE "service_event" (
 );
 DROP TABLE IF EXISTS "service_event_prop";
 CREATE TABLE "service_event_prop" (
-  "service_event_prop_id" int(11) NOT NULL ,
+  "service_event_prop_id" INTEGER ,
   "service_event_id" int(11) NOT NULL DEFAULT '0',
   "service_event_prop_name" varchar(255) DEFAULT NULL,
   "service_event_prop_value" varchar(50) DEFAULT NULL,

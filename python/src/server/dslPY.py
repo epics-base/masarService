@@ -18,4 +18,5 @@ class DSL(object) :
         return argument
     def toString(self) :
         """Return a string that shows the message and severity"""
-        return Alarm.alarmSeverityNames[self.severity] + " " + self.message;
+#        return Alarm.alarmSeverityNames[self.severity] + " " + self.message;
+        pass

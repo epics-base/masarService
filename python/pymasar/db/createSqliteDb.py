@@ -14,7 +14,7 @@ import os.path
 import sqlite3
 
 __sqlitedb__ = 'masar.db'
-__sql__ = 'sqlite/masar-sqlite.sql'
+__sql__ = 'masar-sqlite.sql'
 
 __version__ = '0.0.1'
 
@@ -49,7 +49,7 @@ def createSqliteDb():
     else:
         print ("create a new SQLite db.")
 
-    con = None
+    conn = None
     try:
         conn = sqlite3.connect(__sqlitedb__)
         cur = conn.cursor()
@@ -61,6 +61,36 @@ def createSqliteDb():
     finally:
         if conn:
             conn.close()
+def usage():
+    print ("""usage: createSqliteDb.py [options]
+
+Options (which can be given in any of the forms shown):
+-s  --source    source.sql [default: masar-sqlite.sql]
+-db  --database sqlite.db  [default: masar.db]
+-h  --help
+
+If executed with no arguments, it creates a default sqlite3 database 
+with a name masar.db, which uses sql script from masar-sqlite.sql file.
+
+createSqliteDb.py v {0}. Copyright (c) 2011
+National Synchrotron Light Source II
+Brookhaven National Laboratory
+Upton, New York, USA, 11973
+All rights reserved.
+""".format(__version__))
+    sys.exit()
 
 if __name__ == '__main__':
+    print (sys.argv)
+    args = sys.argv[1:]
+    while args:
+        arg = args.pop(0)
+        if arg in ("-s", "--source"):
+            __sql__ = args.pop(0)
+            print (__sql__)
+        elif arg in ("-db", "--database"):
+            __sqlitedb__ = args.pop(0)
+            print (__sqlitedb__)
+        elif arg in ("-h", "--help", "help"):
+            usage()
     createSqliteDb()
