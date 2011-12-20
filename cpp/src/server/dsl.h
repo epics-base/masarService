@@ -35,7 +35,7 @@ public:
     /**
      * Called by service layer to access the database.
      * @param pvArgument The argument which must follow the argument standard
-     * for the maserService
+     * for the masarService
      * @return An NTTable which has the results.
      */
     virtual epics::pvData::PVStructure::shared_pointer request(

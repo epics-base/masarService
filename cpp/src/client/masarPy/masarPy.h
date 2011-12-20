@@ -6,8 +6,8 @@
  */
 /* Author Marty Kraimer 2011.11 */
 
-#ifndef MASERPY_H
-#define MASERPY_H
+#ifndef MASARPY_H
+#define MASARPY_H
 #include "requesterPy.h"
 
 
@@ -24,4 +24,4 @@ extern PyObject *createMasarPy(
     Masar::shared_pointer masar);
 
 }}
-#endif  /* MASERPY_H */
+#endif  /* MASARPY_H */

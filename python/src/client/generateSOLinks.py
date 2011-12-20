@@ -5,10 +5,10 @@
 #    found in file LICENSE that is included with this distribution.
 # Author Marty Kraimer 2011.07
 #
-# This creates a maserPy.so soft link for the maser.py file.
+# This creates a masarPy.so soft link for the masar.py file.
 import os
 import subprocess,shlex
 hostArch = os.environ["EPICS_HOST_ARCH"]
-value = "/bin/ln -s ../../bin/" + hostArch + "/maserServiceServer.so maserPy.so"
+value = "/bin/ln -s ../../bin/" + hostArch + "/masarServiceServer.so masarPy.so"
 args = shlex.split(value)
 result = subprocess.check_call(args)

@@ -18,8 +18,8 @@ SRC_DIRS += $(SERVER)/dslPY
 INC += dslPY.h
 LIBSRCS += dslPY.cpp
 
-maserService_LIBS += Com pvData pvAccess pvIOC nt
-maserService_LIBS += $(PYTHON)
+masarService_LIBS += Com pvData pvAccess pvIOC nt
+masarService_LIBS += $(PYTHON)
 
 PROD_HOST += masarServiceRun
 masarServiceRun_OBJS += masarServiceMain
