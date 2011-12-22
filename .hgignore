@@ -9,5 +9,6 @@ lib
 ./*.pyc
 ./*.so
 ./documentation/html
+./RELEASE.local
 
 syntax: regexp
