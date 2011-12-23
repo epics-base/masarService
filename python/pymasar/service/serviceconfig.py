@@ -11,9 +11,9 @@ from future_builtins import *
 import sys
 import sqlite3
 
-from utils import checkConnection
-from service import (retrieveServices, saveService)
-from pvgroup.pvgroup import (retrievePvGroups)
+from pymasar.utils import checkConnection
+from pymasar.service.service import (retrieveServices)
+from pymasar.pvgroup.pvgroup import (retrievePvGroups)
 
 def saveServiceConfig(conn, servicename, serviceconfigname, serviceconfigdesc=None, serviceconfigversion=None):
     """
@@ -21,24 +21,10 @@ def saveServiceConfig(conn, servicename, serviceconfigname, serviceconfigdesc=No
     The service config name for each different service has to be unique.
     
     >>> import sqlite3
-    >>> from service import (saveService, retrieveServices)
+    >>> from pymasar.service.service import (saveService, retrieveServices)
+    >>> from pymasar.db.masarsqlite import (SQL)
     >>> conn = sqlite3.connect(":memory:")
     >>> cur = conn.cursor()
-    >>> SQL = '''CREATE TABLE "service" (
-    ...        "service_id" INTEGER, 
-    ...        "service_name" varchar(50) DEFAULT NULL, 
-    ...        "service_desc" varchar(255) DEFAULT NULL, 
-    ...        PRIMARY KEY ("service_id"));
-    ...        CREATE TABLE "service_config" (
-    ...        "service_config_id" INTEGER ,
-    ...        "service_id" int(11) NOT NULL DEFAULT '0',
-    ...        "service_config_name" varchar(50) DEFAULT NULL,
-    ...        "service_config_desc" varchar(255) DEFAULT NULL,
-    ...        "service_config_version" int(11) DEFAULT NULL,
-    ...        "service_config_create_date" timestamp NOT NULL ,
-    ...        PRIMARY KEY ("service_config_id")
-    ...        CONSTRAINT "Ref_197" FOREIGN KEY ("service_id") REFERENCES "service" ("service_id") ON DELETE NO ACTION ON UPDATE NO ACTION
-    ...        );'''
     >>> result = cur.executescript(SQL)
     >>> saveService(conn, 'masar1', desc='non-empty description')
     1
@@ -103,24 +89,10 @@ def retrieveServiceConfigs(conn, serviceconfigname=None, servicename=None, servi
     If service name is none, retrieve all configs in service_config table.
     
     >>> import sqlite3
-    >>> from service import (saveService, retrieveServices)
+    >>> from pymasar.service.service import (saveService, retrieveServices)
+    >>> from pymasar.db.masarsqlite import (SQL)
     >>> conn = sqlite3.connect(":memory:")
     >>> cur = conn.cursor()
-    >>> SQL = '''CREATE TABLE "service" (
-    ...        "service_id" INTEGER, 
-    ...        "service_name" varchar(50) DEFAULT NULL, 
-    ...        "service_desc" varchar(255) DEFAULT NULL, 
-    ...        PRIMARY KEY ("service_id"));
-    ...        CREATE TABLE "service_config" (
-    ...        "service_config_id" INTEGER ,
-    ...        "service_id" int(11) NOT NULL DEFAULT '0',
-    ...        "service_config_name" varchar(50) DEFAULT NULL,
-    ...        "service_config_desc" varchar(255) DEFAULT NULL,
-    ...        "service_config_version" int(11) DEFAULT NULL,
-    ...        "service_config_create_date" timestamp NOT NULL ,
-    ...        PRIMARY KEY ("service_config_id")
-    ...        CONSTRAINT "Ref_197" FOREIGN KEY ("service_id") REFERENCES "service" ("service_id") ON DELETE NO ACTION ON UPDATE NO ACTION
-    ...        );'''
     >>> result = cur.executescript(SQL)
     >>> saveService(conn, 'masar1', desc='non-empty description')
     1
@@ -195,11 +167,11 @@ def saveServicePvGroup(conn, serviceconfigname, pvgroups):
     
     >>> import sqlite3
     >>> conn = sqlite3.connect(':memory:')
-    >>> from service import (saveService, retrieveServices)
-    >>> from serviceconfig import(saveServicePvGroup, retrieveServicePvGroups)
-    >>> from pvgroup.pvgroup import (savePvGroup, retrievePvGroups)
+    >>> from pymasar.service.service import (saveService, retrieveServices)
+    >>> from pymasar.service.serviceconfig import(saveServicePvGroup, retrieveServicePvGroups)
+    >>> from pymasar.pvgroup.pvgroup import (savePvGroup, retrievePvGroups)
+    >>> from pymasar.db.masarsqlite import (SQL)
     >>> cur = conn.cursor()
-    >>> SQL = open('../db/masar-sqlite.sql').read()
     >>> result = cur.executescript(SQL)
     >>> serviceName1 = 'masar'
     >>> serviceDesc1 = 'masar service description example'
@@ -291,11 +263,11 @@ def retrieveServicePvGroups(conn, serviceconfigname, servicename=None):
     
     >>> import sqlite3
     >>> conn = sqlite3.connect(':memory:')
-    >>> from service import (saveService, retrieveServices)
-    >>> from serviceconfig import(saveServicePvGroup, retrieveServicePvGroups)
-    >>> from pvgroup.pvgroup import (savePvGroup, retrievePvGroups)
+    >>> from pymasar.service.service import (saveService, retrieveServices)
+    >>> from pymasar.service.serviceconfig import (saveServicePvGroup, retrieveServicePvGroups)
+    >>> from pymasar.pvgroup.pvgroup import (savePvGroup, retrievePvGroups)
+    >>> from pymasar.db.masarsqlite import SQL
     >>> cur = conn.cursor()
-    >>> SQL = open('../db/masar-sqlite.sql').read()
     >>> result = cur.executescript(SQL)
     >>> serviceName1 = 'masar'
     >>> serviceDesc1 = 'masar service description example'
@@ -419,12 +391,12 @@ def retrieveServiceConfigPVs(conn, serviceconfigname, servicename=None):
     
     >>> import sqlite3
     >>> conn = sqlite3.connect(':memory:')
-    >>> from service import (saveService, retrieveServices)
-    >>> from serviceconfig import(saveServicePvGroup, retrieveServicePvGroups)
-    >>> from pvgroup.pvgroup import (savePvGroup, retrievePvGroups)
-    >>> from pvgroup.pv import (saveGroupPvs, retrieveGroupPvs)
+    >>> from pymasar.service.service import (saveService, retrieveServices)
+    >>> from pymasar.service.serviceconfig import(saveServicePvGroup, retrieveServicePvGroups)
+    >>> from pymasar.pvgroup.pvgroup import (savePvGroup, retrievePvGroups)
+    >>> from pymasar.pvgroup.pv import (saveGroupPvs, retrieveGroupPvs)
+    >>> from pymasar.db.masarsqlite import (SQL)
     >>> cur = conn.cursor()
-    >>> SQL = open('../db/masar-sqlite.sql').read()
     >>> result = cur.executescript(SQL)
     >>> c01pvs = ['SR:C01-BI:G02A<BPM:L1>Pos-X', 'SR:C01-BI:G02A<BPM:L2>Pos-X',
     ...        'SR:C01-BI:G04A<BPM:M1>Pos-X', 'SR:C01-BI:G04B<BPM:M1>Pos-X',

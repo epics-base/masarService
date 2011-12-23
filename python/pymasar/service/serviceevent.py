@@ -12,42 +12,19 @@ import sys
 import sqlite3
 import datetime as dt
 
-from utils import checkConnection
-from serviceconfig import (retrieveServiceConfigs)
+from pymasar.utils import checkConnection
+from pymasar.service.serviceconfig import (retrieveServiceConfigs)
 
 def saveServiceEvent(conn, servicename, serviceconfigname, comment=None):
     """
     save an event config, and associate this event with given service and service config.
     
     >>> import sqlite3
-    >>> from service import (saveService, retrieveServices)
-    >>> from serviceconfig import (saveServiceConfig)
+    >>> from pymasar.service.service import (saveService, retrieveServices)
+    >>> from pymasar.service.serviceconfig import (saveServiceConfig)
+    >>> from pymasar.db.masarsqlite import (SQL)
     >>> conn = sqlite3.connect(":memory:")
     >>> cur = conn.cursor()
-    >>> SQL = '''CREATE TABLE "service" (
-    ...        "service_id" INTEGER, 
-    ...        "service_name" varchar(50) DEFAULT NULL, 
-    ...        "service_desc" varchar(255) DEFAULT NULL, 
-    ...        PRIMARY KEY ("service_id"));
-    ...        CREATE TABLE "service_config" (
-    ...        "service_config_id" INTEGER ,
-    ...        "service_id" int(11) NOT NULL DEFAULT '0',
-    ...        "service_config_name" varchar(50) DEFAULT NULL,
-    ...        "service_config_desc" varchar(255) DEFAULT NULL,
-    ...        "service_config_version" int(11) DEFAULT NULL,
-    ...        "service_config_create_date" timestamp NOT NULL ,
-    ...        PRIMARY KEY ("service_config_id")
-    ...        CONSTRAINT "Ref_197" FOREIGN KEY ("service_id") REFERENCES "service" ("service_id") ON DELETE NO ACTION ON UPDATE NO ACTION
-    ...        );
-    ...        CREATE TABLE "service_event" (
-    ...        "service_event_id" INTEGER ,
-    ...        "service_config_id" int(11) NOT NULL DEFAULT '0',
-    ...        "service_event_user_tag" varchar(255) DEFAULT NULL,
-    ...        "service_event_UTC_time" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    ...        "service_event_serial_tag" varchar(50) DEFAULT NULL,
-    ...        PRIMARY KEY ("service_event_id")
-    ...        CONSTRAINT "Ref_08" FOREIGN KEY ("service_config_id") REFERENCES "service_config" ("service_config_id") ON DELETE NO ACTION ON UPDATE NO ACTION
-    ...        );'''
     >>> result = cur.executescript(SQL)
     >>> saveService(conn, 'masar1', desc='non-empty description')
     1
@@ -128,34 +105,11 @@ def retrieveServiceEvents(conn, start=None, end=None, comment=None):
     [(service_event_id, service_config_id, service_event_user_tag, service_event_UTC_time, service_event_serial_tag)]
     
     >>> import sqlite3
-    >>> from service import (saveService, retrieveServices)
-    >>> from serviceconfig import (saveServiceConfig)
+    >>> from pymasar.service.service import (saveService, retrieveServices)
+    >>> from pymasar.service.serviceconfig import (saveServiceConfig)
+    >>> from pymasar.db.masarsqlite import (SQL)
     >>> conn = sqlite3.connect(":memory:")
     >>> cur = conn.cursor()
-    >>> SQL = '''CREATE TABLE "service" (
-    ...        "service_id" INTEGER, 
-    ...        "service_name" varchar(50) DEFAULT NULL, 
-    ...        "service_desc" varchar(255) DEFAULT NULL, 
-    ...        PRIMARY KEY ("service_id"));
-    ...        CREATE TABLE "service_config" (
-    ...        "service_config_id" INTEGER ,
-    ...        "service_id" int(11) NOT NULL DEFAULT '0',
-    ...        "service_config_name" varchar(50) DEFAULT NULL,
-    ...        "service_config_desc" varchar(255) DEFAULT NULL,
-    ...        "service_config_version" int(11) DEFAULT NULL,
-    ...        "service_config_create_date" timestamp NOT NULL ,
-    ...        PRIMARY KEY ("service_config_id")
-    ...        CONSTRAINT "Ref_197" FOREIGN KEY ("service_id") REFERENCES "service" ("service_id") ON DELETE NO ACTION ON UPDATE NO ACTION
-    ...        );
-    ...        CREATE TABLE "service_event" (
-    ...        "service_event_id" INTEGER ,
-    ...        "service_config_id" int(11) NOT NULL DEFAULT '0',
-    ...        "service_event_user_tag" varchar(255) DEFAULT NULL,
-    ...        "service_event_UTC_time" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    ...        "service_event_serial_tag" varchar(50) DEFAULT NULL,
-    ...        PRIMARY KEY ("service_event_id")
-    ...        CONSTRAINT "Ref_08" FOREIGN KEY ("service_config_id") REFERENCES "service_config" ("service_config_id") ON DELETE NO ACTION ON UPDATE NO ACTION
-    ...        );'''
     >>> result = cur.executescript(SQL)
     >>> saveService(conn, 'masar1', desc='non-empty description')
     1

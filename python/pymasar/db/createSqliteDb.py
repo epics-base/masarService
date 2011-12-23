@@ -14,9 +14,10 @@ import os.path
 import sqlite3
 
 __sqlitedb__ = 'masar.db'
-__sql__ = 'masar-sqlite.sql'
+__sql__ = None
 
 __version__ = '0.0.1'
+
 
 def checkAnswer(answer):
     result = False
@@ -50,10 +51,15 @@ def createSqliteDb():
         print ("create a new SQLite db.")
 
     conn = None
+    sqlfile = None
     try:
         conn = sqlite3.connect(__sqlitedb__)
         cur = conn.cursor()
-        SQL = open(__sql__).read()
+        if __sql__ is None:
+            from pymasar.db.masarsqlite import SQL
+        else:
+            sqlfile = open(__sql__)
+            SQL = sqlfile.read()
         cur.executescript(SQL)
     except sqlite3.Error, e:
         print ("Error %s:" % e.args[0])
@@ -61,6 +67,9 @@ def createSqliteDb():
     finally:
         if conn:
             conn.close()
+        if sqlfile:
+            sqlfile.close()
+        
 def usage():
     print ("""usage: createSqliteDb.py [options]
 

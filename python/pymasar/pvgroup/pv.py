@@ -10,7 +10,7 @@ from future_builtins import *
 
 import sys
 
-from utils import checkConnection
+from pymasar.utils import checkConnection
 
 def savePvs(conn, pvlist, pvdesc=None, update = False):
     """
@@ -18,31 +18,10 @@ def savePvs(conn, pvlist, pvdesc=None, update = False):
     If one pv already exists, it retrieves its primary key, and update its description if update is true. 
     
     >>> import sqlite3
-    >>> from pv import (savePvs, retrieveGroupPvs)
+    >>> from pymasar.pvgroup.pv import (savePvs, retrieveGroupPvs)
+    >>> from pymasar.db.masarsqlite import (SQL)
     >>> conn = sqlite3.connect(":memory:")
     >>> cur = conn.cursor()
-    >>> SQL = '''CREATE TABLE "pv_group" (
-    ...        "pv_group_id" INTEGER ,
-    ...        "pv_group_name" varchar(50) DEFAULT NULL,
-    ...        "pv_group_func" varchar(50) DEFAULT NULL,
-    ...        "pvg_creation_date" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    ...         "version" varchar(50) DEFAULT NULL,
-    ...        PRIMARY KEY ("pv_group_id")
-    ...        );
-    ...        CREATE TABLE "pv__pvgroup" (
-    ...        "pv__pvgroup_id" INTEGER ,
-    ...        "pv_id" int(11) NOT NULL DEFAULT '0',
-    ...        "pv_group_id" int(11) NOT NULL DEFAULT '0',
-    ...        PRIMARY KEY ("pv__pvgroup_id")
-    ...        CONSTRAINT "Ref_92" FOREIGN KEY ("pv_id") REFERENCES "pv" ("pv_id") ON DELETE NO ACTION ON UPDATE NO ACTION,
-    ...        CONSTRAINT "Ref_95" FOREIGN KEY ("pv_group_id") REFERENCES "pv_group" ("pv_group_id") ON DELETE NO ACTION ON UPDATE NO ACTION
-    ...        );
-    ...        CREATE TABLE "pv" (
-    ...        "pv_id" INTEGER ,
-    ...        "pv_name" varchar(128) NOT NULL,
-    ...        "description" text,
-    ...        PRIMARY KEY ("pv_id")
-    ...        );'''
     >>> result = cur.executescript(SQL)
     >>> pvs = ['SR:C01-BI:G02A<BPM:L1>Pos-X', 'SR:C01-BI:G02A<BPM:L2>Pos-X',
     ...        'SR:C01-BI:G04A<BPM:M1>Pos-X', 'SR:C01-BI:G04B<BPM:M1>Pos-X',
@@ -152,32 +131,11 @@ def saveGroupPvs(conn, pvgroupname, pvlist, pvdesc = None, update = False):
     
     >>> import sqlite3
     >>> from __future__ import print_function
-    >>> from pv import (savePvs, retrieveGroupPvs)
-    >>> from pvgroup import(savePvGroup, retrievePvGroups)
+    >>> from pymasar.pvgroup.pv import (savePvs, retrieveGroupPvs)
+    >>> from pymasar.pvgroup.pvgroup import(savePvGroup, retrievePvGroups)
+    >>> from pymasar.db.masarsqlite import (SQL)
     >>> conn = sqlite3.connect(":memory:")
     >>> cur = conn.cursor()
-    >>> SQL = '''CREATE TABLE "pv_group" (
-    ...        "pv_group_id" INTEGER ,
-    ...        "pv_group_name" varchar(50) DEFAULT NULL,
-    ...        "pv_group_func" varchar(50) DEFAULT NULL,
-    ...        "pvg_creation_date" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    ...         "version" varchar(50) DEFAULT NULL,
-    ...        PRIMARY KEY ("pv_group_id")
-    ...        );
-    ...        CREATE TABLE "pv__pvgroup" (
-    ...        "pv__pvgroup_id" INTEGER ,
-    ...        "pv_id" int(11) NOT NULL DEFAULT '0',
-    ...        "pv_group_id" int(11) NOT NULL DEFAULT '0',
-    ...        PRIMARY KEY ("pv__pvgroup_id")
-    ...        CONSTRAINT "Ref_92" FOREIGN KEY ("pv_id") REFERENCES "pv" ("pv_id") ON DELETE NO ACTION ON UPDATE NO ACTION,
-    ...        CONSTRAINT "Ref_95" FOREIGN KEY ("pv_group_id") REFERENCES "pv_group" ("pv_group_id") ON DELETE NO ACTION ON UPDATE NO ACTION
-    ...        );
-    ...        CREATE TABLE "pv" (
-    ...        "pv_id" INTEGER ,
-    ...        "pv_name" varchar(128) NOT NULL,
-    ...        "description" text,
-    ...        PRIMARY KEY ("pv_id")
-    ...        );'''
     >>> result = cur.executescript(SQL)
     >>> pvs = ['SR:C01-BI:G02A<BPM:L1>Pos-X', 'SR:C01-BI:G02A<BPM:L2>Pos-X',
     ...        'SR:C01-BI:G04A<BPM:M1>Pos-X', 'SR:C01-BI:G04B<BPM:M1>Pos-X',
@@ -250,34 +208,11 @@ def retrieveGroupPvs(conn, pvgroupid):
     
     >>> import sqlite3
     >>> from __future__ import print_function
-    >>> from pv import (savePvs, retrieveGroupPvs)
-    >>> from pvgroup import(savePvGroup, retrievePvGroups)
+    >>> from pymasar.pvgroup.pv import (savePvs, retrieveGroupPvs)
+    >>> from pymasar.pvgroup.pvgroup import(savePvGroup, retrievePvGroups)
+    >>> from pymasar.db.masarsqlite import (SQL)
     >>> conn = sqlite3.connect(":memory:")
     >>> cur = conn.cursor()
-    >>> SQL = '''CREATE TABLE "pv_group" (
-    ...        "pv_group_id" INTEGER ,
-    ...        "pv_group_name" varchar(50) DEFAULT NULL,
-    ...        "pv_group_func" varchar(50) DEFAULT NULL,
-    ...        "pvg_creation_date" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    ...         "version" varchar(50) DEFAULT NULL,
-    ...        PRIMARY KEY ("pv_group_id")
-    ...        );'''
-    >>> result = cur.executescript(SQL)
-    >>> SQL = '''CREATE TABLE "pv__pvgroup" (
-    ...        "pv__pvgroup_id" INTEGER ,
-    ...        "pv_id" int(11) NOT NULL DEFAULT '0',
-    ...        "pv_group_id" int(11) NOT NULL DEFAULT '0',
-    ...        PRIMARY KEY ("pv__pvgroup_id")
-    ...        CONSTRAINT "Ref_92" FOREIGN KEY ("pv_id") REFERENCES "pv" ("pv_id") ON DELETE NO ACTION ON UPDATE NO ACTION,
-    ...        CONSTRAINT "Ref_95" FOREIGN KEY ("pv_group_id") REFERENCES "pv_group" ("pv_group_id") ON DELETE NO ACTION ON UPDATE NO ACTION
-    ...        );'''
-    >>> result = cur.executescript(SQL)
-    >>> SQL = '''CREATE TABLE "pv" (
-    ...        "pv_id" INTEGER ,
-    ...        "pv_name" varchar(128) NOT NULL,
-    ...        "description" text,
-    ...        PRIMARY KEY ("pv_id")
-    ...        );'''
     >>> result = cur.executescript(SQL)
     >>> pvs = ['SR:C01-BI:G02A<BPM:L1>Pos-X', 'SR:C01-BI:G02A<BPM:L2>Pos-X',
     ...        'SR:C01-BI:G04A<BPM:M1>Pos-X', 'SR:C01-BI:G04B<BPM:M1>Pos-X',
