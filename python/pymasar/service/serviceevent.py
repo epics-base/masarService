@@ -6,9 +6,7 @@ Created on Dec 16, 2011
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from future_builtins import *
 
-import sys
 import sqlite3
 import datetime as dt
 
