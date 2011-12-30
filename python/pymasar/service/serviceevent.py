@@ -13,7 +13,7 @@ import datetime as dt
 from pymasar.utils import checkConnection
 from pymasar.service.serviceconfig import (retrieveServiceConfigs)
 
-def saveServiceEvent(conn, servicename, serviceconfigname, comment=None):
+def saveServiceEvent(conn, servicename, configname, comment=None):
     """
     save an event config, and associate this event with given service and service config.
     
@@ -36,28 +36,30 @@ def saveServiceEvent(conn, servicename, serviceconfigname, comment=None):
     3
     >>> saveServiceConfig(conn, 'masar2', 'orbit C02', 'BPM horizontal readout for storage ring')
     4
-    >>> result = retrieveServiceConfigs(conn, servicename='masar1', serviceconfigname='orbit C01')
-    >>> saveServiceEvent(conn, servicename='masar1', serviceconfigname='orbit C01', comment='a service event')
+    >>> result = retrieveServiceConfigs(conn, servicename='masar1', configname='orbit C01')
+    >>> saveServiceEvent(conn, servicename='masar1', configname='orbit C01', comment='a service event')
     1
     >>> conn.close()
     """
-    if servicename is None or serviceconfigname is None:
+    if servicename is None or configname is None:
         raise Exception('service or service config is empty. Can not associate the event with service and its config.')
     checkConnection(conn)
-    if serviceconfigname is None:
+    if configname is None:
         raise Exception("service config name is not specified for this event.")
     
-    serviceconfigid = retrieveServiceConfigs(conn, servicename=servicename, serviceconfigname=serviceconfigname)
+    serviceconfigid = retrieveServiceConfigs(conn, servicename=servicename, configname=configname)
     if len(serviceconfigid) > 0:
         serviceconfigid = serviceconfigid[0][0]
     else:
-        raise Exception('Can not find service config (%s) with service (%s)' %(serviceconfigname, servicename))
+        raise Exception('Can not find service config (%s) with service (%s)' %(configname, servicename))
     sql = '''
     insert into service_event(service_event_id, service_config_id, service_event_user_tag, service_event_UTC_time, service_event_serial_tag)
     values (?, ?, ?, datetime('now'), ?)
     '''
     try:
         cur = conn.cursor()
+        
+        # each service event is a individual entity. Do not check the existence. 
         cur.execute(sql, (None, serviceconfigid, comment, None))
     except sqlite3.Error, e:
         print ('Error %s' %e.args[0])
@@ -121,18 +123,18 @@ def retrieveServiceEvents(conn, start=None, end=None, comment=None):
     3
     >>> saveServiceConfig(conn, 'masar2', 'orbit C02', 'BPM horizontal readout for storage ring')
     4
-    >>> result = retrieveServiceConfigs(conn, servicename='masar1', serviceconfigname='orbit C01')
+    >>> result = retrieveServiceConfigs(conn, servicename='masar1', configname='orbit C01')
     >>> import datetime as dt
-    >>> saveServiceEvent(conn, servicename='masar1', serviceconfigname='orbit C01', comment='a service event1')
+    >>> saveServiceEvent(conn, servicename='masar1', configname='orbit C01', comment='a service event1')
     1
     >>> start = dt.datetime.utcnow()
     >>> import time
     >>> time.sleep(1)
-    >>> saveServiceEvent(conn, servicename='masar1', serviceconfigname='orbit C01', comment='a service event2')
+    >>> saveServiceEvent(conn, servicename='masar1', configname='orbit C01', comment='a service event2')
     2
     >>> end = dt.datetime.utcnow()
     >>> time.sleep(1)
-    >>> saveServiceEvent(conn, servicename='masar1', serviceconfigname='orbit C01', comment='a service event3')
+    >>> saveServiceEvent(conn, servicename='masar1', configname='orbit C01', comment='a service event3')
     3
     >>> results = retrieveServiceEvents(conn, comment='a service event1')
     >>> for result in results:

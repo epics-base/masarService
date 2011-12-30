@@ -12,7 +12,7 @@ import sqlite3
 from pymasar.utils import checkConnection
 from pymasar.service.serviceevent import (saveServiceEvent, retrieveServiceEvents)
 
-def saveMasar(conn, data, servicename=None, serviceconfigname=None, comment=None):
+def saveMasar(conn, data, servicename=None, configname=None, comment=None):
     """
     save a snapshot (masar event) with data.
     The data format is a tuple array like [(pv_name, value, status, severity, ioc_timestamp, ioc_timestamp_nano)]
@@ -37,14 +37,14 @@ def saveMasar(conn, data, servicename=None, serviceconfigname=None, comment=None
     3
     >>> saveServiceConfig(conn, 'masar2', 'orbit C02', 'BPM horizontal readout for storage ring')
     4
-    >>> result = retrieveServiceConfigs(conn, servicename='masar1', serviceconfigname='orbit C01')
+    >>> result = retrieveServiceConfigs(conn, servicename='masar1', configname='orbit C01')
     >>> data = [('SR:C01-BI:G02A<BPM:L1>Pos-X', '1.0e-4', 0, 0, 435686768234, 3452345098734),
     ...        ('SR:C01-BI:G02A<BPM:L2>Pos-X', '1.2e-4',  0, 0, 435686768234, 3452345098734),
     ...        ('SR:C01-BI:G04A<BPM:M1>Pos-X', '0.5e-4',  0, 0, 435686768234, 3452345098734),
     ...        ('SR:C01-BI:G04B<BPM:M1>Pos-X', '-1.0e-4', 0, 0, 435686768234, 3452345098734),
     ...        ('SR:C01-BI:G06B<BPM:H1>Pos-X', '-0.5e-4', 0, 0, 435686768234, 3452345098734),
     ...        ('SR:C01-BI:G06B<BPM:H2>Pos-X', '-0.8e-4', 0, 0, 435686768234, 3452345098734)]
-    >>> saveMasar(conn, data, servicename='masar1', serviceconfigname='orbit C01', comment='a service event')
+    >>> saveMasar(conn, data, servicename='masar1', configname='orbit C01', comment='a service event')
     (1, [1, 2, 3, 4, 5, 6])
     >>> data = [('SR:C01-BI:G02A<BPM:L1>Pos-X', '1.0e-4', 0, 0, 564562342566, 3452345098734),
     ...        ('SR:C01-BI:G02A<BPM:L2>Pos-X', '1.2e-4',  0, 0, 564562342566, 3452345098734),
@@ -52,12 +52,12 @@ def saveMasar(conn, data, servicename=None, serviceconfigname=None, comment=None
     ...        ('SR:C01-BI:G04B<BPM:M1>Pos-X', '-1.0e-4', 0, 0, 564562342566, 3452345098734),
     ...        ('SR:C01-BI:G06B<BPM:H1>Pos-X', '-0.5e-4', 0, 0, 564562342566, 3452345098734),
     ...        ('SR:C01-BI:G06B<BPM:H2>Pos-X', '-0.8e-4', 0, 0, 564562342566, 3452345098734)]
-    >>> saveMasar(conn, data, servicename='masar1', serviceconfigname='orbit C01', comment='a service event')
+    >>> saveMasar(conn, data, servicename='masar1', configname='orbit C01', comment='a service event')
     (2, [7, 8, 9, 10, 11, 12])
     >>> conn.close()
     """
     checkConnection(conn)
-    eventid = saveServiceEvent(conn, servicename, serviceconfigname, comment)
+    eventid = saveServiceEvent(conn, servicename, configname, comment)
     masarid = None
     try:
         masarid = __saveMasarData(conn, eventid, data)
@@ -91,14 +91,14 @@ def __saveMasarData(conn, eventid, datas):
     3
     >>> saveServiceConfig(conn, 'masar2', 'orbit C02', 'BPM horizontal readout for storage ring')
     4
-    >>> result = retrieveServiceConfigs(conn, servicename='masar1', serviceconfigname='orbit C01')
+    >>> result = retrieveServiceConfigs(conn, servicename='masar1', configname='orbit C01')
     >>> data = [('SR:C01-BI:G02A<BPM:L1>Pos-X', '1.0e-4', 0, 0, 435686768234, 3452345098734),
     ...        ('SR:C01-BI:G02A<BPM:L2>Pos-X', '1.2e-4',  0, 0, 435686768234, 3452345098734),
     ...        ('SR:C01-BI:G04A<BPM:M1>Pos-X', '0.5e-4',  0, 0, 435686768234, 3452345098734),
     ...        ('SR:C01-BI:G04B<BPM:M1>Pos-X', '-1.0e-4', 0, 0, 435686768234, 3452345098734),
     ...        ('SR:C01-BI:G06B<BPM:H1>Pos-X', '-0.5e-4', 0, 0, 435686768234, 3452345098734),
     ...        ('SR:C01-BI:G06B<BPM:H2>Pos-X', '-0.8e-4', 0, 0, 435686768234, 3452345098734)]
-    >>> saveMasar(conn, data, servicename='masar1', serviceconfigname='orbit C01', comment='a service event')
+    >>> saveMasar(conn, data, servicename='masar1', configname='orbit C01', comment='a service event')
     (1, [1, 2, 3, 4, 5, 6])
     >>> data = [('SR:C01-BI:G02A<BPM:L1>Pos-X', '1.0e-4', 0, 0, 564562342566, 3452345098734),
     ...        ('SR:C01-BI:G02A<BPM:L2>Pos-X', '1.2e-4',  0, 0, 564562342566, 3452345098734),
@@ -106,7 +106,7 @@ def __saveMasarData(conn, eventid, datas):
     ...        ('SR:C01-BI:G04B<BPM:M1>Pos-X', '-1.0e-4', 0, 0, 564562342566, 3452345098734),
     ...        ('SR:C01-BI:G06B<BPM:H1>Pos-X', '-0.5e-4', 0, 0, 564562342566, 3452345098734),
     ...        ('SR:C01-BI:G06B<BPM:H2>Pos-X', '-0.8e-4', 0, 0, 564562342566, 3452345098734)]
-    >>> saveMasar(conn, data, servicename='masar1', serviceconfigname='orbit C01', comment='a service event')
+    >>> saveMasar(conn, data, servicename='masar1', configname='orbit C01', comment='a service event')
     (2, [7, 8, 9, 10, 11, 12])
     >>> conn.close()
     """
@@ -161,7 +161,7 @@ def retrieveMasar(conn, start=None, end=None, comment=None):
     3
     >>> saveServiceConfig(conn, 'masar2', 'orbit C02', 'BPM horizontal readout for storage ring')
     4
-    >>> result = retrieveServiceConfigs(conn, servicename='masar1', serviceconfigname='orbit C01')
+    >>> result = retrieveServiceConfigs(conn, servicename='masar1', configname='orbit C01')
     >>> data = [('SR:C01-BI:G02A<BPM:L1>Pos-X', '1.0e-4', 0, 0, 435686768234, 3452345098734),
     ...        ('SR:C01-BI:G02A<BPM:L2>Pos-X', '1.2e-4',  0, 0, 435686768234, 3452345098734),
     ...        ('SR:C01-BI:G04A<BPM:M1>Pos-X', '0.5e-4',  0, 0, 435686768234, 3452345098734),
@@ -172,7 +172,7 @@ def retrieveMasar(conn, start=None, end=None, comment=None):
     >>> import time
     >>> start = dt.datetime.utcnow()
     >>> time.sleep(1.0) 
-    >>> saveMasar(conn, data, servicename='masar1', serviceconfigname='orbit C01', comment='a service event')
+    >>> saveMasar(conn, data, servicename='masar1', configname='orbit C01', comment='a service event')
     (1, [1, 2, 3, 4, 5, 6])
     >>> data = [('SR:C01-BI:G02A<BPM:L1>Pos-X', '1.0e-4', 0, 0, 564562342566, 3452345098734),
     ...        ('SR:C01-BI:G02A<BPM:L2>Pos-X', '1.2e-4',  0, 0, 564562342566, 3452345098734),
@@ -183,7 +183,7 @@ def retrieveMasar(conn, start=None, end=None, comment=None):
     >>> time.sleep(1.0)
     >>> end1 = dt.datetime.utcnow()
     >>> time.sleep(1.0)
-    >>> saveMasar(conn, data, servicename='masar1', serviceconfigname='orbit C01', comment='a service event')
+    >>> saveMasar(conn, data, servicename='masar1', configname='orbit C01', comment='a service event')
     (2, [7, 8, 9, 10, 11, 12])
     >>> time.sleep(1.0)
     >>> end2 = dt.datetime.utcnow()
