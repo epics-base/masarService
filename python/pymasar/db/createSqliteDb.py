@@ -60,7 +60,11 @@ def createSqliteDb():
         else:
             sqlfile = open(__sql__)
             SQL = sqlfile.read()
-        cur.executescript(SQL)
+        if SQL is None:
+            print ('SQLite script is empty. Cannot create SQLite db.')
+            sys.exit()
+        else:
+            cur.executescript(SQL)
     except sqlite3.Error, e:
         print ("Error %s:" % e.args[0])
         sys.exit(1)
