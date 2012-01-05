@@ -3,7 +3,6 @@ Created on Dec 8, 2011
 
 @author: shengb
 '''
-import sys
 
 def checkConnection(conn):
     """
@@ -15,7 +14,13 @@ def checkConnection(conn):
     """
     if conn == None:
         raise Exception('SQLite connection is empty.')
-        sys.exit()
+
+def save(conn):
+    checkConnection(conn)
+    conn.commit()
+
+__all__ = ['checkConnection', 'save']
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod()

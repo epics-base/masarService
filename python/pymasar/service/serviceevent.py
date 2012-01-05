@@ -96,7 +96,7 @@ def saveServiceEvent(conn, servicename, configname, comment=None):
 #    serviceEventId = cursor.lastrowid
 #    return (serviceEventId,nextSerialTag)
 
-def retrieveServiceEvents(conn, start=None, end=None, comment=None):
+def retrieveServiceEvents(conn, configid=None,start=None, end=None, comment=None):
     """
     retrieve an service event with given user tag within given time frame.
     Both start and end time should be in UTC time format.
@@ -169,11 +169,17 @@ def retrieveServiceEvents(conn, start=None, end=None, comment=None):
         if start > end:
             raise Exception('Time range error')
         
-        if comment is None:
+        if comment is None and configid is None:
             cur.execute(sql, (start, end,))
+        elif configid is None:
+            sql += ' and service_event_user_tag like ? '
+            cur.execute(sql, (start, end, comment, ))
+        elif comment is None:
+            sql += ' and service_config_id = ? '
+            cur.execute(sql, (start, end, configid, ))
         else:
-            sql += ' and service_event_user_tag like ?'
-            cur.execute(sql, (start, end, comment,))
+            sql += ' and service_event_user_tag like ? and service_config_id = ? '
+            cur.execute(sql, (start, end, comment, configid, ))
         results = cur.fetchall()
     except sqlite3.Error, e:
         print ("Error %s" %e.args[0])

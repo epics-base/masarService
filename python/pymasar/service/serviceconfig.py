@@ -106,6 +106,8 @@ def retrieveServiceConfigs(conn, servicename=None, configname=None, configversio
     Retrieve service config attributes like name, description, ... with given service name.    
     If service config name is none, retrieve all configs belong to a service with a given service name.
     If service name is none, retrieve all configs in service_config table.
+    It returns tuple list with [(service_config_id, service_config_name, service_config_desc, service_config_create_date, 
+    service_config_version, and service_name)].
     
     >>> import sqlite3
     >>> from pymasar.service.service import (saveService, retrieveServices)
@@ -189,11 +191,11 @@ def retrieveServiceConfigs(conn, servicename=None, configname=None, configversio
                 cur.execute(sql)
         elif servicename is None:
             if join:
-                sql = sql + joinsql + ' where service_config_name = ? and '
+                sql = sql + joinsql + ' where service_config_name like ? and '
                 sql = sql + ' service_config_prop_name = "system" and service_config_prop_value like ? ' 
                 cur.execute(sql, (configname, system, ))
             else:
-                sql = sql + ' where service_config_name = ?'
+                sql = sql + ' where service_config_name like ?'
                 cur.execute(sql, (configname,))
         elif configname is None:
             if join:
@@ -206,12 +208,12 @@ def retrieveServiceConfigs(conn, servicename=None, configname=None, configversio
         else:
             if join:
                 sql = sql + joinsql + ' left join service using (service_id) '
-                sql = sql + ' where service_config_name = ? and service.service_name = ? and '
+                sql = sql + ' where service_config_name like ? and service.service_name = ? and '
                 sql += ' (service_config_prop_name = "system" and service_config_prop_value like ?) ' 
 #                print (sql)
                 cur.execute(sql, (configname, servicename, system,))
             else:
-                sql = sql + ', service where service_config.service_id = service.service_id and service_config_name = ? and service.service_name = ?'
+                sql = sql + ', service where service_config.service_id = service.service_id and service_config_name like ? and service.service_name = ?'
                 cur.execute(sql, (configname, servicename, ))
         results = cur.fetchall()
         for i in range(len(results)):

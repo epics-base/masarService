@@ -125,7 +125,7 @@ def __saveMasarData(conn, eventid, datas):
         raise 
     return masarid
     
-def retrieveMasar(conn, start=None, end=None, comment=None):
+def retrieveMasar(conn, eventid=None,start=None, end=None, comment=None):
     """
     retrieve masar service data with given time frame and comment.
     If end time is not given, use current time. If start time is not given, 
@@ -133,12 +133,13 @@ def retrieveMasar(conn, start=None, end=None, comment=None):
     Both start time and end time should be in UTC time format.
     It returns data as a tuple array like below:
     service_event_user_tag, service_event_UTC_time, service_config_name, service_name
-    [('user tag', 'event UTC time', 'service config name', 'service name'),
+    [[('user tag', 'event UTC time', 'service config name', 'service name'),
     ('pv name label', 'value label', 'status label', 'severity label', 'ioc time stamp label', 'ioc time stamp nano label'),
     (pv_name data, value data, status data, severity data, ioc_timestamp data, ioc_timestamp_nano data)
     (pv_name data, value data, status data, severity data, ioc_timestamp data, ioc_timestamp_nano data)
     (pv_name data, value data, status data, severity data, ioc_timestamp data, ioc_timestamp_nano data)
     (pv_name data, value data, status data, severity data, ioc_timestamp data, ioc_timestamp_nano data)
+    ...]
     ...
     ]
     
@@ -226,24 +227,38 @@ def retrieveMasar(conn, start=None, end=None, comment=None):
     >>> conn.close()
     """
     checkConnection(conn)
-    results = retrieveServiceEvents(conn, start=start, end=end, comment=comment)
     dataset = []
-    for result in results:
-        data= __retrieveMasarData(conn, result[0])
-        sql = '''
-        select service_event_user_tag, service_event_UTC_time, service_config_name, service_name
-        from service_event
-        left join service_config using (service_config_id)
-        left join service using (service_id)
-        where service_event_id = ? and service_config_id = ?
-        '''
-        data = [('pv_name', 'value', 'status', 'severity', 'ioc_timestamp', 'ioc_timestamp_nano')] + data[:]
 
+    datahead = [('pv_name', 'value', 'status', 'severity', 'ioc_timestamp', 'ioc_timestamp_nano')]
+    sql = '''
+    select service_event_user_tag, service_event_UTC_time, service_config_name, service_name
+    from service_event
+    left join service_config using (service_config_id)
+    left join service using (service_id)
+    where service_event_id = ?
+    '''
+
+    if eventid:
+        data= __retrieveMasarData(conn, eventid)
+        data = datahead + data[:]
+        
         cur = conn.cursor()
-        cur.execute(sql, (result[0], result[1],))
+        cur.execute(sql, (eventid,))
         result =cur.fetchall()
         data = result[:] + data[:]
         dataset.append(data)
+    else:
+        results = retrieveServiceEvents(conn, start=start, end=end, comment=comment)
+        sql += ' and service_config_id = ?'
+        for result in results:
+            data= __retrieveMasarData(conn, result[0])
+            data = datahead + data[:]
+    
+            cur = conn.cursor()
+            cur.execute(sql, (result[0], result[1],))
+            result =cur.fetchall()
+            data = result[:] + data[:]
+            dataset.append(data)
     return dataset
 
 def __retrieveMasarData(conn, eventid):
