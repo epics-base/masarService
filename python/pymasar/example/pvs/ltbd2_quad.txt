@@ -1,0 +1,12 @@
+LTB:MG{Quad:1}Fld-I
+LTB:MG{Quad:2}Fld-I
+LTB:MG{Quad:3}Fld-I
+LTB:MG{Quad:4}Fld-I
+LTB:MG{Quad:5}Fld-I
+LTB:MG{Quad:6}Fld-I
+LTB:MG{Quad:1}Fld-SP
+LTB:MG{Quad:2}Fld-SP
+LTB:MG{Quad:3}Fld-SP
+LTB:MG{Quad:4}Fld-SP
+LTB:MG{Quad:5}Fld-SP
+LTB:MG{Quad:6}Fld-SP
