@@ -5,7 +5,9 @@ Created on Dec 15, 2011
 '''
 # -*- coding: utf-8 -*-
 
-from pvgroup import (pv, pvgroup)
-from service import (serviceconfig, service)
+from pymasar import (utils)
+from pymasar.masardata import (masardata)
+from pymasar.pvgroup import (pv, pvgroup)
+from pymasar.service import (service, serviceconfig, serviceevent, serviceconfigprop)
 
-__doctests__ = [pv, pvgroup, service, serviceconfig]
+__doctests__ = [utils, pv, pvgroup, service, serviceconfig, serviceevent, serviceconfigprop, masardata]

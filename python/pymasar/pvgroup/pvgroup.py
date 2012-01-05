@@ -3,7 +3,7 @@ Created on Dec 7, 2011
 
 @author: shengb
 '''
-from utils import checkConnection
+from pymasar.utils import checkConnection
 
 def savePvGroup(conn, name, **kws):
     """
@@ -15,17 +15,10 @@ def savePvGroup(conn, name, **kws):
     [func='function description for this pv group'] [, update=False] [, version = '0.0.1']
     
     >>> import sqlite3
-    >>> from pvgroup import (savePvGroup, retrievePvGroups)
+    >>> from pymasar.pvgroup.pvgroup import (savePvGroup, retrievePvGroups)
+    >>> from pymasar.db.masarsqlite import (SQL)
     >>> conn = sqlite3.connect(':memory:')
     >>> cur = conn.cursor()
-    >>> SQL = '''CREATE TABLE "pv_group" (
-    ...        "pv_group_id" INTEGER ,
-    ...        "pv_group_name" varchar(50) DEFAULT NULL,
-    ...        "pv_group_func" varchar(50) DEFAULT NULL,
-    ...        "pvg_creation_date" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    ...         "version" varchar(50) DEFAULT NULL,
-    ...        PRIMARY KEY ("pv_group_id")
-    ...        );'''
     >>> result = cur.executescript(SQL)
     >>> name = 'masar'
     >>> desc = 'this is my first pv group for masar service'
@@ -90,17 +83,10 @@ def retrievePvGroups(conn, pvgroupname=None):
     It returns a tuple with format (pv_group_id, pv_group_name, pv_group_func, pvg_creation_date, version)
      
     >>> import sqlite3
-    >>> from pvgroup import (savePvGroup, retrievePvGroups)
+    >>> from pymasar.pvgroup.pvgroup import (savePvGroup, retrievePvGroups)
+    >>> from pymasar.db.masarsqlite import (SQL)
     >>> conn = sqlite3.connect(':memory:')
     >>> cur = conn.cursor()
-    >>> SQL = '''CREATE TABLE "pv_group" (
-    ...        "pv_group_id" INTEGER ,
-    ...        "pv_group_name" varchar(50) DEFAULT NULL,
-    ...        "pv_group_func" varchar(50) DEFAULT NULL,
-    ...        "pvg_creation_date" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    ...         "version" varchar(50) DEFAULT NULL,
-    ...        PRIMARY KEY ("pv_group_id")
-    ...        );'''
     >>> result = cur.executescript(SQL)
     >>> name = 'masar'
     >>> desc = 'this is my first pv group for masar service'

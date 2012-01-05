@@ -6,39 +6,24 @@ Created on Dec 15, 2011
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from future_builtins import *
 
 import sys
 import sqlite3
 
-from utils import checkConnection
-from service import (retrieveServices, saveService)
-from pvgroup.pvgroup import (retrievePvGroups)
+from pymasar.utils import checkConnection
+from pymasar.service.service import (retrieveServices)
+from pymasar.pvgroup.pvgroup import (retrievePvGroups)
 
-def saveServiceConfig(conn, servicename, serviceconfigname, serviceconfigdesc=None, serviceconfigversion=None):
+def saveServiceConfig(conn, servicename, configname, configdesc=None, configversion=None, system=None):
     """
     Link config attributes like name, description, ... with a given service name.
     The service config name for each different service has to be unique.
     
     >>> import sqlite3
-    >>> from service import (saveService, retrieveServices)
+    >>> from pymasar.service.service import (saveService, retrieveServices)
+    >>> from pymasar.db.masarsqlite import (SQL)
     >>> conn = sqlite3.connect(":memory:")
     >>> cur = conn.cursor()
-    >>> SQL = '''CREATE TABLE "service" (
-    ...        "service_id" INTEGER, 
-    ...        "service_name" varchar(50) DEFAULT NULL, 
-    ...        "service_desc" varchar(255) DEFAULT NULL, 
-    ...        PRIMARY KEY ("service_id"));
-    ...        CREATE TABLE "service_config" (
-    ...        "service_config_id" INTEGER ,
-    ...        "service_id" int(11) NOT NULL DEFAULT '0',
-    ...        "service_config_name" varchar(50) DEFAULT NULL,
-    ...        "service_config_desc" varchar(255) DEFAULT NULL,
-    ...        "service_config_version" int(11) DEFAULT NULL,
-    ...        "service_config_create_date" timestamp NOT NULL ,
-    ...        PRIMARY KEY ("service_config_id")
-    ...        CONSTRAINT "Ref_197" FOREIGN KEY ("service_id") REFERENCES "service" ("service_id") ON DELETE NO ACTION ON UPDATE NO ACTION
-    ...        );'''
     >>> result = cur.executescript(SQL)
     >>> saveService(conn, 'masar1', desc='non-empty description')
     1
@@ -46,13 +31,14 @@ def saveServiceConfig(conn, servicename, serviceconfigname, serviceconfigdesc=No
     2
     >>> saveServiceConfig(conn, 'masar1', 'orbit C01-C03', 'BPM horizontal readout for storage ring')
     1
-    >>> saveServiceConfig(conn, 'masar1', 'orbit C01-C03', 'BPM horizontal readout for storage ring')
-    1
+    >>> #saveServiceConfig(conn, 'masar1', 'orbit C01-C03', 'BPM horizontal readout for storage ring')
     >>> saveServiceConfig(conn, 'masar2', 'orbit C01-C03', 'BPM horizontal readout for storage ring')
     2
+    >>> saveServiceConfig(conn, 'masar2', 'RF', 'Storage ring RF system snapshot', system='SR')
+    3
     >>> conn.close()
     """
-    if serviceconfigname is None:
+    if configname is None:
         raise Exception('Service config name is not given')
         sys.exit()
     
@@ -69,23 +55,25 @@ def saveServiceConfig(conn, servicename, serviceconfigname, serviceconfigdesc=No
     try:
         cur = conn.cursor()
         
-        cur.execute('select service_config_id from service_config where service_config_name = ? and service_id = ?', (serviceconfigname, serviceid,))
+        cur.execute('select service_config_id from service_config where service_config_name = ? and service_id = ?', (configname, serviceid,))
         result = cur.fetchone()
         if result is None:            
             sql = 'insert into service_config (service_config_id, service_id, service_config_name, service_config_create_date '
-            if serviceconfigdesc is None and serviceconfigversion is None:
+            if configdesc is None and configversion is None:
                 sql = sql + ') values(?,?,?,datetime("now"))'
-                cur.execute(sql, (None,serviceid,serviceconfigname,))
-            elif serviceconfigversion is None:
+                cur.execute(sql, (None,serviceid,configname,))
+            elif configversion is None:
                 sql = sql + ' , service_config_desc ) values(?,?,?,datetime("now"),?)'
-                cur.execute(sql, (None,serviceid,serviceconfigname,serviceconfigdesc,))
+                cur.execute(sql, (None,serviceid,configname,configdesc,))
             else:
                 sql = sql + ' , service_config_desc, service_config_version ) values(?,?,?,datetime("now"),?, ?)'
-                cur.execute(sql, (None,serviceid,serviceconfigname,serviceconfigdesc,serviceconfigversion,))
+                cur.execute(sql, (None,serviceid,configname,configdesc,configversion,))
             serviceconfigid = cur.lastrowid
+            __saveConfigProp(cur, serviceconfigid, system)
         else:
             # @todo:  identify service config with given name exist already?
             serviceconfigid = result[0]
+            raise Exception('service config exists already.')
 
 #        cur.execute('select service_config_id from service_config where service_id = ?',(serviceid,))
 #        print (cur.fetchall())
@@ -96,31 +84,34 @@ def saveServiceConfig(conn, servicename, serviceconfigname, serviceconfigdesc=No
     
     return serviceconfigid
 
-def retrieveServiceConfigs(conn, serviceconfigname=None, servicename=None, serviceconfigversion=None):
+def __saveConfigProp (cur, serviceconfigid, system):
+    if system is not None:
+        sql = '''
+        insert into service_config_prop (service_config_prop_id, service_config_id, service_config_prop_name, service_config_prop_value)
+        values (?, ?, 'system', ?)
+        '''
+        try:
+            # check this entity exists or not.
+            cur.execute('select service_config_prop_id from service_config_prop where service_config_id = ? and service_config_prop_name = ? and service_config_prop_value = ?',
+                        (serviceconfigid, 'system', system, ))
+            result = cur.fetchone()
+            if result is None:
+                cur.execute(sql, (None, serviceconfigid, system,))
+        except sqlite3.Error, e:
+            print ('Error %s' %e.args[0])
+            raise
+
+def retrieveServiceConfigs(conn, servicename=None, configname=None, configversion=None, system=None):
     """
     Retrieve service config attributes like name, description, ... with given service name.    
     If service config name is none, retrieve all configs belong to a service with a given service name.
     If service name is none, retrieve all configs in service_config table.
     
     >>> import sqlite3
-    >>> from service import (saveService, retrieveServices)
+    >>> from pymasar.service.service import (saveService, retrieveServices)
+    >>> from pymasar.db.masarsqlite import (SQL)
     >>> conn = sqlite3.connect(":memory:")
     >>> cur = conn.cursor()
-    >>> SQL = '''CREATE TABLE "service" (
-    ...        "service_id" INTEGER, 
-    ...        "service_name" varchar(50) DEFAULT NULL, 
-    ...        "service_desc" varchar(255) DEFAULT NULL, 
-    ...        PRIMARY KEY ("service_id"));
-    ...        CREATE TABLE "service_config" (
-    ...        "service_config_id" INTEGER ,
-    ...        "service_id" int(11) NOT NULL DEFAULT '0',
-    ...        "service_config_name" varchar(50) DEFAULT NULL,
-    ...        "service_config_desc" varchar(255) DEFAULT NULL,
-    ...        "service_config_version" int(11) DEFAULT NULL,
-    ...        "service_config_create_date" timestamp NOT NULL ,
-    ...        PRIMARY KEY ("service_config_id")
-    ...        CONSTRAINT "Ref_197" FOREIGN KEY ("service_id") REFERENCES "service" ("service_id") ON DELETE NO ACTION ON UPDATE NO ACTION
-    ...        );'''
     >>> result = cur.executescript(SQL)
     >>> saveService(conn, 'masar1', desc='non-empty description')
     1
@@ -134,19 +125,8 @@ def retrieveServiceConfigs(conn, serviceconfigname=None, servicename=None, servi
     3
     >>> saveServiceConfig(conn, 'masar2', 'orbit C02', 'BPM horizontal readout for storage ring')
     4
-    >>> result = retrieveServiceConfigs(conn, servicename='masar1', serviceconfigname='orbit C01')
-    >>> print (result[0][0], result[0][1])
-    1 orbit C01
-    >>> result = retrieveServiceConfigs(conn, servicename='masar1')
-    >>> print (result[0][0], result[0][1])
-    1 orbit C01
-    >>> print (result[1][0], result[1][1])
-    2 orbit C02
-    >>> result = retrieveServiceConfigs(conn, serviceconfigname='orbit C01')
-    >>> print (result[0][0], result[0][1], result[0][5])
-    1 orbit C01 masar1
-    >>> print (result[1][0], result[1][1], result[1][5])
-    3 orbit C01 masar2
+    >>> saveServiceConfig(conn, 'masar2', 'RF snapshot', 'Storage ring RF system snapshot', system='SR')
+    5
     >>> result = retrieveServiceConfigs(conn)
     >>> print (result[0][0], result[0][1], result[0][5])
     1 orbit C01 masar1
@@ -156,28 +136,83 @@ def retrieveServiceConfigs(conn, serviceconfigname=None, servicename=None, servi
     3 orbit C01 masar2
     >>> print (result[3][0], result[3][1], result[3][5])
     4 orbit C02 masar2
+    >>> result = retrieveServiceConfigs(conn, servicename='masar1')
+    >>> print (result[0][0], result[0][1])
+    1 orbit C01
+    >>> print (result[1][0], result[1][1])
+    2 orbit C02
+    >>> result = retrieveServiceConfigs(conn, configname='orbit C01')
+    >>> print (result[0][0], result[0][1], result[0][5])
+    1 orbit C01 masar1
+    >>> print (result[1][0], result[1][1], result[1][5])
+    3 orbit C01 masar2
+    >>> result = retrieveServiceConfigs(conn, servicename='masar1', configname='orbit C01')
+    >>> print (result[0][0], result[0][1])
+    1 orbit C01
+    >>> result = retrieveServiceConfigs(conn, system='SR1')
+    >>> result = retrieveServiceConfigs(conn, system='SR')
+    >>> print (result[0][0], ',', result[0][1], ',', result[0][2], ',', result[0][5])
+    5 , RF snapshot , Storage ring RF system snapshot , masar2
+    >>> result = retrieveServiceConfigs(conn, configname='RF snapshot', system='SR')
+    >>> print (result[0][0], ',', result[0][1], ',', result[0][2], ',', result[0][5])
+    5 , RF snapshot , Storage ring RF system snapshot , masar2
+    >>> result = retrieveServiceConfigs(conn, servicename='masar2', system='SR')
+    >>> print (result[0][0], ',', result[0][1], ',', result[0][2], ',', result[0][5])
+    5 , RF snapshot , Storage ring RF system snapshot , masar2
+    >>> result = retrieveServiceConfigs(conn, servicename='masar2', configname='RF snapshot', system='SR')
+    >>> print (result[0][0], ',', result[0][1], ',', result[0][2], ',', result[0][5])
+    5 , RF snapshot , Storage ring RF system snapshot , masar2
+    >>> result = retrieveServiceConfigs(conn, system='SR1')
+    >>> print (result)
+    []
     >>> conn.close()
     """
 
     checkConnection(conn)
     
     sql = '''
-    select service_config_id, service_config_name, service_config_desc, service_config_create_date, service_config_version, service_config.service_id
-    from service_config'''
+    select service_config.service_config_id, service_config_name, service_config_desc, service_config_create_date, service_config_version, service_config.service_id
+    from service_config '''
     results = None
     try:
         cur = conn.cursor()
-        if serviceconfigname is None and servicename is None:
-            cur.execute(sql)
+        join = False
+        if system is not None:
+            join = True
+            joinsql = ' left join service_config_prop using (service_config_id) '
+        
+        if configname is None and servicename is None:
+            if join:
+                sql = sql + joinsql + ' where (service_config_prop_name = "system" and service_config_prop_value like ?) '
+                cur.execute(sql, (system,))
+            else:
+                cur.execute(sql)
         elif servicename is None:
-            sql = sql + ' where service_config_name = ?'
-            cur.execute(sql, (serviceconfigname,))
-        elif serviceconfigname is None:
-            sql = sql + ', service where service_config.service_id = service.service_id and service.service_name = ?'
-            cur.execute(sql, (servicename,))
+            if join:
+                sql = sql + joinsql + ' where service_config_name = ? and '
+                sql = sql + ' service_config_prop_name = "system" and service_config_prop_value like ? ' 
+                cur.execute(sql, (configname, system, ))
+            else:
+                sql = sql + ' where service_config_name = ?'
+                cur.execute(sql, (configname,))
+        elif configname is None:
+            if join:
+                sql = sql + joinsql  + ' left join service using (service_id) where service.service_name = ? and '
+                sql += ' service_config_prop_name = "system" and service_config_prop_value like ? '
+                cur.execute(sql, (servicename, system))
+            else:
+                sql = sql + ' , service where service_config.service_id = service.service_id and service.service_name = ?'
+                cur.execute(sql, (servicename,))
         else:
-            sql = sql + ', service where service_config.service_id = service.service_id and service.service_name = ? and service_config_name = ?'
-            cur.execute(sql, (servicename, serviceconfigname,))
+            if join:
+                sql = sql + joinsql + ' left join service using (service_id) '
+                sql = sql + ' where service_config_name = ? and service.service_name = ? and '
+                sql += ' (service_config_prop_name = "system" and service_config_prop_value like ?) ' 
+#                print (sql)
+                cur.execute(sql, (configname, servicename, system,))
+            else:
+                sql = sql + ', service where service_config.service_id = service.service_id and service_config_name = ? and service.service_name = ?'
+                cur.execute(sql, (configname, servicename, ))
         results = cur.fetchall()
         for i in range(len(results)):
             cur.execute('select service_name from service where service_id = ?',(results[i][5],))
@@ -186,20 +221,20 @@ def retrieveServiceConfigs(conn, serviceconfigname=None, servicename=None, servi
     except sqlite3.Error, e:
         print ("Error %s:" % e.args[0])
         raise
-        sys.exit(1)
+#        sys.exit()
     return results
 
-def saveServicePvGroup(conn, serviceconfigname, pvgroups):
+def saveServicePvGroup(conn, configname, pvgroups):
     """
     Assign pv groups to to a service config.
     
     >>> import sqlite3
     >>> conn = sqlite3.connect(':memory:')
-    >>> from service import (saveService, retrieveServices)
-    >>> from serviceconfig import(saveServicePvGroup, retrieveServicePvGroups)
-    >>> from pvgroup.pvgroup import (savePvGroup, retrievePvGroups)
+    >>> from pymasar.service.service import (saveService, retrieveServices)
+    >>> from pymasar.service.serviceconfig import(saveServicePvGroup, retrieveServicePvGroups)
+    >>> from pymasar.pvgroup.pvgroup import (savePvGroup, retrievePvGroups)
+    >>> from pymasar.db.masarsqlite import (SQL)
     >>> cur = conn.cursor()
-    >>> SQL = open('../db/masar-sqlite.sql').read()
     >>> result = cur.executescript(SQL)
     >>> serviceName1 = 'masar'
     >>> serviceDesc1 = 'masar service description example'
@@ -225,7 +260,7 @@ def saveServicePvGroup(conn, serviceconfigname, pvgroups):
     3
     >>> saveServiceConfig(conn, serviceName2, modelconf2, modeldesc2)
     4
-    >>> result = retrieveServiceConfigs(conn, servicename='masar', serviceconfigname='orbit C01')
+    >>> result = retrieveServiceConfigs(conn, servicename='masar', configname='orbit C01')
     >>> pvgname1 = 'masar1group'
     >>> pvgdesc1 = 'this is my first pv group for masar service'
     >>> savePvGroup(conn, pvgname1, func=pvgdesc1)
@@ -251,12 +286,12 @@ def saveServicePvGroup(conn, serviceconfigname, pvgroups):
     [1, 2]
     >>> conn.close()
     """
-    if serviceconfigname is None or len(pvgroups) == 0:
+    if configname is None or len(pvgroups) == 0:
         raise Exception('service config name or service name is empty.')
     checkConnection(conn)
     
     # get service config id
-    serviceconfigid = retrieveServiceConfigs(conn, serviceconfigname)[0][0]
+    serviceconfigid = retrieveServiceConfigs(conn, configname=configname)[0][0]
     pvg_serviceconfig_ids = []
     pvg_ids = []
     for pvgroup in pvgroups:
@@ -278,24 +313,25 @@ def saveServicePvGroup(conn, serviceconfigname, pvgroups):
                 cur.execute(sql, (None, pvg_id, serviceconfigid))
                 pvg_serviceconfig_ids.append(cur.lastrowid)
         else:
+            #pvg_serviceconfig_ids = pvg_serviceconfig_ids[0]
             raise Exception('Service config has associated pv groups already.')
     except sqlite3.Error, e:
         print ('Error %s', e.arg[0])
         raise
     return pvg_serviceconfig_ids
 
-def retrieveServicePvGroups(conn, serviceconfigname, servicename=None):
+def retrieveServicePvGroups(conn, configname, servicename=None):
     """
     Retrieve pv group names belonging to a given service config name.
     Return a tuple array with format [(pv_group_id, pv_group_name, service_config_name, service_name)].
     
     >>> import sqlite3
     >>> conn = sqlite3.connect(':memory:')
-    >>> from service import (saveService, retrieveServices)
-    >>> from serviceconfig import(saveServicePvGroup, retrieveServicePvGroups)
-    >>> from pvgroup.pvgroup import (savePvGroup, retrievePvGroups)
+    >>> from pymasar.service.service import (saveService, retrieveServices)
+    >>> from pymasar.service.serviceconfig import (saveServicePvGroup, retrieveServicePvGroups)
+    >>> from pymasar.pvgroup.pvgroup import (savePvGroup, retrievePvGroups)
+    >>> from pymasar.db.masarsqlite import SQL
     >>> cur = conn.cursor()
-    >>> SQL = open('../db/masar-sqlite.sql').read()
     >>> result = cur.executescript(SQL)
     >>> serviceName1 = 'masar'
     >>> serviceDesc1 = 'masar service description example'
@@ -321,7 +357,7 @@ def retrieveServicePvGroups(conn, serviceconfigname, servicename=None):
     3
     >>> saveServiceConfig(conn, serviceName2, modelconf2, modeldesc2)
     4
-    >>> result = retrieveServiceConfigs(conn, servicename='masar', serviceconfigname='orbit C01')
+    >>> result = retrieveServiceConfigs(conn, servicename='masar', configname='orbit C01')
     >>> pvgname1 = 'masar1group'
     >>> pvgdesc1 = 'this is my first pv group for masar service'
     >>> savePvGroup(conn, pvgname1, func=pvgdesc1)
@@ -359,7 +395,7 @@ def retrieveServicePvGroups(conn, serviceconfigname, servicename=None):
     [(1, u'masar1group', u'model conf 1', u'model'), (2, u'masar2group', u'model conf 1', u'model')]
     >>> conn.close()
     """
-    if serviceconfigname is None:
+    if configname is None:
         raise Exception('service config name is not specified')
         sys.exit()
     checkConnection(conn)
@@ -375,14 +411,14 @@ def retrieveServicePvGroups(conn, serviceconfigname, servicename=None):
     try:
         cur = conn.cursor()
         if servicename is None:
-            cur.execute(sql, (serviceconfigname, ))
+            cur.execute(sql, (configname, ))
         else:
             services = retrieveServices(conn, servicename)
             if len(services) == 0:
                 raise Exception('Given service (%s) does not exist.' %servicename)
             else:
                 sql = sql + ' and service_config.service_id = ?'
-                cur.execute(sql, (serviceconfigname, services[0][0]))
+                cur.execute(sql, (configname, services[0][0]))
         results = cur.fetchall()
     except sqlite3.Error, e:
         print ("Error %s:" % e.args[0])
@@ -413,18 +449,18 @@ def retrieveServicePvGroups(conn, serviceconfigname, servicename=None):
 #    d = {'service':service,'serviceConfigName':serviceConfigName, 'servicePvGroupNames':servicePvGroupNames,}
 #    return d
 #
-def retrieveServiceConfigPVs(conn, serviceconfigname, servicename=None):
+def retrieveServiceConfigPVs(conn, configname, servicename=None):
     """
     Retrieve pv list associated with given service config name.
     
     >>> import sqlite3
     >>> conn = sqlite3.connect(':memory:')
-    >>> from service import (saveService, retrieveServices)
-    >>> from serviceconfig import(saveServicePvGroup, retrieveServicePvGroups)
-    >>> from pvgroup.pvgroup import (savePvGroup, retrievePvGroups)
-    >>> from pvgroup.pv import (saveGroupPvs, retrieveGroupPvs)
+    >>> from pymasar.service.service import (saveService, retrieveServices)
+    >>> from pymasar.service.serviceconfig import(saveServicePvGroup, retrieveServicePvGroups)
+    >>> from pymasar.pvgroup.pvgroup import (savePvGroup, retrievePvGroups)
+    >>> from pymasar.pvgroup.pv import (saveGroupPvs, retrieveGroupPvs)
+    >>> from pymasar.db.masarsqlite import (SQL)
     >>> cur = conn.cursor()
-    >>> SQL = open('../db/masar-sqlite.sql').read()
     >>> result = cur.executescript(SQL)
     >>> c01pvs = ['SR:C01-BI:G02A<BPM:L1>Pos-X', 'SR:C01-BI:G02A<BPM:L2>Pos-X',
     ...        'SR:C01-BI:G04A<BPM:M1>Pos-X', 'SR:C01-BI:G04B<BPM:M1>Pos-X',
@@ -489,15 +525,15 @@ def retrieveServiceConfigPVs(conn, serviceconfigname, servicename=None):
     >>> confdesc2 = 'masar2 desc'
     >>> confname3 = 'masar3'
     >>> confdesc3 = 'masar3 desc'
-    >>> saveServiceConfig(conn, sername1, confname1, serviceconfigdesc=confdesc1)
+    >>> saveServiceConfig(conn, sername1, confname1, configdesc=confdesc1)
     1
-    >>> saveServiceConfig(conn, sername1, confname2, serviceconfigdesc=confdesc2)
+    >>> saveServiceConfig(conn, sername1, confname2, configdesc=confdesc2)
     2
-    >>> saveServiceConfig(conn, sername2, confname2, serviceconfigdesc=confdesc2)
+    >>> saveServiceConfig(conn, sername2, confname2, configdesc=confdesc2)
     3
-    >>> saveServiceConfig(conn, sername2, confname3, serviceconfigdesc=confdesc3)
+    >>> saveServiceConfig(conn, sername2, confname3, configdesc=confdesc3)
     4
-    >>> saveServiceConfig(conn, sername3, confname3, serviceconfigdesc=confdesc3)
+    >>> saveServiceConfig(conn, sername3, confname3, configdesc=confdesc3)
     5
     >>> saveServicePvGroup(conn, confname1, [pvgname1, pvgname2])
     [1, 2]
@@ -516,7 +552,7 @@ def retrieveServiceConfigPVs(conn, serviceconfigname, servicename=None):
     >>> retrieveServiceConfigPVs(conn, confname3)
     [u'SR:C01-BI:G06B<BPM:H1>Pos-X', u'SR:C01-BI:G06B<BPM:H2>Pos-X', u'SR:C02-BI:G02A<BPM:H1>Pos-X', u'SR:C02-BI:G02A<BPM:H2>Pos-X', u'SR:C03-BI:G02A<BPM:L1>Pos-X', u'SR:C03-BI:G02A<BPM:L2>Pos-X', u'SR:C03-BI:G04A<BPM:M1>Pos-X', u'SR:C03-BI:G04B<BPM:M1>Pos-X', u'SR:C03-BI:G06B<BPM:H1>Pos-X', u'SR:C03-BI:G06B<BPM:H2>Pos-X']
     """
-    if serviceconfigname is None:
+    if configname is None:
         raise Exception('service config name is not specified')
         sys.exit()
 
@@ -532,14 +568,14 @@ def retrieveServiceConfigPVs(conn, serviceconfigname, servicename=None):
     try:
         cur = conn.cursor()
         if servicename is None:
-            cur.execute(sql, (serviceconfigname, ))
+            cur.execute(sql, (configname, ))
         else:
             services = retrieveServices(conn, servicename)
             if len(services) == 0:
                 raise Exception('Given service (%s) does not exist.' %servicename)
             else:
                 sql = sql + ' and service_config.service_id = ?'
-                cur.execute(sql, (serviceconfigname, services[0][0]))
+                cur.execute(sql, (configname, services[0][0]))
         results = cur.fetchall()
         for result in results:
             pvlist[result[1]] = result[0]

@@ -6,12 +6,11 @@ Created on Dec 9, 2011
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from future_builtins import *
 
 import sys
 import sqlite3
 
-from utils import checkConnection
+from pymasar.utils import checkConnection
 
 def retrieveServices(conn, servicename=None):
     """
@@ -19,14 +18,10 @@ def retrieveServices(conn, servicename=None):
     for example:
     
     >>> import sqlite3
-    >>> from service import (saveService, retrieveServices)
+    >>> from pymasar.service.service import (saveService, retrieveServices)
+    >>> from pymasar.db.masarsqlite import (SQL)
     >>> conn = sqlite3.connect(':memory:')
     >>> cur = conn.cursor()
-    >>> SQL = '''CREATE TABLE "service" (
-    ...        "service_id" INTEGER, 
-    ...        "service_name" varchar(50) DEFAULT NULL, 
-    ...        "service_desc" varchar(255) DEFAULT NULL, 
-    ...        PRIMARY KEY ("service_id"));'''
     >>> result = cur.executescript(SQL)
     >>> saveService(conn, 'masar1', desc='non-empty description')
     1
@@ -68,10 +63,10 @@ def saveService(conn, name, desc=''):
     for example:
     
     >>> import sqlite3
-    >>> from service import (saveService, retrieveServices)
+    >>> from pymasar.service.service import (saveService, retrieveServices)
+    >>> from pymasar.db.masarsqlite import (SQL)
     >>> conn = sqlite3.connect(':memory:')
     >>> cur = conn.cursor()
-    >>> SQL = 'CREATE TABLE "service" ("service_id" INTEGER, "service_name" varchar(50) DEFAULT NULL, "service_desc" varchar(255) DEFAULT NULL, PRIMARY KEY ("service_id"));'
     >>> result = cur.executescript(SQL)
     >>> saveService(conn, 'masar', desc='an example')
     1
@@ -84,8 +79,16 @@ def saveService(conn, name, desc=''):
     serviceId = None
     try:
         cursor = conn.cursor()
-        cursor.execute('insert into service(service_id, service_name, service_desc) values (?,?,?)', (None, name, desc))
-        serviceId = cursor.lastrowid
+        
+        # check this entity exists or not.
+        cursor.execute('select service_id from service where service_name = ? and service_desc = ?', (name, desc))
+        serviceId = cursor.fetchone()
+        if serviceId is None:
+            cursor.execute('insert into service(service_id, service_name, service_desc) values (?,?,?)', (None, name, desc))
+            serviceId = cursor.lastrowid
+        else:
+            serviceId = serviceId[0]
+        
     except sqlite3.Error, e:
         print ("Error %s:" % e.args[0])
         raise
