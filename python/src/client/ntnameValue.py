@@ -13,14 +13,19 @@ class NTNameValue(object) :
     """
     def __init__(self,function,dictionary) :
         """Constructor
+         Creates a C++ NTNameValue and a python wrapper for the NTNameValue.
 
-        channelName The pvName of the ntnameValue record for the service.
-        request  A string to turn into a pvRequest"""
+        function A string that specifies a function name.
+        dictionary A python dictionary that is a sequence of name,value pairs"""
         self.cppPvt = ntnameValuePy._init(self,function,dictionary)
     def __del__(self) :
-        """Destructor Destroy the connection to the server"""
+        """Destructor Destroy the C++ NTNameValue"""
         ntnameValuePy._destroy(self.cppPvt)
     def __str__(self) :
+        """Get a string value for the NTNameValue."""
         return ntnameValuePy.__str__(self.cppPvt)
     def getNTNameValue(self) :
+        """Get a python object that can be passed to
+        another python method that is a wrapper to a C++ method
+        that expects a PVStructure object."""
         return ntnameValuePy._getNTNameValuePy(self.cppPvt);

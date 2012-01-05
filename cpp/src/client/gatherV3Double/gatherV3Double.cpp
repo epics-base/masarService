@@ -12,7 +12,9 @@
 
 #include <pv/gatherV3Double.h>
 
-namespace epics { namespace pvData {
+namespace epics { namespace pvAccess {
+
+using namespace epics::pvData;
 
 struct GatherV3DoublePvt;
 
@@ -224,12 +226,14 @@ GatherV3Double::GatherV3Double(String channelNames[],int numberChannels)
 
 GatherV3Double::~GatherV3Double()
 {
+printf("GatherV3Double::~GatherV3Double()\n");
     if(pvt->state!=idle) disconnect();
     for(int i=0; i<pvt->numberChannels; i++) {
         ChannelID *pChannelID = pvt->apchannelID[i];
         delete pChannelID;
     }
     delete pvt->apchannelID;
+    delete pvt;
 }
 
 bool GatherV3Double::connect(double timeOut)

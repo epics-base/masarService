@@ -24,7 +24,8 @@
 <h1>EPICS masarService</h1>
 <!-- Maturity: Working Draft or Request for Comments, or Recommendation, and date.  -->
 
-<h2 class="nocount">EPICS v4 Working Group, Working Draft, 05-Jan-2012</h2>
+<h2 class="nocount" id="L50">EPICS v4 Working Group, Working Draft,
+05-Jan-2012</h2>
 <dl>
   <dt>This version:</dt>
     <dd><a
@@ -33,13 +34,13 @@
     <dd><a
       href="http://epics-pvdata.sourceforge.net/masarService_20111220.html">masarService_20120104.html</a></dd>
   <dt>Editors:</dt>
-    <dd>Marty Kraimer, BNL</dd>
     <dd>Guobao Shen, BNL</dd>
+    <dd>Marty Kraimer, BNL</dd>
 </dl>
 <hr />
 </div>
 
-<h2 class="nocount">Abstract</h2>
+<h2 class="nocount" id="L75">Abstract</h2>
 
 <p>masarService is a service that creates, saves, and retrieves snapshots of
 data from a set of V3 channels.</p>
@@ -72,7 +73,7 @@ href="http://epics-pvdata.sourceforge.net/">V4</a> implementation of <a
 href="http://www.aps.anl.gov/epics/">Experimental Physics and Industrial
 Control System.</a></p>
 
-<h2 class="nocount">Status of this Document</h2>
+<h2 class="nocount" id="L109">Status of this Document</h2>
 
 <p>This is the 20-Dec-2011 version of the C++ implementation of masarService.
 It is currently under development.</p>
@@ -85,9 +86,52 @@ It is currently under development.</p>
 </ul>
 
 <p>CONTENTS</p>
+
+<div class="toc">
+<ul>
+  <li><a href="#L50">EPICS v4 Working Group, Working Draft, 05-Jan-2012</a></li>
+  <li><a href="#L75">Abstract</a></li>
+  <li><a href="#L109">Status of this Document</a></li>
+  <li><a href="#L129">Preface</a></li>
+  <li><a href="#L149">Introduction</a></li>
+  <li><a href="#L157">Building</a></li>
+  <li><a href="#L191">Testing</a>
+    <ul>
+      <li><a href="#L195">gatherV3DoubleExample</a></li>
+      <li><a href="#L205">gatherV3DoubleTest</a></li>
+      <li><a href="#L213">masarServiceRun</a></li>
+      <li><a href="#L225">testezchannelRPC</a></li>
+      <li><a href="#L233">testchannelRPC.py</a></li>
+    </ul>
+  </li>
+  <li><a href="#L245">C++ Client</a>
+    <ul>
+      <li><a href="#L251">ezchannelRPC</a></li>
+      <li><a href="#L307">gatherV3Double</a></li>
+    </ul>
+  </li>
+  <li><a href="#L383">Python Client</a>
+    <ul>
+      <li><a href="#L389">channelRPC</a></li>
+      <li><a href="#L397">ntnameValue</a></li>
+      <li><a href="#L407">nttable</a></li>
+      <li><a href="#L418">alarm</a></li>
+      <li><a href="#L426">timeStamp</a></li>
+    </ul>
+  </li>
+  <li><a href="#L436">C++ Server</a>
+    <ul>
+      <li><a href="#L442">service</a></li>
+      <li><a href="#L582">dsl.h - Data Source Layer</a></li>
+      <li><a href="#L621">dslPy</a></li>
+    </ul>
+  </li>
+  <li><a href="#L448">Python Server</a></li>
+</ul>
+</div>
 <hr />
 
-<h2 style="text-align: center">Preface</h2>
+<h2 style="text-align: center" id="L129">Preface</h2>
 <hr />
 
 <p>This product is available via an <a
@@ -110,13 +154,13 @@ and saved in the relational database.</p>
 the masarSevice.</p>
 <hr />
 
-<h2 style="text-align: center">Introduction</h2>
+<h2 style="text-align: center" id="L149">Introduction</h2>
 <hr />
 
 <p>x</p>
 <hr />
 
-<h2 style="text-align: center">Building</h2>
+<h2 style="text-align: center" id="L157">Building</h2>
 <hr />
 
 <p>For now the only way to obtain the masarService is from the sourceforge
@@ -159,14 +203,15 @@ python generateSOLinks.py</pre>
 <pre>export PYTHONPATH=/home/install/python2.7/lib/python2.7/site-packages/
 export PYTHONPATH=$PYTHONPATH:/home/mrk/hg/masarService/cpp/src/python
 export PYTHONPATH=$PYTHONPATH:/home/mrk/hg/masarService/python/src/server
-export PYTHONPATH=$PYTHONPATH:/home/mrk/hg/masarService/python/src/client
-</pre>
+export PYTHONPATH=$PYTHONPATH:/home/mrk/hg/masarService/python/src/client</pre>
 <hr />
 
-<h2 style="text-align: center">Testing</h2>
+<h2 style="text-align: center" id="L191">Testing</h2>
 <hr />
+<p>masarService/python/test has some python tests.
+The following are C++ tests.</p>
 
-<h3>gatherV3DoubleExample</h3>
+<h3 id="L195">gatherV3DoubleExample</h3>
 
 <p>This tests gets a set of V3 channels. This test requires the test V3
 database of the gather service. It must be started before running this test.
@@ -184,7 +229,7 @@ values: double[] value [1.82212,1.82212,1.82212,1.82212,1.82212,1.82212,1.82212,
 values: double[] value [1.82212,1.82212,1.82212,1.82212,1.82212,1.82212,1.82212,1.82212,1.82212,1.82212]
 values: double[] value [2.22554,2.22554,2.22554,2.22554,2.22554,2.22554,2.22554,2.22554,2.22554,2.22554]</pre>
 
-<h3>gatherV3DoubleTest</h3>
+<h3 id="L205">gatherV3DoubleTest</h3>
 
 <p>This tests gets a large set of V3 channels. This test also requires the test
 V3 database of the gather service. It must be started before running this
@@ -195,7 +240,7 @@ test.</p>
 /home/mrk/hg/masarService/cpp
 mrk&gt; bin/linux-x86/gatherV3DoubleExample </pre>
 
-<h3>masarServiceRun</h3>
+<h3 id="L213">masarServiceRun</h3>
 
 <p>This is a dummy server. it just accepts a channelRPC request and always
 returns a PVStructure that is an NTTable.</p>
@@ -208,7 +253,7 @@ returns a PVStructure that is an NTTable.</p>
 
 <p>The server must be run in order to run the next two tests.</p>
 
-<h3>testezchannelRPC</h3>
+<h3 id="L225">testezchannelRPC</h3>
 
 <p>This is a C++ client that makes a channelRPC request to the dummy server.</p>
 
@@ -216,7 +261,7 @@ returns a PVStructure that is an NTTable.</p>
 <pre>cd masarService/cpp/bin/&lt;arch&gt;
  ./testezchannelRPC</pre>
 
-<h3>testchannelRPC.py</h3>
+<h3 id="L233">testchannelRPC.py</h3>
 
 <p>This is a python client program that makes a channelRPC request to the dummy
 server.</p>
@@ -228,14 +273,14 @@ python testchannelRPC.py</pre>
 <p></p>
 <hr />
 
-<h2 style="text-align: center">C++ Client</h2>
+<h2 style="text-align: center" id="L245">C++ Client</h2>
 <hr />
 
 <p>This section describes two client facilities that will both be moved tp
 EZPVA ( Easy PVAccess) when it exists. For now they are here because the
 masarService needs them.</p>
 
-<h3>ezchannelRPC</h3>
+<h3 id="L251">ezchannelRPC</h3>
 
 <p>EZChannelRPC is class that provides an easy way to make a channelRPC
 request. The client provides a PVStructure that is the argument for the
@@ -296,17 +341,74 @@ public:
 <p>masarService/cpp/test/testezchannelRPC/testezchannelRPC.cpp provides an
 example of how to use this class.</p>
 
-<h3>gatherV3Double</h3>
+<h3 id="L307">gatherV3Double</h3>
 
-<p>x</p>
+<p>Gather an array of V3 scalar double values. The complete set of data is
+presented as an NTTable. The NTTable has the optional fields alarm and
+timeStamp. The class definition is:</p>
+<pre>class GatherV3Double {
+public:
+    GatherV3Double(String channelNames[],int numberChannels);
+    bool connect(double timeOut);
+    void disconnect();
+    bool get();
+    String getMessage();
+    PVStructure::shared_pointer getNTTable();
+    PVDoubleArray *getValue();
+    PVDoubleArray *getDeltaTime();
+    PVIntArray *getSeverity();
+    PVBooleanArray *getIsConnected();
+    PVStringArray  *getChannelName();
+};</pre>
+
+<p>where</p>
+<dl>
+  <dt>GatherV3Double</dt>
+    <dd>The constructor. channelNames is the array of channelNames to gather.
+      numberChannels is the number of channels to gather. </dd>
+  <dt>connect</dt>
+    <dd>Connect to V3 channels. This call blocks until all channels are
+      connected or until timeout. timeout is the number of seconds to wait for
+      connections. The return value is true if all channels are connected and
+      false otherwise. If false then all channels are cleared and connect must
+      be reissued. </dd>
+  <dt>disconnect</dt>
+    <dd>Disconnect from the V3 channels.</dd>
+  <dt>get</dt>
+    <dd>Get the current values of the V3 channels.</dd>
+    <dd><b>NOTE:</b> get MUST be called by the same thread that calls
+    connect.</dd>
+    <dd>The return value is true if all gets were successful. If the return
+      value is false then getMessage can be called to get the reason. If any
+      channel is disconnected false is returned. </dd>
+  <dt>getMessage</dt>
+    <dd>Get the reason why a connect or get failed.</dd>
+  <dt>getNTTable</dt>
+    <dd>The data is saved as an NTTable with alarm and timeStamp. Get it.</dd>
+  <dt>getValue</dt>
+    <dd>Get the array of values for each V3 channel.</dd>
+  <dt>getDeltaTime</dt>
+    <dd>Get the array of delta times for each V3 channel. This is the time
+      difference relative to the NTTable timeStamp. </dd>
+  <dt>getSeverity</dt>
+    <dd>Get the array of severity value for each V3 channel. </dd>
+  <dt>getIsConnected</dt>
+    <dd>Get the array of connection state for each V3 channel. </dd>
+  <dt>getChannelName</dt>
+    <dd>Get the array of channel names for each V3 channel. </dd>
+</dl>
+
+<p>masarService/cpp/test/testGatherV3Double/gatherV3DoubleExample.cpp provides
+an example of how to use this class.</p>
 <hr />
 
-<h2 style="text-align: center">Python Client</h2>
+<h2 style="text-align: center" id="L383">Python Client</h2>
 <hr />
 
-<p>x</p>
+<p>masarService/python/src/client has a set of python modules. Each implements
+a python class.</p>
 
-<h3>channelRPC</h3>
+<h3 id="L389">channelRPC</h3>
 
 <p>ChannelRPC is a python class that makes a channelRPC request. If is
 implemented via a C extension module channelRPCPy which uses the EZChannelRPC.
@@ -319,37 +421,119 @@ Python 2.7 (r27:82500, Sep 16 2010, 18:03:06)
 [GCC 4.5.1 20100907 (Red Hat 4.5.1-3)] on linux2
 Type "help", "copyright", "credits" or "license" for more information.
 &gt;&gt;&gt; from channelRPC import ChannelRPC as ChannelRPC
-&gt;&gt;&gt; help(ChannelRPC)
-</pre>
+&gt;&gt;&gt; help(ChannelRPC)</pre>
 
-<h3>ntnameValue</h3>
+<h3 id="L397">ntnameValue</h3>
 
-<p>x</p>
+<p>NTNameValue is a python class that wraps a C++ implementation of
+NTNameValue. Once created it can be passed to other python methods that wrap
+C++ code that expects to receive an PVStructure argument. For example
+ChannelRPC.request expects to receive an argument that is a python object wraps
+a pVStructure. For example testChannelRPC has the statements:</p>
+<pre>from ntnameValue import NTNameValue as NTNameValue
+function = "saveSnapshot"
+args = { "name0" : "value0",
+         "name1" : "value1"
+       }
 
-<h3>nttable</h3>
+ntnv = NTNameValue(function,args)
+ ...
+result =  channelRPC.request(ntnv.getNTNameValue(),False)</pre>
 
-<p>x</p>
+<p>To see the methods:</p>
+<pre>mrk&gt; python
+Python 2.7 (r27:82500, Sep 16 2010, 18:03:06) 
+[GCC 4.5.1 20100907 (Red Hat 4.5.1-3)] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; from ntnameValue import NTNameValue as NTNameValue
+&gt;&gt;&gt; help(NTNameValue)</pre>
 
-<h3>alarm</h3>
+<h3 id="L407">nttable</h3>
 
-<p>x</p>
+<p>NTTable is a python class that wraps a C++ implementation of NTTable. It is
+created by passing a python object that a wrapper for a C++ PVStructure that is
+an NTTable. For example ChannelRPC.request returns such and object. Look at
+testchannelRPC.py for an example of how this is used. <b>NOTE: THIS CLASS NEEDS
+MORE METHODS.</b> </p>
 
-<h3>timeStamp</h3>
+<p>To see the methods:</p>
+<pre>mrk&gt; python
+Python 2.7 (r27:82500, Sep 16 2010, 18:03:06) 
+[GCC 4.5.1 20100907 (Red Hat 4.5.1-3)] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; from nttable import NTTable as NTTable
+&gt;&gt;&gt; help(NTTable)</pre>
 
-<p>x</p>
+<h3 id="L418">alarm</h3>
+
+<p>Alarm is a python class is the python equivalent of PVStructure that
+represents an alarm, i.e. is has a severity and a message.</p>
+
+<p>To see the methods:</p>
+<pre>mrk&gt; python
+Python 2.7 (r27:82500, Sep 16 2010, 18:03:06) 
+[GCC 4.5.1 20100907 (Red Hat 4.5.1-3)] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; from alarm import Alarm as Alarm
+&gt;&gt;&gt; help(Alarm)</pre>
+
+<h3 id="L426">timeStamp</h3>
+
+<p>TimeStamp is a python class is the python equivalent of PVStructure that
+represents a timeStamp, i.e. is has secondsPastEpoch and nanoSeconds within the
+second. It has many methods for manipulating the timeStamp.</p>
+
+<p>To see the methods:</p>
+<pre>mrk&gt; python
+Python 2.7 (r27:82500, Sep 16 2010, 18:03:06) 
+[GCC 4.5.1 20100907 (Red Hat 4.5.1-3)] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; from timeStamp import TimeStamp as TimeStamp
+&gt;&gt;&gt; help(TimeStamp)</pre>
+
+<p>Look at masarService/python/test/testTimeStamp.py for examples of how to use
+timeStamp.</p>
 <hr />
 
-<h2 style="text-align: center">C++ Server</h2>
+<h2 style="text-align: center" id="L436">C++ Server</h2>
 <hr />
 
 <p>x</p>
 
-<h3>masarService</h3>
+<h3 id="L442">service</h3>
 
-<p>x</p>
+<p>For now this is only skeleton code. It extends pvIOC::ServiceRPC and
+implements request. For now it just:</p>
+<ul>
+  <li>accepts the argument fror request, checks to see if it is a NTNameValue
+    structure and prints a statement about if it is a NTNameValue.</li>
+  <li>It calls dslRdb but does nothing with the return value</li>
+  <li>Makes up an NTTable and returns it to the client.</li>
+</ul>
+
+<p>This is just a starting place for Guobao to implement the server side of
+masarService.</p>
+
+<h3 id="L582">dsl.h - Data Source Layer</h3>
+
+<p>This is the interface the Data Source Layer must implement. It will be
+called by service. The class definition is:</p>
+<pre>class DSL {
+public:
+    PVStructure::shared_pointer request(PVStructure pvArgument);
+};</pre>
+
+<p>Thus it takes a single argument which is a NTNameValue, performs whatever
+database action is required, and returns a PVStructure that must be an
+NTTable.</p>
+
+<h3 id="L621">dslPy</h3>
+
+<p>This is just some skeleton code that shows how to call a python methods from
+C++.</p>
 <hr />
 
-<h2 style="text-align: center">Python Server</h2>
+<h2 style="text-align: center" id="L448">Python Server</h2>
 <hr />
 
 <p>x</p>

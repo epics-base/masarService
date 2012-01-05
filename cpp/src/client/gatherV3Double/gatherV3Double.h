@@ -32,7 +32,7 @@
 #include <pv/nt.h>
 
 
-namespace epics { namespace pvData { 
+namespace epics { namespace pvAccess { 
 
 /**
  * Gather an array of V3 scalar double values.
@@ -51,7 +51,7 @@ public:
      * @param channelNames   The array of channelNames to gather
      * @param numberChannels The number of channels to gather.
      */
-    GatherV3Double(String channelNames[],int numberChannels);
+    GatherV3Double(epics::pvData::String channelNames[],int numberChannels);
     /**
      * Destructor
      */
@@ -60,7 +60,7 @@ public:
      * Connect to the V3 channels.
      * @param timeOut Timeout is seconds to wait.
      * @returns (false,true) If (not connected, is connected) to all channels.
-     * If false that all channels are cleared and connect must be reissued.
+     * If false then all channels are cleared and connect must be reissued.
      */
     bool connect(double timeOut);
     /**
@@ -79,38 +79,38 @@ public:
      * get the reason why a connect or get failed.
      * @returns the message.
      */
-    String getMessage();
+    epics::pvData::String getMessage();
     /**
      * The data is saved as an NTTable with alarm and timeStamp. Get it.
      * @returns the NTTable.
      */
-    PVStructure::shared_pointer getNTTable();
+    epics::pvData::PVStructure::shared_pointer getNTTable();
     /**
      * Get the array of values for each V3 channel.
      * @returns The array.
      */
-    PVDoubleArray  *getValue();
+    epics::pvData::PVDoubleArray *getValue();
     /**
      * Get the array of delta times for each V3 channel.
      * This is the time difference relative to the NTTable timeStamp.
      * @returns The array.
      */
-    PVDoubleArray  *getDeltaTime();
+    epics::pvData::PVDoubleArray *getDeltaTime();
     /**
      * Get the array of severity value for each V3 channel.
      * @returns The array.
      */
-    PVIntArray     *getSeverity();
+    epics::pvData::PVIntArray *getSeverity();
     /**
-     * Get the array of connection status for each V3 channel.
+     * Get the array of connection state for each V3 channel.
      * @returns The array.
      */
-    PVBooleanArray *getIsConnected();
+    epics::pvData::PVBooleanArray *getIsConnected();
     /**
      * Get the array of channel names for each V3 channel.
      * @returns The array.
      */
-    PVStringArray  *getChannelName();
+    epics::pvData::PVStringArray  *getChannelName();
 private:
     GatherV3Double::shared_pointer getPtrSelf()
     {

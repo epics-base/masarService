@@ -8,16 +8,25 @@
 import nttablePy
 
 class NTTable(object) :
-    """Create a NTTable
+    """Create an NTTable
+    Given a object that is a python wrapper for a PVStructure
+    that is a valid NTTable. This class can retrieve data from th
+    NTTable and return the data as python objects.
+
+    NOTE: THIS CLASS NEEDS MORE METHODS.
 
     """
     def __init__(self,capsule) :
         """Constructor
 
-        capsule Must be a pvStructure capsule"""
+        capsule Must be a pvStructure capsule
+        This is created by other code that wraps a C++ method the
+        returns a capsule.
+        """
         self.cppPvt = nttablePy._init(self,capsule)
     def __del__(self) :
-        """Destructor Destroy the connection to the server"""
+        """Destructor destroy the connection to the C++ data."""
         nttablePy._destroy(self.cppPvt)
     def __str__(self) :
+        """Get a string value for the NTTable"""
         return nttablePy.__str__(self.cppPvt);

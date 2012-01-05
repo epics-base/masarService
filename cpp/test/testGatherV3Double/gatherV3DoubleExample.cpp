@@ -2,30 +2,14 @@
 
 /* Author: Marty Kraimer */
 
-#include <cstddef>
-#include <cstdlib>
-#include <cstddef>
-#include <string>
-#include <cstdio>
-#include <memory>
-#include <iostream>
-
-#include <cantProceed.h>
-#include <epicsStdio.h>
-#include <epicsMutex.h>
-#include <epicsEvent.h>
-#include <epicsThread.h>
-#include <epicsAssert.h>
-
-#include <epicsExport.h>
-#include <pv/pvIntrospect.h>
-#include <pv/pvData.h>
-#include <pv/nt.h>
+#include <pv/CDRMonitor.h>
+#include <epicsExit.h>
 
 #include <pv/gatherV3Double.h>
 
 using namespace std;
 using namespace epics::pvData;
+using namespace epics::pvAccess;
 
 void test()
 {
@@ -70,7 +54,9 @@ int main(int argc,char *argv[])
 {
     test();
     epicsThreadSleep(.5);
-    test();
-    return(0);
+    epicsExitCallAtExits();
+    epicsThreadSleep(1.0);
+    CDRMonitor::get().show(stdout,true);
+    return 0;
 }
 
