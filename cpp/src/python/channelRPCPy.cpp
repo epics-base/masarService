@@ -19,6 +19,7 @@ namespace epics { namespace pvAccess {
 
 class ChannelRPCPyPvt {
 public:
+    ChannelRPCPyPvt(const char *channelName);
     ChannelRPCPyPvt(
         const char *channelName,
         PVStructure::shared_pointer pvRequest);
@@ -31,6 +32,12 @@ public:
 private:
     EZChannelRPC::shared_pointer channelRPC;
 };
+
+ChannelRPCPyPvt::ChannelRPCPyPvt(
+    const char *channelName)
+: channelRPC(new EZChannelRPC(channelName))
+{
+}
 
 ChannelRPCPyPvt::ChannelRPCPyPvt(
     const char *channelName,
@@ -50,7 +57,8 @@ void ChannelRPCPyPvt::destroy()
    channelRPC.reset();
 }
 
-static char _initDoc[] = "initialize channelRPCPy.";
+static char _init1Doc[] = "initialize channelRPCPy.";
+static char _init2Doc[] = "initialize channelRPCPy.";
 static char _destroyDoc[] = "destroy channelRPCPy.";
 static char _connectDoc[] = "connect.";
 static char _issueConnectDoc[] = "issueConnect.";
@@ -59,9 +67,23 @@ static char _requestDoc[] = "request.";
 static char _issueRequestDoc[] = "issueRequest.";
 static char _waitRequestDoc[] = "waitRequest.";
 static char _getMessageDoc[] = "getMessage.";
-static char _getResponseDoc[] = "getResponse.";
 
-static PyObject * _init(PyObject *willBeNull, PyObject *args)
+static PyObject * _init1(PyObject *willBeNull, PyObject *args)
+{
+    PyObject *self = 0;
+    const char *serverName = 0;
+    if(!PyArg_ParseTuple(args,"Os:channelRPCPy",
+        &self,
+        &serverName))
+    {
+        return NULL;
+    }
+    ChannelRPCPyPvt *pvt = new ChannelRPCPyPvt(serverName);
+    PyObject *pyObject = PyCapsule_New(pvt,"channelRPCPyPvt",0);
+    return pyObject;
+}
+
+static PyObject * _init2(PyObject *willBeNull, PyObject *args)
 {
     PyObject *self = 0;
     const char *serverName = 0;
@@ -191,15 +213,18 @@ static PyObject * _request(PyObject *willBeNull, PyObject *args)
 //pvStructure->get()->toString(&buffer);
 //printf("pvArgument\n%s\n",buffer.c_str());
     bool last = (lastRequest==0) ? false : true ;
-    bool result = false;
     Py_BEGIN_ALLOW_THREADS
-        result = channelRPC->request(*pvStructure,last);
+        pvt->pvResponse = channelRPC->request(*pvStructure,last);
     Py_END_ALLOW_THREADS
-    if(result) {
+    if(pvt->pvResponse.get()==0) {
         Py_INCREF(Py_None);
         return Py_None;
     }
-    return NULL;
+    PyObject *pyObject = PyCapsule_New(&pvt->pvResponse,"pvStructure",0);
+//String buffer;
+//pvt->pvResponse->toString(&buffer);
+//printf("returning\n%s\n",buffer.c_str());
+    return pyObject;
 }
 
 static PyObject * _issueRequest(PyObject *willBeNull, PyObject *args)
@@ -239,21 +264,24 @@ static PyObject * _waitRequest(PyObject *willBeNull, PyObject *args)
     void *pvoid = PyCapsule_GetPointer(pcapsule,"channelRPCPyPvt");
     ChannelRPCPyPvt *pvt = static_cast<ChannelRPCPyPvt *>(pvoid);
     EZChannelRPC::shared_pointer const & channelRPC = pvt->getChannelRPC();
-    bool result = false;
     Py_BEGIN_ALLOW_THREADS
-        result = channelRPC->waitRequest();
+        pvt->pvResponse = channelRPC->waitRequest();
     Py_END_ALLOW_THREADS
-    if(result) {
+    if(pvt->pvResponse.get()==0) {
         Py_INCREF(Py_None);
         return Py_None;
     }
-    return NULL;
+    PyObject *pyObject = PyCapsule_New(&pvt->pvResponse,"pvStructure",0);
+//String buffer;
+//pvt->pvResponse->toString(&buffer);
+//printf("returning\n%s\n",buffer.c_str());
+    return pyObject;
 }
 
 static PyObject * _getMessage(PyObject *willBeNull, PyObject *args)
 {
     PyObject *pcapsule = 0;
-    if(!PyArg_ParseTuple(args,"Od:channelRPCPy",
+    if(!PyArg_ParseTuple(args,"O:channelRPCPy",
         &pcapsule))
     {
         return NULL;
@@ -269,31 +297,9 @@ static PyObject * _getMessage(PyObject *willBeNull, PyObject *args)
     return pyObject;
 }
 
-static PyObject * _getResponse(PyObject *willBeNull, PyObject *args)
-{
-//printf(" _getResponse\n");
-    PyObject *pcapsule = 0;
-    if(!PyArg_ParseTuple(args,"O:channelRPCPy",
-        &pcapsule))
-    {
-        return NULL;
-    }
-    void *pvoid = PyCapsule_GetPointer(pcapsule,"channelRPCPyPvt");
-    ChannelRPCPyPvt *pvt = static_cast<ChannelRPCPyPvt *>(pvoid);
-    EZChannelRPC::shared_pointer const & channelRPC = pvt->getChannelRPC();
-    Py_BEGIN_ALLOW_THREADS
-        pvt->pvResponse = channelRPC->getResponse();
-    Py_END_ALLOW_THREADS
-    PyObject *pyObject = PyCapsule_New(
-        &pvt->pvResponse,"pvStructure",0);
-//String buffer;
-//pvt->pvResponse->toString(&buffer);
-//printf("returning\n%s\n",buffer.c_str());
-    return pyObject;
-}
-
 static PyMethodDef methods[] = {
-    {"_init",_init,METH_VARARGS,_initDoc},
+    {"_init1",_init1,METH_VARARGS,_init1Doc},
+    {"_init2",_init2,METH_VARARGS,_init2Doc},
     {"_destroy",_destroy,METH_VARARGS,_destroyDoc},
     {"_connect",_connect,METH_VARARGS,_connectDoc},
     {"_issueConnect",_issueConnect,METH_VARARGS,_issueConnectDoc},
@@ -302,7 +308,6 @@ static PyMethodDef methods[] = {
     {"_issueRequest",_issueRequest,METH_VARARGS,_issueRequestDoc},
     {"_waitRequest",_waitRequest,METH_VARARGS,_waitRequestDoc},
     {"_getMessage",_getMessage,METH_VARARGS,_getMessageDoc},
-    {"_getResponse",_getResponse,METH_VARARGS,_getResponseDoc},
     {NULL,NULL,0,NULL}
 };
 

@@ -116,7 +116,7 @@ the masarSevice.</p>
 <p>x</p>
 <hr />
 
-<h2 style="text-align: center">Building and Testing</h2>
+<h2 style="text-align: center">Building</h2>
 <hr />
 
 <p>For now the only way to obtain the masarService is from the sourceforge
@@ -142,18 +142,62 @@ PVACCESS=${REPBASE}/pvAccessCPP
 PVIOC=${REPBASE}/pvIOCCPP
 NT=${REPBASE}/alphaCPP/normativeTypes
 
-EPICS_BASE=/home/install/epics/base
-</pre>
+EPICS_BASE=/home/install/epics/base</pre>
 
 <p>Note that python, pvData, pvAccess, pvIOC, and normatives types must all be
 installed and built in order to build the masaarService.</p>
 
-<p>One the masarService is build the following tests can be run to check that
-everything has built properly.</p>
+<p>Once the masarService is build the tests described in the next section can
+be run to check that everything has built properly.</p>
 
-<h4>masarServiceRun</h4>
+<p>The python code requires that that the extension modules have links to a
+shared library. To create these links do the following:</p>
+<pre>cd masarService/cpp/src/python
+python generateSOLinks.py</pre>
 
-<p>This is na dummy server. it just accepts a channelRPC request and always
+<p>Also PYTHONPATH must have definitions similar to the following:</p>
+<pre>export PYTHONPATH=/home/install/python2.7/lib/python2.7/site-packages/
+export PYTHONPATH=$PYTHONPATH:/home/mrk/hg/masarService/cpp/src/python
+export PYTHONPATH=$PYTHONPATH:/home/mrk/hg/masarService/python/src/server
+export PYTHONPATH=$PYTHONPATH:/home/mrk/hg/masarService/python/src/client
+</pre>
+<hr />
+
+<h2 style="text-align: center">Testing</h2>
+<hr />
+
+<h3>gatherV3DoubleExample</h3>
+
+<p>This tests gets a set of V3 channels. This test requires the test V3
+database of the gather service. It must be started before running this test.
+For example:</p>
+<pre>mrk&gt; pwd
+/home/mrk/javaIOC/pvService/gather/caV3/iocBoot/iocAll
+mrk&gt; ../../bin/linux-x86/example st.cmd </pre>
+
+<p>Then in another window just execute:</p>
+<pre>mrk&gt; pwd
+/home/mrk/hg/masarService/cpp
+mrk&gt; bin/linux-x86/gatherV3DoubleExample 
+values: double[] value [1.49182,1.49182,1.49182,1.49182,1.49182,1.49182,1.49182,1.49182,1.49182,1.49182]
+values: double[] value [1.82212,1.82212,1.82212,1.82212,1.82212,1.82212,1.82212,1.82212,1.82212,1.82212]
+values: double[] value [1.82212,1.82212,1.82212,1.82212,1.82212,1.82212,1.82212,1.82212,1.82212,1.82212]
+values: double[] value [2.22554,2.22554,2.22554,2.22554,2.22554,2.22554,2.22554,2.22554,2.22554,2.22554]</pre>
+
+<h3>gatherV3DoubleTest</h3>
+
+<p>This tests gets a large set of V3 channels. This test also requires the test
+V3 database of the gather service. It must be started before running this
+test.</p>
+
+<p>This test prints nothing if it is successfull. To run just execute:</p>
+<pre>mrk&gt; pwd
+/home/mrk/hg/masarService/cpp
+mrk&gt; bin/linux-x86/gatherV3DoubleExample </pre>
+
+<h3>masarServiceRun</h3>
+
+<p>This is a dummy server. it just accepts a channelRPC request and always
 returns a PVStructure that is an NTTable.</p>
 
 <p>To start the server:</p>
@@ -161,9 +205,10 @@ returns a PVStructure that is an NTTable.</p>
  ./masarServiceRun</pre>
 
 <p>To stop the server type "exit".</p>
+
 <p>The server must be run in order to run the next two tests.</p>
 
-<h4>testezchannelRPC</h4>
+<h3>testezchannelRPC</h3>
 
 <p>This is a C++ client that makes a channelRPC request to the dummy server.</p>
 
@@ -171,7 +216,7 @@ returns a PVStructure that is an NTTable.</p>
 <pre>cd masarService/cpp/bin/&lt;arch&gt;
  ./testezchannelRPC</pre>
 
-<h4>testchannelRPC.py</h4>
+<h3>testchannelRPC.py</h3>
 
 <p>This is a python client program that makes a channelRPC request to the dummy
 server.</p>
@@ -186,11 +231,70 @@ python testchannelRPC.py</pre>
 <h2 style="text-align: center">C++ Client</h2>
 <hr />
 
-<p>x</p>
+<p>This section describes two client facilities that will both be moved tp
+EZPVA ( Easy PVAccess) when it exists. For now they are here because the
+masarService needs them.</p>
 
 <h3>ezchannelRPC</h3>
 
-<p>x</p>
+<p>EZChannelRPC is class that provides an easy way to make a channelRPC
+request. The client provides a PVStructure that is the argument for the
+channelRPC request and receives a PVStructure that holds the result. The class
+definition is:</p>
+<pre>class EZChannelRPC {
+public:
+    EZChannelRPC(String channelName);
+    EZChannelRPC(String channelName,PVStructure::shared_pointer pvRequest);
+    void destroy();
+    bool connect(double timeOut);
+    void issueConnect();
+    bool waitConnect(double timeOut);
+    PVStructure::shared_pointer request(
+        PVStructure::shared_pointer const &amp; pvArgument,bool lastRequest);
+    void  issueRequest(
+        PVStructure::shared_pointer const &amp; pvArgument,bool lastRequest);
+    PVStructure::shared_pointer waitRequest();
+    String getMessage();
+};</pre>
+
+<p>where</p>
+<dl>
+  <dt>EZChannelRPC</dt>
+    <dd>The constructor. channelName is the name of the channelRPC server.
+      pvRequest is a request structure to pass to the server. If pvRequest is
+      not given a default structure will be created.</dd>
+  <dt>destroy</dt>
+    <dd>This will clean up all resources used by the channelRPC </dd>
+  <dt>connect</dt>
+    <dd>Connect to the server. The method blocks until the connection is made
+      or a timeout occurs. It is the same as calling issueConnect and then
+      waitConnect. returns (false,true) if (not connected, is connected). If
+      false then connect must be reissued. </dd>
+  <dt>issueConnect</dt>
+    <dd>Issue a connect request and return immediately. waitConnect must be
+      called to complete the request. </dd>
+  <dt>waitConnect</dt>
+    <dd>Wait for the connect request to complete. timeout is the timeout in
+      seconds to wait. returns (false,true) If (not connected, is connected).
+      If false then connect must be reissued. </dd>
+  <dt>request</dt>
+    <dd>Make a channelRPC request. pvArgument is the argument to pass to the
+      server. If lastRequest is true an automatic destroy is made. returns the
+      result. If the result is null then getMessage can be called to get the
+      reason. </dd>
+  <dt>issueRequest</dt>
+    <dd>Issue a channelRPC request and return immediately. pvArgument is the
+      argument to pass to the server. If lastRequest is true an automatic
+      destroy is made. waitRequest must be called to complete the request. </dd>
+  <dt>waitRequest</dt>
+    <dd>Wait for the request to complete. returns the result. If the result is
+      null then getMessage can be called to get the reason. </dd>
+  <dt>getMessage</dt>
+    <dd>Get the reason why a connect or request failed.</dd>
+</dl>
+
+<p>masarService/cpp/test/testezchannelRPC/testezchannelRPC.cpp provides an
+example of how to use this class.</p>
 
 <h3>gatherV3Double</h3>
 
@@ -204,7 +308,19 @@ python testchannelRPC.py</pre>
 
 <h3>channelRPC</h3>
 
-<p>x</p>
+<p>ChannelRPC is a python class that makes a channelRPC request. If is
+implemented via a C extension module channelRPCPy which uses the EZChannelRPC.
+Look at masarService/python/test/testchannelRPC.py for an example of how to use
+this class.</p>
+
+<p>To see the methods:</p>
+<pre>mrk&gt; python
+Python 2.7 (r27:82500, Sep 16 2010, 18:03:06) 
+[GCC 4.5.1 20100907 (Red Hat 4.5.1-3)] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; from channelRPC import ChannelRPC as ChannelRPC
+&gt;&gt;&gt; help(ChannelRPC)
+</pre>
 
 <h3>ntnameValue</h3>
 

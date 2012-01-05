@@ -40,7 +40,9 @@
 namespace epics { namespace pvAccess { 
 
 /**
- * This class provides an easy way to make a channelRPC request
+ * This class provides an easy way to make a channelRPC request.
+ * The client provides a PVStructure that is the argument for the
+ * channelRPC request and receives a PVStructure that holds the result.
  * @author mrk
  *
  */
@@ -51,6 +53,15 @@ class EZChannelRPC :
 {
 public:
     POINTER_DEFINITIONS(EZChannelRPC);
+    /** Constructor
+     * The channelName is the name of the channelRPC server.
+     */
+    EZChannelRPC(
+        epics::pvData::String channelName);
+    /** Constructor
+     * The channelName is the name of the channelRPC server.
+     * pvRequest is a request structure to pass to the server.
+     */
     EZChannelRPC(
         epics::pvData::String channelName,
         epics::pvData::PVStructure::shared_pointer pvRequest);
@@ -58,64 +69,59 @@ public:
      * Destructor
      */
     virtual ~EZChannelRPC();
+    /** destroy the channelRPC.
+     * This will clean up all resources used by the channelRPC
+     */
     void destroy();
     /**
      * Connect to the server.
-     * @param timeOut timeout in seconds to wait.
+     * The method blocks until the connection is made or a timeout occurs.
+     * It is the same as calling issueConnect and then waitConnect.
+     * @param timeout timeout in seconds to wait.
      * @returns (false,true) If (not connected, is connected).
      * If false then connect must be reissued.
      */
-    bool connect(double timeOut);
+    bool connect(double timeout);
     /**
-     * issue the connect to the server and return immediatly.
+     * Issue a connect request and return immediately.
      * waitConnect must be called to complete the request.
      */
     void issueConnect();
     /**
-     * wait for the connect request to complete.
-     * @param timeOut timeout in seconds to wait.
+     * Wait for the connect request to complete.
+     * @param timeout timeout in seconds to wait.
      * @returns (false,true) If (not connected, is connected).
      * If false then connect must be reissued.
      */
-    bool waitConnect(double timeOut);
+    bool waitConnect(double timeout);
     /**
      * Make a channelRPC request.
-     * @param pvAgument The argument to pass to the server.
-     * @param lastRequest If true an automatic disconnect is made.
-     * @returns (false,true) If the request was successful.
-     * If success than a call to getResponse returns the result.
-     * If false getMessage can be called to get the reason.
+     * @param pvArgument The argument to pass to the server.
+     * @param lastRequest If true an automatic destroy is made.
+     * @returns the result. If the result is null then getMessage can be called to get the reason.
      */
-    bool request(
+    epics::pvData::PVStructure::shared_pointer  request(
         epics::pvData::PVStructure::shared_pointer const & pvArgument,
         bool lastRequest);
     /**
-     * Make a channelRPC request and return immediately.
+     * Issue a channelRPC request and return immediately.
      * waitRequest must be called to complete the request.
      * @param pvAgument The argument to pass to the server.
-     * @param lastRequest If true an automatic disconnect is made.
+     * @param lastRequest If true an automatic destroy is made.
      */
     void  issueRequest(
         epics::pvData::PVStructure::shared_pointer const & pvArgument,
         bool lastRequest);
     /**
      * Wait for the request to complete.
-     * waitRequest must be called to complete the request.
-     * @returns (false,true) If the request was successful.
-     * If success than a call to getResponse returns the result.
-     * If false getMessage can be called to get the reason.
+     * @returns the result. If the result is null then getMessage can be called to get the reason.
      */
-     bool waitRequest();
+    epics::pvData::PVStructure::shared_pointer  waitRequest();
     /**
-     * get the reason why a connect or request failed.
+     * Get the reason why a connect or request failed.
      * @returns the message.
      */
     epics::pvData::String getMessage();
-    /**
-     * Get the data returned by the channelRPC request.
-     * @returns the data.
-     */
-    epics::pvData::PVStructure::shared_pointer getResponse();
     // remaining methods are callbacks, i.e. not called by user code
     virtual void channelCreated(
         const epics::pvData::Status& status,

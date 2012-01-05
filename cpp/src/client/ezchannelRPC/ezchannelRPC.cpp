@@ -26,6 +26,16 @@ static void initStatic(void *) {
 static epicsThreadOnceId initOnce = EPICS_THREAD_ONCE_INIT;
 
 EZChannelRPC::EZChannelRPC(
+    String channelName)
+: channelName(channelName),
+  pvRequest(getCreateRequest()->createRequest("record[process=true]field()")),
+  requesterName("ezchannelRPC"),
+  isOK(true)
+{
+    epicsThreadOnce(&initOnce, &initStatic, 0);
+}
+
+EZChannelRPC::EZChannelRPC(
     String channelName,
     PVStructure::shared_pointer pvRequest)
 : channelName(channelName),
@@ -51,7 +61,6 @@ void EZChannelRPC::destroy()
 
 bool EZChannelRPC::connect(double timeOut)
 {
-//printf("EZChannelRPC::connect\n");
     issueConnect();
     return waitConnect(timeOut);
 }
@@ -77,7 +86,7 @@ bool EZChannelRPC::waitConnect(double timeOut) {
     return isOK;
 }
 
-bool EZChannelRPC::request(
+epics::pvData::PVStructure::shared_pointer EZChannelRPC::request(
     PVStructure::shared_pointer const & pvArgument,
     bool lastRequest)
 {
@@ -93,19 +102,19 @@ void EZChannelRPC::issueRequest(
     channelRPC->request(pvArgument,lastRequest);
 }
 
-bool EZChannelRPC::waitRequest()
+epics::pvData::PVStructure::shared_pointer EZChannelRPC::waitRequest()
 {
     bool ok = event.wait();
     if(!ok) {
         isOK = false;
         lastMessage = "event.wait failed\n";
+        pvResponse = epics::pvData::PVStructure::shared_pointer();
     }
-    return isOK;
+    return pvResponse;
 }
 
 String EZChannelRPC::getMessage() { return lastMessage;}
 
-PVStructure::shared_pointer EZChannelRPC::getResponse() { return pvResponse;}
 
 void EZChannelRPC::channelCreated(
     const Status& status,
