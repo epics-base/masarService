@@ -8,6 +8,7 @@
 
 #include <epicsExit.h>
 #include <alarm.h>
+#include <alarmString.h>
 
 #include <pv/gatherV3Double.h>
 

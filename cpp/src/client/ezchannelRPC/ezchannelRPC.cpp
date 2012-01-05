@@ -43,12 +43,15 @@ EZChannelRPC::~EZChannelRPC()
 void EZChannelRPC::destroy()
 {
     Lock xx(mutex);
-    if(channel.get()!=0) channel->destroy();
-    channel.reset();
+    if(channel.get()!=0) {
+        channel->destroy();
+        channel.reset();
+    }
 }
 
 bool EZChannelRPC::connect(double timeOut)
 {
+//printf("EZChannelRPC::connect\n");
     issueConnect();
     return waitConnect(timeOut);
 }
@@ -108,7 +111,7 @@ void EZChannelRPC::channelCreated(
     const Status& status,
     Channel::shared_pointer const & channel)
 {
-printf("EZChannelRPC::channelCreate\n");
+//printf("EZChannelRPC::channelCreate\n");
     isOK = status.isOK();
     this->channel = channel;
     if(!isOK) {
@@ -154,7 +157,7 @@ void EZChannelRPC::requestDone(
     const Status& status,
     PVStructure::shared_pointer const & pvResponse)
 {
-printf("EZChannelRPC::requestDone\n");
+//printf("EZChannelRPC::requestDone\n");
     this->pvResponse = pvResponse;
     if(!status.isOK()) {
         isOK = false;

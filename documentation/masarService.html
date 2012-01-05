@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+  <title>EPICS masarService</title>
+  <link rel="stylesheet" type="text/css"
+  href="http://epics-pvdata.sourceforge.net/base.css" />
+  <link rel="stylesheet" type="text/css"
+  href="http://epics-pvdata.sourceforge.net/epicsv4.css" />
+  <style type="text/css">
+/*<![CDATA[*/
+     .about { margin-left: 3em; margin-right: 3em; font-size: .83em}
+     table { margin-left: auto; margin-right: auto }
+     .diagram { text-align: center; margin: 2.5em 0 }
+     body { margin-right: 10% }
+/*]]>*/</style>
+</head>
+
+<body>
+
+<div class="head">
+<h1>EPICS masarService</h1>
+<!-- Maturity: Working Draft or Request for Comments, or Recommendation, and date.  -->
+
+<h2 class="nocount">EPICS v4 Working Group, Working Draft, 05-Jan-2012</h2>
+<dl>
+  <dt>This version:</dt>
+    <dd><a
+      href="http://epics-pvdata.sourceforge.net/masarService_20111220.html">masarService_20120105.html</a></dd>
+  <dt>Latest version:</dt>
+    <dd><a
+      href="http://epics-pvdata.sourceforge.net/masarService_20111220.html">masarService_20120104.html</a></dd>
+  <dt>Editors:</dt>
+    <dd>Marty Kraimer, BNL</dd>
+    <dd>Guobao Shen, BNL</dd>
+</dl>
+<hr />
+</div>
+
+<h2 class="nocount">Abstract</h2>
+
+<p>masarService is a service that creates, saves, and retrieves snapshots of
+data from a set of V3 channels.</p>
+
+<p>It is one of a set of related products:</p>
+<dl>
+  <dt><a
+  href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/masarService.html">pvData</a></dt>
+    <dd>pvData (Process Variable Daata) defines and implements an efficent way
+      to store, access, and transmit memory resident structured data</dd>
+  <dt><a
+  href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/pvAccessCPP/raw-file/tip/documentation/pvAccessCPP.html">pvAccess</a></dt>
+    <dd>pvAccess is network support for transmitting pvData.</dd>
+  <dt><a
+  href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/pvIOCCPP/raw-file/tip/documentation/pvIOCCPP.html">pvIOC</a></dt>
+    <dd>A pvIOC is a network accessable smart real time database. The database
+      consists of memory resident records. Each record has a name that is
+      uniquie within the local area network and contains a top level pvData
+      structure. Each field of a record can optionally have support code
+      attached to it. The support is called when a request is made to process
+      the record. The support code is what makes the record "smart". A pvAccess
+      server is provided so that the records can be accesed via the network.
+    </dd>
+</dl>
+
+<p>Each of the products has a Java and a C++ implementation.</p>
+
+<p>The products are all part of the <a
+href="http://epics-pvdata.sourceforge.net/">V4</a> implementation of <a
+href="http://www.aps.anl.gov/epics/">Experimental Physics and Industrial
+Control System.</a></p>
+
+<h2 class="nocount">Status of this Document</h2>
+
+<p>This is the 20-Dec-2011 version of the C++ implementation of masarService.
+It is currently under development.</p>
+
+<p>TODO</p>
+<ul>
+  <li>Interface to </li>
+  <li>pvMiscBitSetUtil has not been tested.</li>
+  <li>Change all throw statements so that they generated stack trace.</li>
+</ul>
+
+<p>CONTENTS</p>
+<hr />
+
+<h2 style="text-align: center">Preface</h2>
+<hr />
+
+<p>This product is available via an <a
+href="http://epics-pvdata.sourceforge.net/LICENSE.html">open source
+license</a></p>
+
+<p>This is the overview for masarService, which is a service that defines,
+creates, and retrieves snapshots of data from a set of V3 channels.</p>
+
+<p>An arbitrary number of snapshot definitions can be created and saved in a
+relational database. I snapshot definition defines a set of V3 channels from
+which to collect data.</p>
+
+<p>For each shapshot definition an arbitrary set of snapshots can be obtained
+and saved in the relational database.</p>
+
+<p>A client can retrive any saved snapshot.</p>
+
+<p>This service uses pvData/pvAccess for all communication between a client and
+the masarSevice.</p>
+<hr />
+
+<h2 style="text-align: center">Introduction</h2>
+<hr />
+
+<p>x</p>
+<hr />
+
+<h2 style="text-align: center">Building and Testing</h2>
+<hr />
+
+<p>For now the only way to obtain the masarService is from the sourceforge
+mercurial repository. For example:</p>
+<pre>hg clone http://epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/masarService</pre>
+
+<p>or</p>
+<pre>hg clone ssh://&lt;your-sourceforge-userid&gt;@epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/masarSevice</pre>
+
+<p>After cloning the masarService a RELEASE.local file for C++ must be created
+and the masarService must be built.</p>
+<pre>cd masarSevice/cpp/configure
+create configure/RELEASE.local
+make</pre>
+
+<p>The RELEASE.local must define several variables. An example is:</p>
+<pre>PYTHON=python2.7
+PYTHON_BASE=/usr
+
+REPBASE=/home/mrk/hg
+PVDATA=${REPBASE}/pvDataCPP
+PVACCESS=${REPBASE}/pvAccessCPP
+PVIOC=${REPBASE}/pvIOCCPP
+NT=${REPBASE}/alphaCPP/normativeTypes
+
+EPICS_BASE=/home/install/epics/base
+</pre>
+
+<p>Note that python, pvData, pvAccess, pvIOC, and normatives types must all be
+installed and built in order to build the masaarService.</p>
+
+<p>One the masarService is build the following tests can be run to check that
+everything has built properly.</p>
+
+<h4>masarServiceRun</h4>
+
+<p>This is na dummy server. it just accepts a channelRPC request and always
+returns a PVStructure that is an NTTable.</p>
+
+<p>To start the server:</p>
+<pre>cd masarService/cpp/bin/&lt;arch&gt;
+ ./masarServiceRun</pre>
+
+<p>To stop the server type "exit".</p>
+<p>The server must be run in order to run the next two tests.</p>
+
+<h4>testezchannelRPC</h4>
+
+<p>This is a C++ client that makes a channelRPC request to the dummy server.</p>
+
+<p>To run this test:</p>
+<pre>cd masarService/cpp/bin/&lt;arch&gt;
+ ./testezchannelRPC</pre>
+
+<h4>testchannelRPC.py</h4>
+
+<p>This is a python client program that makes a channelRPC request to the dummy
+server.</p>
+
+<p>To run this test:</p>
+<pre>cd masarService/python/test
+python testchannelRPC.py</pre>
+
+<p></p>
+<hr />
+
+<h2 style="text-align: center">C++ Client</h2>
+<hr />
+
+<p>x</p>
+
+<h3>ezchannelRPC</h3>
+
+<p>x</p>
+
+<h3>gatherV3Double</h3>
+
+<p>x</p>
+<hr />
+
+<h2 style="text-align: center">Python Client</h2>
+<hr />
+
+<p>x</p>
+
+<h3>channelRPC</h3>
+
+<p>x</p>
+
+<h3>ntnameValue</h3>
+
+<p>x</p>
+
+<h3>nttable</h3>
+
+<p>x</p>
+
+<h3>alarm</h3>
+
+<p>x</p>
+
+<h3>timeStamp</h3>
+
+<p>x</p>
+<hr />
+
+<h2 style="text-align: center">C++ Server</h2>
+<hr />
+
+<p>x</p>
+
+<h3>masarService</h3>
+
+<p>x</p>
+<hr />
+
+<h2 style="text-align: center">Python Server</h2>
+<hr />
+
+<p>x</p>
+</body>
+</html>

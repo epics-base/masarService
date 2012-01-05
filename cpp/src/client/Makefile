@@ -5,9 +5,9 @@ USR_INCLUDES += -I${PYTHON_BASE}/include/${PYTHON}
 
 CLIENT = $(TOP)/src/client/
 
-SRC_DIRS += $(CLIENT)/masarPy
-INC += masarPy.h  
-INC += requesterPy.h
+#SRC_DIRS += $(CLIENT)/masarPy
+#INC += masarPy.h  
+#INC += requesterPy.h
 #LIBSRCS += requesterPYtoCPP.cpp
 #LIBSRCS += masarPy.cpp
 
@@ -25,7 +25,8 @@ LIBSRCS += ezchannelRPC.cpp
 
 LIBRARY = masarClient
 
-masarServiceClient_LIBS += pvAccess pvData Com
+masarClient_LIBS += pvAccess pvData Com
+masarClient_LIBS += $(EPICS_BASE_HOST_LIBS)
 
 include $(TOP)/configure/RULES
 

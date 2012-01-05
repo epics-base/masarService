@@ -6,6 +6,8 @@ DIRS += client
 
 DIRS += server
 
+DIRS += python
+
 include $(TOP)/configure/RULES_DIRS
 
 

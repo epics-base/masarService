@@ -1,4 +1,4 @@
-/*masarServiceMain.cpp */
+/*masarServiceRun.cpp */
 
 /* Author: Marty Kraimer */
 

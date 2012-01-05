@@ -2,13 +2,16 @@ QtC-pvAccess.creator.user
 
 syntax: glob
 .DS_Store
-bin
-include
-lib
+./bin
+./include
+./lib
+./doc
+./documentation/html
 ./O.*
 ./*.pyc
 ./*.so
 ./documentation/html
 ./RELEASE.local
+./CONFIG_SITE.local
 
 syntax: regexp

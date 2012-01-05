@@ -50,7 +50,8 @@ void test()
 int main(int argc,char *argv[])
 {
     test();
-    epicsThreadSleep(2.0);
+    epicsThreadSleep(1.0);
     epicsExitCallAtExits();
+    epicsThreadSleep(1.0);
     CDRMonitor::get().show(stdout,true);
 }
