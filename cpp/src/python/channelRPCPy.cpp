@@ -114,9 +114,8 @@ static PyObject * _destroy(PyObject *willBeNull, PyObject *args)
     }
     void *pvoid = PyCapsule_GetPointer(pcapsule,"channelRPCPyPvt");
     ChannelRPCPyPvt *pvt = static_cast<ChannelRPCPyPvt *>(pvoid);
-    EZChannelRPC::shared_pointer const & channelRPC = pvt->getChannelRPC();
     Py_BEGIN_ALLOW_THREADS
-         channelRPC->destroy();
+         pvt->destroy();
     Py_END_ALLOW_THREADS
     return Py_None;
 }

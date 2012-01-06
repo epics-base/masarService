@@ -56,6 +56,9 @@ void EZChannelRPC::destroy()
     if(channel.get()!=0) {
         channel->destroy();
         channel.reset();
+        pvRequest.reset();
+        channelRPC.reset();
+        pvResponse.reset();
     }
 }
 

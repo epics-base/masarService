@@ -32,3 +32,4 @@ if(result==None) :
     exit(1)
 nttable = NTTable(result)
 print nttable
+channelRPC = None
