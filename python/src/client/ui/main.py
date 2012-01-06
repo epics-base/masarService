@@ -61,7 +61,7 @@ while args:
         source = 'sqlite'
         import pymasar
         import sqlite3
-        __db = '/'.join((os.path.abspath(os.path.dirname(__file__)), '../../pymasar/example', 'masar.db'))
+        __db = '/'.join((os.path.abspath(os.path.dirname(__file__)), '../../../pymasar/example', 'masar.db'))
 #        print (__db)
         conn = sqlite3.connect(__db)
     elif arg in ("-e", "--epics", "epics"):
