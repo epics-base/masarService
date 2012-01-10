@@ -41,23 +41,23 @@ class DSL(object) :
         pass
 
     def retrieveServiceConfigProps(self, **params):
-        print (help(pymasar.service.retrieveServiceConfigProps))
+#        print (help(pymasar.service.retrieveServiceConfigProps))
         return 'retrieveServiceConfigProps'
     
     def retrieveServiceConfigs(self, **params):
 #        system=system
-        print (help(pymasar.service.retrieveServiceConfigs))
+#        print (help(pymasar.service.retrieveServiceConfigs))
         return 'retrieveServiceConfigs'
     def retrieveServiceEvents(self, **params):
 #        configid=cid, start=start, end=end
-        print (help(pymasar.service.retrieveServiceEvents))
+#        print (help(pymasar.service.retrieveServiceEvents))
         return 'retrieveServiceEvents'
     def retrieveMasar(self, **params): 
 #        eventid=eventid
-        print (help(pymasar.masardata.retrieveMasar))
+#        print (help(pymasar.masardata.retrieveMasar))
         return 'retrieveMasar'
     def saveMasar(self, **params):
 #        data, servicename=None, configname=None, comment=None
 #        data has the format: [(pv_name, value, status, severity, ioc_timestamp, ioc_timestamp_nano)]
-        print (help(pymasar.masardata.saveMasar))
+#        print (help(pymasar.masardata.saveMasar))
         return 'saveMasar'
