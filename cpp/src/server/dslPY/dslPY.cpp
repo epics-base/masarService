@@ -117,11 +117,12 @@ PVStructure::shared_pointer DSL_RDB::request(
              PVStructure::shared_pointer const & pvArgument)
 {
     char * xxx = 0;
-    const char *arg1 = "this is a test";
     PyGILState_STATE gstate = PyGILState_Ensure();
-        PyObject * arg = Py_BuildValue("(s)",arg1);
+    std::string params[] = {"retrieveMasar", "saveMasar"};
+    for (int i = 0; i < 2; i ++) {
+        PyObject * arg = Py_BuildValue("(s)",params[i].c_str());
         PyObject *result = PyEval_CallObject(prequest,arg);
-         Py_XDECREF(arg);
+        Py_XDECREF(arg);
         if(result==0) {
             printf("DSL::request failed\n");
         } else {
@@ -130,6 +131,7 @@ PVStructure::shared_pointer DSL_RDB::request(
             } 
             Py_XDECREF(result);
         }
+    }
     PyGILState_Release(gstate);
     printf("DSL::request returned %s\n",xxx);
     return pvArgument;
