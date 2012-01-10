@@ -45,8 +45,13 @@ fileList = os.listdir(".")
 outList = ["channelRPCPy","ntnameValuePy","nttablePy","alarmPy","timeStampPy"]
 soList = []
 for element in outList :
-    value = "/bin/ln -s " + soLib
-    value += " " + element + '.so'
+    value = "/bin/ln -s%s " + soLib + " " + element + '.so'
+    if os.path.exists(element+'.so') and os.path.isfile(element+'.so'):
+        value = value %("f")
+    elif os.path.exists(element+'.so'):
+        value = value %("F")
+    else:
+        value = value %(" ")
     soList.append(value)
 for link in soList :
     args = shlex.split(link)
