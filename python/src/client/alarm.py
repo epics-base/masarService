@@ -5,35 +5,34 @@
 #    found in file LICENSE that is included with this distribution.
 # Author Marty Kraimer 2011.07
 
+import alarmPy
+
 class Alarm(object) :
-    """an alarm has a severity and a message."""
-    alarmSeverityNames = ("none","minor","major","invalid")
-    alarmSeverity = (0,1,2,3)
-    def __init__(self,severity = 0,message = "") :
+    """an alarm has a severity, status, and  message."""
+    def __init__(self,severity = "", status = "" ,message = "") :
         """constructor
 
-        severity  The initial severity. The default is 0, i.e. noAlarm.
+        severity  The initial severity. The default is "".
+        status    The initial status. The default is "".
         message   The initial message. The default is an empty string."""
-        if not isinstance(severity,int) :
-            raise TypeError("severity is not an integer")
-            return
-        if (severity<0) or (severity>3) :
-            raise ValueError("severity " + severity + "is out of range")
-            return
-        if not isinstance(message,str) :
-            raise TypeError("message is not a str")
-            return
-        self.severity = severity
-        self.message = message
+        self.cppPvt = alarmPy._init(self)
+        alarmPy._setMessage(self.cppPvt,message)
+        if severity!="" :
+            alarmPy._setSeverity(self.cppPvt,severity)
+        if status!="" :
+            alarmPy._setStatus(self.cppPvt,status)
     def __del__(self) :
         """destructor"""
-        pass
+        alarmPy._destroy(self.cppPvt)
     def __str__(self) :
         """Return a string that shows the message and severity"""
-        return Alarm.alarmSeverityNames[self.severity] + " " + self.message;
+        return alarmPy._str(self.cppPvt)
+    def getAlarmPy(self) :
+        """Return an object for another extension module"""
+        return alarmPy._getAlarmPy(self.cppPvt)
     def getMessage(self) :
         """Get the message"""
-        return self.message
+        return alarmPy._getMessage(self.cppPvt)
     def setMessage(self,message) :
         """Set the message
 
@@ -41,18 +40,26 @@ class Alarm(object) :
         if not isinstance(message,str) :
             raise TypeError("message is not a str")
             return
-        self.message = message
+        alarmPy._setMessage(self.cppPvt,message)
     def getSeverity(self) :
         """Get the severity"""
-        return self.severity
+        return alarmPy._getSeverity(self.cppPvt)
     def setSeverity(self,severity) :
         """Set the severity.
 
-        severity The severity. It must be an integer between 0 and 3."""
-        if not isinstance(severity,int) :
-            raise TypeError("severity is not an integer")
-            return
-        if (severity<0) or (severity>3) :
-            raise ValueError("severity " + severity + "is out of range")
-            return
-        self.severity = severity
+        severity The severity."""
+        alarmPy._setSeverity(self.cppPvt,severity)
+    def getStatus(self) :
+        """Get the status"""
+        return alarmPy._getStatus(self.cppPvt)
+    def setStatus(self,status) :
+        """Set the status.
+
+        status The status."""
+        alarmPy._setStatus(self.cppPvt,status)
+    def getStatusChoices(self) :
+        """Get the statusChoices"""
+        return alarmPy._getStatusChoices(self.cppPvt)
+    def getSeverityChoices(self) :
+        """Get the severityChoices"""
+        return alarmPy._getSeverityChoices(self.cppPvt)

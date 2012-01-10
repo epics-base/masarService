@@ -133,16 +133,16 @@ static PyObject * _getNTNameValuePy(PyObject *willBeNull, PyObject *args)
     return pvt->get();
 }
 
-static char _initDoc[] = "initialize ntnamevaluePy.";
-static char _destroyDoc[] = "destroy ntnamevaluePy.";
-static char _strDoc[] = "str ntnamevaluePy.";
-static char _getntnamevaluepyDoc[] = "get ntnamevaluepy.";
+static char _initDoc[] = "_init ntnamevaluePy.";
+static char _destroyDoc[] = "_destroy ntnamevaluePy.";
+static char _strDoc[] = "_str ntnamevaluePy.";
+static char _getNTNameValuePyDoc[] = "_getNTNameValuePy ntnamevaluePy.";
 
 static PyMethodDef methods[] = {
     {"_init",_init,METH_VARARGS,_initDoc},
     {"_destroy",_destroy,METH_VARARGS,_destroyDoc},
     {"__str__",_str,METH_VARARGS,_strDoc},
-    {"_getNTNameValuePy",_getNTNameValuePy,METH_VARARGS,_getntnamevaluepyDoc},
+    {"_getNTNameValuePy",_getNTNameValuePy,METH_VARARGS,_getNTNameValuePyDoc},
     {NULL,NULL,0,NULL}
 };
 

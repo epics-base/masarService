@@ -29,4 +29,28 @@ class NTTable(object) :
         nttablePy._destroy(self.cppPvt)
     def __str__(self) :
         """Get a string value for the NTTable"""
-        return nttablePy.__str__(self.cppPvt);
+        return nttablePy._str(self.cppPvt);
+    def getNTTable(self) :
+        """Get a python object that can be passed to
+        another python method that is a wrapper to a C++ method
+        that expects a PVStructure object."""
+        return ntnameValuePy._getNTTablePy(self.cppPvt);
+    def getTimeStamp(self,timeStamp) :
+        """Get the timeStamp from the NTTable
+        timeStamp must be timeStamp.getTimeStampPy()
+        """
+        return nttablePy._getTimeStamp(self.cppPvt,timeStamp);
+    def getAlarm(self,alarm) :
+        """Get the alarm from the NTTable
+        alarm must be alarm.getAlarmPy()
+        """
+        return nttablePy._getAlarm(self.cppPvt,alarm);
+    def getNumberValues(self) :
+        """get the number of value fields"""
+        return nttablePy._getNumberValues(self.cppPvt);
+    def getLabel(self) :
+        """get the label"""
+        return nttablePy._getLabel(self.cppPvt);
+    def getValue(self,index) :
+        """get the value for the specified index"""
+        return nttablePy._getValue(self.cppPvt,index);

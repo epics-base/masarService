@@ -57,17 +57,6 @@ void ChannelRPCPyPvt::destroy()
    channelRPC.reset();
 }
 
-static char _init1Doc[] = "initialize channelRPCPy.";
-static char _init2Doc[] = "initialize channelRPCPy.";
-static char _destroyDoc[] = "destroy channelRPCPy.";
-static char _connectDoc[] = "connect.";
-static char _issueConnectDoc[] = "issueConnect.";
-static char _waitConnectDoc[] = "waitConnect(timeout).";
-static char _requestDoc[] = "request.";
-static char _issueRequestDoc[] = "issueRequest.";
-static char _waitRequestDoc[] = "waitRequest.";
-static char _getMessageDoc[] = "getMessage.";
-
 static PyObject * _init1(PyObject *willBeNull, PyObject *args)
 {
     PyObject *self = 0;
@@ -117,6 +106,7 @@ static PyObject * _destroy(PyObject *willBeNull, PyObject *args)
     Py_BEGIN_ALLOW_THREADS
          pvt->destroy();
     Py_END_ALLOW_THREADS
+    Py_INCREF(Py_None);
     return Py_None;
 }
 
@@ -295,6 +285,17 @@ static PyObject * _getMessage(PyObject *willBeNull, PyObject *args)
     PyObject *pyObject = Py_BuildValue("s",message.c_str());
     return pyObject;
 }
+
+static char _init1Doc[] = "_init1 channelRPCPy.";
+static char _init2Doc[] = "_init2 channelRPCPy.";
+static char _destroyDoc[] = "_destroy channelRPCPy.";
+static char _connectDoc[] = "_connect.";
+static char _issueConnectDoc[] = "_issueConnect.";
+static char _waitConnectDoc[] = "_waitConnect(timeout).";
+static char _requestDoc[] = "_request.";
+static char _issueRequestDoc[] = "_issueRequest.";
+static char _waitRequestDoc[] = "_waitRequest.";
+static char _getMessageDoc[] = "_getMessage.";
 
 static PyMethodDef methods[] = {
     {"_init1",_init1,METH_VARARGS,_init1Doc},

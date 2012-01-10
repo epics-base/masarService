@@ -1,6 +1,12 @@
 from channelRPC import ChannelRPC as ChannelRPC
 from ntnameValue import NTNameValue as NTNameValue
 from nttable import NTTable as NTTable
+from alarm import Alarm as Alarm
+from timeStamp import TimeStamp as TimeStamp
+
+alarm = Alarm()
+timeStamp = TimeStamp()
+
 function = "saveSnapshot"
 args = { "name0" : "value0",
          "name1" : "value1"
@@ -32,4 +38,21 @@ if(result==None) :
     exit(1)
 nttable = NTTable(result)
 print nttable
-channelRPC = None
+
+nttable.getAlarm(alarm.getAlarmPy())
+print alarm;
+
+nttable.getTimeStamp(timeStamp.getTimeStampPy())
+print timeStamp;
+
+numberValues = nttable.getNumberValues()
+print "numberValues",numberValues
+
+label = nttable.getLabel()
+print "label",label
+
+i = 0
+while i < numberValues :
+    value = nttable.getValue(i)
+    print "value",label[i],value
+    i += 1
