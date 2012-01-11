@@ -25,11 +25,11 @@
 <!-- Maturity: Working Draft or Request for Comments, or Recommendation, and date.  -->
 
 <h2 class="nocount" id="L50">EPICS v4 Working Group, Working Draft,
-05-Jan-2012</h2>
+11-Jan-2012</h2>
 <dl>
   <dt>This version:</dt>
     <dd><a
-      href="http://epics-pvdata.sourceforge.net/masarService_20111220.html">masarService_20120105.html</a></dd>
+      href="http://epics-pvdata.sourceforge.net/masarService_20111220.html">masarService_20120111.html</a></dd>
   <dt>Latest version:</dt>
     <dd><a
       href="http://epics-pvdata.sourceforge.net/masarService_20111220.html">masarService_20120104.html</a></dd>
@@ -95,7 +95,7 @@ It is currently under development.</p>
   <li><a href="#L129">Preface</a></li>
   <li><a href="#L149">Introduction</a></li>
   <li><a href="#L157">Building</a></li>
-  <li><a href="#L191">Testing</a>
+  <li><a href="#L191">Testing</a> 
     <ul>
       <li><a href="#L195">gatherV3DoubleExample</a></li>
       <li><a href="#L205">gatherV3DoubleTest</a></li>
@@ -104,13 +104,13 @@ It is currently under development.</p>
       <li><a href="#L233">testchannelRPC.py</a></li>
     </ul>
   </li>
-  <li><a href="#L245">C++ Client</a>
+  <li><a href="#L245">C++ Client</a> 
     <ul>
       <li><a href="#L251">ezchannelRPC</a></li>
       <li><a href="#L307">gatherV3Double</a></li>
     </ul>
   </li>
-  <li><a href="#L383">Python Client</a>
+  <li><a href="#L383">Python Client</a> 
     <ul>
       <li><a href="#L389">channelRPC</a></li>
       <li><a href="#L397">ntnameValue</a></li>
@@ -119,7 +119,7 @@ It is currently under development.</p>
       <li><a href="#L426">timeStamp</a></li>
     </ul>
   </li>
-  <li><a href="#L436">C++ Server</a>
+  <li><a href="#L436">C++ Server</a> 
     <ul>
       <li><a href="#L442">service</a></li>
       <li><a href="#L582">dsl.h - Data Source Layer</a></li>
@@ -203,13 +203,15 @@ python generateSOLinks.py</pre>
 <pre>export PYTHONPATH=/home/install/python2.7/lib/python2.7/site-packages/
 export PYTHONPATH=$PYTHONPATH:/home/mrk/hg/masarService/cpp/src/python
 export PYTHONPATH=$PYTHONPATH:/home/mrk/hg/masarService/python/src/server
-export PYTHONPATH=$PYTHONPATH:/home/mrk/hg/masarService/python/src/client</pre>
+export PYTHONPATH=$PYTHONPATH:/home/mrk/hg/masarService/python/src/client
+export PYTHONPATH=$PYTHONPATH:/home/mrk/hg/masarService/python</pre>
 <hr />
 
 <h2 style="text-align: center" id="L191">Testing</h2>
 <hr />
-<p>masarService/python/test has some python tests.
-The following are C++ tests.</p>
+
+<p>masarService/python/test has some python tests. The following are C++
+tests.</p>
 
 <h3 id="L195">gatherV3DoubleExample</h3>
 
@@ -431,9 +433,11 @@ C++ code that expects to receive an PVStructure argument. For example
 ChannelRPC.request expects to receive an argument that is a python object wraps
 a pVStructure. For example testChannelRPC has the statements:</p>
 <pre>from ntnameValue import NTNameValue as NTNameValue
-function = "saveSnapshot"
-args = { "name0" : "value0",
-         "name1" : "value1"
+function = "saveMasar"
+args = { "data" : "pv_name,value,status,severity,timeStamp",
+         "servicename" : "servicexxx",
+         "configname" : "configxxx",
+         "comment" : "This is a comment"
        }
 
 ntnv = NTNameValue(function,args)
@@ -453,8 +457,7 @@ Type "help", "copyright", "credits" or "license" for more information.
 <p>NTTable is a python class that wraps a C++ implementation of NTTable. It is
 created by passing a python object that a wrapper for a C++ PVStructure that is
 an NTTable. For example ChannelRPC.request returns such and object. Look at
-testchannelRPC.py for an example of how this is used. <b>NOTE: THIS CLASS NEEDS
-MORE METHODS.</b> </p>
+testchannelRPC.py for an example of how this is used.  </p>
 
 <p>To see the methods:</p>
 <pre>mrk&gt; python
