@@ -49,9 +49,20 @@ int main(int argc,char *argv[])
         printf("createDSL failed\n");
         return -1;
     }
-    PVStructure::shared_pointer argument = PVStructure::shared_pointer(
-        getPVDataCreate()->createPVStructure(0, createStructure()));
-    PVStructure::shared_pointer result = dsl->request(argument);
+    String function("saveMasar");
+    int num = 4;
+    String names[num];
+    names[0] = String("data");
+    names[1] = String("servicename");
+    names[2] = String("configname");
+    names[3] = String("comment");
+    String values[num];
+    values[0] = String("pv_name,value,status,severity,timeStamp");
+    values[1] = String("servicexxx");
+    values[2] = String("configxxx");
+    values[3] = String("this is a comment");
+    PVStructure::shared_pointer result = dsl->request(
+        function,num,names,values);
     if(result.get()==0) {
         printf("DSL::result failed\n");
         return -1;

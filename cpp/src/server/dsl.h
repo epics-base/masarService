@@ -39,7 +39,10 @@ public:
      * @return An NTTable which has the results.
      */
     virtual epics::pvData::PVStructure::shared_pointer request(
-        epics::pvData::PVStructure::shared_pointer const & pvArgument) = 0;
+        epics::pvData::String function,
+        int num,
+        epics::pvData::String *names,
+        epics::pvData::String *values) = 0;
 };
 
 }}

@@ -60,10 +60,9 @@ static PyObject * _init1(PyObject *willbenull, PyObject *args)
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(capsule,"pvStructure");
-    PVStructure::shared_pointer *pv = 
+    PVStructure::shared_pointer *pvnamevalue = 
         static_cast<PVStructure::shared_pointer *>(pvoid);
-    NTNameValue ntnamevalue(pvnamevalue);
-    NTNameValuePvt *pvt = new NTNameValuePvt(pvnamevalue);
+    NTNameValuePvt *pvt = new NTNameValuePvt(*pvnamevalue);
     PyObject *pyObject = PyCapsule_New(pvt,"ntnameValuePvt",0);
     return pyObject;
 }

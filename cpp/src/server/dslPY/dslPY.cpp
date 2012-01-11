@@ -16,6 +16,8 @@
 #include <pv/pvIntrospect.h>
 #include <pv/pvData.h>
 #include <pv/dsl.h>
+#include <pv/nt.h>
+
 
 namespace epics { namespace masar { 
 
@@ -31,7 +33,7 @@ public:
     virtual ~DSL_RDB();
     virtual void destroy();
     virtual PVStructure::shared_pointer request(
-         PVStructure::shared_pointer const & pvArgument);
+        String functionName,int num,String *names,String *values);
     bool init();
 private:
     DSL_RDB::shared_pointer getPtrSelf()
@@ -113,28 +115,86 @@ bool DSL_RDB::init()
 
 void DSL_RDB::destroy() {}
 
+static PVStructure::shared_pointer createResult(
+    PyObject *result,
+    String functionName)
+{
+    FieldCreate *fieldCreate = getFieldCreate();
+    NTField *ntField = NTField::get();
+    PVNTField *pvntField = PVNTField::get();
+//String builder;
+//GUIBAO MUST CREATE fields based on result and functionName.
+    int n = 2;
+    FieldConstPtr fields[2];
+    fields[0] = fieldCreate->createScalarArray("position",pvDouble);
+    fields[1] = ntField->createAlarmArray("alarms");
+    PVStructure::shared_pointer pvStructure = NTTable::create(
+        false,true,true,n,fields);
+//builder.clear();
+//pvStructure->toString(&builder);
+//printf("%s\n",builder.c_str());
+//builder.clear();
+//pvStructure->getStructure()->toString(&builder);
+//printf("%s\n",builder.c_str());
+    NTTable ntTable(pvStructure);
+    PVDoubleArray *pvPositions
+        = static_cast<PVDoubleArray *>(ntTable.getPVField(0));
+    double positions[2];
+    positions[0] = 1.0;
+    positions[1] = 2.0;
+    pvPositions->put(0,n,positions,0);
+    PVStructureArray *pvAlarms
+        = static_cast<PVStructureArray *>(ntTable.getPVField(1));
+    PVAlarm pvAlarm;
+    Alarm alarm;
+    PVStructurePtr palarms[n];
+    for(int i=0; i<n; i++) {
+        palarms[i] = pvntField->createAlarm(0);
+        pvAlarm.attach(palarms[i]);
+        alarm.setMessage("test");
+        alarm.setSeverity(majorAlarm);
+        alarm.setStatus(clientStatus);
+        pvAlarm.set(alarm);
+    }
+    pvAlarms->put(0,n,palarms,0);
+    String labels[n];
+    labels[0] = pvPositions->getField()->getFieldName();
+    labels[1] = pvAlarms->getField()->getFieldName();
+    PVStringArray *label = ntTable.getLabel();
+    label->put(0,n,labels,0);
+    ntTable.attachAlarm(pvAlarm);
+    alarm.setMessage("test alarm");
+    alarm.setSeverity(majorAlarm);
+    alarm.setStatus(clientStatus);
+    pvAlarm.set(alarm);
+    PVTimeStamp pvTimeStamp;
+    ntTable.attachTimeStamp(pvTimeStamp);
+    TimeStamp timeStamp(1000,1000,10);
+    pvTimeStamp.set(timeStamp);
+//builder.clear();
+//pvStructure->toString(&builder);
+//printf("%s\n",builder.c_str());
+    return pvStructure;
+}
+
 PVStructure::shared_pointer DSL_RDB::request(
-             PVStructure::shared_pointer const & pvArgument)
+    String functionName,int num,String *names,String *values)
 {
     char * xxx = 0;
     PyGILState_STATE gstate = PyGILState_Ensure();
-    std::string params[] = {"retrieveMasar", "saveMasar"};
-    for (int i = 0; i < 2; i ++) {
-        PyObject * arg = Py_BuildValue("(s)",params[i].c_str());
-        PyObject *result = PyEval_CallObject(prequest,arg);
-        Py_XDECREF(arg);
-        if(result==0) {
-            printf("DSL::request failed\n");
-        } else {
-            if (!PyArg_Parse(result, "s", &xxx)) {
-                printf("DSL::request did not return string\n");
-            } 
-            Py_XDECREF(result);
+        PyObject *pyDict = PyDict_New();
+        for (int i = 0; i < num; i ++) {
+            PyObject *pyValue = Py_BuildValue("s",values[i].c_str());
+            PyDict_SetItemString(pyDict,names[i].c_str(),pyValue);
         }
-    }
+        PyObject *pyValue = Py_BuildValue("s",functionName.c_str());
+        PyDict_SetItemString(pyDict,"function",pyValue);
+        PyObject *result = PyEval_CallObject(prequest,pyDict);
+        PVStructure::shared_pointer pvReturn =
+            createResult(result,functionName);
     PyGILState_Release(gstate);
     printf("DSL::request returned %s\n",xxx);
-    return pvArgument;
+    return pvReturn;
 }
 
 DSL::shared_pointer createDSL_RDB()
