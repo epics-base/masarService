@@ -7,9 +7,11 @@ from timeStamp import TimeStamp as TimeStamp
 alarm = Alarm()
 timeStamp = TimeStamp()
 
-function = "saveSnapshot"
-args = { "name0" : "value0",
-         "name1" : "value1"
+function = "saveMasar"
+args = { "data" : "pv_name,value,status,severity,timeStamp",
+         "servicename" : "servicexxx",
+         "configname" : "configxxx",
+         "comment" : "This is a comment"
        }
 
 ntnv = NTNameValue(function,args)

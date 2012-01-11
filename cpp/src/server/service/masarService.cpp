@@ -46,68 +46,68 @@ void MasarService::request(
     ChannelRPCRequester::shared_pointer const & channelRPCRequester,
     epics::pvData::PVStructure::shared_pointer const & pvArgument)
 {
+    static int numberFunctions = 7;
+    static String functionNames[7] = {
+        String("saveMasar"),
+        String("retrieveMasar"),
+        String("retrieveServiceConfigProps"),
+        String("retrieveServiceConfigs"),
+        String("saveServiceConfig"),
+        String("retrieveServiceEvents"),
+        String("saveServiceEvent")
+    };
     String builder;
     builder += "pvArgument ";
 //pvArgument->toString(&builder);
 //printf("%s\n",builder.c_str());
-    bool isNameValue = NTNameValue::isNTNameValue(pvArgument.get());
-    if(isNameValue) {
-        NTNameValue ntNameValue(pvArgument);
-        PVString *function = ntNameValue.getFunction();
-        //Guobao look at function and decide what to do
-        PVStringArray * pvNames = ntNameValue.getNames();
-        PVStringArray * pvValues = ntNameValue.getValues();
-    } else {
-        channelRPCRequester->message("illegal argument",errorMessage);
-    }
-    // Now what to do? What to pass to dslRdb?
-    PVStructure::shared_pointer result = dslRdb->request(pvArgument);
-    // GUOBAO WHAT TO DO?
-    // Following just makes up an NTTable
-    // You start with this and dslPY
-
-    FieldCreate * fieldCreate = getFieldCreate();
-    NTField *ntField = NTField::get();
-    PVNTField *pvntField = PVNTField::get();
-    int n = 2;
-    FieldConstPtr fields[2];
-    fields[0] = fieldCreate->createScalarArray("position",pvDouble);
-    fields[1] = ntField->createAlarmArray("alarms");
-    PVStructure::shared_pointer pvStructure = NTTable::create(
-        true,true,true,n,fields);
-//builder.clear();
-//pvStructure->toString(&builder);
-//printf("%s\n",builder.c_str());
-//builder.clear();
-//pvStructure->getStructure()->toString(&builder);
-//printf("%s\n",builder.c_str());
-    NTTable ntTable(pvStructure);
-    PVDoubleArray *pvPositions
-        = static_cast<PVDoubleArray *>(ntTable.getPVField(0));
-    double positions[2];
-    positions[0] = 1.0;
-    positions[1] = 2.0;
-    pvPositions->put(0,n,positions,0);
-    PVStructureArray *pvAlarms
-        = static_cast<PVStructureArray *>(ntTable.getPVField(1));
-    PVAlarm pvAlarm;
-    Alarm alarm;
-    PVStructurePtr palarms[n];
-    for(int i=0; i<n; i++) {
-        palarms[i] = pvntField->createAlarm(0);
-        pvAlarm.attach(palarms[i]);
-        alarm.setMessage("test");
+    if(!NTNameValue::isNTNameValue(pvArgument.get())) {
+        FieldConstPtr fields[0];
+        PVStructure::shared_pointer pvStructure = NTTable::create(
+            false,true,true,0,fields);
+        NTTable ntTable(pvStructure);
+        Alarm alarm;
+        PVAlarm pvAlarm;
+        pvAlarm.attach(ntTable.getTimeStamp());
+        alarm.setMessage("pvArgument is not an NTNameValue");
         alarm.setSeverity(majorAlarm);
-        alarm.setStatus(clientStatus);
         pvAlarm.set(alarm);
+        channelRPCRequester->requestDone(Status::OK,pvStructure);
+        return;
     }
-    pvAlarms->put(0,n,palarms,0);
-    String labels[n];
-    labels[0] = pvPositions->getField()->getFieldName();
-    labels[1] = pvAlarms->getField()->getFieldName();
-    PVStringArray *label = ntTable.getLabel();
-    label->put(0,n,labels,0);
-    channelRPCRequester->requestDone(Status::OK,pvStructure);
+    NTNameValue ntNameValue(pvArgument);
+    PVString *function = ntNameValue.getFunction();
+    String functionName;
+    for(int i=0; i<numberFunctions; i++) {
+        if(function->get().compare(functionNames[i])==0) {
+             functionName = functionNames[i];
+             break;
+        }
+    }
+    if(functionName.c_str()==0) {
+        FieldConstPtr fields[0];
+        PVStructure::shared_pointer pvStructure = NTTable::create(
+            false,true,true,0,fields);
+        NTTable ntTable(pvStructure);
+        Alarm alarm;
+        PVAlarm pvAlarm;
+        pvAlarm.attach(ntTable.getTimeStamp());
+        alarm.setMessage("pvArgument has an unsupported function");
+        alarm.setSeverity(majorAlarm);
+        pvAlarm.set(alarm);
+        channelRPCRequester->requestDone(Status::OK,pvStructure);
+        return;
+    }
+    PVStringArray * pvNames = ntNameValue.getNames();
+    PVStringArray * pvValues = ntNameValue.getValues();
+    StringArrayData data;
+    int num = pvNames->getLength();
+    pvNames->get(0,num,&data);
+    String *names = data.data;
+    pvValues->get(0,num,&data);
+    String *values = data.data;
+    PVStructure::shared_pointer result = dslRdb->request(
+        functionName,num,names,values);
+    channelRPCRequester->requestDone(Status::OK,result);
 }
 
 }}

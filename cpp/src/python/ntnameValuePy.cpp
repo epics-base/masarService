@@ -49,6 +49,25 @@ void NTNameValuePvt::destroy()
 }
 
 
+static PyObject * _init1(PyObject *willbenull, PyObject *args)
+{
+    PyObject *self = 0;
+    PyObject *capsule = 0;
+    if(!PyArg_ParseTuple(args,"OO:ntnamevaluepy",
+        &self,
+        &capsule))
+    {
+        return NULL;
+    }
+    void *pvoid = PyCapsule_GetPointer(capsule,"pvStructure");
+    PVStructure::shared_pointer *pv = 
+        static_cast<PVStructure::shared_pointer *>(pvoid);
+    NTNameValue ntnamevalue(pvnamevalue);
+    NTNameValuePvt *pvt = new NTNameValuePvt(pvnamevalue);
+    PyObject *pyObject = PyCapsule_New(pvt,"ntnameValuePvt",0);
+    return pyObject;
+}
+
 static PyObject * _init(PyObject *willbenull, PyObject *args)
 {
     PyObject *self = 0;
@@ -133,12 +152,14 @@ static PyObject * _getNTNameValuePy(PyObject *willBeNull, PyObject *args)
     return pvt->get();
 }
 
+static char _init1Doc[] = "_init1 ntnamevaluePy.";
 static char _initDoc[] = "_init ntnamevaluePy.";
 static char _destroyDoc[] = "_destroy ntnamevaluePy.";
 static char _strDoc[] = "_str ntnamevaluePy.";
 static char _getNTNameValuePyDoc[] = "_getNTNameValuePy ntnamevaluePy.";
 
 static PyMethodDef methods[] = {
+    {"_init1",_init1,METH_VARARGS,_init1Doc},
     {"_init",_init,METH_VARARGS,_initDoc},
     {"_destroy",_destroy,METH_VARARGS,_destroyDoc},
     {"__str__",_str,METH_VARARGS,_strDoc},
