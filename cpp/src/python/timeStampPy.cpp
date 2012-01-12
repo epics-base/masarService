@@ -135,7 +135,7 @@ static PyObject * _setNano(PyObject *willBeNull, PyObject *args)
 {
     PyObject *pcapsule = 0;
     int32 value;
-    if(!PyArg_ParseTuple(args,"Ol:timeStampPy",
+    if(!PyArg_ParseTuple(args,"Oi:timeStampPy",
         &pcapsule,
         &value))
     {
