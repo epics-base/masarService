@@ -23,21 +23,25 @@ namespace epics { namespace pvAccess {
 class NTTablePvt {
 public:
     NTTablePvt(
-        NTTable::shared_pointer nttable);
+        NTTable::shared_pointer nttable,
+        PVStructure::shared_pointer const & pvStructure);
     ~NTTablePvt();
     void destroy();
     PyObject *get(){return pyObject;}
 public:
     NTTable::shared_pointer nttable;
+    PVStructure::shared_pointer pvStructure;
     PyObject *pyObject;
 };
 
 NTTablePvt::NTTablePvt(
-    NTTable::shared_pointer arg)
+    NTTable::shared_pointer arg,
+    PVStructure::shared_pointer const & pv)
 : nttable(arg),
+  pvStructure(pv),
   pyObject(0)
 {
-    pyObject = PyCapsule_New(&nttable,"nttable",0);
+    pyObject = PyCapsule_New(&pvStructure,"pvStructure",0);
     Py_INCREF(pyObject);
 }
 
@@ -67,9 +71,8 @@ static PyObject * _init(PyObject *willbenull, PyObject *args)
         static_cast<PVStructure::shared_pointer *>(pvoid);
     NTTable::shared_pointer nttable = NTTable::shared_pointer(
         new NTTable(*pv));
-    NTTablePvt *pvt = new NTTablePvt(nttable);
-    PyObject *pyObject = PyCapsule_New(pvt,"nttablePvt",0);
-    return pyObject;
+    NTTablePvt *pvt = new NTTablePvt(nttable,*pv);
+    return PyCapsule_New(pvt,"nttablePvt",0);
 }
 
 static PyObject * _destroy(PyObject *willBeNull, PyObject *args)

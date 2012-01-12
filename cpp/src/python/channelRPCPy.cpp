@@ -178,7 +178,6 @@ static PyObject * _waitConnect(PyObject *willBeNull, PyObject *args)
 
 static PyObject * _request(PyObject *willBeNull, PyObject *args)
 {
-//printf("_request\n");
     PyObject *pcapsule = 0;
     PyObject *pargument = 0;
     int *lastRequest = 0;
@@ -189,18 +188,12 @@ static PyObject * _request(PyObject *willBeNull, PyObject *args)
     {
         return NULL;
     }
-//printf("calling PyCapsule_GetPointer\n");
     void *pvoid = PyCapsule_GetPointer(pcapsule,"channelRPCPyPvt");
     ChannelRPCPyPvt *pvt = static_cast<ChannelRPCPyPvt *>(pvoid);
     EZChannelRPC::shared_pointer const & channelRPC = pvt->getChannelRPC();
-//printf("calling PyCapsule_GetPointer\n");
     pvoid = PyCapsule_GetPointer(pargument,"pvStructure");
-//printf("pvoid %p\n",pvoid);
     PVStructure::shared_pointer *pvStructure =
         static_cast<PVStructure::shared_pointer *>(pvoid);
-//String buffer;
-//pvStructure->get()->toString(&buffer);
-//printf("pvArgument\n%s\n",buffer.c_str());
     bool last = (lastRequest==0) ? false : true ;
     Py_BEGIN_ALLOW_THREADS
         pvt->pvResponse = channelRPC->request(*pvStructure,last);
@@ -210,9 +203,6 @@ static PyObject * _request(PyObject *willBeNull, PyObject *args)
         return Py_None;
     }
     PyObject *pyObject = PyCapsule_New(&pvt->pvResponse,"pvStructure",0);
-//String buffer;
-//pvt->pvResponse->toString(&buffer);
-//printf("returning\n%s\n",buffer.c_str());
     return pyObject;
 }
 
@@ -261,9 +251,6 @@ static PyObject * _waitRequest(PyObject *willBeNull, PyObject *args)
         return Py_None;
     }
     PyObject *pyObject = PyCapsule_New(&pvt->pvResponse,"pvStructure",0);
-//String buffer;
-//pvt->pvResponse->toString(&buffer);
-//printf("returning\n%s\n",buffer.c_str());
     return pyObject;
 }
 
