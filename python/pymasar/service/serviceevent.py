@@ -47,7 +47,7 @@ def saveServiceEvent(conn, servicename, configname, comment=None):
     if configname is None:
         raise Exception("service config name is not specified for this event.")
     
-    serviceconfigid = retrieveServiceConfigs(conn, servicename=servicename, configname=configname)
+    serviceconfigid = retrieveServiceConfigs(conn, servicename=servicename, configname=configname)[1:]
     if len(serviceconfigid) > 0:
         serviceconfigid = serviceconfigid[0][0]
     else:
@@ -137,17 +137,17 @@ def retrieveServiceEvents(conn, configid=None,start=None, end=None, comment=None
     >>> saveServiceEvent(conn, servicename='masar1', configname='orbit C01', comment='a service event3')
     3
     >>> results = retrieveServiceEvents(conn, comment='a service event1')
-    >>> for result in results:
+    >>> for result in results[1:]:
     ...    print (result[0], result[1], result[2])
     1 1 a service event1
     >>> results = retrieveServiceEvents(conn)
-    >>> for result in results:
+    >>> for result in results[1:]:
     ...    print (result[0], result[1], result[2])
     1 1 a service event1
     2 1 a service event2
     3 1 a service event3
     >>> results = retrieveServiceEvents(conn, start=start, end=end)
-    >>> for result in results:
+    >>> for result in results[1:]:
     ...    print (result[0], result[1], result[2])
     2 1 a service event2
     >>> conn.close()
@@ -157,34 +157,49 @@ def retrieveServiceEvents(conn, configid=None,start=None, end=None, comment=None
     try:
         cur = conn.cursor()
         sql = '''
-        select service_event_id, service_config_id, service_event_user_tag, service_event_UTC_time, service_event_serial_tag
-        from service_event where service_event_UTC_time > ? and service_event_UTC_time < ?  
+        select service_event_id, service_config_id, service_event_user_tag, service_event_UTC_time
+        from service_event  
         '''
         
-        if end is None:
-            end = dt.datetime.utcnow()
-        if start is None:
-            start = end - dt.timedelta(weeks=1)
-        
-        if start > end:
-            raise Exception('Time range error')
-        
-        if comment is None and configid is None:
-            cur.execute(sql, (start, end,))
-        elif configid is None:
-            sql += ' and service_event_user_tag like ? '
-            cur.execute(sql, (start, end, comment, ))
-        elif comment is None:
-            sql += ' and service_config_id = ? '
-            cur.execute(sql, (start, end, configid, ))
+        if (start is None) and (end is None):
+            if comment is None and configid is None:
+                cur.execute(sql)
+            elif configid is None:
+                sql += ' where service_event_user_tag like ? '
+                cur.execute(sql, (comment, ))
+            elif comment is None:
+                sql += ' where service_config_id = ? '
+                cur.execute(sql, (configid, ))
+            else:
+                sql += ' where service_event_user_tag like ? and service_config_id = ? '
+                cur.execute(sql, (comment, configid, ))
         else:
-            sql += ' and service_event_user_tag like ? and service_config_id = ? '
-            cur.execute(sql, (start, end, comment, configid, ))
+            sql += ' where service_event_UTC_time > ? and service_event_UTC_time < ? '
+            if end is None:
+                end = dt.datetime.utcnow()
+            if start is None:
+                start = end - dt.timedelta(weeks=1)
+            
+            if start > end:
+                raise Exception('Time range error')
+            
+            if comment is None and configid is None:
+                cur.execute(sql, (start, end,))
+            elif configid is None:
+                sql += ' and service_event_user_tag like ? '
+                cur.execute(sql, (start, end, comment, ))
+            elif comment is None:
+                sql += ' and service_config_id = ? '
+                cur.execute(sql, (start, end, configid, ))
+            else:
+                sql += ' and service_event_user_tag like ? and service_config_id = ? '
+                cur.execute(sql, (start, end, comment, configid, ))
         results = cur.fetchall()
     except sqlite3.Error, e:
         print ("Error %s" %e.args[0])
         raise
     
+    results = [('service_event_id', 'service_config_id', 'service_event_user_tag', 'service_event_UTC_time'),] + results[:]
     return results
 
 if __name__ == '__main__':

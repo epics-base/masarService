@@ -134,8 +134,8 @@ def retrieveMasar(conn, eventid=None,start=None, end=None, comment=None):
     It returns data as a tuple array like below:
     service_event_user_tag, service_event_UTC_time, service_config_name, service_name
     [[('user tag', 'event UTC time', 'service config name', 'service name'),
-    ('pv name label', 'value label', 'status label', 'severity label', 'ioc time stamp label', 'ioc time stamp nano label'),
-    (pv_name data, value data, status data, severity data, ioc_timestamp data, ioc_timestamp_nano data)
+    ('pv name label', 'value label', 'status label', 'severity label', 'ioc time stamp label', 'ioc time stamp nano label')]
+    [(pv_name data, value data, status data, severity data, ioc_timestamp data, ioc_timestamp_nano data)
     (pv_name data, value data, status data, severity data, ioc_timestamp data, ioc_timestamp_nano data)
     (pv_name data, value data, status data, severity data, ioc_timestamp data, ioc_timestamp_nano data)
     (pv_name data, value data, status data, severity data, ioc_timestamp data, ioc_timestamp_nano data)
@@ -189,11 +189,10 @@ def retrieveMasar(conn, eventid=None,start=None, end=None, comment=None):
     >>> time.sleep(1.0)
     >>> end2 = dt.datetime.utcnow()
     >>> datas = retrieveMasar(conn, start=start, end=end1)
-    >>> print (datas[0][0][0], ',', datas[0][0][2], ',', datas[0][0][3])
+    >>> print (datas[1][0][0], ',', datas[1][0][2], ',', datas[1][0][3])
     a service event , orbit C01 , masar1
-    >>> for data in datas[0][1:]:
+    >>> for data in datas[1][1:]:
     ...    print (data)
-    (u'pv_name', u'value', u'status', u'severity', u'ioc_timestamp', u'ioc_timestamp_nano')
     (u'SR:C01-BI:G02A<BPM:L1>Pos-X', u'1.0e-4', 0, 0, 435686768234L, 3452345098734L)
     (u'SR:C01-BI:G02A<BPM:L2>Pos-X', u'1.2e-4', 0, 0, 435686768234L, 3452345098734L)
     (u'SR:C01-BI:G04A<BPM:M1>Pos-X', u'0.5e-4', 0, 0, 435686768234L, 3452345098734L)
@@ -201,12 +200,11 @@ def retrieveMasar(conn, eventid=None,start=None, end=None, comment=None):
     (u'SR:C01-BI:G06B<BPM:H1>Pos-X', u'-0.5e-4', 0, 0, 435686768234L, 3452345098734L)
     (u'SR:C01-BI:G06B<BPM:H2>Pos-X', u'-0.8e-4', 0, 0, 435686768234L, 3452345098734L)
     >>> datasets = retrieveMasar(conn, start=start, end=end2)
-    >>> for dataset in datasets:
+    >>> for dataset in datasets[1:]:
     ...    print (dataset[0][0], ',', dataset[0][2], ',', dataset[0][3])
     ...    for data in dataset[1:]:
     ...        print (data)
     a service event , orbit C01 , masar1
-    (u'pv_name', u'value', u'status', u'severity', u'ioc_timestamp', u'ioc_timestamp_nano')
     (u'SR:C01-BI:G02A<BPM:L1>Pos-X', u'1.0e-4', 0, 0, 435686768234L, 3452345098734L)
     (u'SR:C01-BI:G02A<BPM:L2>Pos-X', u'1.2e-4', 0, 0, 435686768234L, 3452345098734L)
     (u'SR:C01-BI:G04A<BPM:M1>Pos-X', u'0.5e-4', 0, 0, 435686768234L, 3452345098734L)
@@ -214,7 +212,6 @@ def retrieveMasar(conn, eventid=None,start=None, end=None, comment=None):
     (u'SR:C01-BI:G06B<BPM:H1>Pos-X', u'-0.5e-4', 0, 0, 435686768234L, 3452345098734L)
     (u'SR:C01-BI:G06B<BPM:H2>Pos-X', u'-0.8e-4', 0, 0, 435686768234L, 3452345098734L)
     a service event , orbit C01 , masar1
-    (u'pv_name', u'value', u'status', u'severity', u'ioc_timestamp', u'ioc_timestamp_nano')
     (u'SR:C01-BI:G02A<BPM:L1>Pos-X', u'1.0e-4', 0, 0, 564562342566L, 3452345098734L)
     (u'SR:C01-BI:G02A<BPM:L2>Pos-X', u'1.2e-4', 0, 0, 564562342566L, 3452345098734L)
     (u'SR:C01-BI:G04A<BPM:M1>Pos-X', u'0.5e-4', 0, 0, 564562342566L, 3452345098734L)
@@ -223,13 +220,14 @@ def retrieveMasar(conn, eventid=None,start=None, end=None, comment=None):
     (u'SR:C01-BI:G06B<BPM:H2>Pos-X', u'-0.8e-4', 0, 0, 564562342566L, 3452345098734L)
     >>> datasets = retrieveMasar(conn, start=end2)
     >>> print (datasets)
-    []
+    [[(u'user tag', u'event UTC time', u'service config name', u'service name'), (u'pv_name', u'value', u'status', u'severity', u'ioc_timestamp', u'ioc_timestamp_nano')]]
     >>> conn.close()
     """
     checkConnection(conn)
     dataset = []
 
-    datahead = [('pv_name', 'value', 'status', 'severity', 'ioc_timestamp', 'ioc_timestamp_nano')]
+    datahead = [[('user tag', 'event UTC time', 'service config name', 'service name'), 
+                ('pv_name', 'value', 'status', 'severity', 'ioc_timestamp', 'ioc_timestamp_nano')]]
     sql = '''
     select service_event_user_tag, service_event_UTC_time, service_config_name, service_name
     from service_event
@@ -240,7 +238,7 @@ def retrieveMasar(conn, eventid=None,start=None, end=None, comment=None):
 
     if eventid:
         data= __retrieveMasarData(conn, eventid)
-        data = datahead + data[:]
+#        data = datahead + data[:]
         
         cur = conn.cursor()
         cur.execute(sql, (eventid,))
@@ -249,16 +247,18 @@ def retrieveMasar(conn, eventid=None,start=None, end=None, comment=None):
         dataset.append(data)
     else:
         results = retrieveServiceEvents(conn, start=start, end=end, comment=comment)
+#        print ("event retults = ", results)
         sql += ' and service_config_id = ?'
-        for result in results:
+        for result in results[1:]:
             data= __retrieveMasarData(conn, result[0])
-            data = datahead + data[:]
+#            data = datahead + data[:]
     
             cur = conn.cursor()
             cur.execute(sql, (result[0], result[1],))
             result =cur.fetchall()
             data = result[:] + data[:]
             dataset.append(data)
+    dataset = datahead[:] + dataset[:]
     return dataset
 
 def __retrieveMasarData(conn, eventid):

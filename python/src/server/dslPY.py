@@ -14,12 +14,11 @@ class DSL(object) :
     def __init__(self) :
         """constructor"""
         self.__servicename = 'masar'
-        self.conn = pymasar.utils.connect()
         
     def __del__(self) :
         """destructor"""
         print ('close SQLite3 connection.')
-        pymasar.utils.close(self.conn)
+#        pymasar.utils.close(conn)
     
     def dispatch(self, fname, fargs):
         actions = (("retrieveServiceConfigProps", self.retrieveServiceConfigProps),
@@ -31,12 +30,12 @@ class DSL(object) :
             if re.match(params, fname):
                 return func(fargs)
 
-    def request(self, func, argument) :
+    def request(self, argument):
         """issue request"""
-#        print ("func: ", func)
+        func = argument['function']
         result = self.dispatch(func, argument)
-        return result
-    
+        return (result, )
+
     def toString(self) :
         """Return a string that shows the message and severity"""
 #        return Alarm.alarmSeverityNames[self.severity] + " " + self.message;
@@ -59,9 +58,11 @@ class DSL(object) :
         if not service:
             service = self.__servicename
 #        print (name, service, config)
-        print pymasar.service.retrieveServiceConfigProps(self.conn, propname=name, servicename=service, configname=config)
-
-        return 'retrieveServiceConfigProps'
+        conn = pymasar.utils.connect()
+        result = pymasar.service.retrieveServiceConfigProps(conn, propname=name, servicename=service, configname=config)
+        pymasar.utils.close(conn)
+        return result
+#        return 'retrieveServiceConfigProps'
     
     def retrieveServiceConfigs(self, params):
         key = ['servicename', 'configname', 'configversion', 'system']
@@ -69,25 +70,32 @@ class DSL(object) :
         if not service:
             service = self.__servicename
 #        print (service, config, version, system)
-        print pymasar.service.retrieveServiceConfigs(self.conn, servicename=service, configname=config, configversion=version, system=system)
-
-        return 'retrieveServiceConfigs'
+        conn = pymasar.utils.connect()
+        result = pymasar.service.retrieveServiceConfigs(conn, servicename=service, configname=config, configversion=version, system=system)
+        pymasar.utils.close(conn)
+        return result
+#        return 'retrieveServiceConfigs'
     
     def retrieveServiceEvents(self, params):
         key = ['configid', 'start', 'end', 'comment']
         cid, start, end, comment = self._parseParams(params, key)
 #        print (cid, start, end, comment)
-        print pymasar.service.retrieveServiceEvents(self.conn, configid=cid,start=start, end=end, comment=comment)
-        
-        return 'retrieveServiceEvents'
+        conn = pymasar.utils.connect()
+        result = pymasar.service.retrieveServiceEvents(conn, configid=cid,start=start, end=end, comment=comment)
+        pymasar.utils.close(conn)
+        return result
+#        return 'retrieveServiceEvents'
 
     def retrieveMasar(self, params): 
         key = ['eventid', 'start', 'end', 'comment']
         eid, start, end, comment = self._parseParams(params, key)
 #        print (eid, start, end, comment)
-        print pymasar.masardata.retrieveMasar(self.conn, eventid=eid,start=start,end=end,comment=comment)
+        conn = pymasar.utils.connect()
+        result = pymasar.masardata.retrieveMasar(conn, eventid=eid,start=start,end=end,comment=comment)
+        pymasar.utils.close(conn)
 
-        return 'retrieveMasar'
+        return result
+#        return 'retrieveMasar'
     
     def saveMasar(self, params):
         key = ['data','servicename','configname','comment']
@@ -97,5 +105,8 @@ class DSL(object) :
             service = self.__servicename
         
 #        print (data, service, config, comment)
-        #pymasar.masardata.saveMasar(self.conn, data, servicename=service, configname=config, comment=comment)
+#        conn = pymasar.utils.connect()
+        #result = pymasar.masardata.saveMasar(conn, data, servicename=service, configname=config, comment=comment)
+#        pymasar.utils.close(conn)
+#        return result
         return 'saveMasar'

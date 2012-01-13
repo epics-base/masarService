@@ -4,49 +4,51 @@ import datetime
 test = dsl.DSL();
 
 def testSaveMasar():
-    func = 'saveMasar'
-    params = {'servicename': 'masar',
+    params = {'function': 'saveMasar',
+              'servicename': 'masar',
               'configname': 'test',
               'comment': 'this is a comment'
               }
     
-    result = test.request(func, params)
-    print "result: ", result
+    result = test.request(params)
+    print "saveMasar: ", result
 
 def testRetrieveMasar():
-    func = 'retrieveMasar'
-    params = {'eventid': 1}
-    result = test.request(func, params)
-    print "result: ", result
+    params = {'function': 'retrieveMasar',
+              'eventid': '56'}
+#              'eventid': '35'}
 
+    result = test.request(params)
+    print "retrieveMasar: ", len(result), len(result[0]), len(result[0][0]), result
+    print "retrieveMasar: ", type(result[0]), result[0]
+    print "retrieveMasar: ", type(result[0][0]), result[0][0]
+    print "retrieveMasar: ", type(result[0][0][0]), result[0][0][0]
+    
 def testRetrieveServiceEvents():
-    func = 'retrieveServiceEvents'
-    params = {'configid': 0,
-              'start': datetime.datetime.utcnow(),
-              'end': datetime.datetime.utcnow()
+    params = {'function': 'retrieveServiceEvents',
+              'configid': '1'
               }
-    result = test.request(func, params)
-    print "result: ", result
+    result = test.request(params)
+    print "retrieveServiceEvents: ", result
 
 def testRetrieveServiceConfigs():
-    func = 'retrieveServiceConfigs'
-    params = {'configname': 'sr', 
+    params = {'function': 'retrieveServiceConfigs',
               'system': 'sr'
               }
-    result = test.request(func, params)
-    print "result: ", result
+    result = test.request(params)
+    print "retrieveServiceConfigs: ", len(result[0]), result
 
 def testRetrieveServiceConfigProps():
-    func = 'retrieveServiceConfigProps'
-    params = {'propname': 'system', 
+    params = {'function': 'retrieveServiceConfigProps',
+              'propname': 'system', 
               'configname': 'sr_qs'
               }
-    result = test.request(func, params)
-    print "result: ", result
+    result = test.request(params)
+    print "retrieveServiceConfigProps: ", result
 
 if __name__ == '__main__':
-    testSaveMasar()
-    testRetrieveMasar()
+#    testSaveMasar()
+#    testRetrieveMasar()
     testRetrieveServiceEvents()
     testRetrieveServiceConfigs()
     testRetrieveServiceConfigProps()

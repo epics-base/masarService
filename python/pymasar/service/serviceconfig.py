@@ -130,43 +130,43 @@ def retrieveServiceConfigs(conn, servicename=None, configname=None, configversio
     >>> saveServiceConfig(conn, 'masar2', 'RF snapshot', 'Storage ring RF system snapshot', system='SR')
     5
     >>> result = retrieveServiceConfigs(conn)
-    >>> print (result[0][0], result[0][1], result[0][5])
-    1 orbit C01 masar1
     >>> print (result[1][0], result[1][1], result[1][5])
-    2 orbit C02 masar1
+    1 orbit C01 masar1
     >>> print (result[2][0], result[2][1], result[2][5])
-    3 orbit C01 masar2
+    2 orbit C02 masar1
     >>> print (result[3][0], result[3][1], result[3][5])
+    3 orbit C01 masar2
+    >>> print (result[4][0], result[4][1], result[4][5])
     4 orbit C02 masar2
     >>> result = retrieveServiceConfigs(conn, servicename='masar1')
-    >>> print (result[0][0], result[0][1])
-    1 orbit C01
     >>> print (result[1][0], result[1][1])
+    1 orbit C01
+    >>> print (result[2][0], result[2][1])
     2 orbit C02
     >>> result = retrieveServiceConfigs(conn, configname='orbit C01')
-    >>> print (result[0][0], result[0][1], result[0][5])
-    1 orbit C01 masar1
     >>> print (result[1][0], result[1][1], result[1][5])
+    1 orbit C01 masar1
+    >>> print (result[2][0], result[2][1], result[2][5])
     3 orbit C01 masar2
     >>> result = retrieveServiceConfigs(conn, servicename='masar1', configname='orbit C01')
-    >>> print (result[0][0], result[0][1])
+    >>> print (result[1][0], result[1][1])
     1 orbit C01
     >>> result = retrieveServiceConfigs(conn, system='SR1')
     >>> result = retrieveServiceConfigs(conn, system='SR')
-    >>> print (result[0][0], ',', result[0][1], ',', result[0][2], ',', result[0][5])
+    >>> print (result[1][0], ',', result[1][1], ',', result[1][2], ',', result[1][5])
     5 , RF snapshot , Storage ring RF system snapshot , masar2
     >>> result = retrieveServiceConfigs(conn, configname='RF snapshot', system='SR')
-    >>> print (result[0][0], ',', result[0][1], ',', result[0][2], ',', result[0][5])
+    >>> print (result[1][0], ',', result[1][1], ',', result[1][2], ',', result[1][5])
     5 , RF snapshot , Storage ring RF system snapshot , masar2
     >>> result = retrieveServiceConfigs(conn, servicename='masar2', system='SR')
-    >>> print (result[0][0], ',', result[0][1], ',', result[0][2], ',', result[0][5])
+    >>> print (result[1][0], ',', result[1][1], ',', result[1][2], ',', result[1][5])
     5 , RF snapshot , Storage ring RF system snapshot , masar2
     >>> result = retrieveServiceConfigs(conn, servicename='masar2', configname='RF snapshot', system='SR')
-    >>> print (result[0][0], ',', result[0][1], ',', result[0][2], ',', result[0][5])
+    >>> print (result[1][0], ',', result[1][1], ',', result[1][2], ',', result[1][5])
     5 , RF snapshot , Storage ring RF system snapshot , masar2
     >>> result = retrieveServiceConfigs(conn, system='SR1')
     >>> print (result)
-    []
+    [(u'service_config_id', u'service_config_name', u'service_config_desc', u'service_config_create_date', u'service_config_version', u'service_name')]
     >>> conn.close()
     """
 
@@ -224,6 +224,7 @@ def retrieveServiceConfigs(conn, servicename=None, configname=None, configversio
         print ("Error %s:" % e.args[0])
         raise
 #        sys.exit()
+    results = [('service_config_id', 'service_config_name', 'service_config_desc', 'service_config_create_date', 'service_config_version', 'service_name'),] + results[:]
     return results
 
 def saveServicePvGroup(conn, configname, pvgroups):
@@ -293,7 +294,7 @@ def saveServicePvGroup(conn, configname, pvgroups):
     checkConnection(conn)
     
     # get service config id
-    serviceconfigid = retrieveServiceConfigs(conn, configname=configname)[0][0]
+    serviceconfigid = retrieveServiceConfigs(conn, configname=configname)[1][0]
     pvg_serviceconfig_ids = []
     pvg_ids = []
     for pvgroup in pvgroups:

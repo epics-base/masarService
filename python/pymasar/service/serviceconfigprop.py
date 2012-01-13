@@ -47,7 +47,7 @@ def saveServiceConfigProp(conn, propname=None, propvalue=None, servicename=None,
     
     checkConnection(conn)
     
-    serviceconfigid = retrieveServiceConfigs(conn, servicename=servicename, configname=configname)
+    serviceconfigid = retrieveServiceConfigs(conn, servicename=servicename, configname=configname)[1:]
     if len(serviceconfigid) > 0:
         serviceconfigid = serviceconfigid[0][0]
     else:
@@ -95,19 +95,19 @@ def retrieveServiceConfigProps(conn, propname=None, servicename=None, configname
     1
     >>> saveServiceConfigProp(conn, 'system', 'booster', 'masar2', 'booster orbit')
     2
-    >>> retrieveServiceConfigProps(conn)
+    >>> retrieveServiceConfigProps(conn)[1:]
     [(1, 1, u'system', u'SR'), (2, 2, u'system', u'booster')]
-    >>> retrieveServiceConfigProps(conn, propname='system')
+    >>> retrieveServiceConfigProps(conn, propname='system')[1:]
     [(1, 1, u'system', u'SR'), (2, 2, u'system', u'booster')]
-    >>> retrieveServiceConfigProps(conn, propname='system', servicename='masar1', configname='orbit C01')
+    >>> retrieveServiceConfigProps(conn, propname='system', servicename='masar1', configname='orbit C01')[1:]
     [(1, 1, u'system', u'SR')]
-    >>> retrieveServiceConfigProps(conn, propname='system', servicename='masar2', configname='booster orbit')
+    >>> retrieveServiceConfigProps(conn, propname='system', servicename='masar2', configname='booster orbit')[1:]
     [(2, 2, u'system', u'booster')]
     >>> conn.close()
     """
     checkConnection(conn)
     
-    serviceconfigids = retrieveServiceConfigs(conn, servicename=servicename, configname=configname)
+    serviceconfigids = retrieveServiceConfigs(conn, servicename=servicename, configname=configname)[1:]
     serviceconfigid = []
     if len(serviceconfigids) > 0:
         for ids in serviceconfigids:
@@ -130,13 +130,14 @@ def retrieveServiceConfigProps(conn, propname=None, servicename=None, configname
             else:
                 cur.execute(sql + ' where service_config_id = ? and service_config_prop_name like ?', (configid, propname,))
             result = cur.fetchall()
-            if len(result) >0:
+            if len(result) > 0:
                 results.append(result[0])
             else:
                 print ('Did not find matched service config property.')
     except sqlite3.Error, e:
         print ('Error %s' %e.args[0])
         raise
+    results = [('service_config_prop_id', 'service_config_id', 'service_config_prop_name', 'service_config_prop_value'),] + results[:]
     return results
 
 if __name__ == '__main__':

@@ -7,54 +7,91 @@ from timeStamp import TimeStamp as TimeStamp
 alarm = Alarm()
 timeStamp = TimeStamp()
 
-function = "saveMasar"
-args = { "data" : "pv_name,value,status,severity,timeStamp",
-         "servicename" : "servicexxx",
-         "configname" : "configxxx",
-         "comment" : "This is a comment"
-       }
+#function = "saveMasar"
+#params = {'function': 'saveMasar',
+#          'servicename': 'masar',
+#          'configname': 'test',
+#          'comment': 'this is a comment'
+#          }
 
-ntnv = NTNameValue(function,args)
-print ntnv
+#function = 'retrieveMasar'
+#params = {'eventid': 35}
 
-channelRPC = ChannelRPC("masarService")
-if not channelRPC.connect(1.0) :
-    print channelRPC.getMessage()
-    exit(1)
-result =  channelRPC.request(ntnv.getNTNameValue(),False)
-if(result==None) :
-    print channelRPC.getMessage()
-    exit(1)
-nttable = NTTable(result)
-print nttable
-# now do issue + wait
-channelRPC = ChannelRPC("masarService","record[process=true]field()")
-channelRPC.issueConnect()
-if not channelRPC.waitConnect(1.0) :
-    print channelRPC.getMessage()
-    exit(1)
-channelRPC.issueRequest(ntnv.getNTNameValue(),False)
-result = channelRPC.waitRequest()
-if(result==None) :
-    print channelRPC.getMessage()
-    exit(1)
-nttable = NTTable(result)
-print nttable
+def testRPC(function, params):
+    ntnv = NTNameValue(function,params)
+    print ntnv
+    
+#    channelRPC = ChannelRPC("masarService")
+#    if not channelRPC.connect(1.0) :
+#        print channelRPC.getMessage()
+#        exit(1)
+#    result =  channelRPC.request(ntnv.getNTNameValue(),False)
+#    if(result==None) :
+#        print channelRPC.getMessage()
+#        exit(1)
+#    nttable = NTTable(result)
+#    print nttable
+#    
+    # now do issue + wait
+    channelRPC = ChannelRPC("masarService","record[process=true]field()")
+    channelRPC.issueConnect()
+    if not channelRPC.waitConnect(1.0) :
+        print channelRPC.getMessage()
+        exit(1)
+    channelRPC.issueRequest(ntnv.getNTNameValue(),False)
+    result = channelRPC.waitRequest()
+    if(result==None) :
+        print channelRPC.getMessage()
+        exit(1)
+    nttable = NTTable(result)
+    print nttable
+    
+    nttable.getAlarm(alarm.getAlarmPy())
+    print alarm;
+    
+    nttable.getTimeStamp(timeStamp.getTimeStampPy())
+    print timeStamp;
+    
+    numberValues = nttable.getNumberValues()
+    print "numberValues",numberValues
+    
+    label = nttable.getLabel()
+    print "label",label
+    
+    i = 0
+    while i < numberValues :
+        value = nttable.getValue(i)
+        print "value",label[i],value
+        i += 1
 
-nttable.getAlarm(alarm.getAlarmPy())
-print alarm;
+if __name__ == '__main__':
+# ======    
+    function = 'retrieveServiceConfigs'
+    print ("=== test %s ===" %function)
+    params = {'system': 'sr'
+              }
+    testRPC(function, params)
+    print ("=== test %s end ===" %function)
 
-nttable.getTimeStamp(timeStamp.getTimeStampPy())
-print timeStamp;
+# ======    
+    function = 'retrieveServiceConfigProps'
+    print ("=== test %s ===" %function)
+    params = {'propname': 'system', 
+              'configname': 'sr_qs'
+              }
+    testRPC(function, params)
+    print ("=== test %s end ===" %function)
+# ======    
+    function = 'retrieveServiceEvents'
+    print ("=== test %s ===" %function)
+    params = {'configid': '1'}
+    testRPC(function, params)
+    print ("=== test %s end ===" %function)
 
-numberValues = nttable.getNumberValues()
-print "numberValues",numberValues
+# ======    
+#    function = 'retrieveMasar'
+#    print ("=== test %s ===" %function)
+#    params = {'eventid': '56'}
+#    testRPC(function, params)
+#    print ("=== test %s end ===" %function)
 
-label = nttable.getLabel()
-print "label",label
-
-i = 0
-while i < numberValues :
-    value = nttable.getValue(i)
-    print "value",label[i],value
-    i += 1
