@@ -54,12 +54,12 @@ void NTNameValuePvt::destroy()
 
 static PyObject * _init1(PyObject *willbenull, PyObject *args)
 {
-    PyObject *self = 0;
     PyObject *capsule = 0;
-    if(!PyArg_ParseTuple(args,"OO:ntnamevaluepy",
-        &self,
+    if(!PyArg_ParseTuple(args,"O:ntnamevaluepy",
         &capsule))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvStructure)");
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(capsule,"pvStructure");
@@ -73,14 +73,14 @@ static PyObject * _init1(PyObject *willbenull, PyObject *args)
 
 static PyObject * _init2(PyObject *willbenull, PyObject *args)
 {
-    PyObject *self = 0;
     const char *function = 0;
     PyObject *dict = 0;
-    if(!PyArg_ParseTuple(args,"OsO!:ntnamevaluepy",
-        &self,
+    if(!PyArg_ParseTuple(args,"sO!:ntnamevaluepy",
         &function,
         &PyDict_Type,&dict))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (function,dictionary)");
         return NULL;
     }
     Py_ssize_t n = PyDict_Size(dict);
@@ -115,9 +115,16 @@ static PyObject * _destroy(PyObject *willBeNull, PyObject *args)
     if(!PyArg_ParseTuple(args,"O:ntnameValuePy",
         &pcapsule))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt)");
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(pcapsule,"ntnameValuePvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
     NTNameValuePvt *pvt = static_cast<NTNameValuePvt *>(pvoid);
     pvt->destroy();
     delete pvt;
@@ -132,9 +139,16 @@ static PyObject * _str(PyObject *willBeNull, PyObject *args)
     if(!PyArg_ParseTuple(args,"O:ntnameValuePy",
         &pcapsule))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt)");
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(pcapsule,"ntnameValuePvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
     NTNameValuePvt *pvt = static_cast<NTNameValuePvt *>(pvoid);
     String buffer;
     pvt->ntnameValue->getPVStructure()->toString(&buffer);
@@ -148,9 +162,16 @@ static PyObject * _getNTNameValuePy(PyObject *willBeNull, PyObject *args)
     if(!PyArg_ParseTuple(args,"O:ntnameValuePy",
         &pcapsule))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt)");
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(pcapsule,"ntnameValuePvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
     NTNameValuePvt *pvt = static_cast<NTNameValuePvt *>(pvoid);
     return pvt->get();
 }
@@ -163,9 +184,16 @@ static PyObject * _getTimeStamp(PyObject *willBeNull, PyObject *args)
         &pcapsule,
         &ptimeStamp))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt)");
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(pcapsule,"ntnameValuePvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
     NTNameValuePvt *pvt = static_cast<NTNameValuePvt *>(pvoid);
     pvoid = PyCapsule_GetPointer(ptimeStamp,"timeStamp");
     TimeStamp *xxx = static_cast<TimeStamp *>(pvoid);
@@ -187,9 +215,16 @@ static PyObject * _getAlarm(PyObject *willBeNull, PyObject *args)
         &pcapsule,
         &palarm))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt,palarm)");
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(pcapsule,"ntnameValuePvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
     NTNameValuePvt *pvt = static_cast<NTNameValuePvt *>(pvoid);
     pvoid = PyCapsule_GetPointer(palarm,"alarm");
     Alarm *xxx = static_cast<Alarm *>(pvoid);
@@ -209,9 +244,16 @@ static PyObject * _getNames(PyObject *willBeNull, PyObject *args)
     if(!PyArg_ParseTuple(args,"O:ntnameValuePy",
         &pcapsule))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt)");
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(pcapsule,"ntnameValuePvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
     NTNameValuePvt *pvt = static_cast<NTNameValuePvt *>(pvoid);
     PVStringArray *pvNames = pvt->ntnameValue->getNames();
     StringArrayData stringArrayData;
@@ -231,9 +273,16 @@ static PyObject * _getValues(PyObject *willBeNull, PyObject *args)
     if(!PyArg_ParseTuple(args,"O:ntnameValuePy",
         &pcapsule))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt)");
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(pcapsule,"ntnameValuePvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
     NTNameValuePvt *pvt = static_cast<NTNameValuePvt *>(pvoid);
     PVStringArray *pvValues = pvt->ntnameValue->getValues();
     StringArrayData stringArrayData;

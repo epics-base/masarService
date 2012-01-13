@@ -15,7 +15,7 @@ class Alarm(object) :
         severity  The initial severity. The default is "".
         status    The initial status. The default is "".
         message   The initial message. The default is an empty string."""
-        self.cppPvt = alarmPy._init(self)
+        self.cppPvt = alarmPy._init()
         alarmPy._setMessage(self.cppPvt,message)
         if severity!="" :
             alarmPy._setSeverity(self.cppPvt,severity)

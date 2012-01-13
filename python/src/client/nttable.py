@@ -23,7 +23,7 @@ class NTTable(object) :
         This is created by other code that wraps a C++ method the
         returns a capsule.
         """
-        self.cppPvt = nttablePy._init(self,capsule)
+        self.cppPvt = nttablePy._init(capsule)
     def __del__(self) :
         """Destructor destroy the connection to the C++ data."""
         nttablePy._destroy(self.cppPvt)
