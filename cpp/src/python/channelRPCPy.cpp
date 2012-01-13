@@ -59,12 +59,12 @@ void ChannelRPCPyPvt::destroy()
 
 static PyObject * _init1(PyObject *willBeNull, PyObject *args)
 {
-    PyObject *self = 0;
     const char *serverName = 0;
-    if(!PyArg_ParseTuple(args,"Os:channelRPCPy",
-        &self,
+    if(!PyArg_ParseTuple(args,"s:channelRPCPy",
         &serverName))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (serverName)");
         return NULL;
     }
     ChannelRPCPyPvt *pvt = new ChannelRPCPyPvt(serverName);
@@ -74,14 +74,14 @@ static PyObject * _init1(PyObject *willBeNull, PyObject *args)
 
 static PyObject * _init2(PyObject *willBeNull, PyObject *args)
 {
-    PyObject *self = 0;
     const char *serverName = 0;
     const char *request = 0;
-    if(!PyArg_ParseTuple(args,"Oss:channelRPCPy",
-        &self,
+    if(!PyArg_ParseTuple(args,"ss:channelRPCPy",
         &serverName,
         &request))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (serverName,request)");
         return NULL;
     }
     CreateRequest::shared_pointer createRequest = getCreateRequest();
@@ -99,9 +99,16 @@ static PyObject * _destroy(PyObject *willBeNull, PyObject *args)
     if(!PyArg_ParseTuple(args,"O:channelRPCPy",
         &pcapsule))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt)");
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(pcapsule,"channelRPCPyPvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
     ChannelRPCPyPvt *pvt = static_cast<ChannelRPCPyPvt *>(pvoid);
     Py_BEGIN_ALLOW_THREADS
          pvt->destroy();
@@ -118,9 +125,16 @@ static PyObject * _connect(PyObject *willBeNull, PyObject *args)
         &pcapsule,
         &timeout))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt,timeout)");
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(pcapsule,"channelRPCPyPvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
     ChannelRPCPyPvt *pvt = static_cast<ChannelRPCPyPvt *>(pvoid);
     EZChannelRPC::shared_pointer const & channelRPC = pvt->getChannelRPC();
     bool result = false;
@@ -131,6 +145,7 @@ static PyObject * _connect(PyObject *willBeNull, PyObject *args)
         Py_INCREF(Py_None);
         return Py_None;
     }
+    PyErr_SetString(PyExc_RuntimeError, "timeout");
     return NULL;
 }
 
@@ -140,9 +155,16 @@ static PyObject * _issueConnect(PyObject *willBeNull, PyObject *args)
     if(!PyArg_ParseTuple(args,"O:channelRPCPy",
         &pcapsule))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt)");
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(pcapsule,"channelRPCPyPvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
     ChannelRPCPyPvt *pvt = static_cast<ChannelRPCPyPvt *>(pvoid);
     EZChannelRPC::shared_pointer const & channelRPC = pvt->getChannelRPC();
     Py_BEGIN_ALLOW_THREADS
@@ -160,9 +182,16 @@ static PyObject * _waitConnect(PyObject *willBeNull, PyObject *args)
         &pcapsule,
         &timeout))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt,timeout)");
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(pcapsule,"channelRPCPyPvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
     ChannelRPCPyPvt *pvt = static_cast<ChannelRPCPyPvt *>(pvoid);
     EZChannelRPC::shared_pointer const & channelRPC = pvt->getChannelRPC();
     bool result = false;
@@ -186,9 +215,16 @@ static PyObject * _request(PyObject *willBeNull, PyObject *args)
         &pargument,
         &lastRequest))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt,pargument)");
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(pcapsule,"channelRPCPyPvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
     ChannelRPCPyPvt *pvt = static_cast<ChannelRPCPyPvt *>(pvoid);
     EZChannelRPC::shared_pointer const & channelRPC = pvt->getChannelRPC();
     pvoid = PyCapsule_GetPointer(pargument,"pvStructure");
@@ -216,9 +252,16 @@ static PyObject * _issueRequest(PyObject *willBeNull, PyObject *args)
         &pargument,
         &lastRequest))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt,pargument)");
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(pcapsule,"channelRPCPyPvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
     ChannelRPCPyPvt *pvt = static_cast<ChannelRPCPyPvt *>(pvoid);
     EZChannelRPC::shared_pointer const & channelRPC = pvt->getChannelRPC();
     pvoid = PyCapsule_GetPointer(pargument,"pvStructure");
@@ -238,9 +281,16 @@ static PyObject * _waitRequest(PyObject *willBeNull, PyObject *args)
     if(!PyArg_ParseTuple(args,"O:channelRPCPy",
         &pcapsule))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt)");
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(pcapsule,"channelRPCPyPvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
     ChannelRPCPyPvt *pvt = static_cast<ChannelRPCPyPvt *>(pvoid);
     EZChannelRPC::shared_pointer const & channelRPC = pvt->getChannelRPC();
     Py_BEGIN_ALLOW_THREADS
@@ -260,9 +310,16 @@ static PyObject * _getMessage(PyObject *willBeNull, PyObject *args)
     if(!PyArg_ParseTuple(args,"O:channelRPCPy",
         &pcapsule))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt)");
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(pcapsule,"channelRPCPyPvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
     ChannelRPCPyPvt *pvt = static_cast<ChannelRPCPyPvt *>(pvoid);
     EZChannelRPC::shared_pointer const & channelRPC = pvt->getChannelRPC();
     String message;

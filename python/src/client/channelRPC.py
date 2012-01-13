@@ -29,9 +29,9 @@ class ChannelRPC(object) :
         channelName The pvName of the channelRPC record for the service.
         request  A string to turn into a pvRequest"""
         if(request==None) :
-            self.cppPvt = channelRPCPy._init1(self,channelName)
+            self.cppPvt = channelRPCPy._init1(channelName)
         else :
-            self.cppPvt = channelRPCPy._init2(self,channelName,request)
+            self.cppPvt = channelRPCPy._init2(channelName,request)
     def __del__(self) :
         """Destructor Destroys the connection to the server"""
         channelRPCPy._destroy(self.cppPvt)

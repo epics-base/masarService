@@ -47,12 +47,6 @@ void TimeStampPvt::destroy()
 
 static PyObject * _init(PyObject *willbenull, PyObject *args)
 {
-    PyObject *self = 0;
-    if(!PyArg_ParseTuple(args,"O:timeStampPy",
-        &self))
-    {
-        return NULL;
-    }
     TimeStampPvt *pvt = new TimeStampPvt();
     PyObject *pyObject = PyCapsule_New(pvt,"timeStampPvt",0);
     return pyObject;
@@ -64,9 +58,16 @@ static PyObject * _destroy(PyObject *willBeNull, PyObject *args)
     if(!PyArg_ParseTuple(args,"O:timeStampPy",
         &pcapsule))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt)");
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(pcapsule,"timeStampPvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
     TimeStampPvt *pvt = static_cast<TimeStampPvt *>(pvoid);
     pvt->destroy();
     delete pvt;
@@ -80,9 +81,16 @@ static PyObject * _getTimeStampPy(PyObject *willBeNull, PyObject *args)
     if(!PyArg_ParseTuple(args,"O:timeStampPy",
         &pcapsule))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt)");
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(pcapsule,"timeStampPvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
     TimeStampPvt *pvt = static_cast<TimeStampPvt *>(pvoid);
     return pvt->get();
 }
@@ -93,9 +101,16 @@ static PyObject * _getSeconds(PyObject *willBeNull, PyObject *args)
     if(!PyArg_ParseTuple(args,"O:timeStampPy",
         &pcapsule))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt)");
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(pcapsule,"timeStampPvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
     TimeStampPvt *pvt = static_cast<TimeStampPvt *>(pvoid);
     return Py_BuildValue("k",pvt->timeStamp.getSecondsPastEpoch());
 }
@@ -108,9 +123,16 @@ static PyObject * _setSeconds(PyObject *willBeNull, PyObject *args)
         &pcapsule,
         &value))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt,seconds)");
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(pcapsule,"timeStampPvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
     TimeStampPvt *pvt = static_cast<TimeStampPvt *>(pvoid);
     int32 nano = pvt->timeStamp.getNanoSeconds();
     pvt->timeStamp.put(value,nano);
@@ -124,9 +146,16 @@ static PyObject * _getNano(PyObject *willBeNull, PyObject *args)
     if(!PyArg_ParseTuple(args,"O:timeStampPy",
         &pcapsule))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt)");
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(pcapsule,"timeStampPvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
     TimeStampPvt *pvt = static_cast<TimeStampPvt *>(pvoid);
     return Py_BuildValue("i",pvt->timeStamp.getNanoSeconds());
 }
@@ -139,9 +168,16 @@ static PyObject * _setNano(PyObject *willBeNull, PyObject *args)
         &pcapsule,
         &value))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt,nanoSeconds)");
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(pcapsule,"timeStampPvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
     TimeStampPvt *pvt = static_cast<TimeStampPvt *>(pvoid);
     int64 secs = pvt->timeStamp.getSecondsPastEpoch();
     pvt->timeStamp.put(secs,value);

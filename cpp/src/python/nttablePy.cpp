@@ -58,15 +58,20 @@ void NTTablePvt::destroy()
 
 static PyObject * _init(PyObject *willbenull, PyObject *args)
 {
-    PyObject *self = 0;
     PyObject *capsule = 0;
-    if(!PyArg_ParseTuple(args,"OO:nttablepy",
-        &self,
+    if(!PyArg_ParseTuple(args,"O:nttablepy",
         &capsule))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvStructure)");
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(capsule,"pvStructure");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Must be pvStructure PyCapsule");
+        return NULL;
+    }
     PVStructure::shared_pointer *pv = 
         static_cast<PVStructure::shared_pointer *>(pvoid);
     NTTable::shared_pointer nttable = NTTable::shared_pointer(
@@ -81,9 +86,16 @@ static PyObject * _destroy(PyObject *willBeNull, PyObject *args)
     if(!PyArg_ParseTuple(args,"O:nttablePy",
         &pcapsule))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt)");
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(pcapsule,"nttablePvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
     NTTablePvt *pvt = static_cast<NTTablePvt *>(pvoid);
     pvt->destroy();
     delete pvt;
@@ -97,9 +109,16 @@ static PyObject * _str(PyObject *willBeNull, PyObject *args)
     if(!PyArg_ParseTuple(args,"O:nttablePy",
         &pcapsule))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt)");
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(pcapsule,"nttablePvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
     NTTablePvt *pvt = static_cast<NTTablePvt *>(pvoid);
     String buffer;
     pvt->nttable->getPVStructure()->toString(&buffer);
@@ -112,9 +131,16 @@ static PyObject * _getNTTablePy(PyObject *willBeNull, PyObject *args)
     if(!PyArg_ParseTuple(args,"O:nttablePy",
         &pcapsule))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt)");
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(pcapsule,"nttablePvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
     NTTablePvt *pvt = static_cast<NTTablePvt *>(pvoid);
     return pvt->get();
 }
@@ -127,9 +153,16 @@ static PyObject * _getTimeStamp(PyObject *willBeNull, PyObject *args)
         &pcapsule,
         &ptimeStamp))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt,ptimeStamp)");
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(pcapsule,"nttablePvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
     NTTablePvt *pvt = static_cast<NTTablePvt *>(pvoid);
     pvoid = PyCapsule_GetPointer(ptimeStamp,"timeStamp");
     TimeStamp *xxx = static_cast<TimeStamp *>(pvoid);
@@ -151,9 +184,16 @@ static PyObject * _getAlarm(PyObject *willBeNull, PyObject *args)
         &pcapsule,
         &palarm))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt,palarm)");
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(pcapsule,"nttablePvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
     NTTablePvt *pvt = static_cast<NTTablePvt *>(pvoid);
     pvoid = PyCapsule_GetPointer(palarm,"alarm");
     Alarm *xxx = static_cast<Alarm *>(pvoid);
@@ -173,9 +213,16 @@ static PyObject * _getNumberValues(PyObject *willBeNull, PyObject *args)
     if(!PyArg_ParseTuple(args,"O:nttablePy",
         &pcapsule))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt)");
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(pcapsule,"nttablePvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
     NTTablePvt *pvt = static_cast<NTTablePvt *>(pvoid);
     int nvalues = pvt->nttable->getNumberValues();
     return Py_BuildValue("i",nvalues);
@@ -187,9 +234,16 @@ static PyObject * _getLabel(PyObject *willBeNull, PyObject *args)
     if(!PyArg_ParseTuple(args,"O:nttablePy",
         &pcapsule))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt)");
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(pcapsule,"nttablePvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
     NTTablePvt *pvt = static_cast<NTTablePvt *>(pvoid);
     PVStringArray *pvLabel = pvt->nttable->getLabel();
     StringArrayData stringArrayData;
@@ -446,9 +500,16 @@ static PyObject * _getValue(PyObject *willbenull, PyObject *args)
         &pcapsule,
         &index))
     {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt,index)");
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(pcapsule,"nttablePvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
     NTTablePvt *pvt = static_cast<NTTablePvt *>(pvoid);
     PVFieldPtr pvField =  pvt->nttable->getPVField(index);
     Type type = pvField->getField()->getType();

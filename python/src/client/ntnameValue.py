@@ -17,7 +17,7 @@ class NTNameValue(object) :
 
         function A string that specifies a function name.
         dictionary A python dictionary that is a sequence of name,value pairs"""
-        self.cppPvt = ntnameValuePy._init2(self,function,dictionary)
+        self.cppPvt = ntnameValuePy._init2(function,dictionary)
     def __del__(self) :
         """Destructor Destroy the C++ NTNameValue"""
         ntnameValuePy._destroy(self.cppPvt)

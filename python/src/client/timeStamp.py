@@ -29,7 +29,7 @@ class TimeStamp(object) :
         if (not isinstance(nanoSeconds,int)) and (not isinstance(nanoSeconds,long)) :
             raise TypeError("nanoSeconds is not an integer")
             return
-        self.cppPvt = timeStampPy._init(self)
+        self.cppPvt = timeStampPy._init()
         timeStampPy._setSeconds(self.cppPvt,secondsPastEpoch)
         timeStampPy._setNano(self.cppPvt,nanoSeconds)
         self.normalize()
