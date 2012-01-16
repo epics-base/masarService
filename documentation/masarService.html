@@ -25,11 +25,11 @@
 <!-- Maturity: Working Draft or Request for Comments, or Recommendation, and date.  -->
 
 <h2 class="nocount" id="L50">EPICS v4 Working Group, Working Draft,
-12-Jan-2012</h2>
+2012.01.16</h2>
 <dl>
-  <dt>This version:</dt>
+  <dt>Previous version:</dt>
     <dd><a
-      href="http://epics-pvdata.sourceforge.net/masarService_20111220.html">masarService_20120111.html</a></dd>
+      href="http://epics-pvdata.sourceforge.net/masarService_20120112.html">masarService_20120111.html</a></dd>
   <dt>Editors:</dt>
     <dd>Guobao Shen, BNL</dd>
     <dd>Marty Kraimer, BNL</dd>
@@ -37,7 +37,9 @@
 <hr />
 </div>
 
+<hr />
 <h2 class="nocount" id="L69">Abstract</h2>
+<hr />
 
 <p>masarService is a service that creates, saves, and retrieves snapshots of
 data from a set of V3 channels.</p>
@@ -70,10 +72,18 @@ href="http://epics-pvdata.sourceforge.net/">V4</a> implementation of <a
 href="http://www.aps.anl.gov/epics/">Experimental Physics and Industrial
 Control System.</a></p>
 
+<hr />
 <h2 class="nocount" id="L103">Status of this Document</h2>
+<hr />
 
 <p>This is the C++ and python implementation of masarService. It is currently
 under development.</p>
+
+<p><b>Known Problem</b> If ClientFactory.stop is called in ezchannelRPC.cpp then python will crash when python terminates.</p>
+
+<hr />
+<h2 class="nocount" style="text-align:center" id="L120">Table of Contents</h2>
+<hr />
 
 <p>CONTENTS</p>
 

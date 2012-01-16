@@ -4,8 +4,6 @@ from nttable import NTTable as NTTable
 from alarm import Alarm as Alarm
 from timeStamp import TimeStamp as TimeStamp
 
-alarm = Alarm()
-timeStamp = TimeStamp()
 
 #function = "saveMasar"
 #params = {'function': 'saveMasar',
@@ -18,6 +16,8 @@ timeStamp = TimeStamp()
 #params = {'eventid': 35}
 
 def testRPC(function, params):
+    alarm = Alarm()
+    timeStamp = TimeStamp()
     ntnv = NTNameValue(function,params)
     print ntnv
     

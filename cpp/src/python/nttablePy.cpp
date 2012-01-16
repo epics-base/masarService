@@ -165,6 +165,11 @@ static PyObject * _getTimeStamp(PyObject *willBeNull, PyObject *args)
     }
     NTTablePvt *pvt = static_cast<NTTablePvt *>(pvoid);
     pvoid = PyCapsule_GetPointer(ptimeStamp,"timeStamp");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "second argument is not a timeStamp capsule");
+        return NULL;
+    }
     TimeStamp *xxx = static_cast<TimeStamp *>(pvoid);
     PVStructurePtr pvStructure = pvt->nttable->getTimeStamp();
     if(pvStructure!=0) {
@@ -196,6 +201,11 @@ static PyObject * _getAlarm(PyObject *willBeNull, PyObject *args)
     }
     NTTablePvt *pvt = static_cast<NTTablePvt *>(pvoid);
     pvoid = PyCapsule_GetPointer(palarm,"alarm");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "second argument is not an alarm capsule");
+        return NULL;
+    }
     Alarm *xxx = static_cast<Alarm *>(pvoid);
     PVStructurePtr pvStructure = pvt->nttable->getAlarm();
     if(pvStructure!=0) {
