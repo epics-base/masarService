@@ -3,7 +3,8 @@
 # Copyright - See the COPYRIGHT that is included with this distribution.
 # This code is distributed subject to a Software License Agreement
 #    found in file LICENSE that is included with this distribution.
-# Author Marty Kraimer 2011.11
+# Author: Guobao Shen   2012.01
+#         Marty Kraimer 2011.11
 
 import re
 
@@ -98,11 +99,11 @@ class DSL(object) :
 #        return 'retrieveMasar'
     
     def saveMasar(self, params):
-        key = ['data','servicename','configname','comment']
+#        key = ['data','servicename','configname','comment']
 
-        data, service, config, comment = self._parseParams(params, key)
-        if not service:
-            service = self.__servicename
+#        data, service, config, comment = self._parseParams(params, key)
+#        if not service:
+#            service = self.__servicename
         
 #        print (data, service, config, comment)
 #        conn = pymasar.utils.connect()

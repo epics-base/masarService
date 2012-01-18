@@ -5,33 +5,13 @@ from alarm import Alarm as Alarm
 from timeStamp import TimeStamp as TimeStamp
 
 
-#function = "saveMasar"
-#params = {'function': 'saveMasar',
-#          'servicename': 'masar',
-#          'configname': 'test',
-#          'comment': 'this is a comment'
-#          }
-
-#function = 'retrieveMasar'
-#params = {'eventid': 35}
-
 def testRPC(function, params):
     alarm = Alarm()
     timeStamp = TimeStamp()
+
     ntnv = NTNameValue(function,params)
     print ntnv
     
-#    channelRPC = ChannelRPC("masarService")
-#    if not channelRPC.connect(1.0) :
-#        print channelRPC.getMessage()
-#        exit(1)
-#    result =  channelRPC.request(ntnv.getNTNameValue(),False)
-#    if(result==None) :
-#        print channelRPC.getMessage()
-#        exit(1)
-#    nttable = NTTable(result)
-#    print nttable
-#    
     # now do issue + wait
     channelRPC = ChannelRPC("masarService","record[process=true]field()")
     channelRPC.issueConnect()
@@ -64,8 +44,7 @@ def testRPC(function, params):
         print "value",label[i],value
         i += 1
 
-if __name__ == '__main__':
-# ======    
+def retrieveServiceConfigs():
     function = 'retrieveServiceConfigs'
     print ("=== test %s ===" %function)
     params = {'system': 'sr'
@@ -73,7 +52,7 @@ if __name__ == '__main__':
     testRPC(function, params)
     print ("=== test %s end ===" %function)
 
-# ======    
+def retrieveServiceConfigProps():
     function = 'retrieveServiceConfigProps'
     print ("=== test %s ===" %function)
     params = {'propname': 'system', 
@@ -81,17 +60,27 @@ if __name__ == '__main__':
               }
     testRPC(function, params)
     print ("=== test %s end ===" %function)
-# ======    
+    
+def retrieveServiceEvents():
     function = 'retrieveServiceEvents'
     print ("=== test %s ===" %function)
-    params = {'configid': '1'}
+    params = {'configid': '100'}
     testRPC(function, params)
     print ("=== test %s end ===" %function)
 
-# ======    
-#    function = 'retrieveMasar'
-#    print ("=== test %s ===" %function)
-#    params = {'eventid': '56'}
-#    testRPC(function, params)
-#    print ("=== test %s end ===" %function)
+def retrieveMasar():
+    function = 'retrieveMasar'
+    print ("=== test %s ===" %function)
+    params = {'eventid': '56'}
+#    params = {'eventid': '10'}
+    testRPC(function, params)
+    print ("=== test %s end ===" %function)
+
+if __name__ == '__main__':
+    for i in range (1):
+        retrieveServiceConfigs()
+        retrieveServiceConfigProps()
+        retrieveServiceEvents()
+        retrieveMasar()
+
 

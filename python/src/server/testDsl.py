@@ -1,5 +1,4 @@
 import dslPY as dsl
-import datetime
 
 test = dsl.DSL();
 
@@ -13,11 +12,9 @@ def testSaveMasar():
     result = test.request(params)
     print "saveMasar: ", result
 
-def testRetrieveMasar():
-    params = {'function': 'retrieveMasar',
-              'eventid': '56'}
-#              'eventid': '35'}
-
+def testRetrieveMasar(**kws):
+    params = {'function': 'retrieveMasar'}
+    params.update(kws)
     result = test.request(params)
     print "retrieveMasar: ", len(result), len(result[0]), len(result[0][0]), result
     print "retrieveMasar: ", type(result[0]), result[0]
@@ -47,8 +44,11 @@ def testRetrieveServiceConfigProps():
     print "retrieveServiceConfigProps: ", result
 
 if __name__ == '__main__':
-#    testSaveMasar()
-#    testRetrieveMasar()
+    testSaveMasar()
+    testRetrieveMasar(eventid='56')
+    testRetrieveMasar(eventid='35')
+    testRetrieveMasar(eventid='10')
+
     testRetrieveServiceEvents()
     testRetrieveServiceConfigs()
     testRetrieveServiceConfigProps()
