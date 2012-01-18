@@ -52,6 +52,8 @@ struct GatherV3DoublePvt
     ChannelID **apchannelID; // array of  pointer to ChanneID
     PVDoubleArray *pvvalue;
     PVDoubleArray *pvdeltaTime;
+    PVLongArray *pvsecPastEpoch;
+    PVIntArray *pvNano;
     PVIntArray *pvseverity;
     PVBooleanArray *pvisConnected;
     PVStringArray *pvchannelName;
@@ -149,6 +151,16 @@ static void getCallback ( struct event_handler_args args )
     TimeStamp timeStamp(secs,nano);
     double diff = TimeStamp::diff(timeStamp,pvt->timeStamp);
     pdeltaTime[offset] = diff;
+
+    LongArrayData ldata;
+    pvt->pvsecPastEpoch->get(0,pvt->numberChannels,&ldata);
+    int64 * psecPastEpoch = ldata.data;
+    psecPastEpoch[offset] = secs;
+
+    pvt->pvNano->get(0,pvt->numberChannels,&idata);
+    int * pnano = idata.data;
+    pnano[offset] = nano;
+
     if(pvt->numberCallbacks==pvt->numberChannels) {
         pvt->event.signal();
     }
@@ -157,14 +169,16 @@ static void getCallback ( struct event_handler_args args )
 GatherV3Double::GatherV3Double(String channelNames[],int numberChannels)
 : pvt(0)
 {
-    int n = 5;
+    int n = 7;
     FieldConstPtr fields[n];
     FieldCreate *fieldCreate = getFieldCreate();
     fields[0] = fieldCreate->createScalarArray("value",pvDouble);
     fields[1] = fieldCreate->createScalarArray("deltaTime",pvDouble);
-    fields[2] = fieldCreate->createScalarArray("severity",pvInt);
-    fields[3] = fieldCreate->createScalarArray("isConnected",pvBoolean);
-    fields[4] = fieldCreate->createScalarArray("channelName",pvString);
+    fields[2] = fieldCreate->createScalarArray("secPastEpoch",pvLong);
+    fields[3] = fieldCreate->createScalarArray("nano",pvInt);
+    fields[4] = fieldCreate->createScalarArray("severity",pvInt);
+    fields[5] = fieldCreate->createScalarArray("isConnected",pvBoolean);
+    fields[6] = fieldCreate->createScalarArray("channelName",pvString);
     PVStructure::shared_pointer pvStructure = NTTable::create(
         false,true,true,n,fields);
     pvt = new GatherV3DoublePvt(pvStructure);
@@ -190,6 +204,7 @@ GatherV3Double::GatherV3Double(String channelNames[],int numberChannels)
     double *pdouble = ddata.data;
     for (int i=0; i<numberChannels; i++) pdouble[i] = 0.0;
     pvt->pvvalue->setLength(numberChannels);
+
     pvt->pvdeltaTime = static_cast<PVDoubleArray *>(pvt->nttable.getPVField(1));
     pvt->pvdeltaTime->setCapacity(numberChannels);
     pvt->pvdeltaTime->setCapacityMutable(false);
@@ -197,15 +212,36 @@ GatherV3Double::GatherV3Double(String channelNames[],int numberChannels)
     pdouble = ddata.data;
     for (int i=0; i<numberChannels; i++) pdouble[i] = 0.0;
     pvt->pvdeltaTime->setLength(numberChannels);
-    pvt->pvseverity = static_cast<PVIntArray *>(pvt->nttable.getPVField(2));
-    pvt->pvseverity->setCapacity(numberChannels);
-    pvt->pvseverity->setCapacityMutable(false);
+
+    pvt->pvsecPastEpoch = static_cast<PVLongArray *>(pvt->nttable.getPVField(2));
+    pvt->pvsecPastEpoch->setCapacity(numberChannels);
+    pvt->pvsecPastEpoch->setCapacityMutable(false);
+    LongArrayData ldata;
+    pvt->pvsecPastEpoch->get(0,numberChannels,&ldata);
+    int64 *plong = ldata.data;
+    for (int i=0; i<numberChannels; i++) plong[i] = 0;
+    pvt->pvsecPastEpoch->setLength(numberChannels);
+
+    pvt->pvNano = static_cast<PVIntArray *>(pvt->nttable.getPVField(3));
+    pvt->pvNano->setCapacity(numberChannels);
+    pvt->pvNano->setCapacityMutable(false);
     IntArrayData idata;
-    pvt->pvseverity->get(0,numberChannels,&idata);
+    pvt->pvNano->get(0,numberChannels,&idata);
     int *pint = idata.data;
     for (int i=0; i<numberChannels; i++) pint[i] = 4;
+    pvt->pvNano->setLength(numberChannels);
+
+    pvt->pvseverity = static_cast<PVIntArray *>(pvt->nttable.getPVField(4));
+    pvt->pvseverity->setCapacity(numberChannels);
+    pvt->pvseverity->setCapacityMutable(false);
+//    IntArrayData idata;
+    pvt->pvseverity->get(0,numberChannels,&idata);
+//    int *pint = idata.data;
+    pint = idata.data;
+    for (int i=0; i<numberChannels; i++) pint[i] = 4;
     pvt->pvseverity->setLength(numberChannels);
-    pvt->pvisConnected = static_cast<PVBooleanArray *>(pvt->nttable.getPVField(3));
+
+    pvt->pvisConnected = static_cast<PVBooleanArray *>(pvt->nttable.getPVField(5));
     pvt->pvisConnected->setCapacity(numberChannels);
     pvt->pvisConnected->setCapacityMutable(false);
     BooleanArrayData bdata;
@@ -213,7 +249,8 @@ GatherV3Double::GatherV3Double(String channelNames[],int numberChannels)
     bool *pbool = bdata.data;
     for (int i=0; i<numberChannels; i++) pbool[i] = false;
     pvt->pvisConnected->setLength(numberChannels);
-    pvt->pvchannelName = static_cast<PVStringArray *>(pvt->nttable.getPVField(4));
+
+    pvt->pvchannelName = static_cast<PVStringArray *>(pvt->nttable.getPVField(6));
     pvt->pvchannelName->setCapacity(numberChannels);
     pvt->pvchannelName->setCapacityMutable(false);
     pvt->pvchannelName->put(0,numberChannels,channelNames,0);
@@ -382,4 +419,11 @@ PVStringArray * GatherV3Double::getChannelName()
     return pvt->pvchannelName;
 }
 
+PVLongArray *GatherV3Double::getTsSecPastEpoch(){
+    return pvt->pvsecPastEpoch;
+}
+
+PVIntArray *GatherV3Double::pvTsNano(){
+    return pvt->pvNano;
+}
 }}

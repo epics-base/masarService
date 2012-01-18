@@ -1,4 +1,4 @@
-/* gatherV3Double.h */
+/* gatherV3Data.h */
 /*
  * Copyright - See the COPYRIGHT that is included with this distribution.
  * This code is distributed subject to a Software License Agreement found
@@ -111,6 +111,17 @@ public:
      * @returns The array.
      */
     epics::pvData::PVStringArray  *getChannelName();
+    /**
+     * Get the array of seconds past epoch of time stamp for each V3 channel.
+     * @returns The array.
+     */
+    epics::pvData::PVLongArray *getTsSecPastEpoch();
+    /**
+     * Get the array of nano seconds of time stamp for each V3 channel.
+     * @returns The array.
+     */
+    epics::pvData::PVIntArray *pvTsNano();
+
 private:
     GatherV3Double::shared_pointer getPtrSelf()
     {
