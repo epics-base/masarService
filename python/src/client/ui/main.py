@@ -248,7 +248,7 @@ class masar(QMainWindow, ui_masar.Ui_masar):
             
             data = self.retrieveMasarData(eventid=eventIds[i])
             tabWidget.clear()
-            self.setTable(data, tabWidget)
+            self.setSnapshotTable(data, tabWidget)
             tabWidget.resizeColumnsToContents()
             label = QString.fromUtf8((eventNames[i]+': ' + eventTs[i]))
             self.snapshotTabWidget.addTab(tabWidget, label)
@@ -257,6 +257,78 @@ class masar(QMainWindow, ui_masar.Ui_masar):
     def setEventTable(self, data):
         self.setTable(data, self.eventTableWidget)
     
+    def setSnapshotTable(self, data, table):
+        if data:
+            length = len(data.values()[0])
+        else:
+            print ('data is empty, exit.')
+            return
+        
+        for i in range(1, len(data.values())):
+            if length != len(data.values()[i]):
+                QMessageBox.warning(self,
+                                    "Warning",
+                                    "Data length are not consistent.")
+
+                return
+
+        if isinstance(data, odict) and isinstance(table, QTableWidget):
+            nrows = len(data.values()[0])
+            #    ('pv name label',  'dbr_type label', 'string value', 'int value', 'double value', 'status label', 'severity label', 'ioc time stamp label', 'ioc time stamp nano label'),
+            # => (pv_name, status, severity, ioc_timestamp, saved value)
+            ncols = len(data) - 4
+            table.setRowCount(nrows)
+            table.setColumnCount(ncols)
+            
+            pvnames = data['PV Name']
+            status = data['Status']
+            severity = data['Severity']
+            ts = data['Time stamp']
+            ts_nano = data['Time stamp (nano)']
+            dbrtype = data['DBR']
+            s_value = data['S_value']
+            i_value = data['I_value']
+            d_value = data['D_value']
+
+            epicsInt    = [1, 4, 5]
+            epicsString = [0]
+            epicsDouble = [2, 6]
+
+            keys = ['PV Name', 'Status', 'Severity', 'Time stamp', 'Saved value']
+            table.setHorizontalHeaderLabels(keys)
+            
+            for i in range(nrows):
+                if pvnames[i]:
+                    newitem = QTableWidgetItem(pvnames[i])
+                    newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
+                    table.setItem(i, 0, newitem)
+                if status[i]:
+                    newitem = QTableWidgetItem(status[i])
+                    newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
+                    table.setItem(i, 1, newitem)
+                if severity[i]:
+                    newitem = QTableWidgetItem(severity[i])
+                    newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
+                    table.setItem(i, 2, newitem)
+                if ts[i]:
+                    dt = str(datetime.datetime.fromtimestamp(ts[i]+ts_nano[i]*1.0e-9))
+                    newitem = QTableWidgetItem(dt)
+                    newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
+                    table.setItem(i, 3, newitem)
+                if dbrtype[i]:
+                    if dbrtype[i] in epicsDouble:
+                        newitem = QTableWidgetItem(str(d_value[i]))
+                        newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
+                    elif dbrtype[i] in epicsInt:
+                        newitem = QTableWidgetItem(str(i_value[i]))
+                        newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
+                    elif dbrtype[i] in epicsString:
+                        newitem = QTableWidgetItem(s_value[i])
+                        newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
+                    table.setItem(i, 4, newitem)
+        else:
+            raise "Either given data is not an instance of OrderedDict or table is not an instance of QtGui.QTableWidget"
+
     def setTable(self, data, table):
         """
         Set data view.
@@ -301,7 +373,7 @@ class masar(QMainWindow, ui_masar.Ui_masar):
         if source == 'sqlite':
             results = pymasar.service.retrieveServiceConfigProps(conn)
             system = []
-            for result in results:
+            for result in results[1:]:
                 system.append(result[3])
             return sorted(set(system))
     
@@ -309,10 +381,12 @@ class masar(QMainWindow, ui_masar.Ui_masar):
         if source == 'sqlite':
 #            print (type(self.currentConfigFilter), self.currentConfigFilter)
 #            results = pymasar.service.retrieveServiceConfigs(conn, servicename=self.__service, configname=self.currentConfigFilter, system=self.system)
-            results = pymasar.service.retrieveServiceConfigs(conn, servicename=self.__service, system=self.system)
+            results = pymasar.service.retrieveServiceConfigs(conn, servicename=self.__service, system=self.system)[1:]
             # the rturned data format looks like
             # [(service_config_id, service_config_name, service_config_desc, service_config_create_date, 
             #   service_config_version, and service_name)]
+
+            #  + self.UTC_OFFSET_TIMEDELTA
             config_id = []
             config_name = []
             config_desc = []
@@ -361,7 +435,7 @@ class masar(QMainWindow, ui_masar.Ui_masar):
                     else:
                         results = pymasar.service.retrieveServiceEvents(conn, configid= cid)
                     #service_event_id, service_config_id, service_event_user_tag, service_event_UTC_time, service_event_serial_tag
-                    for res in results:
+                    for res in results[1:]:
                         c_names.append(confignames[i])
                         event_ids.append(str(res[0]))
 #                        event_ts.append(res[3] - self.UTC_OFFSET_TIMEDELTA)
@@ -378,38 +452,48 @@ class masar(QMainWindow, ui_masar.Ui_masar):
         if source == 'sqlite':
             # result format:
             #    ('user tag', 'event UTC time', 'service config name', 'service name'),
-            #    ('pv name label', 'value label', 'status label', 'severity label', 'ioc time stamp label', 'ioc time stamp nano label'),
+            #    ('pv name label',  'dbr_type label', 'string value', 'int value', 'double value', 'status label', 'severity label', 'ioc time stamp label', 'ioc time stamp nano label'),
             #    (pv_name data, value data, status data, severity data, ioc_timestamp data, ioc_timestamp_nano data)
-            results = pymasar.masardata.masardata.retrieveMasar(conn, eventid=eventid)[0]
+            results = pymasar.masardata.masardata.retrieveMasar(conn, eventid=eventid)[1]
+            print (results)
             data = odict()
             pvnames = []
+            dbrtype = []
+            s_value = []
+            i_value = []
+            d_value = []
             status = []
             severity = []
             ts = []
             ts_nano = []
-            value = []
             if len(results) > 2:
                 for i in range(2, len(results)):
                     res = results[i]
                     pvnames.append(res[0])
-                    value.append(res[1])
+                    dbrtype.append(res[1])
+                    s_value.append(res[2])
+                    i_value.append(res[3])
+                    d_value.append(res[4])
                     try:
-                        status.append(self.alarmDict[res[2]])
+                        status.append(self.alarmDict[res[5]])
                     except:
                         status.append('N/A')
                     try:
-                        severity.append(self.severityDict[res[3]])
+                        severity.append(self.severityDict[res[6]])
                     except:
                         severity.append('N/A')
-                    ts.append(str(res[4]))
-                    ts_nano.append(str(res[5]))
+                    ts.append(res[7])
+                    ts_nano.append(res[8])
 #                    print (res)
             data['PV Name'] = pvnames
             data['Status'] = status
             data['Severity'] = severity
             data['Time stamp'] = ts
             data['Time stamp (nano)'] = ts_nano
-            data['Saved value'] = value
+            data['DBR'] = dbrtype
+            data['S_value'] = s_value
+            data['I_value'] = i_value
+            data['D_value'] = d_value
     
         return data
 

@@ -153,17 +153,19 @@ def dummyServiceEventData():
         data = []
         
         import random
+        import time
         # data from ioc
-        # [(pv_name, value, status, severity, ioc_timestamp, ioc_timestamp_nano), ]
+        # [(pv_name, dbr_type, s_value, i_value, d_value, status, severity, ioc_timestamp, ioc_timestamp_nano), ]
         for pv in pvlist:
-            data.append((pv, str(random.uniform(-5.0e-2, 5.0e-2)), '0', '0', str(random.randrange(1e9, 5e9)), str(random.randrange(1e6, 5e6))))
+            sec = time.time()
+            data.append((pv, 6, '', 0, random.uniform(-5.0e-2, 5.0e-2), 0, 0, int(sec), int((sec-int(sec))*1e9)))
         saveMasar(conn, data, servicename=__servicename, configname=k, comment=v[0])
         
 if __name__ == '__main__':
-#    initPvGroups()
-#    initService()
-#    initServiceConfig()
-#    dummyServiceEventNoData
+    initPvGroups()
+    initService()
+    initServiceConfig()
+    dummyServiceEventNoData()
     dummyServiceEventData()
     save(conn)
     conn.close()
