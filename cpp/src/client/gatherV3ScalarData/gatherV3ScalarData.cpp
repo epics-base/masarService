@@ -19,13 +19,6 @@ using namespace epics::pvData;
 
 struct GatherV3ScalarDataPvt;
 
-struct ChannelID
-{
-    GatherV3ScalarDataPvt *pvt;
-    chid theChid;
-    int offset;
-};
-
 enum State {
     idle,
     connecting,
@@ -39,13 +32,19 @@ enum V3RequestType {
     requestString
 };
 
+struct ChannelID
+{
+    GatherV3ScalarDataPvt *pvt;
+    chid theChid;
+    int offset;
+    V3RequestType requestType;
+};
+
 struct GatherV3ScalarDataPvt
 {
     GatherV3ScalarDataPvt(
-          PVStructure::shared_pointer const & pvStructure,
-          V3RequestType requestType)
-    : requestType(requestType),
-      pvStructure(pvStructure),
+          PVStructure::shared_pointer const & pvStructure)
+    : pvStructure(pvStructure),
       nttable(NTTable(pvStructure))
     {}
     ~GatherV3ScalarDataPvt(){}
@@ -56,7 +55,6 @@ struct GatherV3ScalarDataPvt
     PVAlarm pvalarm;
     Alarm alarm;
     String message;
-    V3RequestType requestType;
     PVStructure::shared_pointer pvStructure;
     NTTable nttable;
     int numberChannels;
@@ -114,12 +112,31 @@ static void connectionCallback(struct connection_handler_args args)
     Lock xx(pvt->mutex);
     data.data[offset] = newState;
     if(newState) {
+        int dbrType = ca_field_type(chid);
+        switch(dbrType) {
+        case DBF_STRING:
+        case DBF_ENUM:
+            id->requestType = requestString; break;
+        case DBF_CHAR:
+        case DBF_INT:
+        case DBF_LONG:
+            id->requestType = requestInt; break;
+        case DBF_FLOAT:
+        case DBF_DOUBLE:
+            id->requestType = requestDouble; break;
+        default:
+            String message(ca_name(chid));
+            message += " has unsupported type";
+            throw std::runtime_error(message.c_str());
+        }
         IntArrayData data;
         pvt->pvDBRType->get(0,pvt->numberChannels,&data);
         int32 * pvalue = data.data;
-        pvalue[offset] = ca_field_type(chid);
+        pvalue[offset] = dbrType;
         if(ca_element_count(chid)>1) {
-            throw std::runtime_error("a channel is an array instead of scalar");
+            String message(ca_name(chid));
+            message += " is an array instead of scalar";
+            throw std::runtime_error(message.c_str());
         }
         pvt->numberConnected++;
         if(pvt->state==connecting && pvt->numberConnected==pvt->numberChannels) {
@@ -180,21 +197,27 @@ static void getCallback ( struct event_handler_args args )
     pvt->pvnanoSeconds->get(0,pvt->numberChannels,&idata);
     int32 *pnanoSeconds = idata.data;
     pnanoSeconds[offset] = nano;
-    if(pvt->requestType==requestDouble) {
+    if(id->requestType==requestDouble) {
         const struct dbr_time_double * pTD =
              ( const struct dbr_time_double * ) args.dbr;
         DoubleArrayData data;
         pvt->pvdoubleValue->get(0,pvt->numberChannels,&data);
         double * pvalue = data.data;
         pvalue[offset] = pTD->value;
-    } else if(pvt->requestType==requestInt) {
+        IntArrayData idata;
+        pvt->pvintValue->get(0,pvt->numberChannels,&idata);
+        idata.data[offset] = pTD->value;
+    } else if(id->requestType==requestInt) {
         const struct dbr_time_long * pTL =
              ( const struct dbr_time_long * ) args.dbr;
         IntArrayData data;
         pvt->pvintValue->get(0,pvt->numberChannels,&data);
         int32 * pvalue = data.data;
         pvalue[offset] = pTL->value;
-    } else if(pvt->requestType==requestString) {
+        DoubleArrayData ddata;
+        pvt->pvdoubleValue->get(0,pvt->numberChannels,&ddata);
+        ddata.data[offset] = pTL->value;
+    } else if(id->requestType==requestString) {
         const struct dbr_time_string * pTS =
              ( const struct dbr_time_string * ) args.dbr;
         StringArrayData data;
@@ -212,8 +235,7 @@ static void getCallback ( struct event_handler_args args )
 
 GatherV3ScalarData::GatherV3ScalarData(
     String channelNames[],
-    int numberChannels,
-    String type)
+    int numberChannels)
 : pvt(0)
 {
     IntArrayData idata;
@@ -223,15 +245,6 @@ GatherV3ScalarData::GatherV3ScalarData(
     BooleanArrayData bdata;
 
     V3RequestType requestType = requestDouble;
-    if(type.compare("int")==0) {
-        requestType = requestInt;
-    } else if(type.compare("double")==0) {
-        requestType = requestDouble;
-    } else if(type.compare("string")==0) {
-        requestType = requestString;
-    } else {
-        throw std::runtime_error("Bad type. Must be int,double, or string");
-    }
     int n = 12;
     FieldConstPtr fields[n];
     FieldCreate *fieldCreate = getFieldCreate();
@@ -249,7 +262,7 @@ GatherV3ScalarData::GatherV3ScalarData(
     fields[11] = fieldCreate->createScalarArray("channelName",pvString);
     PVStructure::shared_pointer pvStructure = NTTable::create(
         false,true,true,n,fields);
-    pvt = new GatherV3ScalarDataPvt(pvStructure,requestType);
+    pvt = new GatherV3ScalarDataPvt(pvStructure);
     pvt->nttable.attachTimeStamp(pvt->pvtimeStamp);
     pvt->nttable.attachAlarm(pvt->pvalarm);
     pvt->pvtimeStamp.attach(pvStructure->getSubField("timeStamp"));
@@ -266,31 +279,28 @@ GatherV3ScalarData::GatherV3ScalarData(
     pvt->apchannelID = apchannelID;
 
     pvt->pvdoubleValue = static_cast<PVDoubleArray *>(pvt->nttable.getPVField(0));
-    int length = (requestType==requestDouble) ? numberChannels : 0;
-    pvt->pvdoubleValue->setCapacity(length);
+    pvt->pvdoubleValue->setCapacity(numberChannels);
     pvt->pvdoubleValue->setCapacityMutable(false);
-    pvt->pvdoubleValue->get(0,length,&ddata);
+    pvt->pvdoubleValue->get(0,numberChannels,&ddata);
     double *pdouble = ddata.data;
-    for (int i=0; i<length; i++) pdouble[i] = 0.0;
-    pvt->pvdoubleValue->setLength(length);
+    for (int i=0; i<numberChannels; i++) pdouble[i] = 0.0;
+    pvt->pvdoubleValue->setLength(numberChannels);
 
     pvt->pvintValue = static_cast<PVIntArray *>(pvt->nttable.getPVField(1));
-    length = (requestType==requestInt) ? numberChannels : 0;
-    pvt->pvintValue->setCapacity(length);
+    pvt->pvintValue->setCapacity(numberChannels);
     pvt->pvintValue->setCapacityMutable(false);
-    pvt->pvintValue->get(0,length,&idata);
+    pvt->pvintValue->get(0,numberChannels,&idata);
     int32 *pint = idata.data;
-    for (int i=0; i<length; i++) pint[i] = 0.0;
-    pvt->pvintValue->setLength(length);
+    for (int i=0; i<numberChannels; i++) pint[i] = 0.0;
+    pvt->pvintValue->setLength(numberChannels);
 
     pvt->pvstringValue = static_cast<PVStringArray *>(pvt->nttable.getPVField(2));
-    length = (requestType==requestString) ? numberChannels : 0;
-    pvt->pvstringValue->setCapacity(length);
+    pvt->pvstringValue->setCapacity(numberChannels);
     pvt->pvstringValue->setCapacityMutable(false);
-    pvt->pvstringValue->get(0,length,&sdata);
+    pvt->pvstringValue->get(0,numberChannels,&sdata);
     String *pstring = sdata.data;
-    for (int i=0; i<length; i++) pstring[i] = 0.0;
-    pvt->pvstringValue->setLength(length);
+    for (int i=0; i<numberChannels; i++) pstring[i] = 0.0;
+    pvt->pvstringValue->setLength(numberChannels);
 
     pvt->pvsecondsPastEpoch = static_cast<PVLongArray *>(pvt->nttable.getPVField(3));
     pvt->pvsecondsPastEpoch->setCapacity(numberChannels);
@@ -466,9 +476,14 @@ bool GatherV3ScalarData::get()
     pvt->alarm.setSeverity(noAlarm);
     pvt->alarm.setStatus(noStatus);
     for(int i=0; i< pvt->numberChannels; i++) {
-        chid theChid = pvt->apchannelID[i]->theChid;
+        ChannelID *channelId = pvt->apchannelID[i];
+        chid theChid = channelId->theChid;
+        V3RequestType requestType = channelId->requestType;
+        int req = DBR_TIME_DOUBLE;
+        if(requestType==requestInt) req = DBR_TIME_LONG;
+        if(requestType==requestString) req = DBR_TIME_STRING;
         int result = ca_get_callback(
-            DBR_TIME_DOUBLE,
+            req,
             theChid,
             getCallback,
             pvt->apchannelID[i]);

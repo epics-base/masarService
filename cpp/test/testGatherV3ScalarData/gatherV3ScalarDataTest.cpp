@@ -71,7 +71,7 @@ void test(bool debug)
         channelName[i] = String(name);
     }
     GatherV3ScalarData::shared_pointer gather = GatherV3ScalarData::shared_pointer(
-        new GatherV3ScalarData(channelName,n,"double"));
+        new GatherV3ScalarData(channelName,n));
     PVStructure::shared_pointer nttable = gather->getNTTable();
     if(debug) {
         builder.clear();

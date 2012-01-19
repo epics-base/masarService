@@ -54,8 +54,7 @@ public:
      */
     GatherV3ScalarData(
         epics::pvData::String channelNames[],
-        int numberChannels,
-        epics::pvData::String type);
+        int numberChannels);
     /**
      * Destructor
      */

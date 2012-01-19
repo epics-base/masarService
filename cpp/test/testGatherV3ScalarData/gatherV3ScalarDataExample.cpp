@@ -22,7 +22,7 @@ void test()
         channelName[i] = String(name);
     }
     GatherV3ScalarData::shared_pointer gather = GatherV3ScalarData::shared_pointer(
-        new GatherV3ScalarData(channelName,n,"double"));
+        new GatherV3ScalarData(channelName,n));
     bool result = gather->connect(5.0);
     if(!result) {
         printf("connect failed\n%s\n",gather->getMessage().c_str());
