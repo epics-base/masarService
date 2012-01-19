@@ -64,7 +64,7 @@ def retrieveServiceConfigProps():
 def retrieveServiceEvents():
     function = 'retrieveServiceEvents'
     print ("=== test %s ===" %function)
-    params = {'configid': '100'}
+    params = {'configid': '1'}
     testRPC(function, params)
     print ("=== test %s end ===" %function)
 
@@ -77,10 +77,7 @@ def retrieveMasar():
     print ("=== test %s end ===" %function)
 
 if __name__ == '__main__':
-    for i in range (1):
-        retrieveServiceConfigs()
-        retrieveServiceConfigProps()
-        retrieveServiceEvents()
-        retrieveMasar()
-
-
+    retrieveServiceConfigs()
+    retrieveServiceConfigProps()
+    retrieveServiceEvents()
+    retrieveMasar()

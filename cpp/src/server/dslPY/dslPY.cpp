@@ -122,7 +122,7 @@ static PVStructure::shared_pointer retrieveMasar(PyObject * list)
     if (top_len != 2) {
         THROW_BASE_EXCEPTION("Wrong format for returned data from dslPY when retrieving masar data.");
     }
-    size_t strFieldLen = 2; // pv name and value are stored as string.
+    size_t strFieldLen = 2; // pv name and s_value are stored as string.
 
     FieldCreate *fieldCreate = getFieldCreate();
 
@@ -133,13 +133,14 @@ static PVStructure::shared_pointer retrieveMasar(PyObject * list)
     // create fields
     // set label for each field
     FieldConstPtr fields[tuple_size];
-    for (size_t i = 0; i < strFieldLen; i ++){
-        fields[i] = fieldCreate->createScalarArray(PyString_AsString(PyTuple_GetItem(head, i)), pvString);
-    }
-
-    // do it later to separate value from status, severity, and time stamp, which should be long
-    for (int i = strFieldLen; i < tuple_size; i ++){
-        fields[i] = fieldCreate->createScalarArray(PyString_AsString(PyTuple_GetItem(head, i)), pvDouble);
+    for (size_t i = 0; i < tuple_size; i ++){
+        if (i == 0 || i == 2) { // pv_name: 0, string value: 2
+            fields[i] = fieldCreate->createScalarArray(PyString_AsString(PyTuple_GetItem(head, i)), pvString);
+        } else if (i == 4) { // double value: 4
+            fields[i] = fieldCreate->createScalarArray(PyString_AsString(PyTuple_GetItem(head, i)), pvDouble);
+        } else { // dbr_type: 1, i_value: 3, status: 5, severity: 6, ioc_timestamp: 7, ioc_timestamp_nano: 8
+            fields[i] = fieldCreate->createScalarArray(PyString_AsString(PyTuple_GetItem(head, i)), pvLong);
+        }
     }
 
     // create NTTable
@@ -150,49 +151,72 @@ static PVStructure::shared_pointer retrieveMasar(PyObject * list)
     PyObject * data_array = PyList_GetItem(list, 1); // get data array
     Py_ssize_t dataLen = PyList_Size(data_array) - 1; // data length in each field
 
-    printf("data length = %d\n", dataLen);
     if (dataLen > 0) {
         String pvNames [strFieldLen][dataLen];
-        double vals [tuple_size-strFieldLen][dataLen];
+        double dVals [dataLen];
+        long long lVals [tuple_size-strFieldLen-1][dataLen];
 
         // Get values for each fields from list
         PyObject * sublist;
-        for (int index = 1; index < dataLen + 1; index++ ){
-            sublist = PyList_GetItem(data_array, index);
+        for (int index = 0; index < dataLen; index++ ){
+            sublist = PyList_GetItem(data_array, index+1);
             for (int i = 0; i < tuple_size; i ++) {
                 PyObject * temp = PyTuple_GetItem(sublist, i);
-//                printf("temp tuple size = %d\n", PyTuple_Size(temp));
-                if (i < strFieldLen){
+                // (pv_name, dbr_type, s_value, i_value, d_value, status, severity, ioc_timestamp, ioc_timestamp_nano)
+                if (i == 0 ) { // pv_name: 0
                     if (PyString_AsString (temp) == NULL) {
-                        pvNames[i][index-1] = "";
+                        pvNames[0][index] = "";
                     } else {
-                        pvNames[i][index-1] = PyString_AsString (temp);
+                        pvNames[0][index] = PyString_AsString (temp);
                     }
-                    printf("%s,", PyString_AsString (temp));
-                } else {
-                    vals[i-strFieldLen][index-1] = PyLong_AsLong (temp);
-//                    if (PyLong_AsLong(temp) == NULL) {
-//                        vals[i-strFieldLen][index-1] = INT_MAX;
-//                    } else {
-//                    }
-                    printf("%ld,", vals[i-strFieldLen][index-1]);
+                } else if (i == 2) { // string value: 2
+                    if (PyString_AsString (temp) == NULL) {
+                        pvNames[1][index] = "";
+                    } else {
+                        pvNames[1][index] = PyString_AsString (temp);
+                    }
+                } else if (i == 4) { // double value: 4
+                    dVals[index] = PyFloat_AsDouble (temp);
+                } else {  // dbr_type: 1, i_value: 3, status: 5, severity: 6, ioc_timestamp: 7, ioc_timestamp_nano: 8
+                    if (i == 1) {
+                        lVals[0][index] = PyLong_AsLong (temp);
+                    } else if (i == 3) {
+                        lVals[1][index] = PyLong_AsLong (temp);
+                    } else {
+                        lVals[i-3][index] = PyLong_AsLong (temp);
+                    }
                 }
             }
         }
 
-        // set value to each numeric field
-        PVStringArray *pvName;
-        for (int i = 0; i < strFieldLen; i ++) {
-            pvName = static_cast<PVStringArray *>(ntTable.getPVField(i));
-            pvName -> put (0, dataLen, pvNames[i], 0);
+        // set value to each field
+        PVStringArray *pvStr;
+        PVDoubleArray * pvDVal;
+        PVLongArray * pvLVal;
+        for (int i = 0; i < tuple_size; i ++) {
+            if (i == 0 ) { // pv_name: 0
+                // pvName
+                pvStr = static_cast<PVStringArray *>(ntTable.getPVField(i));
+                pvStr -> put (0, dataLen, pvNames[0], 0);
+            } else if (i == 2) { // string value: 2
+                // s_value
+                pvStr = static_cast<PVStringArray *>(ntTable.getPVField(i));
+                pvStr -> put (0, dataLen, pvNames[1], 0);
+            } else if (i == 4) { // double value: 4
+                // d_double
+                pvDVal = static_cast<PVDoubleArray *>(ntTable.getPVField(i));
+                pvDVal -> put (0, dataLen, dVals, 0);
+            } else {  // dbr_type: 1, i_value: 3, status: 5, severity: 6, ioc_timestamp: 7, ioc_timestamp_nano: 8
+                pvLVal = static_cast<PVLongArray *>(ntTable.getPVField(i));
+                if (i == 1) {
+                    pvLVal -> put (0, dataLen, lVals[0], 0);
+                } else if (i == 3) {
+                    pvLVal -> put (0, dataLen, lVals[1], 0);
+                } else {
+                    pvLVal -> put (0, dataLen, lVals[i-3], 0);
+                }
+            }
         }
-        // set value to each string field
-        PVDoubleArray * pvVal;
-        for (int i = strFieldLen; i < tuple_size; i ++) {
-            pvVal = static_cast<PVDoubleArray *>(ntTable.getPVField(i));
-            pvVal -> put (0, dataLen, vals[i-strFieldLen], 0);
-        }
-
     }
 
     // set label strings
@@ -215,11 +239,6 @@ static PVStructure::shared_pointer retrieveMasar(PyObject * list)
 //        pvAlarm.set(alarm);
 //    }
 //    pvAlarms->put(0,n,palarms,0);
-//    String labels[n];
-//    labels[0] = pvPositions->getField()->getFieldName();
-//    labels[1] = pvAlarms->getField()->getFieldName();
-//    PVStringArray *label = ntTable.getLabel();
-//    label->put(0,n,labels,0);
 //    ntTable.attachAlarm(pvAlarm);
 //    alarm.setMessage("test alarm");
 //    alarm.setSeverity(majorAlarm);
@@ -231,7 +250,7 @@ static PVStructure::shared_pointer retrieveMasar(PyObject * list)
     ntTable.attachTimeStamp(pvTimeStamp);
     TimeStamp timeStamp;
     timeStamp.getCurrent();
-    timeStamp.setUserTag(32);
+    timeStamp.setUserTag(0);
 //    bool result = pvTimeStamp.set(timeStamp);
     pvTimeStamp.set(timeStamp);
 
@@ -341,9 +360,6 @@ static PVStructure::shared_pointer retrieveServiceConfigEvents(PyObject * list, 
 //        pvAlarm.set(alarm);
 //    }
 //    pvAlarms->put(0,n,palarms,0);
-//    String labels[n];
-//    labels[0] = );->getField()->getFieldName();
-//    labels[1] = pvAlarms->getField()->getFieldName();
 //    ntTable.attachAlarm(pvAlarm);
 //    alarm.setMessage("test alarm");
 //    alarm.setSeverity(majorAlarm);
@@ -353,15 +369,14 @@ static PVStructure::shared_pointer retrieveServiceConfigEvents(PyObject * list, 
     ntTable.attachTimeStamp(pvTimeStamp);
     TimeStamp timeStamp;
     timeStamp.getCurrent();
-    timeStamp.setUserTag(32);
+    timeStamp.setUserTag(0);
 //    bool result = pvTimeStamp.set(timeStamp);
     pvTimeStamp.set(timeStamp);
 
     return pvStructure;
 }
 
-static PVStructure::shared_pointer saveMasar(
-        PyObject * list)
+static PVStructure::shared_pointer saveMasar(PyObject * list)
 {
     FieldCreate *fieldCreate = getFieldCreate();
     NTField *ntField = NTField::get();

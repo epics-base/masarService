@@ -15,18 +15,22 @@ def testSaveMasar():
 def testRetrieveMasar(**kws):
     params = {'function': 'retrieveMasar'}
     params.update(kws)
-    result = test.request(params)
-    print "retrieveMasar: ", len(result), len(result[0]), len(result[0][0]), result
-    print "retrieveMasar: ", type(result[0]), result[0]
-    print "retrieveMasar: ", type(result[0][0]), result[0][0]
-    print "retrieveMasar: ", type(result[0][0][0]), result[0][0][0]
+    results = test.request(params)
+#    print "retrieveMasar: ", len(results), len(results[0]), len(results[0][0]), results
+#    print "retrieveMasar: ", type(results[0]), results[0]
+#    print "retrieveMasar: ", type(results[0][0]), results[0][0]
+#    print "retrieveMasar: ", type(results[0][0][0]), results[0][0][0]
+    for result in results[0][1]:
+        print result
     
 def testRetrieveServiceEvents():
     params = {'function': 'retrieveServiceEvents',
               'configid': '1'
               }
-    result = test.request(params)
-    print "retrieveServiceEvents: ", result
+    results = test.request(params)
+    print "retrieveServiceEvents: " , len(results[0])
+    for result in results[0]:
+        print result
 
 def testRetrieveServiceConfigs():
     params = {'function': 'retrieveServiceConfigs',
@@ -44,11 +48,11 @@ def testRetrieveServiceConfigProps():
     print "retrieveServiceConfigProps: ", result
 
 if __name__ == '__main__':
-    testSaveMasar()
-    testRetrieveMasar(eventid='56')
-    testRetrieveMasar(eventid='35')
-    testRetrieveMasar(eventid='10')
-
-    testRetrieveServiceEvents()
     testRetrieveServiceConfigs()
     testRetrieveServiceConfigProps()
+    testRetrieveServiceEvents()
+    testRetrieveMasar(eventid='56')
+#    testRetrieveMasar(eventid='35')
+#    testRetrieveMasar(eventid='10')
+#
+#    testSaveMasar()
