@@ -1,11 +1,11 @@
-/*gatherV3DoubleExample.cpp */
+/*gatherV3ScalarDataExample.cpp */
 
 /* Author: Marty Kraimer */
 
 #include <pv/CDRMonitor.h>
 #include <epicsExit.h>
 
-#include <pv/gatherV3Double.h>
+#include <pv/gatherV3ScalarData.h>
 
 using namespace std;
 using namespace epics::pvData;
@@ -21,8 +21,8 @@ void test()
         sprintf(name,"gatherExample%4.4d",i);
         channelName[i] = String(name);
     }
-    GatherV3Double::shared_pointer gather = GatherV3Double::shared_pointer(
-        new GatherV3Double(channelName,n));
+    GatherV3ScalarData::shared_pointer gather = GatherV3ScalarData::shared_pointer(
+        new GatherV3ScalarData(channelName,n,"double"));
     bool result = gather->connect(5.0);
     if(!result) {
         printf("connect failed\n%s\n",gather->getMessage().c_str());
@@ -35,7 +35,7 @@ void test()
     result = gather->get();
     if(!result) printf("get failed\n%s\n",gather->getMessage().c_str());
     assert(result);
-    PVDoubleArray *values = gather->getValue();
+    PVDoubleArray *values = gather->getDoubleValue();
     builder.clear();
     values->toString(&builder);
     printf("values: %s\n",builder.c_str());
@@ -44,7 +44,7 @@ void test()
     result = gather->get();
     if(!result) printf("get failed\n%s\n",gather->getMessage().c_str());
     assert(result);
-    values = gather->getValue();
+    values = gather->getDoubleValue();
     builder.clear();
     values->toString(&builder);
     printf("values: %s\n",builder.c_str());

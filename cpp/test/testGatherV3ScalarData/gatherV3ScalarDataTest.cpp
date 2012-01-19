@@ -1,17 +1,17 @@
-/*gatherV3DoubleTest.cpp */
+/*gatherV3ScalarDataTest.cpp */
 
 /* Author: Marty Kraimer */
 
 #include <pv/CDRMonitor.h>
 #include <epicsExit.h>
 
-#include <pv/gatherV3Double.h>
+#include <pv/gatherV3ScalarData.h>
 
 using namespace std;
 using namespace epics::pvData;
 using namespace epics::pvAccess;
 
-void testGet(bool debug,GatherV3Double::shared_pointer gather)
+void testGet(bool debug,GatherV3ScalarData::shared_pointer gather)
 {
     String builder;
     PVStructure::shared_pointer nttable = gather->getNTTable();
@@ -23,18 +23,14 @@ void testGet(bool debug,GatherV3Double::shared_pointer gather)
         printf("nttable\n%s\n",builder.c_str());
     }
     assert(result);
-    PVDoubleArray *values = gather->getValue();
-    PVDoubleArray *deltas = gather->getDeltaTime();
-    PVIntArray    *severitys = gather->getSeverity();
+    PVDoubleArray *values = gather->getDoubleValue();
+    PVIntArray    *severitys = gather->getAlarmSeverity();
     PVBooleanArray *isConnecteds = gather->getIsConnected();
     PVStringArray  *channelNames = gather->getChannelName();
     if(debug) {
         builder.clear();
         values->toString(&builder);
         printf("values: %s\n",builder.c_str());
-        builder.clear();
-        deltas->toString(&builder);
-        printf("deltas: %s\n",builder.c_str());
         builder.clear();
         severitys->toString(&builder);
         printf("severitys: %s\n",builder.c_str());
@@ -47,7 +43,7 @@ void testGet(bool debug,GatherV3Double::shared_pointer gather)
     }
 }
 
-void testConnect(bool debug,GatherV3Double::shared_pointer gather)
+void testConnect(bool debug,GatherV3ScalarData::shared_pointer gather)
 {
     bool result = gather->connect(5.0);
     if(!result) {
@@ -74,8 +70,8 @@ void test(bool debug)
         sprintf(name,"gatherExample%4.4d",i);
         channelName[i] = String(name);
     }
-    GatherV3Double::shared_pointer gather = GatherV3Double::shared_pointer(
-        new GatherV3Double(channelName,n));
+    GatherV3ScalarData::shared_pointer gather = GatherV3ScalarData::shared_pointer(
+        new GatherV3ScalarData(channelName,n,"double"));
     PVStructure::shared_pointer nttable = gather->getNTTable();
     if(debug) {
         builder.clear();

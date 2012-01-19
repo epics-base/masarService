@@ -1,4 +1,4 @@
-/* gatherV3Double.h */
+/* gatherV3ScalarData.h */
 /*
  * Copyright - See the COPYRIGHT that is included with this distribution.
  * This code is distributed subject to a Software License Agreement found
@@ -6,8 +6,8 @@
  */
 /* Author Marty Kraimer 2011.11 */
 
-#ifndef GATHERV3DOUBLE_H
-#define GATHERV3DOUBLE_H
+#ifndef GATHERV3SCALARDATA_H
+#define GATHERV3SCALARDATA_H
 
 #include <cstddef>
 #include <cstdlib>
@@ -41,21 +41,25 @@ namespace epics { namespace pvAccess {
  * @author mrk
  *
  */
-class GatherV3Double :
-    public std::tr1::enable_shared_from_this<GatherV3Double>
+class GatherV3ScalarData :
+    public std::tr1::enable_shared_from_this<GatherV3ScalarData>
 {
 public:
-    POINTER_DEFINITIONS(GatherV3Double);
+    POINTER_DEFINITIONS(GatherV3ScalarData);
     /**
      * Constructor
      * @param channelNames   The array of channelNames to gather
      * @param numberChannels The number of channels to gather.
+     * @param type           The data type. Must be int, double, or string
      */
-    GatherV3Double(epics::pvData::String channelNames[],int numberChannels);
+    GatherV3ScalarData(
+        epics::pvData::String channelNames[],
+        int numberChannels,
+        epics::pvData::String type);
     /**
      * Destructor
      */
-    ~GatherV3Double();
+    ~GatherV3ScalarData();
     /**
      * Connect to the V3 channels.
      * @param timeOut Timeout is seconds to wait.
@@ -87,20 +91,59 @@ public:
     epics::pvData::PVStructure::shared_pointer getNTTable();
     /**
      * Get the array of values for each V3 channel.
-     * @returns The array.
+     * @returns The data array.
+     * If the data type is not int an empty array is returned.
      */
-    epics::pvData::PVDoubleArray *getValue();
+    epics::pvData::PVIntArray *getIntValue();
     /**
-     * Get the array of delta times for each V3 channel.
-     * This is the time difference relative to the NTTable timeStamp.
-     * @returns The array.
+     * Get the array of values for each V3 channel.
+     * @returns The data array.
+     * If the data type is not double an empty array is returned.
      */
-    epics::pvData::PVDoubleArray *getDeltaTime();
+    epics::pvData::PVDoubleArray *getDoubleValue();
     /**
-     * Get the array of severity value for each V3 channel.
+     * Get the array of values for each V3 channel.
+     * @returns The array.
+     * If the data type is not string an empty array is returned.
+     */
+    epics::pvData::PVStringArray *getStringValue();
+    /**
+     * Get the array of secondsPastEpoch for each V3 channel.
+     * The epoch is midnight 1970 UTC time.
+     * @returns The array of seconds.
+     */
+    epics::pvData::PVLongArray *getSecondsPastEpoch();
+    /**
+     * Get the array of nanoSeconds since the seconds.
+     * @returns The array of nanoSeconds after the secsPastEpoch.
+     */
+    epics::pvData::PVIntArray *getNanoSeconds();
+    /**
+     * Get the array of timeStamp tag for each V3 channel.
      * @returns The array.
      */
-    epics::pvData::PVIntArray *getSeverity();
+    epics::pvData::PVIntArray *getTimeStampTag();
+    /**
+     * Get the array of alarm severity value for each V3 channel.
+     * @returns The array.
+     */
+    epics::pvData::PVIntArray *getAlarmSeverity();
+    /**
+     * Get the array of alarm status value for each V3 channel.
+     * @returns The array.
+     */
+    epics::pvData::PVIntArray *getAlarmStatus();
+    /**
+     * Get the array of alarm messages for each V3 channel.
+     * This is just the string value of the status.
+     * @returns The array.
+     */
+    epics::pvData::PVStringArray *getAlarmMessage();
+    /**
+     * Get the array of native DBR type for each V3 channel.
+     * @returns The array.
+     */
+    epics::pvData::PVIntArray *getDBRType();
     /**
      * Get the array of connection state for each V3 channel.
      * @returns The array.
@@ -112,13 +155,13 @@ public:
      */
     epics::pvData::PVStringArray  *getChannelName();
 private:
-    GatherV3Double::shared_pointer getPtrSelf()
+    GatherV3ScalarData::shared_pointer getPtrSelf()
     {
         return shared_from_this();
     }
-    class GatherV3DoublePvt *pvt;
+    class GatherV3ScalarDataPvt *pvt;
 };
 
 }}
 
-#endif  /* GATHERV3DOUBLE_H */
+#endif  /* GATHERV3SCALARDATA_H */
