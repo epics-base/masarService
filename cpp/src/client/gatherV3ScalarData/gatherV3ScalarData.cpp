@@ -24,6 +24,7 @@ enum State {
     connecting,
     connected,
     getting,
+    putting,
 };
 
 enum V3RequestType {
@@ -204,9 +205,11 @@ static void getCallback ( struct event_handler_args args )
         pvt->pvdoubleValue->get(0,pvt->numberChannels,&data);
         double * pvalue = data.data;
         pvalue[offset] = pTD->value;
-        IntArrayData idata;
-        pvt->pvintValue->get(0,pvt->numberChannels,&idata);
-        idata.data[offset] = pTD->value;
+        StringArrayData sdata;
+        pvt->pvstringValue->get(0,pvt->numberChannels,&sdata);
+        char buffer[20];
+        sprintf(buffer,"%e",pTD->value);
+        sdata.data[offset] = String(buffer);
     } else if(id->requestType==requestInt) {
         const struct dbr_time_long * pTL =
              ( const struct dbr_time_long * ) args.dbr;
@@ -217,6 +220,11 @@ static void getCallback ( struct event_handler_args args )
         DoubleArrayData ddata;
         pvt->pvdoubleValue->get(0,pvt->numberChannels,&ddata);
         ddata.data[offset] = pTL->value;
+        StringArrayData sdata;
+        pvt->pvstringValue->get(0,pvt->numberChannels,&sdata);
+        char buffer[20];
+        sprintf(buffer,"%d",pTL->value);
+        sdata.data[offset] = String(buffer);
     } else if(id->requestType==requestString) {
         const struct dbr_time_string * pTS =
              ( const struct dbr_time_string * ) args.dbr;
@@ -233,6 +241,26 @@ static void getCallback ( struct event_handler_args args )
     }
 }
 
+static void putCallback ( struct event_handler_args args )
+{
+    chid        chid = args.chid;
+    ChannelID *id = static_cast<ChannelID *>(ca_puser(chid));
+    GatherV3ScalarDataPvt * pvt = id->pvt;
+    int offset = id->offset;
+    Lock xx(pvt->mutex);
+    pvt->numberCallbacks++;
+    if ( args.status != ECA_NORMAL ) {
+          messageCat(pvt,"putCallback",args.status,offset);
+          if(pvt->numberCallbacks==pvt->numberChannels) {
+              pvt->event.signal();
+          }
+          return;
+    }
+    if(pvt->numberCallbacks==pvt->numberChannels) {
+        pvt->event.signal();
+    }
+}
+
 GatherV3ScalarData::GatherV3ScalarData(
     String channelNames[],
     int numberChannels)
@@ -244,7 +272,6 @@ GatherV3ScalarData::GatherV3ScalarData(
     DoubleArrayData ddata;
     BooleanArrayData bdata;
 
-    V3RequestType requestType = requestDouble;
     int n = 12;
     FieldConstPtr fields[n];
     FieldCreate *fieldCreate = getFieldCreate();
@@ -505,6 +532,71 @@ bool GatherV3ScalarData::get()
     return pvt->requestOK;
 }
 
+bool GatherV3ScalarData::put()
+{
+    if(pvt->state!=connected) {
+        throw std::runtime_error("GatherV3ScalarData::put illegal state\n");
+    }
+    if(pvt->threadId!=epicsThreadGetIdSelf()) {
+        throw std::runtime_error(
+            "GatherV3ScalarData::put must be same thread that called connect\n");
+    }
+    pvt->state = putting;
+    pvt->numberCallbacks = 0;
+    pvt->requestOK = true;
+    pvt->message = String();
+    pvt->event.tryWait();
+    pvt->timeStamp.getCurrent();
+    pvt->alarm.setMessage("");
+    pvt->alarm.setSeverity(noAlarm);
+    pvt->alarm.setStatus(noStatus);
+    IntArrayData idata;
+    pvt->pvintValue->get(0,pvt->numberChannels,&idata);
+    int32 * pivalue = idata.data;
+    DoubleArrayData ddata;
+    pvt->pvdoubleValue->get(0,pvt->numberChannels,&ddata);
+    double * pdvalue = ddata.data;
+    StringArrayData sdata;
+    pvt->pvstringValue->get(0,pvt->numberChannels,&sdata);
+    String * psvalue = sdata.data;
+    for(int i=0; i< pvt->numberChannels; i++) {
+        ChannelID *channelId = pvt->apchannelID[i];
+        chid theChid = channelId->theChid;
+        V3RequestType requestType = channelId->requestType;
+        void *pdata = 0;
+        int req = 0;
+        switch(requestType) {
+        case requestInt:
+            req = DBR_TIME_LONG; pdata = &pivalue[i]; break;
+        case requestDouble:
+            req = DBR_TIME_DOUBLE; pdata = &pdvalue[i]; break;
+        case requestString:
+            req = DBR_TIME_STRING; pdata = &psvalue[i]; break;
+        }
+        int result = ca_put_callback(
+            req,
+            theChid,
+            pdata,
+            putCallback,
+            pvt->apchannelID[i]);
+        if(result!=ECA_NORMAL) {
+            messageCat(pvt,"ca_get_callback",result,i);
+            pvt->requestOK = false;
+        }
+    }
+    ca_flush_io();
+    bool result = pvt->event.wait();
+    if(!result) {
+        pvt->message += "timeout";
+        pvt->requestOK = false;
+        pvt->alarm.setMessage(pvt->message);
+        pvt->alarm.setSeverity(invalidAlarm);
+        pvt->alarm.setStatus(clientStatus);
+    }
+    pvt->state = connected;
+    return pvt->requestOK;
+}
+
 String GatherV3ScalarData::getMessage()
 {
     return pvt->message;
@@ -558,6 +650,11 @@ PVIntArray * GatherV3ScalarData::getAlarmStatus()
 PVStringArray * GatherV3ScalarData::getAlarmMessage()
 {
     return pvt->pvalarmMessage;
+}
+
+PVIntArray * GatherV3ScalarData::getDBRType()
+{
+    return pvt->pvDBRType;
 }
 
 PVBooleanArray * GatherV3ScalarData::getIsConnected()

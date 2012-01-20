@@ -6,6 +6,8 @@ syntax: glob
 ./include
 ./lib
 ./doc
+./db
+./dbd
 ./documentation/html
 ./O.*
 ./*.pyc

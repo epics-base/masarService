@@ -14,6 +14,12 @@ gatherV3ScalarDataExample_LIBS += nt pvIOC pvAccess pvData ca Com
 gatherV3ScalarDataExample_LIBS += masarServer masarClient
 gatherV3ScalarDataExample_LIBS += $(PYTHON)
 
+PROD_HOST += gatherV3ScalarDataPut
+gatherV3ScalarDataPut_SRCS += gatherV3ScalarDataPut.cpp
+gatherV3ScalarDataPut_LIBS += nt pvIOC pvAccess pvData ca Com
+gatherV3ScalarDataPut_LIBS += masarServer masarClient
+gatherV3ScalarDataPut_LIBS += $(PYTHON)
+
 $(PYTHON)_DIR = $(PYTHON_BASE)/lib/$(PYTHON)/config
 
 include $(TOP)/configure/RULES

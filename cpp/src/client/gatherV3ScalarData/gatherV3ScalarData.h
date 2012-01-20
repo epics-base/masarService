@@ -79,6 +79,17 @@ public:
      */
     bool get();
     /**
+     * put new values to the V3 channels.
+     * NOTE: get MUST be called by the same thread that calls connect.
+     * @returns (false,true) If (all, not all ) puts were successful.
+     * If false getMessage can be called to get the reason.
+     * If any channel is disconnected then false is returned.
+     * The data must be in the return values from
+     * getIntValue, getDoubleValue, getStringValue.
+     * For each channel the one used depends on the channel DBRType.
+     */
+    bool put();
+    /**
      * get the reason why a connect or get failed.
      * @returns the message.
      */

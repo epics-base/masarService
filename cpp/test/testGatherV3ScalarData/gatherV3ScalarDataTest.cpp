@@ -63,11 +63,11 @@ void test(bool debug)
 {
     String builder;
     int n = 1000;
-    if(debug) n = 2;
+    if(debug) n = 6;
     String channelName[n];
     char name[40];
     for(int i=0; i<n; i++) {
-        sprintf(name,"gatherExample%4.4d",i);
+        sprintf(name,"masarExample%4.4d",i);
         channelName[i] = String(name);
     }
     GatherV3ScalarData::shared_pointer gather = GatherV3ScalarData::shared_pointer(
