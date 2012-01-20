@@ -567,11 +567,11 @@ bool GatherV3ScalarData::put()
         int req = 0;
         switch(requestType) {
         case requestInt:
-            req = DBR_TIME_LONG; pdata = &pivalue[i]; break;
+            req = DBR_LONG; pdata = &pivalue[i]; break;
         case requestDouble:
-            req = DBR_TIME_DOUBLE; pdata = &pdvalue[i]; break;
+            req = DBR_DOUBLE; pdata = &pdvalue[i]; break;
         case requestString:
-            req = DBR_TIME_STRING; pdata = &psvalue[i]; break;
+            req = DBR_STRING; pdata = &psvalue[i]; break;
         }
         int result = ca_put_callback(
             req,

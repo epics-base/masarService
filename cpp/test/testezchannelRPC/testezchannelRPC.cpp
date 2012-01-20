@@ -28,12 +28,12 @@ void test()
     PVString * pvFunction = ntNameValue.getFunction();
     PVStringArray *pvNames = ntNameValue.getNames();
     PVStringArray *pvValues = ntNameValue.getValues();
-    int n = 2;
-    String name[] = {String("name 0"),String("name 1")};
-    String value[] = {String("value 0"),String("value 1")};
+    int n = 1;
+    String name[] = {String("system")};
+    String value[] = {String("sr")};
     pvNames->put(0,n,name,0);
     pvValues->put(0,n,value,0);
-    pvFunction->put("test");
+    pvFunction->put("retrieveServiceConfigs");
     PVStructure::shared_pointer pvResponse = channelRPC->request(pvNameValue,false);
     if(pvResponse.get()==0) {dump(channelRPC); return;}
     String builder;

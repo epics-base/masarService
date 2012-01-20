@@ -8,6 +8,7 @@ syntax: glob
 ./doc
 ./db
 ./dbd
+./envPaths
 ./documentation/html
 ./O.*
 ./*.pyc
