@@ -236,7 +236,7 @@ static void getCallback ( struct event_handler_args args )
         throw std::logic_error("unknown DBR_TYPE");
     }
 
-    if(pvt->numberCallbacks==pvt->numberChannels) {
+    if(pvt->numberCallbacks==pvt->numberConnected) {
         pvt->event.signal();
     }
 }
@@ -406,7 +406,6 @@ GatherV3ScalarData::GatherV3ScalarData(
 
 GatherV3ScalarData::~GatherV3ScalarData()
 {
-printf("GatherV3ScalarData::~GatherV3ScalarData()\n");
     if(pvt->state!=idle) disconnect();
     for(int i=0; i<pvt->numberChannels; i++) {
         ChannelID *pChannelID = pvt->apchannelID[i];
@@ -445,21 +444,28 @@ bool GatherV3ScalarData::connect(double timeOut)
         }
     }
     ca_flush_io();
-    bool result = pvt->event.wait(timeOut);
-    if(result && pvt->requestOK) {
-        pvt->state = connected;
-        return pvt->requestOK;
-    }
-    if(pvt->numberConnected!=pvt->numberChannels) {
-        char buf[30];
-        sprintf(buf,"%d channels of %d are not connected.\nReturning to idle state.",
-            (pvt->numberChannels - pvt->numberConnected),
-             pvt->numberChannels);
-        pvt->message = String(buf);
-        pvt->alarm.setMessage(pvt->message);
-        pvt->alarm.setSeverity(invalidAlarm);
-        pvt->alarm.setStatus(clientStatus);
-        disconnect();
+    while(true) {
+        int oldNumber = pvt->numberConnected;
+        bool result = pvt->event.wait(timeOut);
+        if(result && pvt->requestOK) {
+            pvt->state = connected;
+            return pvt->requestOK;
+        }
+        if(pvt->numberConnected!=pvt->numberChannels) {
+            char buf[30];
+            sprintf(buf,"%d channels of %d are not connected.\n",
+                (pvt->numberChannels - pvt->numberConnected),
+                 pvt->numberChannels);
+            pvt->message = String(buf);
+            pvt->alarm.setMessage(pvt->message);
+            pvt->alarm.setSeverity(invalidAlarm);
+            pvt->alarm.setStatus(clientStatus);
+        }
+        if(oldNumber==pvt->numberConnected) {
+            pvt->state = connected;
+            return false;
+        }
+        timeOut = 1.0;
     }
     return false;
 }
@@ -520,7 +526,13 @@ bool GatherV3ScalarData::get()
         }
     }
     ca_flush_io();
-    bool result = pvt->event.wait();
+    bool result = false;
+    while(true) {
+        int oldNumber = pvt->numberCallbacks;
+        result = pvt->event.wait(1.0);
+        if(result) break;
+        if(pvt->numberCallbacks==oldNumber) break;
+    }
     if(!result) {
         pvt->message += "timeout";
         pvt->requestOK = false;
@@ -585,7 +597,13 @@ bool GatherV3ScalarData::put()
         }
     }
     ca_flush_io();
-    bool result = pvt->event.wait();
+    bool result = false;
+    while(true) {
+        int oldNumber = pvt->numberCallbacks;
+        result = pvt->event.wait(1.0);
+        if(result) break;
+        if(pvt->numberCallbacks==oldNumber) break;
+    }
     if(!result) {
         pvt->message += "timeout";
         pvt->requestOK = false;
