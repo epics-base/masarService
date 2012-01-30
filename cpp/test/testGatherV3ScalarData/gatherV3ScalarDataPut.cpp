@@ -36,9 +36,10 @@ void test()
     StringArrayData sdata;
     gather->getStringValue()->get(0,n,&sdata);
     String *svalue = sdata.data;
+    LongArrayData ldata;
+    gather->getLongValue()->get(0,n,&ldata);
+    int64 *lvalue = ldata.data;
     IntArrayData idata;
-    gather->getIntValue()->get(0,n,&idata);
-    int32 *ivalue = idata.data;
     gather->getDBRType()->get(0,n,&idata);
     int32 *dbrType = idata.data;
     for(int i=0; i<n; i++) {
@@ -50,7 +51,7 @@ void test()
         case DBF_CHAR:
         case DBF_INT:
         case DBF_LONG:
-             ivalue[i] = i; break;
+             lvalue[i] = i; break;
         case DBF_FLOAT:
         case DBF_DOUBLE:
              dvalue[i] = i; break;

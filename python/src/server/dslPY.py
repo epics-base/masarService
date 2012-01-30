@@ -8,6 +8,7 @@
 
 import re
 
+from nttable import NTTable
 import pymasar
 
 class DSL(object) :
@@ -31,10 +32,16 @@ class DSL(object) :
             if re.match(params, fname):
                 return func(fargs)
 
-    def request(self, argument):
+    def request(self, *argument):
         """issue request"""
-        func = argument['function']
-        result = self.dispatch(func, argument)
+        if len(argument) == 1:
+            argument = argument[0]
+            func = argument['function']
+            result = self.dispatch(func, argument)
+        else:
+            func = argument[1]
+            func = func['function']
+            result = self.dispatch(func, argument)
         return (result, )
 
     def toString(self) :
@@ -84,6 +91,7 @@ class DSL(object) :
         conn = pymasar.utils.connect()
         result = pymasar.service.retrieveServiceEvents(conn, configid=cid,start=start, end=end, comment=comment)
         pymasar.utils.close(conn)
+        print (result)
         return result
 #        return 'retrieveServiceEvents'
 
@@ -99,15 +107,64 @@ class DSL(object) :
 #        return 'retrieveMasar'
     
     def saveMasar(self, params):
-#        key = ['data','servicename','configname','comment']
+        key = ['servicename','configname','comment']
+        service, config, comment = self._parseParams(params[1], key)
+        if not service:
+            service = self.__servicename
 
-#        data, service, config, comment = self._parseParams(params, key)
-#        if not service:
-#            service = self.__servicename
+        rawdata = params[0]
+        nttable = NTTable(rawdata)
+        numberValueCount = nttable.getNumberValues()
         
-#        print (data, service, config, comment)
-#        conn = pymasar.utils.connect()
-        #result = pymasar.masardata.saveMasar(conn, data, servicename=service, configname=config, comment=comment)
-#        pymasar.utils.close(conn)
-#        return result
-        return 'saveMasar'
+        # label = nttable.getLabel()
+        # print "label",label
+
+        # values format: the value is raw data from IOC 
+        # [(channel name,), (string value,),(double value,),(long value,),(dbr type),(is connected),
+        #  (second past epoch,),(nano seconds,),(time stamp tag,),(alarm severity,),(alarm status,),(alarm message,)]
+        values = []
+        # data format: the data is prepared to save into rdb
+        # rawdata format
+        # [('channel name', 'string value', 'double value', 'long value', 'dbr type', 'is connected', 
+        #  'seconds past epoch', 'nano seconds', 'time stamp tag', 'alarm severity', 'alarm status', 'alarm message'),
+        #  ...
+        # ]
+        datas = []
+        dataLen = len(nttable.getValue(0))
+        
+        # get IOC raw data
+        for i in range(numberValueCount):
+            values.append(nttable.getValue(i))
+        
+        # initialize data for rdb
+        for j in range(dataLen):
+            datas.append(())
+        
+        # convert data format values ==> datas
+        for i in range(numberValueCount):
+            for j in range(dataLen):
+                datas[j] = datas[j] + (values[i][j],)
+        
+        # save into database
+        try:
+            conn = pymasar.utils.connect()
+            eid, result = pymasar.masardata.saveMasar(conn, datas, servicename=service, configname=config, comment=comment)
+    #        conn = pymasar.utils.save(conn)
+            pymasar.utils.close(conn)
+            result.insert(0, eid)
+            return result
+        except:
+            # keep the same format with a normal operation
+            return [-1]
+    
+    def retrieveChannelNames(self, params):
+        
+        key = ['servicename','configname','comment']
+        service, config, comment = self._parseParams(params, key)
+        if not service:
+            service = self.__servicename
+        
+        conn = pymasar.utils.connect()
+        result = pymasar.service.retrieveServiceConfigPVs(conn, config, servicename=service)
+        pymasar.utils.close(conn)
+        return result

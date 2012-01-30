@@ -289,12 +289,22 @@ class masar(QMainWindow, ui_masar.Ui_masar):
             s_value = data['S_value']
             i_value = data['I_value']
             d_value = data['D_value']
+            isConnected = data['isConnected']
 
-            epicsInt    = [1, 4, 5]
-            epicsString = [0]
+            # DBR_TYPE definition
+            #define DBF_STRING  0
+            #define DBF_INT     1
+            #define DBF_SHORT   1
+            #define DBF_FLOAT   2
+            #define DBF_ENUM    3
+            #define DBF_CHAR    4
+            #define DBF_LONG    5
+            #define DBF_DOUBLE  6
+            epicsLong   = [1, 4, 5]
+            epicsString = [0, 3]
             epicsDouble = [2, 6]
 
-            keys = ['PV Name', 'Status', 'Severity', 'Time stamp', 'Saved value']
+            keys = ['PV Name', 'Status', 'Severity', 'Time stamp', 'Connection', 'Saved value']
             table.setHorizontalHeaderLabels(keys)
             
             for i in range(nrows):
@@ -315,17 +325,21 @@ class masar(QMainWindow, ui_masar.Ui_masar):
                     newitem = QTableWidgetItem(dt)
                     newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
                     table.setItem(i, 3, newitem)
+                if isConnected[i]:
+                    newitem = QTableWidgetItem(str(bool(isConnected[i])))
+                    newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
+                    table.setItem(i, 4, newitem)
                 if dbrtype[i]:
                     if dbrtype[i] in epicsDouble:
                         newitem = QTableWidgetItem(str(d_value[i]))
                         newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
-                    elif dbrtype[i] in epicsInt:
+                    elif dbrtype[i] in epicsLong:
                         newitem = QTableWidgetItem(str(i_value[i]))
                         newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
                     elif dbrtype[i] in epicsString:
                         newitem = QTableWidgetItem(s_value[i])
                         newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
-                    table.setItem(i, 4, newitem)
+                    table.setItem(i, 5, newitem)
         else:
             raise "Either given data is not an instance of OrderedDict or table is not an instance of QtGui.QTableWidget"
 
@@ -451,40 +465,45 @@ class masar(QMainWindow, ui_masar.Ui_masar):
     def retrieveMasarData(self, eventid=None):
         if source == 'sqlite':
             # result format:
-            #    ('user tag', 'event UTC time', 'service config name', 'service name'),
-            #    ('pv name label',  'dbr_type label', 'string value', 'int value', 'double value', 'status label', 'severity label', 'ioc time stamp label', 'ioc time stamp nano label'),
-            #    (pv_name data, value data, status data, severity data, ioc_timestamp data, ioc_timestamp_nano data)
+            # ('user tag', 'event UTC time', 'service config name', 'service name'),
+            # ('pv name', 'string value', 'double value', 'long value', 'dbr type', 'isConnected', 'secondsPastEpoch', 'nanoSeconds', 'timeStampTag', 'alarmSeverity', 'alarmStatus', 'alarmMessage')
             results = pymasar.masardata.masardata.retrieveMasar(conn, eventid=eventid)[1]
-            print (results)
             data = odict()
             pvnames = []
-            dbrtype = []
             s_value = []
-            i_value = []
             d_value = []
-            status = []
-            severity = []
+            i_value = []
+            dbrtype = []
+            isConnected = []
             ts = []
             ts_nano = []
+            ts_tag = []
+            severity = []
+            status = []
+            alarm_message = []
+
             if len(results) > 2:
                 for i in range(2, len(results)):
                     res = results[i]
+
                     pvnames.append(res[0])
-                    dbrtype.append(res[1])
-                    s_value.append(res[2])
+                    s_value.append(res[1])
+                    d_value.append(res[2])
                     i_value.append(res[3])
-                    d_value.append(res[4])
+                    dbrtype.append(res[4])
+                    isConnected.append(res[5])
+                    ts.append(res[6])
+                    ts_nano.append(res[7])
+                    ts_tag.append(res[8])
                     try:
-                        status.append(self.alarmDict[res[5]])
-                    except:
-                        status.append('N/A')
-                    try:
-                        severity.append(self.severityDict[res[6]])
+                        severity.append(self.severityDict[res[9]])
                     except:
                         severity.append('N/A')
-                    ts.append(res[7])
-                    ts_nano.append(res[8])
-#                    print (res)
+                    try:
+                        status.append(self.alarmDict[res[10]])
+                    except:
+                        status.append('N/A')
+                    alarm_message.append(res[11])
             data['PV Name'] = pvnames
             data['Status'] = status
             data['Severity'] = severity
@@ -494,6 +513,7 @@ class masar(QMainWindow, ui_masar.Ui_masar):
             data['S_value'] = s_value
             data['I_value'] = i_value
             data['D_value'] = d_value
+            data['isConnected'] = isConnected
     
         return data
 

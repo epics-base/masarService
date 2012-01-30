@@ -76,8 +76,19 @@ def retrieveMasar():
     testRPC(function, params)
     print ("=== test %s end ===" %function)
 
+def saveMasar():
+    function = 'saveMasar'
+    print ("=== test %s ===" %function)
+#    params = {'configname': 'sr_bpm',
+#              'servicename': 'masar'}
+    params = {'configname': 'sr_test',
+              'servicename': 'masar'}
+    testRPC(function, params)
+    print ("=== test %s end ===" %function)
+
 if __name__ == '__main__':
-    retrieveServiceConfigs()
-    retrieveServiceConfigProps()
-    retrieveServiceEvents()
-    retrieveMasar()
+#    retrieveServiceConfigs()
+#    retrieveServiceConfigProps()
+#    retrieveServiceEvents()
+#    retrieveMasar()
+    saveMasar()

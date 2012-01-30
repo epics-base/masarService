@@ -35,7 +35,8 @@ pvgroups= {
     'sr_quad':      ('sr_quad.txt' , 'storage ring quad pvs'),
     'sr_sext':      ('sr_sext.txt' , 'storage ring sext pvs'),
     'sr_vcor':      ('sr_vcor.txt' , 'storage ring vertical slow corrector'),
-    'sr_vfcor':     ('sr_vfcor.txt' , 'storage ring vertical fast corrector')
+    'sr_vfcor':     ('sr_vfcor.txt' , 'storage ring vertical fast corrector'),
+    'test':         ('example.txt', 'server test')
 }
 
 # dict format
@@ -57,7 +58,8 @@ masarconfigs= {
     'sr_quad':      ('storage ring quads', 'sr'),
     'sr_sext':      ('storage ring sexts', 'sr'),
     'sr_vcor':      ('storage ring vertical slow corrector', 'sr'),
-    'sr_vfcor':     ('storage ring vertical fast corrector', 'sr')
+    'sr_vfcor':     ('storage ring vertical fast corrector', 'sr'),
+    'sr_test':      ('test pv config', 'sr')
 }
 
 # service config: [pvgroup,]
@@ -78,7 +80,8 @@ pvg2config= {
     'sr_quad':   ['sr_quad'],
     'sr_sext':   ['sr_sext'],
     'sr_vcor':   ['sr_vcor'],
-    'sr_vfcor':  ['sr_vfcor']
+    'sr_vfcor':  ['sr_vfcor'],
+    'sr_test':   ['test']
 }
 
 #saveServiceEvent(conn, servicename, configname, comment=None):
@@ -155,17 +158,28 @@ def dummyServiceEventData():
         import random
         import time
         # data from ioc
-        # [(pv_name, dbr_type, s_value, i_value, d_value, status, severity, ioc_timestamp, ioc_timestamp_nano), ]
+        # ('pv name', 'string value', 'double value', 'long value', 'dbr type', 'isConnected', 'secondsPastEpoch', 'nanoSeconds', 'timeStampTag', 'alarmSeverity', 'alarmStatus', 'alarmMessage')
         for pv in pvlist:
             sec = time.time()
-            data.append((pv, 6, '', 0, random.uniform(-5.0e-2, 5.0e-2), 0, 0, int(sec), int((sec-int(sec))*1e9)))
+#            value = random.randrange(-3.0, 2.0)
+            value = random.uniform(-3.0, 2.0)
+            data.append((pv, str(value), value, int(value), 6, 1, int(sec), int((sec-int(sec))*1e9), 0, 0, 0, ''))
         saveMasar(conn, data, servicename=__servicename, configname=k, comment=v[0])
         
 if __name__ == '__main__':
-    initPvGroups()
-    initService()
-    initServiceConfig()
-    dummyServiceEventNoData()
-    dummyServiceEventData()
+    try:
+        initPvGroups()
+        initService()
+        initServiceConfig()
+    except:
+        pass
+    import time
+    for i in range(10):
+        print (i, "save event without data")
+        dummyServiceEventNoData()
+        time.sleep(5.0)
+        print (i, "save event with dummy data")
+        dummyServiceEventData()
+        time.sleep(5.0)
     save(conn)
     conn.close()

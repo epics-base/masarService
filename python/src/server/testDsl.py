@@ -47,11 +47,22 @@ def testRetrieveServiceConfigProps():
     result = test.request(params)
     print "retrieveServiceConfigProps: ", result
 
+def testRetrieveServiceConfigPVs():
+    params = {'function': 'retrieveServiceConfigPVs',
+              'configname': 'sr_bpm',
+              'servicename': 'masar'
+              }
+    result = test.retrieveChannelNames(params)
+    print "retrieveServiceConfigProps: "
+    print len(result)
+    print result
+
 if __name__ == '__main__':
-    testRetrieveServiceConfigs()
-    testRetrieveServiceConfigProps()
-    testRetrieveServiceEvents()
-    testRetrieveMasar(eventid='56')
+#    testRetrieveServiceConfigs()
+#    testRetrieveServiceConfigProps()
+#    testRetrieveServiceEvents()
+#    testRetrieveMasar(eventid='365')
+    testRetrieveServiceConfigPVs()
 #    testRetrieveMasar(eventid='35')
 #    testRetrieveMasar(eventid='10')
 #

@@ -5,14 +5,17 @@ CREATE TABLE "masar_data" (
   "masar_data_id" INTEGER ,
   "service_event_id" INT NOT NULL DEFAULT '0',
   "pv_name" VARCHAR(50) DEFAULT NULL,
-  "i_value" INT DEFAULT NULL,
-  "d_value" REAL DEFAULT NULL,
   "s_value" VARCHAR(50) DEFAULT NULL,
+  "d_value" REAL DEFAULT NULL,
+  "l_value" INT DEFAULT NULL,
   "dbr_type" INT DEFAULT NULL,
-  "status" INT DEFAULT NULL,
-  "severity" INT DEFAULT NULL,
+  "isConnected" INT DEFAULT NULL,
   "ioc_timestamp" INT  NOT NULL,
   "ioc_timestamp_nano" INT  NOT NULL,
+  "timestamp_tag" INT  NOT NULL,
+  "status" INT DEFAULT NULL,
+  "severity" INT DEFAULT NULL,
+  "alarmMessage" VARCHAR(250) DEFAULT NULL,
   PRIMARY KEY ("masar_data_id")
   CONSTRAINT "Ref_10" FOREIGN KEY ("service_event_id") REFERENCES "service_event" ("service_event_id") ON DELETE NO ACTION ON UPDATE NO ACTION
 );

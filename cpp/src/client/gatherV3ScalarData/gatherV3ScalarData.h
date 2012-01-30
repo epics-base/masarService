@@ -85,7 +85,7 @@ public:
      * If false getMessage can be called to get the reason.
      * If any channel is disconnected then false is returned.
      * The data must be in the return values from
-     * getIntValue, getDoubleValue, getStringValue.
+     * getLongValue, getDoubleValue, getStringValue.
      * For each channel the one used depends on the channel DBRType.
      */
     bool put();
@@ -104,7 +104,7 @@ public:
      * @returns The data array.
      * If the data type is not int an empty array is returned.
      */
-    epics::pvData::PVIntArray *getIntValue();
+    epics::pvData::PVLongArray *getLongValue();
     /**
      * Get the array of values for each V3 channel.
      * @returns The data array.
