@@ -25,6 +25,7 @@ enum State {
     connected,
     getting,
     putting,
+    destroying,
 };
 
 enum V3RequestType {
@@ -101,6 +102,7 @@ static void connectionCallback(struct connection_handler_args args)
     chid        chid = args.chid;
     ChannelID *id = static_cast<ChannelID *>(ca_puser(chid));
     GatherV3ScalarDataPvt * pvt = id->pvt;
+    if(pvt->state==destroying) return;
     int offset = id->offset;
 
     BooleanArrayData data;
@@ -153,6 +155,7 @@ static void getCallback ( struct event_handler_args args )
     chid        chid = args.chid;
     ChannelID *id = static_cast<ChannelID *>(ca_puser(chid));
     GatherV3ScalarDataPvt * pvt = id->pvt;
+    if(pvt->state==destroying) return;
     int offset = id->offset;
     Lock xx(pvt->mutex);
     pvt->numberCallbacks++;
@@ -504,14 +507,10 @@ void GatherV3ScalarData::disconnect()
         throw std::runtime_error(
             "GatherV3ScalarData::disconnect must be same thread that called connect\n");
     }
-    pvt->state = idle;
-    BooleanArrayData bdata;
-    pvt->pvisConnected->get(0,pvt->numberChannels,&bdata);
-    bool *pbool = bdata.data;
+    pvt->state = destroying;
     for(int i=0; i< pvt->numberChannels; i++) {
         chid theChid = pvt->apchannelID[i]->theChid;
         ca_clear_channel(theChid);
-        pbool[i] = false;
     }
     ca_context_destroy();
 }
