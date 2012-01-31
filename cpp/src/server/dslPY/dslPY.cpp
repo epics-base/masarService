@@ -175,7 +175,7 @@ static PVStructure::shared_pointer retrieveMasar(PyObject * list)
     if (dataLen > 0) {
         String pvNames [strFieldLen][dataLen];
         double dVals [dataLen];
-        long long lVals [tuple_size-strFieldLen-1][dataLen];
+        int64 lVals [tuple_size-strFieldLen-1][dataLen];
 
         // Get values for each fields from list
         PyObject * sublist;
@@ -314,7 +314,7 @@ static PVStructure::shared_pointer retrieveServiceConfigEvents(PyObject * list, 
         false,true,true,tuple_size,fields);
     NTTable ntTable(pvStructure);
 
-    long long scIdVals [numeric][list_len-1];
+    int64 scIdVals [numeric][list_len-1];
     String vals [tuple_size-numeric][fieldLen];
 
     // Get values for each fields from list
@@ -384,7 +384,7 @@ static PVStructure::shared_pointer saveMasar(PyObject * list)
     // -1 means saveMasar failure
     PyObject * plist = PyTuple_GetItem(list, 0);
     PyObject * pstatus = PyList_GetItem(plist,0);
-    long long status = PyLong_AsLongLong(pstatus);
+    int64 status = PyLong_AsLongLong(pstatus);
 
     FieldCreate *fieldCreate = getFieldCreate();
 

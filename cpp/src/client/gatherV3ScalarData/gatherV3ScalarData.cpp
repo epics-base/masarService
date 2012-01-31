@@ -601,7 +601,7 @@ bool GatherV3ScalarData::put()
         ChannelID *channelId = pvt->apchannelID[i];
         chid theChid = channelId->theChid;
         V3RequestType requestType = channelId->requestType;
-        void *pdata = 0;
+        const void *pdata = 0;
         int req = 0;
         switch(requestType) {
         case requestLong:
@@ -609,7 +609,7 @@ bool GatherV3ScalarData::put()
         case requestDouble:
             req = DBR_DOUBLE; pdata = &pdvalue[i]; break;
         case requestString:
-            req = DBR_STRING; pdata = &psvalue[i]; break;
+            req = DBR_STRING; pdata = psvalue[i].c_str(); break;
         }
         int result = ca_put_callback(
             req,

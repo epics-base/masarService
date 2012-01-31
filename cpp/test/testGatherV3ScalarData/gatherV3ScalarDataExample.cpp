@@ -11,7 +11,7 @@ using namespace std;
 using namespace epics::pvData;
 using namespace epics::pvAccess;
 
-PVStructure::shared_pointer getLiveMachine(
+NTTable::shared_pointer getLiveMachine(
         String channelName [], int numberChannels)
 {
     GatherV3ScalarData::shared_pointer gather = GatherV3ScalarData::shared_pointer(
@@ -32,13 +32,13 @@ PVStructure::shared_pointer getLiveMachine(
 
     // First place to show the data
     String builder;
-    NTTable pvt = static_cast<NTTable> (nttable);
-    PVBooleanArray * isConnected = static_cast<PVBooleanArray *>(pvt.getPVField(5));
+    NTTable::shared_pointer pvt = NTTable::shared_pointer(new NTTable(nttable));
+    PVBooleanArray * isConnected = static_cast<PVBooleanArray *>(pvt->getPVField(5));
     isConnected->toString(&builder);
-//    nttable->toString(&builder);
+//nttable->toString(&builder);
     printf("%s\n", builder.c_str());
 
-    return nttable;
+    return pvt;
 }
 
 
@@ -53,9 +53,10 @@ void test()
         channelName[i] = String(name);
     }
 
-    NTTable pvt = static_cast<NTTable>(getLiveMachine(channelName,n));
-    PVBooleanArray * isConnected = static_cast<PVBooleanArray *>(pvt.getPVField(5));
+    NTTable::shared_pointer pvt = getLiveMachine(channelName,n);
+    PVBooleanArray * isConnected = static_cast<PVBooleanArray *>(pvt->getPVField(5));
     isConnected->toString(&builder);
+//pvt->getPVStructure()->toString(&builder);
     printf("%s\n", builder.c_str());
 
 //    // do itself.

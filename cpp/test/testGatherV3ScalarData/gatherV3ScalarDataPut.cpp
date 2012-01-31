@@ -47,7 +47,7 @@ void test()
         case DBF_STRING:
              svalue[i] = String("this is set by gatherV3ScalarDataPut"); break;
         case DBF_ENUM:
-             svalue[i] = String("seven"); break;
+             svalue[i] = String("one"); break;
         case DBF_CHAR:
         case DBF_INT:
         case DBF_LONG:
@@ -61,7 +61,7 @@ void test()
         }
     }
     if(!result) {printf("put failed\n%s\n",gather->getMessage().c_str()); exit(1);}
-    result = gather->get();
+    result = gather->put();
     if(!result) {printf("get failed\n%s\n",gather->getMessage().c_str()); exit(1);}
      PVStructure::shared_pointer nttable = gather->getNTTable();
      builder.clear();
