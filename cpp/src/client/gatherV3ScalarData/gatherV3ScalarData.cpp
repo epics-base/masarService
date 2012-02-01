@@ -40,6 +40,9 @@ struct ChannelID
     chid theChid;
     int offset;
     V3RequestType requestType;
+    dbr_short_t     status;
+    dbr_short_t     severity;
+    epicsTimeStamp  stamp;         
 };
 
 struct GatherV3ScalarDataPvt
@@ -113,7 +116,6 @@ static void connectionCallback(struct connection_handler_args args)
         throw std::runtime_error("Why extra connection callback");
     }
     Lock xx(pvt->mutex);
-    data.data[offset] = newState;
     if(newState) {
         int dbrType = ca_field_type(chid);
         switch(dbrType) {
@@ -155,7 +157,7 @@ static void getCallback ( struct event_handler_args args )
     chid        chid = args.chid;
     ChannelID *id = static_cast<ChannelID *>(ca_puser(chid));
     GatherV3ScalarDataPvt * pvt = id->pvt;
-    if(pvt->state==destroying) return;
+    if(pvt->state!=getting) return;
     int offset = id->offset;
     Lock xx(pvt->mutex);
     pvt->numberCallbacks++;
@@ -169,39 +171,9 @@ static void getCallback ( struct event_handler_args args )
     // all DBR_TIME_XXX start with status,severity, timeStamp
     const struct dbr_time_double * pTime =
          ( const struct dbr_time_double * ) args.dbr;
-    dbr_short_t    severity = pTime->severity;
-    dbr_short_t    status = pTime->status;
-    epicsTimeStamp stamp = pTime->stamp;
-    if(pvt->alarm.getSeverity()<severity) {
-        pvt->alarm.setSeverity(static_cast<AlarmSeverity>(severity));
-        pvt->alarm.setStatus(static_cast<AlarmStatus>(status));
-        pvt->alarm.setMessage(epicsAlarmConditionStrings[status]);
-    }
-
-    // channel severity
-    IntArrayData idata;
-    pvt->pvalarmSeverity->get(0,pvt->numberChannels,&idata);
-    int32 *pseverity = idata.data;
-    pseverity[offset] = severity;
-    // channel status
-    pvt->pvalarmStatus->get(0,pvt->numberChannels,&idata);
-    int *pstatus = idata.data;
-    pstatus[offset] = status;
-    // channel message
-    StringArrayData sdata;
-    pvt->pvalarmMessage->get(0,pvt->numberChannels,&sdata);
-    String *pmessage = sdata.data;
-    pmessage[offset] = String(epicsAlarmConditionStrings[status]);
-    // channel timeStamp
-    int64 secs = stamp.secPastEpoch - posixEpochAtEpicsEpoch;
-    int32 nano = stamp.nsec;
-    LongArrayData ldata;
-    pvt->pvsecondsPastEpoch->get(0,pvt->numberChannels,&ldata);
-    int64 *psecondsPastEpoch = ldata.data;
-    psecondsPastEpoch[offset] = secs;
-    pvt->pvnanoSeconds->get(0,pvt->numberChannels,&idata);
-    int32 *pnanoSeconds = idata.data;
-    pnanoSeconds[offset] = nano;
+    id->severity = pTime->severity;
+    id->status = pTime->status;
+    id->stamp = pTime->stamp;
     if(id->requestType==requestDouble) {
         const struct dbr_time_double * pTD =
              ( const struct dbr_time_double * ) args.dbr;
@@ -265,6 +237,7 @@ static void putCallback ( struct event_handler_args args )
     chid        chid = args.chid;
     ChannelID *id = static_cast<ChannelID *>(ca_puser(chid));
     GatherV3ScalarDataPvt * pvt = id->pvt;
+    if(pvt->state!=putting) return;
     int offset = id->offset;
     Lock xx(pvt->mutex);
     pvt->numberCallbacks++;
@@ -329,10 +302,13 @@ GatherV3ScalarData::GatherV3ScalarData(
         pChannelID->pvt = pvt;
         pChannelID->theChid = 0;
         pChannelID->offset = i;
+        pChannelID->severity = epicsSevInvalid;
+        pChannelID->status = epicsAlarmUDF;
+        pChannelID->stamp.secPastEpoch = 0;
+        pChannelID->stamp.nsec = 0;
         apchannelID[i] = pChannelID;
     }
     pvt->apchannelID = apchannelID;
-
     pvt->pvchannelName = static_cast<PVStringArray *>(pvt->nttable.getPVField(0));
     pvt->pvchannelName->setCapacity(numberChannels);
     pvt->pvchannelName->setCapacityMutable(false);
@@ -507,12 +483,20 @@ void GatherV3ScalarData::disconnect()
         throw std::runtime_error(
             "GatherV3ScalarData::disconnect must be same thread that called connect\n");
     }
+    int numberChannels = pvt->numberChannels;
     pvt->state = destroying;
-    for(int i=0; i< pvt->numberChannels; i++) {
+    for(int i=0; i< numberChannels; i++) {
         chid theChid = pvt->apchannelID[i]->theChid;
         ca_clear_channel(theChid);
     }
     ca_context_destroy();
+    pvt->state = idle;
+    BooleanArrayData bdata;
+    pvt->pvisConnected->get(0,numberChannels,&bdata);
+    bool *isConnected = bdata.data;
+    for(int i=0; i<numberChannels; i++) {
+        isConnected[i] = false;
+    }
 }
 
 bool GatherV3ScalarData::get()
@@ -557,6 +541,41 @@ bool GatherV3ScalarData::get()
         result = pvt->event.wait(1.0);
         if(result) break;
         if(pvt->numberCallbacks==oldNumber) break;
+    }
+    if(result) {
+        int numberChannels = pvt->numberChannels;
+        BooleanArrayData bdata;
+        pvt->pvisConnected->get(0,numberChannels,&bdata);
+        bool *isConnected = bdata.data;
+        LongArrayData ldata;
+        pvt->pvsecondsPastEpoch->get(0,numberChannels,&ldata);
+        int64 *secondsPastEpoch = ldata.data;
+        IntArrayData idata;
+        pvt->pvnanoSeconds->get(0,numberChannels,&idata);
+        int32 *nanoSeconds = idata.data;
+        pvt->pvalarmSeverity->get(0,numberChannels,&idata);
+        int32 *alarmSeverity = idata.data;
+        pvt->pvalarmStatus->get(0,numberChannels,&idata);
+        int32 *alarmStatus = idata.data;
+        StringArrayData sdata;
+        pvt->pvalarmMessage->get(0,pvt->numberChannels,&sdata);
+        String *alarmMessage = sdata.data;
+        for(int i=0; i<numberChannels; i++) {
+            ChannelID *pID = pvt->apchannelID[i];
+            isConnected[i] =
+                 ((ca_state(pID->theChid)==cs_conn) ? true : false);
+            secondsPastEpoch[i] =
+                pID->stamp.secPastEpoch - posixEpochAtEpicsEpoch;
+            nanoSeconds[i] = pID->stamp.nsec;
+            alarmSeverity[i] = pID->severity;
+            alarmStatus[i] = pID->status;
+            alarmMessage[i] = String(epicsAlarmConditionStrings[pID->status]);
+            if(pvt->alarm.getSeverity()<pID->severity) {
+                pvt->alarm.setSeverity(static_cast<AlarmSeverity>(alarmSeverity[i]));
+                pvt->alarm.setStatus(static_cast<AlarmStatus>(alarmStatus[i]));
+                pvt->alarm.setMessage(alarmMessage[i]);
+            }
+        }
     }
     if(!result) {
         pvt->message += "timeout";

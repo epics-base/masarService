@@ -60,8 +60,9 @@ void test()
             exit(1);
         }
     }
-    if(!result) {printf("put failed\n%s\n",gather->getMessage().c_str()); exit(1);}
     result = gather->put();
+    if(!result) {printf("put failed\n%s\n",gather->getMessage().c_str()); exit(1);}
+    result = gather->get();
     if(!result) {printf("get failed\n%s\n",gather->getMessage().c_str()); exit(1);}
      PVStructure::shared_pointer nttable = gather->getNTTable();
      builder.clear();
