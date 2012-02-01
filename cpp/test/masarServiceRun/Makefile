@@ -8,7 +8,5 @@ masarServiceRun_SRCS += masarServiceRun.cpp
 masarServiceRun_LIBS += nt pvIOC pvAccess pvData Com masarServer masarClient
 masarServiceRun_LIBS += $(PYTHON)
 
-$(PYTHON)_DIR = $(PYTHON_BASE)/lib/$(PYTHON)/config
-
 include $(TOP)/configure/RULES
 

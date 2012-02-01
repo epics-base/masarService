@@ -40,6 +40,7 @@ struct ChannelID
     chid theChid;
     int offset;
     V3RequestType requestType;
+    bool getIsConnected;
     dbr_short_t     status;
     dbr_short_t     severity;
     epicsTimeStamp  stamp;         
@@ -168,6 +169,7 @@ static void getCallback ( struct event_handler_args args )
           }
           return;
     }
+    id->getIsConnected = true;
     // all DBR_TIME_XXX start with status,severity, timeStamp
     const struct dbr_time_double * pTime =
          ( const struct dbr_time_double * ) args.dbr;
@@ -433,10 +435,16 @@ bool GatherV3ScalarData::connect(double timeOut)
     pvt->numberCallbacks = 0;
     pvt->requestOK = true;
     pvt->event.tryWait();
-    for(int i=0; i< pvt->numberChannels; i++) {
-        StringArrayData data;
-        pvt->pvchannelName->get(0,pvt->numberChannels,&data);
-        const char * channelName = data.data[i].c_str();
+    int numberChannels = pvt->numberChannels;
+    BooleanArrayData bdata;
+    pvt->pvisConnected->get(0,numberChannels,&bdata);
+    bool *isConnected = bdata.data;
+    StringArrayData sdata;
+    pvt->pvchannelName->get(0,numberChannels,&sdata);
+    String *channelNames = sdata.data;
+    for(int i=0; i< numberChannels; i++) {
+        isConnected[i] = false;
+        const char * channelName = channelNames[i].c_str();
         ChannelID *pchannelID = pvt->apchannelID[i];
         int result = ca_create_channel(
            channelName,
@@ -491,12 +499,6 @@ void GatherV3ScalarData::disconnect()
     }
     ca_context_destroy();
     pvt->state = idle;
-    BooleanArrayData bdata;
-    pvt->pvisConnected->get(0,numberChannels,&bdata);
-    bool *isConnected = bdata.data;
-    for(int i=0; i<numberChannels; i++) {
-        isConnected[i] = false;
-    }
 }
 
 bool GatherV3ScalarData::get()
@@ -529,6 +531,13 @@ bool GatherV3ScalarData::get()
             theChid,
             getCallback,
             pvt->apchannelID[i]);
+        if(result==ECA_NORMAL) continue;
+        if(result==ECA_DISCONN) {
+            messageCat(pvt,"ca_get_callback",ECA_DISCONN,i);
+            channelId->getIsConnected = false;
+            pvt->requestOK = false;
+            continue;
+        }
         if(result!=ECA_NORMAL) {
             messageCat(pvt,"ca_get_callback",result,i);
             pvt->requestOK = false;
@@ -568,8 +577,7 @@ bool GatherV3ScalarData::get()
     String *alarmMessage = sdata.data;
     for(int i=0; i<numberChannels; i++) {
         ChannelID *pID = pvt->apchannelID[i];
-        isConnected[i] =
-             ((ca_state(pID->theChid)==cs_conn) ? true : false);
+        isConnected[i] = pID->getIsConnected;
         secondsPastEpoch[i] =
             pID->stamp.secPastEpoch - posixEpochAtEpicsEpoch;
         nanoSeconds[i] = pID->stamp.nsec;

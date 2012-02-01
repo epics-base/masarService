@@ -63,7 +63,9 @@ public:
      * Connect to the V3 channels.
      * @param timeOut Timeout is seconds to wait.
      * @returns (false,true) If (not connected, is connected) to all channels.
-     * If false then all channels are cleared and connect must be reissued.
+     * It not connected to all channels getMessage can be called to
+     * find out why. Also isConnected shows the status of each channel.
+     * Connect can not be called again until disconnect is called.
      */
     bool connect(double timeOut);
     /**
@@ -76,6 +78,9 @@ public:
      * @returns (false,true) If (all, not all ) gets were successful.
      * If false getMessage can be called to get the reason.
      * If any channel is disconnected then false is returned.
+     * Note that the values of each channels data (The array methods
+     * below) are updated as a result of the get request and will not
+     * change until the next get request is issued.
      */
     bool get();
     /**

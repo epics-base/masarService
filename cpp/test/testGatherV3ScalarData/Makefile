@@ -26,8 +26,6 @@ gatherV3Scalar_LIBS += nt pvIOC pvAccess pvData ca Com
 gatherV3Scalar_LIBS += masarServer masarClient
 gatherV3Scalar_LIBS += $(PYTHON)
 
-$(PYTHON)_DIR = $(PYTHON_BASE)/lib/$(PYTHON)/config
-
 include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
