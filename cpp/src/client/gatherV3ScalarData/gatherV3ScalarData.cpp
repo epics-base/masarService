@@ -542,47 +542,45 @@ bool GatherV3ScalarData::get()
         if(result) break;
         if(pvt->numberCallbacks==oldNumber) break;
     }
-    if(result) {
-        int numberChannels = pvt->numberChannels;
-        BooleanArrayData bdata;
-        pvt->pvisConnected->get(0,numberChannels,&bdata);
-        bool *isConnected = bdata.data;
-        LongArrayData ldata;
-        pvt->pvsecondsPastEpoch->get(0,numberChannels,&ldata);
-        int64 *secondsPastEpoch = ldata.data;
-        IntArrayData idata;
-        pvt->pvnanoSeconds->get(0,numberChannels,&idata);
-        int32 *nanoSeconds = idata.data;
-        pvt->pvalarmSeverity->get(0,numberChannels,&idata);
-        int32 *alarmSeverity = idata.data;
-        pvt->pvalarmStatus->get(0,numberChannels,&idata);
-        int32 *alarmStatus = idata.data;
-        StringArrayData sdata;
-        pvt->pvalarmMessage->get(0,pvt->numberChannels,&sdata);
-        String *alarmMessage = sdata.data;
-        for(int i=0; i<numberChannels; i++) {
-            ChannelID *pID = pvt->apchannelID[i];
-            isConnected[i] =
-                 ((ca_state(pID->theChid)==cs_conn) ? true : false);
-            secondsPastEpoch[i] =
-                pID->stamp.secPastEpoch - posixEpochAtEpicsEpoch;
-            nanoSeconds[i] = pID->stamp.nsec;
-            alarmSeverity[i] = pID->severity;
-            alarmStatus[i] = pID->status;
-            alarmMessage[i] = String(epicsAlarmConditionStrings[pID->status]);
-            if(pvt->alarm.getSeverity()<pID->severity) {
-                pvt->alarm.setSeverity(static_cast<AlarmSeverity>(alarmSeverity[i]));
-                pvt->alarm.setStatus(static_cast<AlarmStatus>(alarmStatus[i]));
-                pvt->alarm.setMessage(alarmMessage[i]);
-            }
-        }
-    }
     if(!result) {
         pvt->message += "timeout";
         pvt->requestOK = false;
         pvt->alarm.setMessage(pvt->message);
         pvt->alarm.setSeverity(invalidAlarm);
         pvt->alarm.setStatus(clientStatus);
+    }
+    int numberChannels = pvt->numberChannels;
+    BooleanArrayData bdata;
+    pvt->pvisConnected->get(0,numberChannels,&bdata);
+    bool *isConnected = bdata.data;
+    LongArrayData ldata;
+    pvt->pvsecondsPastEpoch->get(0,numberChannels,&ldata);
+    int64 *secondsPastEpoch = ldata.data;
+    IntArrayData idata;
+    pvt->pvnanoSeconds->get(0,numberChannels,&idata);
+    int32 *nanoSeconds = idata.data;
+    pvt->pvalarmSeverity->get(0,numberChannels,&idata);
+    int32 *alarmSeverity = idata.data;
+    pvt->pvalarmStatus->get(0,numberChannels,&idata);
+    int32 *alarmStatus = idata.data;
+    StringArrayData sdata;
+    pvt->pvalarmMessage->get(0,pvt->numberChannels,&sdata);
+    String *alarmMessage = sdata.data;
+    for(int i=0; i<numberChannels; i++) {
+        ChannelID *pID = pvt->apchannelID[i];
+        isConnected[i] =
+             ((ca_state(pID->theChid)==cs_conn) ? true : false);
+        secondsPastEpoch[i] =
+            pID->stamp.secPastEpoch - posixEpochAtEpicsEpoch;
+        nanoSeconds[i] = pID->stamp.nsec;
+        alarmSeverity[i] = pID->severity;
+        alarmStatus[i] = pID->status;
+        alarmMessage[i] = String(epicsAlarmConditionStrings[pID->status]);
+        if(pvt->alarm.getSeverity()<pID->severity) {
+            pvt->alarm.setSeverity(static_cast<AlarmSeverity>(alarmSeverity[i]));
+            pvt->alarm.setStatus(static_cast<AlarmStatus>(alarmStatus[i]));
+            pvt->alarm.setMessage(alarmMessage[i]);
+        }
     }
     pvt->state = connected;
     return pvt->requestOK;
