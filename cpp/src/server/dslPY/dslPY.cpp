@@ -439,7 +439,7 @@ static PVStructure::shared_pointer createResult(
     PVStructure::shared_pointer pvStructure;
     pvStructure.reset();
     if (functionName.compare("saveMasar")==0) {
-           pvStructure = saveMasar(result);
+        pvStructure = saveMasar(result);
     } else {
         PyObject *list = 0;
         if(!PyArg_ParseTuple(result,"O!:dslPY", &PyList_Type,&list))
@@ -458,7 +458,6 @@ static PVStructure::shared_pointer createResult(
     //        if ( functionName == "retrieveServiceConfigs") {
             pvStructure = retrieveServiceConfigEvents(list, 1);
         } else if (functionName.compare("retrieveServiceConfigProps")==0) {
-    //        if ( functionName == "retrieveServiceConfigProps") {
             pvStructure = retrieveServiceConfigEvents(list, 2);
         }
     }
@@ -483,11 +482,6 @@ static PVStructure::shared_pointer getLiveMachine(
     result = gather->get();
 
     PVStructure::shared_pointer nttable = gather->getNTTable();
-
-    // First place to show the data
-    String builder;
-    nttable->toString(&builder);
-    printf("%s\n", builder.c_str());
 
     return nttable;
 }
@@ -519,12 +513,6 @@ PVStructure::shared_pointer DSL_RDB::request(
             channames[i] = PyString_AsString(name);
         }
         PVStructure::shared_pointer data = getLiveMachine(channames, list_len);
-
-        // Second place to show the data
-        // But why data not exact same with first place?
-        String builder;
-        data->toString(&builder);
-        printf("%s\n", builder.c_str());
 
         // create a tuple is needed to pass to Python as parameter.
         PyObject * pdata = PyCapsule_New(&data,"pvStructure",0);

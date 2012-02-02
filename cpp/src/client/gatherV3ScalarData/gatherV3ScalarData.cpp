@@ -578,8 +578,11 @@ bool GatherV3ScalarData::get()
     for(int i=0; i<numberChannels; i++) {
         ChannelID *pID = pvt->apchannelID[i];
         isConnected[i] = pID->getIsConnected;
-        secondsPastEpoch[i] =
-            pID->stamp.secPastEpoch - posixEpochAtEpicsEpoch;
+        // pID->stamp.secPastEpoch should be 0 if record is not processed yet.
+        // otherwise, use EPOCH time.
+        if (pID->stamp.secPastEpoch > posixEpochAtEpicsEpoch)
+            secondsPastEpoch[i] =
+                pID->stamp.secPastEpoch - posixEpochAtEpicsEpoch;
         nanoSeconds[i] = pID->stamp.nsec;
         alarmSeverity[i] = pID->severity;
         alarmStatus[i] = pID->status;
