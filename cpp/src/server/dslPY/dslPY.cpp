@@ -378,7 +378,7 @@ static PVStructure::shared_pointer retrieveServiceConfigEvents(PyObject * list, 
     return pvStructure;
 }
 
-static PVStructure::shared_pointer saveMasar(PyObject * list)
+static PVStructure::shared_pointer saveMasar(PyObject * list, String message)
 {
     // Get save masar event id
     // -1 means saveMasar failure
@@ -412,12 +412,14 @@ static PVStructure::shared_pointer saveMasar(PyObject * list)
     PVAlarm pvAlarm;
     Alarm alarm;
     ntTable.attachAlarm(pvAlarm);
+    printf("message = %s\n", message.c_str());
+
     if(status != -1) {
-        alarm.setMessage("Save MASAR suessed.");
+        alarm.setMessage("Save MASAR suessed." + message);
         alarm.setSeverity(noAlarm);
         alarm.setStatus(noStatus);
     } else {
-        alarm.setMessage("Save MASAR failed.");
+        alarm.setMessage("Save MASAR failed." + message);
         alarm.setSeverity(majorAlarm);
         alarm.setStatus(clientStatus);
     }
@@ -440,9 +442,10 @@ static PVStructure::shared_pointer createResult(
 {
     PVStructure::shared_pointer pvStructure;
     pvStructure.reset();
-    if (functionName.compare("saveMasar")==0) {
-        pvStructure = saveMasar(result);
-    } else {
+//    if (functionName.compare("saveMasar")==0) {
+//        pvStructure = saveMasar(result);
+//    } else
+    {
         PyObject *list = 0;
         if(!PyArg_ParseTuple(result,"O!:dslPY", &PyList_Type,&list))
         {
@@ -467,7 +470,7 @@ static PVStructure::shared_pointer createResult(
 }
 
 static PVStructure::shared_pointer getLiveMachine(
-        String channelName [], int numberChannels)
+        String channelName [], int numberChannels, String * message)
 {
     GatherV3ScalarData::shared_pointer gather = GatherV3ScalarData::shared_pointer(
         new GatherV3ScalarData(channelName,numberChannels));
@@ -475,11 +478,12 @@ static PVStructure::shared_pointer getLiveMachine(
     // wait one second, which is a magic number for now.
     // The waiting time might be removed later after stability test.
     bool result = gather->connect(1.0);
+    * message = gather->getMessage();
     if(!result) {
         printf("connect failed\n%s\n",gather->getMessage().c_str());
-        printf("This test requires the test V3 database"
-           " of the gather service.\n");
-        printf("It must be started before running this test\n");
+    }
+    if((*message).length() == 0) {
+        *message = "All channels are connected.";
     }
     result = gather->get();
 
@@ -514,7 +518,8 @@ PVStructure::shared_pointer DSL_RDB::request(
             name = PyList_GetItem(pchannelnames, i);
             channames[i] = PyString_AsString(name);
         }
-        PVStructure::shared_pointer data = getLiveMachine(channames, list_len);
+        String message;
+        PVStructure::shared_pointer data = getLiveMachine(channames, list_len, &message);
 
         // create a tuple is needed to pass to Python as parameter.
         PyObject * pdata = PyCapsule_New(&data,"pvStructure",0);
@@ -525,7 +530,8 @@ PVStructure::shared_pointer DSL_RDB::request(
         // second value is the dictionary
         PyTuple_SetItem(pyTuple2, 1, pyDict);
         PyObject *result = PyEval_CallObject(prequest,pyTuple2);
-        pvReturn = createResult(result,functionName);
+        pvReturn = saveMasar(result,message);
+//        pvReturn = createResult(result,functionName);
     } else {
         // A tuple is needed to pass to Python as parameter.
         PyObject * pyTuple = PyTuple_New(1);

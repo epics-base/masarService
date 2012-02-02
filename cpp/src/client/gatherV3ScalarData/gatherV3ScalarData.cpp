@@ -466,7 +466,7 @@ bool GatherV3ScalarData::connect(double timeOut)
         }
         if(pvt->numberConnected!=pvt->numberChannels) {
             char buf[30];
-            sprintf(buf,"%d channels of %d are not connected.\n",
+            sprintf(buf,"%d channels of %d are not connected.",
                 (pvt->numberChannels - pvt->numberConnected),
                  pvt->numberChannels);
             pvt->message = String(buf);

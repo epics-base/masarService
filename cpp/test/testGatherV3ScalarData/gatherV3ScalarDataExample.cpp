@@ -29,11 +29,15 @@ NTTable::shared_pointer getLiveMachine(
     result = gather->get();
 
     PVStructure::shared_pointer nttable = gather->getNTTable();
+    String builder;
+    nttable->toString(&builder);
+    printf("%s\n", builder.c_str());
 
     // First place to show the data
-    String builder;
+//    String builder;
     NTTable::shared_pointer pvt = NTTable::shared_pointer(new NTTable(nttable));
     PVBooleanArray * isConnected = static_cast<PVBooleanArray *>(pvt->getPVField(5));
+    builder.clear();
     isConnected->toString(&builder);
     printf("%s\n", builder.c_str());
 
@@ -54,6 +58,7 @@ void test()
 
     NTTable::shared_pointer pvt = getLiveMachine(channelName,n);
     PVBooleanArray * isConnected = static_cast<PVBooleanArray *>(pvt->getPVField(5));
+    builder.clear();
     isConnected->toString(&builder);
     printf("%s\n", builder.c_str());
 
