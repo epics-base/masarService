@@ -412,7 +412,6 @@ static PVStructure::shared_pointer saveMasar(PyObject * list, String message)
     PVAlarm pvAlarm;
     Alarm alarm;
     ntTable.attachAlarm(pvAlarm);
-    printf("message = %s\n", message.c_str());
 
     if(status != -1) {
         alarm.setMessage("Save MASAR suessed." + message);
