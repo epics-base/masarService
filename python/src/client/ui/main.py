@@ -7,7 +7,7 @@ Created on Dec 1, 2011
 
 from __future__ import division
 from __future__ import print_function
-from __future__ import unicode_literals
+#from __future__ import unicode_literals
 
 import sys
 import os
@@ -66,16 +66,20 @@ while args:
         conn = sqlite3.connect(__db)
     elif arg in ("-e", "--epics", "epics"):
         print ('use EPICS V4 as data source')
-        source = 'epics' # this is default data source, get data from EPICS V4 server
-        #import pyepics4 as dsl
+#        source = 'epics' # this is default data source, get data from EPICS V4 server
+#        import masarClient
     elif arg in ("-h", "--help", "help"):
         usage()
     else:
-        print ('use EPICS V4 as data source')
-        source = 'epics'
-        #import pyepics4 as dsl
+        print ('Unknown data source. use EPICS V4 as data source')
+#        source = 'epics'
+#        import masarClient
+if source == 'epics':
+    source = 'epics'
+    import masarClient
 
-class masar(QMainWindow, ui_masar.Ui_masar):
+
+class masarUI(QMainWindow, ui_masar.Ui_masar):
     severityDict= {0: 'NO_ALARM',
                    1: 'MINOR_ALARM',
                    2: 'MAJOR_ALARM',
@@ -108,12 +112,14 @@ class masar(QMainWindow, ui_masar.Ui_masar):
                  22: 'ALARM_NSTATUS'
     }
 
-    def __init__(self, source='epics', parent=None):
-        super(masar, self).__init__(parent)
+    def __init__(self, parent=None, channelname='masarService', source='epics'):
+        super(masarUI, self).__init__(parent)
         self.setupUi(self)
         self.__setDateTime()
         self.tabWindowDict = {'comment': self.commentTab}
         self.__service = 'masar'
+        if source == 'epics':
+            self.mc = masarClient.client(channelname)
         
         self.__initSystemBomboBox()
         
@@ -374,6 +380,8 @@ class masar(QMainWindow, ui_masar.Ui_masar):
             for key in data:
                 m = 0
                 for item in data[key]:
+                    if not isinstance(item, basestring):
+                        item = str(item)
                     if item:
                         newitem = QTableWidgetItem(item)
                         newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
@@ -390,8 +398,18 @@ class masar(QMainWindow, ui_masar.Ui_masar):
             for result in results[1:]:
                 system.append(result[3])
             return sorted(set(system))
+        elif source == 'epics':
+            try:
+                return self.mc.retrieveSystemList()
+            except:
+                QMessageBox.warning(self,
+                                    "Warning",
+                                    "Cannot connect to MASAR server.\nPlease check the serviceName, network connection, and service status.")
+
+                return
     
     def retrieveConfigData(self):
+        data = odict()
         if source == 'sqlite':
 #            print (type(self.currentConfigFilter), self.currentConfigFilter)
 #            results = pymasar.service.retrieveServiceConfigs(conn, servicename=self.__service, configname=self.currentConfigFilter, system=self.system)
@@ -406,7 +424,6 @@ class masar(QMainWindow, ui_masar.Ui_masar):
             config_desc = []
             config_date = []
             config_version = []
-            data = odict()
             if results:
                 for res in results:
                     config_id.append(str(res[0]))
@@ -414,12 +431,16 @@ class masar(QMainWindow, ui_masar.Ui_masar):
                     config_desc.append(res[2])
                     config_date.append(res[3])
                     config_version.append(res[4])
-                data['Name'] = config_name
-                data['Description'] = config_desc
-                data['Date'] = config_date
-                data['Version'] = config_version
-                data['Id'] = config_id
-            return data
+        elif source == 'epics':
+            params = {"system": self.system,
+                      "servicename": self.__service}
+            config_id, config_name, config_desc, config_date, config_version = self.mc.retrieveServiceConfigs(params)
+        data['Name'] = config_name
+        data['Description'] = config_desc
+        data['Date'] = config_date
+        data['Version'] = config_version
+        data['Id'] = config_id
+        return data
     
     def retrieveEventData(self,configids=None,confignames=None):
         start = None
@@ -433,15 +454,12 @@ class masar(QMainWindow, ui_masar.Ui_masar):
                             "Please select a correct time range.")
                 return
 
+        event_ids = []
+        event_ts = []
+        event_desc = []
+        c_names = []
         if source == 'sqlite':
-            #retrieveServiceEvents(conn, configid=None,start=None, end=None, comment=None):
             if configids:
-                data = odict()
-                event_ids = []
-                event_ts = []
-                event_desc = []
-                c_names = []
-#                for cid in configids:
                 for i in range(len(configids)):
                     cid = configids[i]
                     if self.timeRangeCheckBox.isChecked():
@@ -452,23 +470,38 @@ class masar(QMainWindow, ui_masar.Ui_masar):
                     for res in results[1:]:
                         c_names.append(confignames[i])
                         event_ids.append(str(res[0]))
-#                        event_ts.append(res[3] - self.UTC_OFFSET_TIMEDELTA)
                         ts = str(datetime.datetime.fromtimestamp(time.mktime(time.strptime(res[3], self.time_format))) - self.UTC_OFFSET_TIMEDELTA)
                         event_ts.append(ts)
                         event_desc.append(res[2])
-                data['Config'] = c_names
-                data['Time stamp'] = event_ts
-                data['Description'] = event_desc
-                data['Id'] = event_ids
-                return data
+        elif source == 'epics':
+            if configids:
+                for i in range(len(configids)):
+                    cid = configids[i]
+                    params = {'configid': cid}
+                    if self.timeRangeCheckBox.isChecked():
+                        params['start'] = str(start)
+                        params['end'] = str(end)
+                    eids, usertag, utctimes = self.mc.retrieveServiceEvents(params)
+                    event_ids = event_ids[:] + (list(eids))[:]
+                    event_desc = event_desc[:] + (list(usertag))[:]
+                    for ut in utctimes:
+                        c_names.append(confignames[i])
+                        ts = str(datetime.datetime.fromtimestamp(time.mktime(time.strptime(ut, self.time_format))) - self.UTC_OFFSET_TIMEDELTA)
+                        event_ts.append(ts)
+        data = odict()
+        data['Config'] = c_names
+        data['Time stamp'] = event_ts
+        data['Description'] = event_desc
+        data['Id'] = event_ids
+        return data
 
     def retrieveMasarData(self, eventid=None):
+        data = odict()
         if source == 'sqlite':
             # result format:
             # ('user tag', 'event UTC time', 'service config name', 'service name'),
             # ('pv name', 'string value', 'double value', 'long value', 'dbr type', 'isConnected', 'secondsPastEpoch', 'nanoSeconds', 'timeStampTag', 'alarmSeverity', 'alarmStatus', 'alarmMessage')
             results = pymasar.masardata.masardata.retrieveMasar(conn, eventid=eventid)[1]
-            data = odict()
             pvnames = []
             s_value = []
             d_value = []
@@ -495,14 +528,8 @@ class masar(QMainWindow, ui_masar.Ui_masar):
                     ts.append(res[6])
                     ts_nano.append(res[7])
                     ts_tag.append(res[8])
-                    try:
-                        severity.append(self.severityDict[res[9]])
-                    except:
-                        severity.append('N/A')
-                    try:
-                        status.append(self.alarmDict[res[10]])
-                    except:
-                        status.append('N/A')
+                    severity.append(res[9])
+                    status.append(res[10])
                     alarm_message.append(res[11])
             data['PV Name'] = pvnames
             data['Status'] = status
@@ -514,7 +541,33 @@ class masar(QMainWindow, ui_masar.Ui_masar):
             data['I_value'] = i_value
             data['D_value'] = d_value
             data['isConnected'] = isConnected
-    
+        elif source == 'epics':
+            params = {'eventid': eventid}
+            pvnames, s_value, d_value, i_value, dbrtype, isConnected, ts, ts_nano, severity, status = self.mc.retrieveMasar(params)
+            severity = list(severity)
+            status = list(status)
+
+        for i in range(len(severity)):
+            try:
+                severity[i] = self.severityDict[severity[i]]
+            except:
+                severity[i] = 'N/A'
+            try:
+                status[i] = self.alarmDict[status[i]]
+            except:
+                status[i] = 'N/A'
+
+        data['PV Name'] = pvnames
+        data['Status'] = status
+        data['Severity'] = severity
+        data['Time stamp'] = ts
+        data['Time stamp (nano)'] = ts_nano
+        data['DBR'] = dbrtype
+        data['S_value'] = s_value
+        data['I_value'] = i_value
+        data['D_value'] = d_value
+        data['isConnected'] = isConnected
+        
         return data
 
 def main():
@@ -522,7 +575,7 @@ def main():
     app.setOrganizationName("NSLS II")
     app.setOrganizationDomain("BNL")
     app.setApplicationName("MASAR Viewer")
-    form = masar(source)
+    form = masarUI(source=source)
     form.show()
     app.exec_()
 

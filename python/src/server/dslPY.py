@@ -59,18 +59,16 @@ class DSL(object) :
             except:
                 results.append(None)
         return results
-        
+    
     def retrieveServiceConfigProps(self, params):
         key = ['propname', 'servicename', 'configname']
         name, service, config = self._parseParams(params, key)
         if not service:
             service = self.__servicename
-#        print (name, service, config)
         conn = pymasar.utils.connect()
         result = pymasar.service.retrieveServiceConfigProps(conn, propname=name, servicename=service, configname=config)
         pymasar.utils.close(conn)
         return result
-#        return 'retrieveServiceConfigProps'
     
     def retrieveServiceConfigs(self, params):
         key = ['servicename', 'configname', 'configversion', 'system']
@@ -87,11 +85,9 @@ class DSL(object) :
     def retrieveServiceEvents(self, params):
         key = ['configid', 'start', 'end', 'comment']
         cid, start, end, comment = self._parseParams(params, key)
-#        print (cid, start, end, comment)
         conn = pymasar.utils.connect()
         result = pymasar.service.retrieveServiceEvents(conn, configid=cid,start=start, end=end, comment=comment)
         pymasar.utils.close(conn)
-        print (result)
         return result
 #        return 'retrieveServiceEvents'
 
@@ -149,7 +145,7 @@ class DSL(object) :
         try:
             conn = pymasar.utils.connect()
             eid, result = pymasar.masardata.saveMasar(conn, datas, servicename=service, configname=config, comment=comment)
-    #        conn = pymasar.utils.save(conn)
+#            pymasar.utils.save(conn)
             pymasar.utils.close(conn)
             result.insert(0, eid)
             return result

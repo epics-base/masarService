@@ -388,17 +388,19 @@ static PVStructure::shared_pointer saveMasar(PyObject * list)
 
     FieldCreate *fieldCreate = getFieldCreate();
 
-    FieldConstPtr fields = fieldCreate->createScalar("status",pvBoolean);
+    FieldConstPtr fields = fieldCreate->createScalarArray("status",pvBoolean);
     PVStructure::shared_pointer pvStructure = NTTable::create(
         false,true,true,1, &fields);
 
     NTTable ntTable(pvStructure);
 
-    PVBoolean * pvBoolVal = static_cast<PVBoolean *>(ntTable.getPVField(0));
+    PVBooleanArray * pvBoolVal = static_cast<PVBooleanArray *>(ntTable.getPVField(0));
     if (status != -1) {
-        pvBoolVal -> put (true);
+        bool temp [] = {true};
+        pvBoolVal -> put (0, 1, temp, 0);
     } else {
-        pvBoolVal -> put (false);
+        bool temp [] = {false};
+        pvBoolVal -> put (0, 1, temp, 0);
     }
 
     // set label strings

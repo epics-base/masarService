@@ -5,7 +5,7 @@ from alarm import Alarm as Alarm
 from timeStamp import TimeStamp as TimeStamp
 
 
-def testRPC(function, params):
+def __clientRPC(function, params):
     alarm = Alarm()
     timeStamp = TimeStamp()
 
@@ -24,32 +24,42 @@ def testRPC(function, params):
         print channelRPC.getMessage()
         exit(1)
     nttable = NTTable(result)
-    print nttable
+#    print nttable
     
     nttable.getAlarm(alarm.getAlarmPy())
-    print alarm;
+#    print alarm;
     
     nttable.getTimeStamp(timeStamp.getTimeStampPy())
-    print timeStamp;
+#    print timeStamp;
     
-    numberValues = nttable.getNumberValues()
-    print "numberValues",numberValues
-    
-    label = nttable.getLabel()
-    print "label",label
-    
-    i = 0
-    while i < numberValues :
-        value = nttable.getValue(i)
-        print "value",label[i],value
-        i += 1
+#    numberValues = nttable.getNumberValues()
+#    print "numberValues",numberValues
+#    
+#    label = nttable.getLabel()
+#    print "label",label
+#    
+#    i = 0
+#    while i < numberValues :
+#        value = nttable.getValue(i)
+#        print "value",label[i],value
+#        i += 1
+    return nttable
+
+def retrieveSystemList():
+    function = 'retrieveServiceConfigProps'
+    print ("=== test %s ===" %function)
+    params = {}
+    nttable = __clientRPC(function, params)
+    print (nttable)
+    print ("=== test %s end ===" %function)
+
 
 def retrieveServiceConfigs():
     function = 'retrieveServiceConfigs'
     print ("=== test %s ===" %function)
     params = {'system': 'sr'
               }
-    testRPC(function, params)
+    __clientRPC(function, params)
     print ("=== test %s end ===" %function)
 
 def retrieveServiceConfigProps():
@@ -58,14 +68,14 @@ def retrieveServiceConfigProps():
     params = {'propname': 'system', 
               'configname': 'sr_qs'
               }
-    testRPC(function, params)
+    __clientRPC(function, params)
     print ("=== test %s end ===" %function)
     
 def retrieveServiceEvents():
     function = 'retrieveServiceEvents'
     print ("=== test %s ===" %function)
     params = {'configid': '1'}
-    testRPC(function, params)
+    __clientRPC(function, params)
     print ("=== test %s end ===" %function)
 
 def retrieveMasar():
@@ -73,7 +83,7 @@ def retrieveMasar():
     print ("=== test %s ===" %function)
     params = {'eventid': '56'}
 #    params = {'eventid': '10'}
-    testRPC(function, params)
+    __clientRPC(function, params)
     print ("=== test %s end ===" %function)
 
 def saveMasar():
@@ -83,10 +93,11 @@ def saveMasar():
 #              'servicename': 'masar'}
     params = {'configname': 'sr_test',
               'servicename': 'masar'}
-    testRPC(function, params)
+    __clientRPC(function, params)
     print ("=== test %s end ===" %function)
 
 if __name__ == '__main__':
+#    retrieveSystemList()
 #    retrieveServiceConfigs()
 #    retrieveServiceConfigProps()
 #    retrieveServiceEvents()
