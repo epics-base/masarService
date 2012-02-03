@@ -13,7 +13,7 @@ from pymasar.service.service import (saveService)
 from pymasar.service.serviceconfig import (saveServiceConfig, saveServicePvGroup, retrieveServiceConfigPVs)
 from pymasar.service.serviceevent import (saveServiceEvent)
 from pymasar.utils import (save)
-from pymasar.masardata.masardata import (saveMasar)
+from pymasar.masardata.masardata import (saveSnapshot)
 
 conn = sqlite3.connect('masar.db')
 
@@ -164,7 +164,7 @@ def dummyServiceEventData():
 #            value = random.randrange(-3.0, 2.0)
             value = random.uniform(-3.0, 2.0)
             data.append((pv, str(value), value, int(value), 6, 1, int(sec), int((sec-int(sec))*1e9), 0, 0, 0, ''))
-        saveMasar(conn, data, servicename=__servicename, configname=k, comment=v[0])
+        saveSnapshot(conn, data, servicename=__servicename, configname=k, comment=v[0])
         
 if __name__ == '__main__':
     try:

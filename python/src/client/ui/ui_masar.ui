@@ -75,13 +75,6 @@
              </property>
             </widget>
            </item>
-           <item row="2" column="1">
-            <widget class="QPushButton" name="selectConfigButton">
-             <property name="text">
-              <string>Select Config(s)</string>
-             </property>
-            </widget>
-           </item>
            <item row="3" column="0" colspan="2">
             <widget class="QTableWidget" name="configTableWidget">
              <property name="selectionMode">
@@ -89,6 +82,9 @@
              </property>
              <property name="selectionBehavior">
               <enum>QAbstractItemView::SelectRows</enum>
+             </property>
+             <property name="sortingEnabled">
+              <bool>true</bool>
              </property>
             </widget>
            </item>
@@ -190,6 +186,13 @@
              </property>
             </widget>
            </item>
+           <item row="4" column="3">
+            <widget class="QPushButton" name="fetchSnapshotButton">
+             <property name="text">
+              <string>Fetch Snapshot</string>
+             </property>
+            </widget>
+           </item>
           </layout>
          </item>
          <item>
@@ -200,21 +203,24 @@
            <property name="selectionBehavior">
             <enum>QAbstractItemView::SelectRows</enum>
            </property>
+           <property name="sortingEnabled">
+            <bool>true</bool>
+           </property>
           </widget>
          </item>
          <item>
           <layout class="QHBoxLayout" name="snapshotHorizontalLayout">
            <item>
-            <widget class="QPushButton" name="fetchSnapshotButton">
+            <widget class="QPushButton" name="saveSnapshotButton">
              <property name="text">
-              <string>Fetch Snapshot</string>
+              <string>Save Snapshot</string>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="getLiveButton">
+            <widget class="QPushButton" name="restoreMachineButton">
              <property name="text">
-              <string>Get Live Machine</string>
+              <string>Restore Machine</string>
              </property>
             </widget>
            </item>
@@ -378,10 +384,10 @@
    </hints>
   </connection>
   <connection>
-   <sender>selectConfigButton</sender>
+   <sender>saveSnapshotButton</sender>
    <signal>clicked()</signal>
    <receiver>masar</receiver>
-   <slot>selectConfigAction()</slot>
+   <slot>saveSnapshotAction()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>20</x>
@@ -458,10 +464,10 @@
    </hints>
   </connection>
   <connection>
-   <sender>getLiveButton</sender>
+   <sender>restoreMachineButton</sender>
    <signal>clicked(void)</signal>
    <receiver>masar</receiver>
-   <slot>getLiveMachine()</slot>
+   <slot>restoreSnapshotAction()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>20</x>
@@ -478,11 +484,11 @@
   <slot>systemComboxChanged(QString)</slot>
   <slot>configFilterChanged()</slot>
   <slot>fetchConfigAction()</slot>
-  <slot>selectConfigAction()</slot>
+  <slot>saveSnapshotAction()</slot>
   <slot>eventFilterChanged()</slot>
   <slot>useTimeRange()</slot>
   <slot>fetchEventAction()</slot>
   <slot>retrieveSnapshot()</slot>
-  <slot>getLiveMachine()</slot>
+  <slot>restoreSnapshotAction()</slot>
  </slots>
 </ui>

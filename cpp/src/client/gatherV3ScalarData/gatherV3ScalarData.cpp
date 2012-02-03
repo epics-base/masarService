@@ -582,7 +582,7 @@ bool GatherV3ScalarData::get()
         // otherwise, use EPOCH time.
         if (pID->stamp.secPastEpoch > posixEpochAtEpicsEpoch)
             secondsPastEpoch[i] =
-                pID->stamp.secPastEpoch - posixEpochAtEpicsEpoch;
+                pID->stamp.secPastEpoch + posixEpochAtEpicsEpoch;
         nanoSeconds[i] = pID->stamp.nsec;
         alarmSeverity[i] = pID->severity;
         alarmStatus[i] = pID->status;

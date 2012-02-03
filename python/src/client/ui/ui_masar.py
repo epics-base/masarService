@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_masar.ui'
 #
-# Created: Wed Jan  4 11:26:34 2012
+# Created: Fri Feb  3 14:43:52 2012
 #      by: PyQt4 UI code generator 4.8.6
 #
 # WARNING! All changes made in this file will be lost!
@@ -65,10 +65,6 @@ class Ui_masar(object):
         self.fetchConfigButton.setText(QtGui.QApplication.translate("masar", "Fetch Config(s)", None, QtGui.QApplication.UnicodeUTF8))
         self.fetchConfigButton.setObjectName(_fromUtf8("fetchConfigButton"))
         self.configGridLayout.addWidget(self.fetchConfigButton, 2, 0, 1, 1)
-        self.selectConfigButton = QtGui.QPushButton(self.layoutWidget)
-        self.selectConfigButton.setText(QtGui.QApplication.translate("masar", "Select Config(s)", None, QtGui.QApplication.UnicodeUTF8))
-        self.selectConfigButton.setObjectName(_fromUtf8("selectConfigButton"))
-        self.configGridLayout.addWidget(self.selectConfigButton, 2, 1, 1, 1)
         self.configTableWidget = QtGui.QTableWidget(self.layoutWidget)
         self.configTableWidget.setSelectionMode(QtGui.QAbstractItemView.MultiSelection)
         self.configTableWidget.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
@@ -125,6 +121,10 @@ class Ui_masar(object):
         self.eventEndDateTime.setCalendarPopup(True)
         self.eventEndDateTime.setObjectName(_fromUtf8("eventEndDateTime"))
         self.eventGridLayout.addWidget(self.eventEndDateTime, 3, 2, 1, 2)
+        self.fetchSnapshotButton = QtGui.QPushButton(self.layoutWidget1)
+        self.fetchSnapshotButton.setText(QtGui.QApplication.translate("masar", "Fetch Snapshot", None, QtGui.QApplication.UnicodeUTF8))
+        self.fetchSnapshotButton.setObjectName(_fromUtf8("fetchSnapshotButton"))
+        self.eventGridLayout.addWidget(self.fetchSnapshotButton, 4, 3, 1, 1)
         self.eventVerticalLayout.addLayout(self.eventGridLayout)
         self.eventTableWidget = QtGui.QTableWidget(self.layoutWidget1)
         self.eventTableWidget.setSelectionMode(QtGui.QAbstractItemView.MultiSelection)
@@ -135,14 +135,14 @@ class Ui_masar(object):
         self.eventVerticalLayout.addWidget(self.eventTableWidget)
         self.snapshotHorizontalLayout = QtGui.QHBoxLayout()
         self.snapshotHorizontalLayout.setObjectName(_fromUtf8("snapshotHorizontalLayout"))
-        self.fetchSnapshotButton = QtGui.QPushButton(self.layoutWidget1)
-        self.fetchSnapshotButton.setText(QtGui.QApplication.translate("masar", "Fetch Snapshot", None, QtGui.QApplication.UnicodeUTF8))
-        self.fetchSnapshotButton.setObjectName(_fromUtf8("fetchSnapshotButton"))
-        self.snapshotHorizontalLayout.addWidget(self.fetchSnapshotButton)
-        self.getLiveButton = QtGui.QPushButton(self.layoutWidget1)
-        self.getLiveButton.setText(QtGui.QApplication.translate("masar", "Get Live Machine", None, QtGui.QApplication.UnicodeUTF8))
-        self.getLiveButton.setObjectName(_fromUtf8("getLiveButton"))
-        self.snapshotHorizontalLayout.addWidget(self.getLiveButton)
+        self.saveSnapshotButton = QtGui.QPushButton(self.layoutWidget1)
+        self.saveSnapshotButton.setText(QtGui.QApplication.translate("masar", "Save Snapshot", None, QtGui.QApplication.UnicodeUTF8))
+        self.saveSnapshotButton.setObjectName(_fromUtf8("saveSnapshotButton"))
+        self.snapshotHorizontalLayout.addWidget(self.saveSnapshotButton)
+        self.restoreMachineButton = QtGui.QPushButton(self.layoutWidget1)
+        self.restoreMachineButton.setText(QtGui.QApplication.translate("masar", "Restore Machine", None, QtGui.QApplication.UnicodeUTF8))
+        self.restoreMachineButton.setObjectName(_fromUtf8("restoreMachineButton"))
+        self.snapshotHorizontalLayout.addWidget(self.restoreMachineButton)
         self.eventVerticalLayout.addLayout(self.snapshotHorizontalLayout)
         self.snapshotTabWidget = QtGui.QTabWidget(self.mainSplitter)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
@@ -201,14 +201,16 @@ class Ui_masar(object):
         QtCore.QObject.connect(self.systemCombox, QtCore.SIGNAL(_fromUtf8("currentIndexChanged(QString)")), masar.systemComboxChanged)
         QtCore.QObject.connect(self.configFilterLineEdit, QtCore.SIGNAL(_fromUtf8("returnPressed()")), masar.configFilterChanged)
         QtCore.QObject.connect(self.fetchConfigButton, QtCore.SIGNAL(_fromUtf8("clicked()")), masar.fetchConfigAction)
-        QtCore.QObject.connect(self.selectConfigButton, QtCore.SIGNAL(_fromUtf8("clicked()")), masar.selectConfigAction)
+        QtCore.QObject.connect(self.saveSnapshotButton, QtCore.SIGNAL(_fromUtf8("clicked()")), masar.saveSnapshotAction)
         QtCore.QObject.connect(self.eventFilterLineEdit, QtCore.SIGNAL(_fromUtf8("returnPressed()")), masar.eventFilterChanged)
         QtCore.QObject.connect(self.timeRangeCheckBox, QtCore.SIGNAL(_fromUtf8("stateChanged(int)")), masar.useTimeRange)
         QtCore.QObject.connect(self.fetchEventButton, QtCore.SIGNAL(_fromUtf8("clicked(void)")), masar.fetchEventAction)
         QtCore.QObject.connect(self.fetchSnapshotButton, QtCore.SIGNAL(_fromUtf8("clicked(void)")), masar.retrieveSnapshot)
-        QtCore.QObject.connect(self.getLiveButton, QtCore.SIGNAL(_fromUtf8("clicked(void)")), masar.getLiveMachine)
+        QtCore.QObject.connect(self.restoreMachineButton, QtCore.SIGNAL(_fromUtf8("clicked(void)")), masar.restoreSnapshotAction)
         QtCore.QMetaObject.connectSlotsByName(masar)
 
     def retranslateUi(self, masar):
+        self.configTableWidget.setSortingEnabled(True)
+        self.eventTableWidget.setSortingEnabled(True)
         self.snapshotTabWidget.setTabText(self.snapshotTabWidget.indexOf(self.commentTab), QtGui.QApplication.translate("masar", "Comment", None, QtGui.QApplication.UnicodeUTF8))
 

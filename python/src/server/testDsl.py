@@ -2,24 +2,24 @@ import dslPY as dsl
 
 test = dsl.DSL();
 
-def testSaveMasar():
-    params = {'function': 'saveMasar',
+def testSaveSnapshot():
+    params = {'function': 'saveSnapshot',
               'servicename': 'masar',
               'configname': 'test',
               'comment': 'this is a comment'
               }
     
     result = test.request(params)
-    print "saveMasar: ", result
+    print "saveSnapshot: ", result
 
-def testRetrieveMasar(**kws):
-    params = {'function': 'retrieveMasar'}
+def testRetrieveSnapshot(**kws):
+    params = {'function': 'retrieveSnapshot'}
     params.update(kws)
     results = test.request(params)
-#    print "retrieveMasar: ", len(results), len(results[0]), len(results[0][0]), results
-#    print "retrieveMasar: ", type(results[0]), results[0]
-#    print "retrieveMasar: ", type(results[0][0]), results[0][0]
-#    print "retrieveMasar: ", type(results[0][0][0]), results[0][0][0]
+#    print "retrieveSnapshot: ", len(results), len(results[0]), len(results[0][0]), results
+#    print "retrieveSnapshot: ", type(results[0]), results[0]
+#    print "retrieveSnapshot: ", type(results[0][0]), results[0][0]
+#    print "retrieveSnapshot: ", type(results[0][0][0]), results[0][0][0]
     for result in results[0][1]:
         print result
     
@@ -61,9 +61,9 @@ if __name__ == '__main__':
 #    testRetrieveServiceConfigs()
 #    testRetrieveServiceConfigProps()
 #    testRetrieveServiceEvents()
-#    testRetrieveMasar(eventid='365')
+#    testRetrieveSnapshot(eventid='365')
     testRetrieveServiceConfigPVs()
-#    testRetrieveMasar(eventid='35')
-#    testRetrieveMasar(eventid='10')
+#    testRetrieveSnapshot(eventid='35')
+#    testRetrieveSnapshot(eventid='10')
 #
-#    testSaveMasar()
+#    testSaveSnapshot()

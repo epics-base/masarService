@@ -130,7 +130,7 @@ bool DSL_RDB::init()
 
 void DSL_RDB::destroy() {}
 
-static PVStructure::shared_pointer retrieveMasar(PyObject * list)
+static PVStructure::shared_pointer retrieveSnapshot(PyObject * list)
 {
     Py_ssize_t top_len = PyList_Size(list);
     if (top_len != 2) {
@@ -378,10 +378,10 @@ static PVStructure::shared_pointer retrieveServiceConfigEvents(PyObject * list, 
     return pvStructure;
 }
 
-static PVStructure::shared_pointer saveMasar(PyObject * list, String message)
+static PVStructure::shared_pointer saveSnapshot(PyObject * list, String message)
 {
     // Get save masar event id
-    // -1 means saveMasar failure
+    // -1 means saveSnapshot failure
     PyObject * plist = PyTuple_GetItem(list, 0);
     PyObject * pstatus = PyList_GetItem(plist,0);
     int64 status = PyLong_AsLongLong(pstatus);
@@ -441,8 +441,8 @@ static PVStructure::shared_pointer createResult(
 {
     PVStructure::shared_pointer pvStructure;
     pvStructure.reset();
-//    if (functionName.compare("saveMasar")==0) {
-//        pvStructure = saveMasar(result);
+//    if (functionName.compare("saveSnapshot")==0) {
+//        pvStructure = saveSnapshot(result);
 //    } else
     {
         PyObject *list = 0;
@@ -452,9 +452,9 @@ static PVStructure::shared_pointer createResult(
             THROW_BASE_EXCEPTION("Wrong format for returned data from dslPY.");
         }
 
-        if (functionName.compare("retrieveMasar")==0) {
-    //    if (functionName == "retrieveMasar") {
-            pvStructure = retrieveMasar(list);
+        if (functionName.compare("retrieveSnapshot")==0) {
+    //    if (functionName == "retrieveSnapshot") {
+            pvStructure = retrieveSnapshot(list);
         } else if (functionName.compare("retrieveServiceEvents")==0) {
     //        if (functionName == "retrieveServiceEvents") {
             pvStructure = retrieveServiceConfigEvents(list, 2);
@@ -503,7 +503,7 @@ PVStructure::shared_pointer DSL_RDB::request(
     PyObject *pyValue = Py_BuildValue("s",functionName.c_str());
     PyDict_SetItemString(pyDict,"function",pyValue);
     PVStructure::shared_pointer pvReturn;
-    if (functionName.compare("saveMasar")==0) {
+    if (functionName.compare("saveSnapshot")==0) {
         // A tuple is needed to pass to Python as parameter.
         PyObject * pyTuple = PyTuple_New(1);
         // put dictionary into the tuple
@@ -529,7 +529,7 @@ PVStructure::shared_pointer DSL_RDB::request(
         // second value is the dictionary
         PyTuple_SetItem(pyTuple2, 1, pyDict);
         PyObject *result = PyEval_CallObject(prequest,pyTuple2);
-        pvReturn = saveMasar(result,message);
+        pvReturn = saveSnapshot(result,message);
 //        pvReturn = createResult(result,functionName);
     } else {
         // A tuple is needed to pass to Python as parameter.

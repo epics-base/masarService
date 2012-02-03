@@ -24,7 +24,7 @@ epicsint    = [1, 4, 5]
 epicsString = [0]
 epicsDouble = [2, 6]
 
-def saveMasar(conn, data, servicename=None, configname=None, comment=None):
+def saveSnapshot(conn, data, servicename=None, configname=None, comment=None):
     """
     save a snapshot (masar event) with data.
     The data format is a tuple array like 
@@ -57,7 +57,7 @@ def saveMasar(conn, data, servicename=None, configname=None, comment=None):
     ...        ('SR:C01-BI:G04B<BPM:M1>Pos-X', '12.2', 12.2, 12, 6, 1, 435686768234, 3452345098734, 0, 0, 0, ""),
     ...        ('SR:C01-BI:G06B<BPM:H1>Pos-X', '12.2', 12.2, 12, 6, 1, 435686768234, 3452345098734, 0, 0, 0, ""),
     ...        ('SR:C01-BI:G06B<BPM:H2>Pos-X', '12.2', 12.2, 12, 6, 1, 435686768234, 3452345098734, 0, 0, 0, "")]
-    >>> saveMasar(conn, data, servicename='masar1', configname='orbit C01', comment='a service event')
+    >>> saveSnapshot(conn, data, servicename='masar1', configname='orbit C01', comment='a service event')
     (1, [1, 2, 3, 4, 5, 6])
     >>> data = [('SR:C01-BI:G02A<BPM:L1>Pos-X','12.2', 12.2, 12, 6, 1, 564562342566, 3452345098734, 0, 0, 0, ""),
     ...        ('SR:C01-BI:G02A<BPM:L2>Pos-X', '12.2', 12.2, 12, 6, 1, 564562342566, 3452345098734, 0, 0, 0, ""),
@@ -65,7 +65,7 @@ def saveMasar(conn, data, servicename=None, configname=None, comment=None):
     ...        ('SR:C01-BI:G04B<BPM:M1>Pos-X', '12.2', 12.2, 12, 6, 1, 564562342566, 3452345098734, 0, 0, 0, ""),
     ...        ('SR:C01-BI:G06B<BPM:H1>Pos-X', '12.2', 12.2, 12, 6, 1, 564562342566, 3452345098734, 0, 0, 0, ""),
     ...        ('SR:C01-BI:G06B<BPM:H2>Pos-X', '12.2', 12.2, 12, 6, 1, 564562342566, 3452345098734, 0, 0, 0, "")]
-    >>> saveMasar(conn, data, servicename='masar1', configname='orbit C01', comment='a service event')
+    >>> saveSnapshot(conn, data, servicename='masar1', configname='orbit C01', comment='a service event')
     (2, [7, 8, 9, 10, 11, 12])
     >>> conn.close()
     """
@@ -103,7 +103,7 @@ def __saveMasarData(conn, eventid, datas):
         raise 
     return masarid
     
-def retrieveMasar(conn, eventid=None,start=None, end=None, comment=None):
+def retrieveSnapshot(conn, eventid=None,start=None, end=None, comment=None):
     """
     retrieve masar service data with given time frame and comment.
     If end time is not given, use current time. If start time is not given, 
@@ -149,7 +149,7 @@ def retrieveMasar(conn, eventid=None,start=None, end=None, comment=None):
     >>> import time
     >>> start = dt.datetime.utcnow()
     >>> time.sleep(1.0) 
-    >>> saveMasar(conn, data, servicename='masar1', configname='orbit C01', comment='a service event')
+    >>> saveSnapshot(conn, data, servicename='masar1', configname='orbit C01', comment='a service event')
     (1, [1, 2, 3, 4, 5, 6])
     >>> data = [('SR:C01-BI:G02A<BPM:L1>Pos-X','12.2', 12.2, 12, 6, 1, 564562342566, 3452345098734, 0, 0, 0, ""),
     ...        ('SR:C01-BI:G02A<BPM:L2>Pos-X', '12.2', 12.2, 12, 6, 1, 564562342566, 3452345098734, 0, 0, 0, ""),
@@ -160,11 +160,11 @@ def retrieveMasar(conn, eventid=None,start=None, end=None, comment=None):
     >>> time.sleep(1.0)
     >>> end1 = dt.datetime.utcnow()
     >>> time.sleep(1.0)
-    >>> saveMasar(conn, data, servicename='masar1', configname='orbit C01', comment='a service event')
+    >>> saveSnapshot(conn, data, servicename='masar1', configname='orbit C01', comment='a service event')
     (2, [7, 8, 9, 10, 11, 12])
     >>> time.sleep(1.0)
     >>> end2 = dt.datetime.utcnow()
-    >>> datas = retrieveMasar(conn, start=start, end=end1)
+    >>> datas = retrieveSnapshot(conn, start=start, end=end1)
     >>> print (datas[1][0][0], ',', datas[1][0][2], ',', datas[1][0][3])
     a service event , orbit C01 , masar1
     >>> for data in datas[1][1:]:
@@ -175,7 +175,7 @@ def retrieveMasar(conn, eventid=None,start=None, end=None, comment=None):
     (u'SR:C01-BI:G04B<BPM:M1>Pos-X', u'12.2', 12.2, 12, 6, 1, 435686768234L, 3452345098734L, 0, 0, 0, u'')
     (u'SR:C01-BI:G06B<BPM:H1>Pos-X', u'12.2', 12.2, 12, 6, 1, 435686768234L, 3452345098734L, 0, 0, 0, u'')
     (u'SR:C01-BI:G06B<BPM:H2>Pos-X', u'12.2', 12.2, 12, 6, 1, 435686768234L, 3452345098734L, 0, 0, 0, u'')
-    >>> datasets = retrieveMasar(conn, start=start, end=end2)
+    >>> datasets = retrieveSnapshot(conn, start=start, end=end2)
     >>> for dataset in datasets[1:]:
     ...    print (dataset[0][0], ',', dataset[0][2], ',', dataset[0][3])
     ...    for data in dataset[1:]:
@@ -194,7 +194,7 @@ def retrieveMasar(conn, eventid=None,start=None, end=None, comment=None):
     (u'SR:C01-BI:G04B<BPM:M1>Pos-X', u'12.2', 12.2, 12, 6, 1, 564562342566L, 3452345098734L, 0, 0, 0, u'')
     (u'SR:C01-BI:G06B<BPM:H1>Pos-X', u'12.2', 12.2, 12, 6, 1, 564562342566L, 3452345098734L, 0, 0, 0, u'')
     (u'SR:C01-BI:G06B<BPM:H2>Pos-X', u'12.2', 12.2, 12, 6, 1, 564562342566L, 3452345098734L, 0, 0, 0, u'')
-    >>> datasets = retrieveMasar(conn, start=end2)
+    >>> datasets = retrieveSnapshot(conn, start=end2)
     >>> print (datasets)
     [[(u'user tag', u'event UTC time', u'service config name', u'service name'), (u'pv name', u'string value', u'double value', u'long value', u'dbr type', u'isConnected', u'secondsPastEpoch', u'nanoSeconds', u'timeStampTag', u'alarmSeverity', u'alarmStatus', u'alarmMessage')]]
     >>> conn.close()

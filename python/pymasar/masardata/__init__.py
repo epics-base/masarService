@@ -1,3 +1,3 @@
-from masardata import (saveMasar, retrieveMasar)
+from masardata import (saveSnapshot, retrieveSnapshot)
 
-__all__ = ['saveMasar', 'retrieveMasar']
+__all__ = ['saveSnapshot', 'retrieveSnapshot']

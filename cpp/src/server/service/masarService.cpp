@@ -48,8 +48,8 @@ void MasarService::request(
 {
     static int numberFunctions = 7;
     static String functionNames[7] = {
-        String("saveMasar"),
-        String("retrieveMasar"),
+        String("saveSnapshot"),
+        String("retrieveSnapshot"),
         String("retrieveServiceConfigProps"),
         String("retrieveServiceConfigs"),
         String("saveServiceConfig"),

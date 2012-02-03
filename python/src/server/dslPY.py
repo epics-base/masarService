@@ -26,8 +26,8 @@ class DSL(object) :
         actions = (("retrieveServiceConfigProps", self.retrieveServiceConfigProps),
                    ("retrieveServiceConfigs", self.retrieveServiceConfigs),
                    ("retrieveServiceEvents", self.retrieveServiceEvents),
-                   ("retrieveMasar", self.retrieveMasar),
-                   ("saveMasar", self.saveMasar))
+                   ("retrieveSnapshot", self.retrieveSnapshot),
+                   ("saveSnapshot", self.saveSnapshot))
         for (params, func) in actions:
             if re.match(params, fname):
                 return func(fargs)
@@ -75,6 +75,8 @@ class DSL(object) :
         service, config, version, system = self._parseParams(params, key)
         if not service:
             service = self.__servicename
+        if system == 'all':
+            system = None
 #        print (service, config, version, system)
         conn = pymasar.utils.connect()
         result = pymasar.service.retrieveServiceConfigs(conn, servicename=service, configname=config, configversion=version, system=system)
@@ -91,23 +93,23 @@ class DSL(object) :
         return result
 #        return 'retrieveServiceEvents'
 
-    def retrieveMasar(self, params): 
+    def retrieveSnapshot(self, params): 
         key = ['eventid', 'start', 'end', 'comment']
         eid, start, end, comment = self._parseParams(params, key)
 #        print (eid, start, end, comment)
         conn = pymasar.utils.connect()
-        result = pymasar.masardata.retrieveMasar(conn, eventid=eid,start=start,end=end,comment=comment)
+        result = pymasar.masardata.retrieveSnapshot(conn, eventid=eid,start=start,end=end,comment=comment)
         pymasar.utils.close(conn)
 
         return result
-#        return 'retrieveMasar'
+#        return 'retrieveSnapshot'
     
-    def saveMasar(self, params):
+    def saveSnapshot(self, params):
         key = ['servicename','configname','comment']
         service, config, comment = self._parseParams(params[1], key)
         if not service:
             service = self.__servicename
-
+        
         rawdata = params[0]
         nttable = NTTable(rawdata)
         numberValueCount = nttable.getNumberValues()
@@ -119,6 +121,7 @@ class DSL(object) :
         # [(channel name,), (string value,),(double value,),(long value,),(dbr type),(is connected),
         #  (second past epoch,),(nano seconds,),(time stamp tag,),(alarm severity,),(alarm status,),(alarm message,)]
         values = []
+
         # data format: the data is prepared to save into rdb
         # rawdata format
         # [('channel name', 'string value', 'double value', 'long value', 'dbr type', 'is connected', 
@@ -130,8 +133,15 @@ class DSL(object) :
         
         # get IOC raw data
         for i in range(numberValueCount):
-            values.append(nttable.getValue(i))
-        
+            values.append(list(nttable.getValue(i)))
+
+        # problem when a negative value is passed from C++
+        #define DBF_FLOAT   2
+        #define DBF_DOUBLE  6
+        for i in range(len(values[2])):
+            if values[4][i] in [2, 6] and values[2][i] < 0:
+                values[3][i] = int(values[2][i])
+
         # initialize data for rdb
         for j in range(dataLen):
             datas.append(())
@@ -144,8 +154,8 @@ class DSL(object) :
         # save into database
         try:
             conn = pymasar.utils.connect()
-            eid, result = pymasar.masardata.saveMasar(conn, datas, servicename=service, configname=config, comment=comment)
-#            pymasar.utils.save(conn)
+            eid, result = pymasar.masardata.saveSnapshot(conn, datas, servicename=service, configname=config, comment=comment)
+            pymasar.utils.save(conn)
             pymasar.utils.close(conn)
             result.insert(0, eid)
             return result

@@ -78,16 +78,16 @@ def retrieveServiceEvents():
     __clientRPC(function, params)
     print ("=== test %s end ===" %function)
 
-def retrieveMasar():
-    function = 'retrieveMasar'
+def retrieveSnapshot():
+    function = 'retrieveSnapshot'
     print ("=== test %s ===" %function)
     params = {'eventid': '56'}
 #    params = {'eventid': '10'}
     __clientRPC(function, params)
     print ("=== test %s end ===" %function)
 
-def saveMasar():
-    function = 'saveMasar'
+def saveSnapshot():
+    function = 'saveSnapshot'
     print ("=== test %s ===" %function)
 #    params = {'configname': 'sr_bpm',
 #              'servicename': 'masar'}
@@ -98,8 +98,8 @@ def saveMasar():
 
 if __name__ == '__main__':
 #    retrieveSystemList()
-#    retrieveServiceConfigs()
+    retrieveServiceConfigs()
 #    retrieveServiceConfigProps()
 #    retrieveServiceEvents()
-#    retrieveMasar()
-    saveMasar()
+    retrieveSnapshot()
+#    saveSnapshot()

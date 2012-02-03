@@ -14,7 +14,7 @@ import os
 import time
 import datetime
 
-from PyQt4.QtGui import (QApplication, QMainWindow, QMessageBox, QTableWidgetItem, QTableWidget)
+from PyQt4.QtGui import (QApplication, QMainWindow, QMessageBox, QTableWidgetItem, QTableWidget, QInputDialog)
 from PyQt4.QtCore import (QDateTime, Qt, QString)
 
 try:
@@ -129,12 +129,14 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.time_format = "%Y-%m-%d %H:%M:%S"
 
     def __initSystemBomboBox(self):
+        self.systemCombox.addItem(_fromUtf8(""))
+        self.systemCombox.setItemText(0, "all")
         results = self.getSystemList()
         if results:
             for i in range(len(results)):
                 self.systemCombox.addItem(_fromUtf8(""))
-                self.systemCombox.setItemText(i, results[i])
-            self.system = str(self.systemCombox.currentText())
+                self.systemCombox.setItemText(i+1, results[i])
+        self.system = str(self.systemCombox.currentText())
 
     def __setDateTime(self):
         self.eventStartDateTime.setDateTime(QDateTime.currentDateTime())
@@ -142,7 +144,6 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         
     def systemComboxChanged(self, qstring):
         self.system = str(qstring)
-#        print (str(qstring))
         
     def configFilterChanged(self):
         self.currentConfigFilter = str(self.configFilterLineEdit.text())
@@ -156,30 +157,40 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
 #        print ("fetch configurations.")
         self.setConfigTable()
         self.configTableWidget.resizeColumnsToContents()
+
         
-    def selectConfigAction(self):
-#        print ("=== query selected items only ===")
-        selectedItems = self.configTableWidget.selectionModel().selectedRows()
-        if len(selectedItems) <= 0:
+    def saveSnapshotAction(self):
+        selectedConfigs = self.configTableWidget.selectionModel().selectedRows()
+        if len(selectedConfigs) > 0:
+            configIds=[]
+            configNames = []
+            descs = []
+            configMessages = "Do you want to save snapshots for all the following configurations?\n"
+            for idx in selectedConfigs: 
+    #            print("%s is selected." %self.configTableWidget.item(idx.row(), 1).text())
+                configIds.append(str(self.configTableWidget.item(idx.row(), 4).text()))
+                descs.append(str(self.configTableWidget.item(idx.row(), 1).text()))
+                tmp = str(self.configTableWidget.item(idx.row(), 0).text())
+                configNames.append(tmp)
+                configMessages += " - "+tmp+"\n"
+    
+            reply = QMessageBox.question(self, 'Message',
+                                         configMessages,                                          
+                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            
+            if reply == QMessageBox.Yes:
+                self.saveSnapshotData(configNames, descs)
+            else:
+                return  
+        else:
             QMessageBox.warning(self,
-                            "Warning",
-                            "Please select at least one configuration.")
+                "Warning",
+                "You did not select any configuration yet.")
             return
 
-        rows=[]
-        for idx in selectedItems: 
-            rows.append(idx.row()) 
-#            print("%s is selected." %self.configTableWidget.item(idx.row(), 1).text())
-        return rows.sort()
-        
-#        print (rows)
-            
-#        print ("=== query whole table ===")
-#        for i in range(self.configTableWidget.rowCount()):
-#            selectedItem = self.configTableWidget.item(i, 1)
-#            if selectedItem.isSelected():
-#                print("%s is selected." %selectedItem.text())
-
+    def restoreSnapshotAction(self):
+        print ('Reserved for restoring snapshot action')
+  
     def useTimeRange(self, state):
         if state == Qt.Checked:
             self.eventStartDateTime.setEnabled(True)
@@ -220,21 +231,9 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             eventTs.append(str(self.eventTableWidget.item(idx.row(), 1).text()))
             eventIds.append(str(self.eventTableWidget.item(idx.row(), 3).text()))
             
-#        print ("=== whole event table ===")
-#        for i in range(self.eventTableWidget.rowCount()):
-##            for m in range(self.configTable.columnCount()):
-#            selectedItem = self.eventTableWidget.item(i, 1)
-#            if selectedItem.isSelected():
-#                print("Event: %s is selected." %selectedItem.text())
-#            else:
-#                print("Event: %s is not selected." %selectedItem.text())
-
         self.snapshotTabWidget.setStatusTip("Snapshot data")
         self.setSnapshotTabWindow(eventNames, eventTs, eventIds)
         
-    def getLiveMachine(self):
-        print ('Reserved for get live data from machine')
-  
     def setConfigTable(self):
         data = self.retrieveConfigData()
         self.setTable(data, self.configTableWidget)
@@ -285,6 +284,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             ncols = len(data) - 4
             table.setRowCount(nrows)
             table.setColumnCount(ncols)
+            table.setSortingEnabled(True)
             
             pvnames = data['PV Name']
             status = data['Status']
@@ -335,17 +335,21 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                     newitem = QTableWidgetItem(str(bool(isConnected[i])))
                     newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
                     table.setItem(i, 4, newitem)
-                if dbrtype[i]:
-                    if dbrtype[i] in epicsDouble:
-                        newitem = QTableWidgetItem(str(d_value[i]))
-                        newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
-                    elif dbrtype[i] in epicsLong:
-                        newitem = QTableWidgetItem(str(i_value[i]))
-                        newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
-                    elif dbrtype[i] in epicsString:
-                        newitem = QTableWidgetItem(s_value[i])
-                        newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
+                    
+                if dbrtype[i] in epicsDouble:
+                    newitem = QTableWidgetItem(str(d_value[i]))
                     table.setItem(i, 5, newitem)
+                    newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
+                elif dbrtype[i] in epicsLong:
+                    newitem = QTableWidgetItem(str(i_value[i]))
+                    table.setItem(i, 5, newitem)
+                    newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
+                elif dbrtype[i] in epicsString:
+                    newitem = QTableWidgetItem(str(s_value[i]))
+                    newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
+                    table.setItem(i, 5, newitem)
+                else:
+                    print('invalid dbr type (code = %s)'%(dbrtype[i]))
         else:
             raise "Either given data is not an instance of OrderedDict or table is not an instance of QtGui.QTableWidget"
 
@@ -373,7 +377,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             ncols = len(data)
             table.setRowCount(nrows)
             table.setColumnCount(ncols)
-            
+            # Removes all items in the view, and also all selections
+            table.clear()
             table.setHorizontalHeaderLabels(data.keys())
             
             n = 0
@@ -501,7 +506,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             # result format:
             # ('user tag', 'event UTC time', 'service config name', 'service name'),
             # ('pv name', 'string value', 'double value', 'long value', 'dbr type', 'isConnected', 'secondsPastEpoch', 'nanoSeconds', 'timeStampTag', 'alarmSeverity', 'alarmStatus', 'alarmMessage')
-            results = pymasar.masardata.masardata.retrieveMasar(conn, eventid=eventid)[1]
+            results = pymasar.masardata.masardata.retrieveSnapshot(conn, eventid=eventid)[1]
             pvnames = []
             s_value = []
             d_value = []
@@ -543,7 +548,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             data['isConnected'] = isConnected
         elif source == 'epics':
             params = {'eventid': eventid}
-            pvnames, s_value, d_value, i_value, dbrtype, isConnected, ts, ts_nano, severity, status = self.mc.retrieveMasar(params)
+            pvnames, s_value, d_value, i_value, dbrtype, isConnected, ts, ts_nano, severity, status = self.mc.retrieveSnapshot(params)
             severity = list(severity)
             status = list(status)
 
@@ -569,6 +574,40 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         data['isConnected'] = isConnected
         
         return data
+
+    def saveSnapshotData(self, configNames, comments):
+        if source == 'sqlite':
+            pass
+        elif source == 'epics':
+            for i in range(len(configNames)):
+                while (True):
+                    text, ok = QInputDialog.getText(self, 'Event Description', 
+                                                    'Enter description for %s: \n(Use default by click Cancel)'%configNames[i])
+                    if ok:
+                        reply = QMessageBox.question(self, 'Confirm',
+                            "Use description? \n%s"%text, QMessageBox.Yes | 
+                            QMessageBox.No, QMessageBox.No)
+                
+                        if reply == QMessageBox.Yes:
+                            comment = str(text)
+                            break
+                    else:
+                        reply = QMessageBox.question(self, 'Confirm',
+                            "Use default description? \n%s"%comments[i], QMessageBox.Yes | 
+                            QMessageBox.No, QMessageBox.No)
+                
+                        if reply == QMessageBox.Yes:
+                            comment = comments[i]
+                            break
+                
+                params = {'configname': configNames[i],
+                          'comment': comment,
+                          'servicename': 'masar'}
+                result = self.mc.saveSnapshot(params)
+                if not result:
+                    QMessageBox.warning(self,
+                        "Warning",
+                        "Failed to save snapshot for configuration %s"%(configNames[i]))
 
 def main():
     app = QApplication(sys.argv)

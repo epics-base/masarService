@@ -71,8 +71,8 @@ class client():
                 nttable.getValue(2),
                 nttable.getValue(3))
     
-    def retrieveMasar(self, params):
-        function = 'retrieveMasar'
+    def retrieveSnapshot(self, params):
+        function = 'retrieveSnapshot'
 #        [pv name,string value,double value,long value,
 #        dbr type,isConnected,secondsPastEpoch,nanoSeconds,timeStampTag,
 #        alarmSeverity,alarmStatus,alarmMessage]
@@ -88,8 +88,8 @@ class client():
                 nttable.getValue(9),
                 nttable.getValue(10))
     
-    def saveMasar(self, params):
-        function = 'saveMasar'
+    def saveSnapshot(self, params):
+        function = 'saveSnapshot'
         nttable = self.__clientRPC(function, params)
         status = nttable.getValue(0)
         return status[0]
@@ -102,16 +102,16 @@ if __name__ == '__main__':
     mc.retrieveServiceConfigs(params)
 #    retrieveServiceConfigProps()
 #    retrieveServiceEvents()
-#    retrieveMasar()
+#    retrieveSnapshot()
 
     #    params = {'configname': 'sr_bpm',
     #              'servicename': 'masar'}
 #        params = {'configname': 'sr_test',
 #                  'servicename': 'masar'}
 
-    params = {'configname': 'sr_test',
+    params = {'configname': 'ltbd1_quad',
               'servicename': 'masar'}
-    if mc.saveMasar(params):
+    if mc.saveSnapshot(params):
         print ("Successfully saved a snapshot.")
     else:
         print ("Failed to save a snapshot.")
