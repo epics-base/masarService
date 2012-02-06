@@ -55,29 +55,21 @@ while args:
     if arg in ("-i", "--irmis", "irmis"):
         print ('use IRMIS as data source')
         source = 'irmis'
-        #import pyirmis as dsl
     elif arg in ("-l", "--sqlite", "sqlite"):
         print ('use SQLite as data source')
         source = 'sqlite'
         import pymasar
         import sqlite3
         __db = '/'.join((os.path.abspath(os.path.dirname(__file__)), '../../../pymasar/example', 'masar.db'))
-#        print (__db)
         conn = sqlite3.connect(__db)
     elif arg in ("-e", "--epics", "epics"):
         print ('use EPICS V4 as data source')
-#        source = 'epics' # this is default data source, get data from EPICS V4 server
-#        import masarClient
     elif arg in ("-h", "--help", "help"):
         usage()
     else:
         print ('Unknown data source. use EPICS V4 as data source')
-#        source = 'epics'
-#        import masarClient
 if source == 'epics':
-    source = 'epics'
     import masarClient
-
 
 class masarUI(QMainWindow, ui_masar.Ui_masar):
     severityDict= {0: 'NO_ALARM',
@@ -147,17 +139,13 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         
     def configFilterChanged(self):
         self.currentConfigFilter = str(self.configFilterLineEdit.text())
-#        print (self.currentConfigFilter)
 
     def eventFilterChanged(self):
         self.eventConfigFilter = str(self.eventFilterLineEdit.text())
-#        print (self.eventConfigFilter)
 
     def fetchConfigAction(self):
-#        print ("fetch configurations.")
         self.setConfigTable()
         self.configTableWidget.resizeColumnsToContents()
-
         
     def saveSnapshotAction(self):
         selectedConfigs = self.configTableWidget.selectionModel().selectedRows()
@@ -167,7 +155,6 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             descs = []
             configMessages = "Do you want to save snapshots for all the following configurations?\n"
             for idx in selectedConfigs: 
-    #            print("%s is selected." %self.configTableWidget.item(idx.row(), 1).text())
                 configIds.append(str(self.configTableWidget.item(idx.row(), 4).text()))
                 descs.append(str(self.configTableWidget.item(idx.row(), 1).text()))
                 tmp = str(self.configTableWidget.item(idx.row(), 0).text())
@@ -204,10 +191,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         configIds=[]
         configNames = []
         for idx in selectedConfigs: 
-#            print("%s is selected." %self.configTableWidget.item(idx.row(), 1).text())
             configIds.append(str(self.configTableWidget.item(idx.row(), 4).text()))
             configNames.append(str(self.configTableWidget.item(idx.row(), 0).text()))
-#        print ("selected configs: ", configIds)
         
         data = self.retrieveEventData(configids=configIds, confignames=configNames)
         
@@ -226,7 +211,6 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         eventNames=[]
         eventIds = []
         for idx in selectedItems: 
-#            print("Event: %s is selected." %self.eventTableWidget.item(idx.row(), 1).text())
             eventNames.append(str(self.eventTableWidget.item(idx.row(), 0).text()))
             eventTs.append(str(self.eventTableWidget.item(idx.row(), 1).text()))
             eventIds.append(str(self.eventTableWidget.item(idx.row(), 3).text()))
@@ -416,8 +400,6 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
     def retrieveConfigData(self):
         data = odict()
         if source == 'sqlite':
-#            print (type(self.currentConfigFilter), self.currentConfigFilter)
-#            results = pymasar.service.retrieveServiceConfigs(conn, servicename=self.__service, configname=self.currentConfigFilter, system=self.system)
             results = pymasar.service.retrieveServiceConfigs(conn, servicename=self.__service, system=self.system)[1:]
             # the rturned data format looks like
             # [(service_config_id, service_config_name, service_config_desc, service_config_create_date, 
@@ -505,7 +487,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         if source == 'sqlite':
             # result format:
             # ('user tag', 'event UTC time', 'service config name', 'service name'),
-            # ('pv name', 'string value', 'double value', 'long value', 'dbr type', 'isConnected', 'secondsPastEpoch', 'nanoSeconds', 'timeStampTag', 'alarmSeverity', 'alarmStatus', 'alarmMessage')
+            # ('pv name', 'string value', 'double value', 'long value', 'dbr type', 'isConnected', 
+            #  'secondsPastEpoch', 'nanoSeconds', 'timeStampTag', 'alarmSeverity', 'alarmStatus', 'alarmMessage')
             results = pymasar.masardata.masardata.retrieveSnapshot(conn, eventid=eventid)[1]
             pvnames = []
             s_value = []
@@ -580,6 +563,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             pass
         elif source == 'epics':
             for i in range(len(configNames)):
+                count = 0
                 while (True):
                     text, ok = QInputDialog.getText(self, 'Event Description', 
                                                     'Enter description for %s: \n(Use default by click Cancel)'%configNames[i])
@@ -599,7 +583,16 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                         if reply == QMessageBox.Yes:
                             comment = comments[i]
                             break
-                
+                    if count == 3:
+                        reply = QMessageBox.question(self, 'Confirm',
+                            "Do you want to cancel this operation?", QMessageBox.Yes | 
+                            QMessageBox.No, QMessageBox.No)
+                        if reply == QMessageBox.Yes:
+                            return
+                        else:
+                            count = 0
+                    else:
+                        count += 1
                 params = {'configname': configNames[i],
                           'comment': comment,
                           'servicename': 'masar'}
