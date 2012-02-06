@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_masar.ui'
 #
-# Created: Fri Feb  3 14:43:52 2012
+# Created: Mon Feb  6 16:20:59 2012
 #      by: PyQt4 UI code generator 4.8.6
 #
 # WARNING! All changes made in this file will be lost!
@@ -66,7 +66,7 @@ class Ui_masar(object):
         self.fetchConfigButton.setObjectName(_fromUtf8("fetchConfigButton"))
         self.configGridLayout.addWidget(self.fetchConfigButton, 2, 0, 1, 1)
         self.configTableWidget = QtGui.QTableWidget(self.layoutWidget)
-        self.configTableWidget.setSelectionMode(QtGui.QAbstractItemView.MultiSelection)
+        self.configTableWidget.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
         self.configTableWidget.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         self.configTableWidget.setObjectName(_fromUtf8("configTableWidget"))
         self.configTableWidget.setColumnCount(0)
@@ -127,7 +127,7 @@ class Ui_masar(object):
         self.eventGridLayout.addWidget(self.fetchSnapshotButton, 4, 3, 1, 1)
         self.eventVerticalLayout.addLayout(self.eventGridLayout)
         self.eventTableWidget = QtGui.QTableWidget(self.layoutWidget1)
-        self.eventTableWidget.setSelectionMode(QtGui.QAbstractItemView.MultiSelection)
+        self.eventTableWidget.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
         self.eventTableWidget.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         self.eventTableWidget.setObjectName(_fromUtf8("eventTableWidget"))
         self.eventTableWidget.setColumnCount(0)

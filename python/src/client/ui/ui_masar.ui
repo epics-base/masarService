@@ -78,7 +78,7 @@
            <item row="3" column="0" colspan="2">
             <widget class="QTableWidget" name="configTableWidget">
              <property name="selectionMode">
-              <enum>QAbstractItemView::MultiSelection</enum>
+              <enum>QAbstractItemView::ExtendedSelection</enum>
              </property>
              <property name="selectionBehavior">
               <enum>QAbstractItemView::SelectRows</enum>
@@ -198,7 +198,7 @@
          <item>
           <widget class="QTableWidget" name="eventTableWidget">
            <property name="selectionMode">
-            <enum>QAbstractItemView::MultiSelection</enum>
+            <enum>QAbstractItemView::ExtendedSelection</enum>
            </property>
            <property name="selectionBehavior">
             <enum>QAbstractItemView::SelectRows</enum>
