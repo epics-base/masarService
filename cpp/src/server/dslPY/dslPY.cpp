@@ -173,9 +173,16 @@ static PVStructure::shared_pointer retrieveSnapshot(PyObject * list)
     Py_ssize_t dataLen = PyList_Size(data_array) - 1; // data length in each field
 
     if (dataLen > 0) {
-        String pvNames [strFieldLen][dataLen];
-        double dVals [dataLen];
-        int64 lVals [tuple_size-strFieldLen-1][dataLen];
+        String *pvNames [strFieldLen];
+        double *dVals;
+        int64 *lVals [tuple_size-strFieldLen-1];
+        for(int ii=0; ii<strFieldLen; ii++) {
+            pvNames[ii] = new String[dataLen];
+        }
+        dVals = new double[dataLen];
+        for(int ii=0; ii<tuple_size-strFieldLen-1; ii++) {
+             lVals[ii] = new int64[dataLen];
+        }
 
         // Get values for each fields from list
         PyObject * sublist;
@@ -241,6 +248,13 @@ static PVStructure::shared_pointer retrieveSnapshot(PyObject * list)
                 pvLVal = static_cast<PVLongArray *>(ntTable.getPVField(i));
                 pvLVal -> put (0, dataLen, lVals[i-3], 0);
             }
+        }
+        for(int ii=0; ii<tuple_size-strFieldLen-1; ii++) {
+             delete[]  lVals[ii];
+        }
+        delete[]dVals;
+        for(int ii=0; ii<strFieldLen; ii++) {
+            delete[] pvNames[ii];
         }
     }
 
