@@ -13,6 +13,8 @@
 #include <string>
 #include <stdexcept>
 #include <memory>
+#include <vector>
+
 #include <pv/pvIntrospect.h>
 #include <pv/pvData.h>
 #include <pv/dsl.h>
@@ -173,9 +175,15 @@ static PVStructure::shared_pointer retrieveSnapshot(PyObject * list)
     Py_ssize_t dataLen = PyList_Size(data_array) - 1; // data length in each field
 
     if (dataLen > 0) {
-        String pvNames [strFieldLen][dataLen];
-        double dVals [dataLen];
-        int64 lVals [tuple_size-strFieldLen-1][dataLen];
+        std::vector<std::vector<String> > pvNames (strFieldLen);
+        for (size_t i = 0; i < pvNames.size(); i++){
+            pvNames[i].resize(dataLen);
+        }
+        std::vector<double> dVals(dataLen);
+        std::vector<std::vector<int64> > lVals(tuple_size-strFieldLen-1); //[dataLen];
+        for(size_t i=0; i<lVals.size(); i++) {
+            lVals[i].resize(dataLen);
+        }
 
         // Get values for each fields from list
         PyObject * sublist;
@@ -225,21 +233,21 @@ static PVStructure::shared_pointer retrieveSnapshot(PyObject * list)
         for (int i = 0; i < tuple_size; i ++) {
             if (i == 0 ) { // pv_name: 0
                 pvStr = static_cast<PVStringArray *>(ntTable.getPVField(i));
-                pvStr -> put (0, dataLen, pvNames[0], 0);
+                pvStr -> put (0, dataLen, &(pvNames[0])[0], 0);
             } else if (i == 1) { // string value: 1
                 pvStr = static_cast<PVStringArray *>(ntTable.getPVField(i));
-                pvStr -> put (0, dataLen, pvNames[1], 0);
+                pvStr -> put (0, dataLen, &(pvNames[1])[0], 0);
             } else if (i == 11 ) { // alarm message: 11
                 pvStr = static_cast<PVStringArray *>(ntTable.getPVField(11));
-                pvStr -> put (0, dataLen, pvNames[2], 0);
+                pvStr -> put (0, dataLen, &(pvNames[2])[0], 0);
             }else if (i == 2) { // double value: 2
                 pvDVal = static_cast<PVDoubleArray *>(ntTable.getPVField(i));
-                pvDVal -> put (0, dataLen, dVals, 0);
+                pvDVal -> put (0, dataLen, &dVals[0], 0);
             } else {
                 // long value: 3, dbr type: 4, isConnected: 5, secondsPastEpoch: 6, nanoSeconds: 7,
                 // timeStampTag: 8, alarmSeverity: 9, alarmStatus: 10
                 pvLVal = static_cast<PVLongArray *>(ntTable.getPVField(i));
-                pvLVal -> put (0, dataLen, lVals[i-3], 0);
+                pvLVal -> put (0, dataLen, &(lVals[i-3])[0], 0);
             }
         }
     }
