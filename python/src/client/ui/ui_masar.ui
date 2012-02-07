@@ -14,12 +14,12 @@
    <string>MASAR Viewer</string>
   </property>
   <widget class="QWidget" name="mainwidget">
-   <layout class="QVBoxLayout" name="verticalLayout_4">
+   <layout class="QHBoxLayout" name="horizontalLayout_2">
     <item>
-     <widget class="QSplitter" name="mainSplitter">
+     <widget class="QSplitter" name="splitter">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-        <horstretch>0</horstretch>
+        <horstretch>3</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
@@ -28,8 +28,8 @@
       </property>
       <widget class="QSplitter" name="configEventSplitter">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-         <horstretch>1</horstretch>
+        <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+         <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
@@ -186,13 +186,6 @@
              </property>
             </widget>
            </item>
-           <item row="4" column="3">
-            <widget class="QPushButton" name="fetchSnapshotButton">
-             <property name="text">
-              <string>Fetch Snapshot</string>
-             </property>
-            </widget>
-           </item>
           </layout>
          </item>
          <item>
@@ -211,16 +204,9 @@
          <item>
           <layout class="QHBoxLayout" name="snapshotHorizontalLayout">
            <item>
-            <widget class="QPushButton" name="saveSnapshotButton">
+            <widget class="QPushButton" name="fetchSnapshotButton">
              <property name="text">
-              <string>Save Snapshot</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="restoreMachineButton">
-             <property name="text">
-              <string>Restore Machine</string>
+              <string>Fetch Snapshot</string>
              </property>
             </widget>
            </item>
@@ -229,93 +215,137 @@
         </layout>
        </widget>
       </widget>
-      <widget class="QTabWidget" name="snapshotTabWidget">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-         <horstretch>3</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="currentIndex">
-        <number>0</number>
-       </property>
-       <widget class="QWidget" name="commentTab">
-        <attribute name="title">
-         <string>Comment</string>
-        </attribute>
-        <layout class="QVBoxLayout" name="commentTabWindowLayout">
-         <item>
-          <widget class="QLabel" name="commentInputLabel">
-           <property name="text">
-            <string>Enter comment:</string>
-           </property>
+      <widget class="QWidget" name="">
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <widget class="QTabWidget" name="snapshotTabWidget">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>3</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>768</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
+          <widget class="QWidget" name="commentTab">
+           <attribute name="title">
+            <string>Comment</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="commentTabWindowLayout">
+            <item>
+             <widget class="QLabel" name="commentInputLabel">
+              <property name="text">
+               <string>Enter comment:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPlainTextEdit" name="commentInputTextEdit"/>
+            </item>
+            <item>
+             <widget class="QLabel" name="currentCommentLabel">
+              <property name="text">
+               <string>Enter comment:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPlainTextEdit" name="currentCommentText">
+              <property name="palette">
+               <palette>
+                <active>
+                 <colorrole role="Base">
+                  <brush brushstyle="SolidPattern">
+                   <color alpha="255">
+                    <red>231</red>
+                    <green>231</green>
+                    <blue>231</blue>
+                   </color>
+                  </brush>
+                 </colorrole>
+                </active>
+                <inactive>
+                 <colorrole role="Base">
+                  <brush brushstyle="SolidPattern">
+                   <color alpha="255">
+                    <red>231</red>
+                    <green>231</green>
+                    <blue>231</blue>
+                   </color>
+                  </brush>
+                 </colorrole>
+                </inactive>
+                <disabled>
+                 <colorrole role="Base">
+                  <brush brushstyle="SolidPattern">
+                   <color alpha="255">
+                    <red>255</red>
+                    <green>255</green>
+                    <blue>255</blue>
+                   </color>
+                  </brush>
+                 </colorrole>
+                </disabled>
+               </palette>
+              </property>
+              <property name="autoFillBackground">
+               <bool>true</bool>
+              </property>
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+              <property name="plainText">
+               <string>This is a fake snapshot comment message.</string>
+              </property>
+              <property name="backgroundVisible">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </widget>
-         </item>
-         <item>
-          <widget class="QPlainTextEdit" name="commentInputTextEdit"/>
-         </item>
-         <item>
-          <widget class="QLabel" name="currentCommentLabel">
-           <property name="text">
-            <string>Enter comment:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPlainTextEdit" name="currentCommentText">
-           <property name="palette">
-            <palette>
-             <active>
-              <colorrole role="Base">
-               <brush brushstyle="SolidPattern">
-                <color alpha="255">
-                 <red>231</red>
-                 <green>231</green>
-                 <blue>231</blue>
-                </color>
-               </brush>
-              </colorrole>
-             </active>
-             <inactive>
-              <colorrole role="Base">
-               <brush brushstyle="SolidPattern">
-                <color alpha="255">
-                 <red>231</red>
-                 <green>231</green>
-                 <blue>231</blue>
-                </color>
-               </brush>
-              </colorrole>
-             </inactive>
-             <disabled>
-              <colorrole role="Base">
-               <brush brushstyle="SolidPattern">
-                <color alpha="255">
-                 <red>255</red>
-                 <green>255</green>
-                 <blue>255</blue>
-                </color>
-               </brush>
-              </colorrole>
-             </disabled>
-            </palette>
-           </property>
-           <property name="autoFillBackground">
-            <bool>true</bool>
-           </property>
-           <property name="readOnly">
-            <bool>true</bool>
-           </property>
-           <property name="plainText">
-            <string>This is a fake snapshot comment message.</string>
-           </property>
-           <property name="backgroundVisible">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="saveSnapshotButton">
+            <property name="text">
+             <string>Save Snapshot</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="restoreMachineButton">
+            <property name="text">
+             <string>Restore Machine</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
       </widget>
      </widget>
     </item>

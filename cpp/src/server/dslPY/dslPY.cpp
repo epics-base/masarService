@@ -414,11 +414,11 @@ static PVStructure::shared_pointer saveSnapshot(PyObject * list, String message)
     ntTable.attachAlarm(pvAlarm);
 
     if(status != -1) {
-        alarm.setMessage("Save MASAR suessed." + message);
+        alarm.setMessage("Save MASAR suessed. " + message);
         alarm.setSeverity(noAlarm);
         alarm.setStatus(noStatus);
     } else {
-        alarm.setMessage("Save MASAR failed." + message);
+        alarm.setMessage("Save MASAR failed. " + message);
         alarm.setSeverity(majorAlarm);
         alarm.setStatus(clientStatus);
     }

@@ -81,8 +81,8 @@ def retrieveServiceEvents():
 def retrieveSnapshot():
     function = 'retrieveSnapshot'
     print ("=== test %s ===" %function)
-    params = {'eventid': '56'}
-#    params = {'eventid': '10'}
+    params = {'eventid': '24'}
+#    params = {'eventid': '132'}
     __clientRPC(function, params)
     print ("=== test %s end ===" %function)
 
@@ -98,7 +98,7 @@ def saveSnapshot():
 
 if __name__ == '__main__':
 #    retrieveSystemList()
-    retrieveServiceConfigs()
+#    retrieveServiceConfigs()
 #    retrieveServiceConfigProps()
 #    retrieveServiceEvents()
     retrieveSnapshot()
