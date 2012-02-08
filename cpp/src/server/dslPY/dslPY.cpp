@@ -525,6 +525,7 @@ PVStructure::shared_pointer DSL_RDB::request(
             name = PyList_GetItem(pchannelnames, i);
             channames[i] = PyString_AsString(name);
         }
+        Py_DECREF(pchannelnames);
         String message;
         PVStructure::shared_pointer data = getLiveMachine(channames, list_len, &message);
 
@@ -539,6 +540,7 @@ PVStructure::shared_pointer DSL_RDB::request(
         PyObject *result = PyEval_CallObject(prequest,pyTuple2);
         pvReturn = saveSnapshot(result,message);
 //        pvReturn = createResult(result,functionName);
+        Py_DECREF(result);
     } else {
         // A tuple is needed to pass to Python as parameter.
         PyObject * pyTuple = PyTuple_New(1);
