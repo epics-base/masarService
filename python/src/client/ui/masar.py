@@ -109,6 +109,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.setupUi(self)
         self.__setDateTime()
         self.tabWindowDict = {'comment': self.commentTab}
+        self.e2cDict = {} # event to config dictionary
+        self.pv4cDict = {} # pv name list for each selected configuration
         self.__service = 'masar'
         if source == 'epics':
             self.mc = masarClient.client(channelname)
@@ -153,7 +155,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             configIds=[]
             configNames = []
             descs = []
-            configMessages = "Do you want to save snapshots for all the following configurations?\n"
+            configMessages = "Do you want to save snapshots for the following configurations?\n"
             for idx in selectedConfigs: 
                 configIds.append(str(self.configTableWidget.item(idx.row(), 4).text()))
                 descs.append(str(self.configTableWidget.item(idx.row(), 1).text()))
@@ -174,6 +176,31 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 "Warning",
                 "You did not select any configuration yet.")
             return
+
+    def saveSelectedSnapshotAction(self):
+        curWidget = self.snapshotTabWidget.currentWidget()
+        eid = self.__find_key(self.tabWindowDict, curWidget)
+        try:
+            cid, desc, c_name = self.e2cDict[eid]
+            configMessages = "Do you want to save snapshots for the following configurations?\n - %s\n" %(c_name)
+            reply = QMessageBox.question(self, 'Message',
+                                         configMessages,                                          
+                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            
+            if reply == QMessageBox.Yes:
+                self.saveSnapshotData([c_name], [desc])
+            else:
+                return
+        except:  
+            QMessageBox.warning(self,
+                "Warning",
+                "No configuration was found.")
+            return
+        
+#        self.__doSaveSnapshot(selectedConfigs)
+    def __find_key(self, dic, val):
+        """return the key of dictionary dic given the value"""
+        return [k for k, v in dic.iteritems() if v == val][0]
 
     def restoreSnapshotAction(self):
         print ('Reserved for restoring snapshot action')
@@ -222,12 +249,21 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         data = self.retrieveConfigData()
         self.setTable(data, self.configTableWidget)
 
+    def snapshotTabSelector(self):
+        curWidget = self.snapshotTabWidget.currentWidget()
+        eid = self.__find_key(self.tabWindowDict, curWidget)
+        if eid != 'comment':
+            print (eid)        
+            pvs = self.pv4cDict[str(eid)]
+            print (len(pvs), pvs)
+    
     def setSnapshotTabWindow(self, eventNames, eventTs, eventIds):
         tabWidget = None
         
         for i in range(self.snapshotTabWidget.count(), 0, -1):
             self.snapshotTabWidget.removeTab(i)
-        
+
+        self.pv4cDict.clear()
         for i in range(len(eventIds)):
             if self.tabWindowDict.has_key(eventIds[i]):
                 tabWidget = self.tabWindowDict[eventIds[i]]
@@ -239,10 +275,14 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             tabWidget.clear()
             self.setSnapshotTable(data, tabWidget)
             tabWidget.resizeColumnsToContents()
-            label = QString.fromUtf8((eventNames[i]+': ' + eventTs[i]))
+            ts = eventTs[i].split('.')[0]
+            label = QString.fromUtf8((eventNames[i]+': ' + ts))
             self.snapshotTabWidget.addTab(tabWidget, label)
             self.snapshotTabWidget.setTabText(i+1, label)
-
+            self.pv4cDict[str(eventIds[i])] = data['PV Name']
+                
+        self.snapshotTabWidget.setCurrentIndex(1)
+        
     def setEventTable(self, data):
         self.setTable(data, self.eventTableWidget)
     
@@ -445,6 +485,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         event_ts = []
         event_desc = []
         c_names = []
+        self.e2cDict.clear()
         if source == 'sqlite':
             if configids:
                 for i in range(len(configids)):
@@ -460,6 +501,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                         ts = str(datetime.datetime.fromtimestamp(time.mktime(time.strptime(res[3], self.time_format))) - self.UTC_OFFSET_TIMEDELTA)
                         event_ts.append(ts)
                         event_desc.append(res[2])
+                        self.e2cDict[str(res[0])] = [cid, res[2], confignames[i]]
         elif source == 'epics':
             if configids:
                 for i in range(len(configids)):
@@ -471,10 +513,13 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                     eids, usertag, utctimes = self.mc.retrieveServiceEvents(params)
                     event_ids = event_ids[:] + (list(eids))[:]
                     event_desc = event_desc[:] + (list(usertag))[:]
+                    for j in range(len(eids)):
+                        self.e2cDict[str(eids[j])] = [cid, usertag[j],confignames[i]]
                     for ut in utctimes:
                         c_names.append(confignames[i])
                         ts = str(datetime.datetime.fromtimestamp(time.mktime(time.strptime(ut, self.time_format))) - self.UTC_OFFSET_TIMEDELTA)
                         event_ts.append(ts)
+                    
         data = odict()
         data['Config'] = c_names
         data['Time stamp'] = event_ts
