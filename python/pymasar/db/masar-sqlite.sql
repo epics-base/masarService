@@ -86,6 +86,8 @@ CREATE TABLE "service_event" (
   "service_config_id" INT NOT NULL DEFAULT '0',
   "service_event_user_tag" VARCHAR(255) DEFAULT NULL,
   "service_event_UTC_time" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "service_event_approval" INT NOT NULL DEFAULT '0',
+  "service_event_user_name" VARCHAR(50) DEFAULT NULL,
   "service_event_serial_tag" VARCHAR(50) DEFAULT NULL,
   PRIMARY KEY ("service_event_id")
   CONSTRAINT "Ref_08" FOREIGN KEY ("service_config_id") REFERENCES "service_config" ("service_config_id") ON DELETE NO ACTION ON UPDATE NO ACTION

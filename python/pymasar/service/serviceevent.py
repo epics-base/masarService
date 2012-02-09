@@ -13,7 +13,7 @@ import datetime as dt
 from pymasar.utils import checkConnection
 from pymasar.service.serviceconfig import (retrieveServiceConfigs)
 
-def saveServiceEvent(conn, servicename, configname, comment=None):
+def saveServiceEvent(conn, servicename, configname, comment=None, approval=False, username=None):
     """
     save an event config, and associate this event with given service and service config.
     
@@ -52,51 +52,91 @@ def saveServiceEvent(conn, servicename, configname, comment=None):
         serviceconfigid = serviceconfigid[0][0]
     else:
         raise Exception('Can not find service config (%s) with service (%s)' %(configname, servicename))
+
     sql = '''
-    insert into service_event(service_event_id, service_config_id, service_event_user_tag, service_event_UTC_time, service_event_serial_tag)
-    values (?, ?, ?, datetime('now'), ?)
+    insert into service_event(service_event_id, service_config_id, service_event_user_tag, service_event_UTC_time, service_event_approval, service_event_user_name)
+    values (?, ?, ?, datetime('now'), ?, ?)
     '''
     try:
         cur = conn.cursor()
         
         # each service event is a individual entity. Do not check the existence. 
-        cur.execute(sql, (None, serviceconfigid, comment, None))
+        cur.execute(sql, (None, serviceconfigid, comment, approval, username))
     except sqlite3.Error, e:
         print ('Error %s' %e.args[0])
         raise
     return cur.lastrowid
 
+def updateServiceEvent(conn, eventid, comment=None, approval=False, username=None):
+    """
+    update the comment, approval status, and add user name for an existing event.
+    
+    >>> import sqlite3
+    >>> from pymasar.service.service import (saveService, retrieveServices)
+    >>> from pymasar.service.serviceconfig import (saveServiceConfig)
+    >>> from pymasar.db.masarsqlite import (SQL)
+    >>> conn = sqlite3.connect(":memory:")
+    >>> cur = conn.cursor()
+    >>> result = cur.executescript(SQL)
+    >>> saveService(conn, 'masar1', desc='non-empty description')
+    1
+    >>> saveService(conn, 'masar2', desc='non-empty description')
+    2
+    >>> saveServiceConfig(conn, 'masar1', 'orbit C01', 'BPM horizontal readout for storage ring')
+    1
+    >>> saveServiceConfig(conn, 'masar1', 'orbit C02', 'BPM horizontal readout for storage ring')
+    2
+    >>> saveServiceConfig(conn, 'masar2', 'orbit C01', 'BPM horizontal readout for storage ring')
+    3
+    >>> saveServiceConfig(conn, 'masar2', 'orbit C02', 'BPM horizontal readout for storage ring')
+    4
+    >>> result = retrieveServiceConfigs(conn, servicename='masar1', configname='orbit C01')
+    >>> saveServiceEvent(conn, servicename='masar1', configname='orbit C01', comment='a service event',approval=True)
+    1
+    >>> saveServiceEvent(conn, servicename='masar1', configname='orbit C01', comment='end service event',approval=True)
+    2
+    >>> updateServiceEvent(conn, 1, comment='an updated service event', approval=True, username='test user')
+    True
+    >>> results = retrieveServiceEvents(conn)
+    >>> for res in results[1:]:
+    ...    print (res[0], res[0], res[2], res[4])
+    1 1 an updated service event test user
+    2 2 end service event None
+    >>> conn.close()
+    """
+    checkConnection(conn)
+   
+    sqlsel = '''
+    SELECT service_event_user_tag, service_event_approval, service_event_user_name
+    FROM service_event
+    WHERE service_event_id = ?
+    '''
+ 
+    sql = '''
+    UPDATE service_event
+    SET service_event_user_tag = ?, service_event_approval=?, service_event_user_name=?
+    WHERE service_event_id = ?
+    '''
+    try:
+        cur = conn.cursor()
+        
+        cur.execute(sqlsel, (eventid,))
+        comment0, approval0, username0 = cur.fetchone()
+        if comment==None:
+            comment = comment0
+        if not approval:
+            approval = approval0
+        if username==None:
+            username = username0
+        
+        # each service event is a individual entity. Do not check the existence. 
+        cur.execute(sql, (comment, approval, username, eventid))
+    except sqlite3.Error, e:
+        print ('Error %s' %e.args[0])
+        raise
+    return True
 
-#def insertServiceEvent(connx,serviceConfigId,comment):
-#    cursor = conn.cursor() 
-#    SQLgetLastSerial = '''select service_event_serial_tag from service_event 
-#        where service_config_id = '%s' 
-#        order by service_event_serial_tag desc limit 1 '''
-#    SQL = SQLgetLastSerial % serviceConfigId
-#    print ("insertServiceEvent2", SQL)
-#    cursor.execute(SQL)
-#    if cursor.rowcount > 0: #first
-#        nextSerialTag = cursor.fetchone()[0] + 1
-#    else:
-#        nextSerialTag = 1
-#        print ("using default serial tag = 1")
-#    print ("nextSerialTag",nextSerialTag)
-#    SQLinsertServiceEvent = '''insert into service_event 
-#        (service_config_id, service_event_user_tag,service_event_serial_tag) 
-#        values (%s, '%s', %s)  '''
-#    SQL = SQLinsertServiceEvent % (serviceConfigId, comment, nextSerialTag)
-#    print (SQL)
-#    try:
-#        cursor.execute(SQL)
-#        print ("success")
-#    except Exception:
-#        #?# need to get specific information on the exception.
-#        print ('insertServiceEvent2 failed %s (%s)' % (Exception.message, type(Exception)))
-#        return(-1,-1)
-#    serviceEventId = cursor.lastrowid
-#    return (serviceEventId,nextSerialTag)
-
-def retrieveServiceEvents(conn, configid=None,start=None, end=None, comment=None):
+def retrieveServiceEvents(conn, configid=None,start=None, end=None, comment=None, approval=True):
     """
     retrieve an service event with given user tag within given time frame.
     Both start and end time should be in UTC time format.
@@ -125,16 +165,16 @@ def retrieveServiceEvents(conn, configid=None,start=None, end=None, comment=None
     4
     >>> result = retrieveServiceConfigs(conn, servicename='masar1', configname='orbit C01')
     >>> import datetime as dt
-    >>> saveServiceEvent(conn, servicename='masar1', configname='orbit C01', comment='a service event1')
+    >>> saveServiceEvent(conn, servicename='masar1', configname='orbit C01', comment='a service event1',approval=True)
     1
     >>> start = dt.datetime.utcnow()
     >>> import time
     >>> time.sleep(1)
-    >>> saveServiceEvent(conn, servicename='masar1', configname='orbit C01', comment='a service event2')
+    >>> saveServiceEvent(conn, servicename='masar1', configname='orbit C01', comment='a service event2',approval=True)
     2
     >>> end = dt.datetime.utcnow()
     >>> time.sleep(1)
-    >>> saveServiceEvent(conn, servicename='masar1', configname='orbit C01', comment='a service event3')
+    >>> saveServiceEvent(conn, servicename='masar1', configname='orbit C01', comment='a service event3',approval=True)
     3
     >>> results = retrieveServiceEvents(conn, comment='a service event1')
     >>> for result in results[1:]:
@@ -157,24 +197,24 @@ def retrieveServiceEvents(conn, configid=None,start=None, end=None, comment=None
     try:
         cur = conn.cursor()
         sql = '''
-        select service_event_id, service_config_id, service_event_user_tag, service_event_UTC_time
-        from service_event  
+        select service_event_id, service_config_id, service_event_user_tag, service_event_UTC_time, service_event_user_name
+        from service_event where service_event_approval = 1
         '''
         
         if (start is None) and (end is None):
             if comment is None and configid is None:
                 cur.execute(sql)
             elif configid is None:
-                sql += ' where service_event_user_tag like ? '
+                sql += ' and service_event_user_tag like ?'
                 cur.execute(sql, (comment, ))
             elif comment is None:
-                sql += ' where service_config_id = ? '
+                sql += ' and service_config_id = ?'
                 cur.execute(sql, (configid, ))
             else:
-                sql += ' where service_event_user_tag like ? and service_config_id = ? '
+                sql += ' and service_event_user_tag like ? and service_config_id = ?'
                 cur.execute(sql, (comment, configid, ))
         else:
-            sql += ' where service_event_UTC_time > ? and service_event_UTC_time < ? '
+            sql += ' and service_event_UTC_time > ? and service_event_UTC_time < ? '
             if end is None:
                 end = dt.datetime.utcnow()
             if start is None:

@@ -5,5 +5,5 @@ from serviceconfigprop import (saveServiceConfigProp, retrieveServiceConfigProps
 
 __all__ = ['retrieveServices', 'saveService']
 __all__.extend(['saveServiceConfig', 'saveServicePvGroup', 'retrieveServiceConfigs', 'retrieveServicePvGroups', 'retrieveServiceConfigPVs'])
-__all__.extend(['saveServiceEvent', 'retrieveServiceEvents'])
+__all__.extend(['saveServiceEvent', 'retrieveServiceEvents', 'updateServiceEvent'])
 __all__.extend(['saveServiceConfigProp', 'retrieveServiceConfigProps'])

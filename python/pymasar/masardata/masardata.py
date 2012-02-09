@@ -24,7 +24,7 @@ epicsint    = [1, 4, 5]
 epicsString = [0]
 epicsDouble = [2, 6]
 
-def saveSnapshot(conn, data, servicename=None, configname=None, comment=None):
+def saveSnapshot(conn, data, servicename=None, configname=None, comment=None,approval=False):
     """
     save a snapshot (masar event) with data.
     The data format is a tuple array like 
@@ -70,7 +70,7 @@ def saveSnapshot(conn, data, servicename=None, configname=None, comment=None):
     >>> conn.close()
     """
     checkConnection(conn)
-    eventid = saveServiceEvent(conn, servicename, configname, comment)
+    eventid = saveServiceEvent(conn, servicename, configname, comment=comment, approval=approval)
     masarid = None
     try:
         masarid = __saveMasarData(conn, eventid, data)
@@ -103,7 +103,7 @@ def __saveMasarData(conn, eventid, datas):
         raise 
     return masarid
     
-def retrieveSnapshot(conn, eventid=None,start=None, end=None, comment=None):
+def retrieveSnapshot(conn, eventid=None,start=None, end=None, comment=None,approval=True):
     """
     retrieve masar service data with given time frame and comment.
     If end time is not given, use current time. If start time is not given, 
@@ -122,6 +122,7 @@ def retrieveSnapshot(conn, eventid=None,start=None, end=None, comment=None):
     >>> import sqlite3
     >>> from pymasar.service.service import (saveService, retrieveServices)
     >>> from pymasar.service.serviceconfig import (saveServiceConfig, retrieveServiceConfigs)
+    >>> from pymasar.service.serviceevent import (updateServiceEvent)
     >>> from pymasar.db.masarsqlite import (SQL)
     >>> conn = sqlite3.connect(":memory:")
     >>> cur = conn.cursor()
@@ -151,6 +152,8 @@ def retrieveSnapshot(conn, eventid=None,start=None, end=None, comment=None):
     >>> time.sleep(1.0) 
     >>> saveSnapshot(conn, data, servicename='masar1', configname='orbit C01', comment='a service event')
     (1, [1, 2, 3, 4, 5, 6])
+    >>> updateServiceEvent(conn, 1, approval=True, username='test_user')
+    True
     >>> data = [('SR:C01-BI:G02A<BPM:L1>Pos-X','12.2', 12.2, 12, 6, 1, 564562342566, 3452345098734, 0, 0, 0, ""),
     ...        ('SR:C01-BI:G02A<BPM:L2>Pos-X', '12.2', 12.2, 12, 6, 1, 564562342566, 3452345098734, 0, 0, 0, ""),
     ...        ('SR:C01-BI:G04A<BPM:M1>Pos-X', '12.2', 12.2, 12, 6, 1, 564562342566, 3452345098734, 0, 0, 0, ""),
@@ -162,6 +165,8 @@ def retrieveSnapshot(conn, eventid=None,start=None, end=None, comment=None):
     >>> time.sleep(1.0)
     >>> saveSnapshot(conn, data, servicename='masar1', configname='orbit C01', comment='a service event')
     (2, [7, 8, 9, 10, 11, 12])
+    >>> updateServiceEvent(conn, 2, approval=True, username='test_user2')
+    True
     >>> time.sleep(1.0)
     >>> end2 = dt.datetime.utcnow()
     >>> datas = retrieveSnapshot(conn, start=start, end=end1)
@@ -209,7 +214,7 @@ def retrieveSnapshot(conn, eventid=None,start=None, end=None, comment=None):
     from service_event
     left join service_config using (service_config_id)
     left join service using (service_id)
-    where service_event_id = ?
+    where service_event_id = ? 
     '''
 
     if eventid:
@@ -222,9 +227,9 @@ def retrieveSnapshot(conn, eventid=None,start=None, end=None, comment=None):
         data = result[:] + data[:]
         dataset.append(data)
     else:
-        results = retrieveServiceEvents(conn, start=start, end=end, comment=comment)
+        results = retrieveServiceEvents(conn, start=start, end=end, comment=comment, approval=approval)
 #        print ("event retults = ", results)
-        sql += ' and service_config_id = ?'
+        sql += ' and service_config_id = ?  and service_event_approval = 1 '
         for result in results[1:]:
             data= __retrieveMasarData(conn, result[0])
 #            data = datahead + data[:]

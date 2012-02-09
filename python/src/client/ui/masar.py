@@ -253,9 +253,9 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         curWidget = self.snapshotTabWidget.currentWidget()
         eid = self.__find_key(self.tabWindowDict, curWidget)
         if eid != 'comment':
-            print (eid)        
+#            print (eid)        
             pvs = self.pv4cDict[str(eid)]
-            print (len(pvs), pvs)
+#            print (len(pvs), pvs)
     
     def setSnapshotTabWindow(self, eventNames, eventTs, eventIds):
         tabWidget = None
