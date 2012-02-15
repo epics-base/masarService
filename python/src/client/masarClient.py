@@ -66,10 +66,11 @@ class client():
     def retrieveServiceEvents(self, params):
         function = 'retrieveServiceEvents'
         nttable = self.__clientRPC(function, params)
-#        service_event_id,service_config_id,service_event_user_tag,service_event_UTC_time
+#        service_event_id,service_config_id,service_event_user_tag,service_event_UTC_time,service_event_user_name
         return (nttable.getValue(0), 
                 nttable.getValue(2),
-                nttable.getValue(3))
+                nttable.getValue(3),
+                nttable.getValue(4))
     
     def retrieveSnapshot(self, params):
         function = 'retrieveSnapshot'
@@ -91,8 +92,35 @@ class client():
     def saveSnapshot(self, params):
         function = 'saveSnapshot'
         nttable = self.__clientRPC(function, params)
-        status = nttable.getValue(0)
-        return status[0]
+        ts = TimeStamp()
+        nttable.getTimeStamp(ts.getTimeStampPy())
+        return (ts.getUserTag(),
+                nttable.getValue(0), 
+                nttable.getValue(1), 
+                nttable.getValue(2),
+                nttable.getValue(3),
+                nttable.getValue(4),
+                nttable.getValue(5),
+                nttable.getValue(6),
+                nttable.getValue(7),
+                nttable.getValue(9),
+                nttable.getValue(10))
+
+    def updateSnapshotEvent(self, params):
+        function = 'updateSnapshotEvent'
+        nttable = self.__clientRPC(function, params)
+        return nttable.getValue(0)[0]
+    
+    def getLiveMachine(self, params):
+        function = 'getLiveMachine'
+        nttable = self.__clientRPC(function, params)
+        # channelName,stringValue,doubleValue,longValue,dbrType,isConnected
+        return (nttable.getValue(0),
+                nttable.getValue(1),
+                nttable.getValue(2),
+                nttable.getValue(3),
+                nttable.getValue(4),
+                nttable.getValue(5))
     
 if __name__ == '__main__':
     mc = client()

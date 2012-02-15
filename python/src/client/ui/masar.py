@@ -14,7 +14,7 @@ import os
 import time
 import datetime
 
-from PyQt4.QtGui import (QApplication, QMainWindow, QMessageBox, QTableWidgetItem, QTableWidget, QInputDialog)
+from PyQt4.QtGui import (QApplication, QMainWindow, QMessageBox, QTableWidgetItem, QTableWidget)
 from PyQt4.QtCore import (QDateTime, Qt, QString)
 
 try:
@@ -28,7 +28,9 @@ else:
     print ('Python version 2.7 or higher is needed.')
     sys.exit()
 
+
 import ui_masar
+import commentdlg
 
 __version__ = "0.0.1"
 
@@ -71,6 +73,9 @@ while args:
 if source == 'epics':
     import masarClient
 
+# have to put this as last import, otherwise, import error. 
+import cothread.catools as cav3
+
 class masarUI(QMainWindow, ui_masar.Ui_masar):
     severityDict= {0: 'NO_ALARM',
                    1: 'MINOR_ALARM',
@@ -111,6 +116,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.tabWindowDict = {'comment': self.commentTab}
         self.e2cDict = {} # event to config dictionary
         self.pv4cDict = {} # pv name list for each selected configuration
+        self.data4eid = {}
+        
         self.__service = 'masar'
         if source == 'epics':
             self.mc = masarClient.client(channelname)
@@ -121,6 +128,22 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.eventConfigFilter = str(self.eventFilterLineEdit.text())
         self.UTC_OFFSET_TIMEDELTA = datetime.datetime.utcnow() - datetime.datetime.now()
         self.time_format = "%Y-%m-%d %H:%M:%S"
+        self.previewId = None
+        self.previewConfName = None
+        
+        # DBR_TYPE definition
+        #define DBF_STRING  0
+        #define DBF_INT     1
+        #define DBF_SHORT   1
+        #define DBF_FLOAT   2
+        #define DBF_ENUM    3
+        #define DBF_CHAR    4
+        #define DBF_LONG    5
+        #define DBF_DOUBLE  6
+        self.epicsLong   = [1, 4, 5]
+        self.epicsString = [0, 3]
+        self.epicsDouble = [2, 6]
+        self.epicsNoAccess = [7]
 
     def __initSystemBomboBox(self):
         self.systemCombox.addItem(_fromUtf8(""))
@@ -148,54 +171,88 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
     def fetchConfigAction(self):
         self.setConfigTable()
         self.configTableWidget.resizeColumnsToContents()
-        
-    def saveSnapshotAction(self):
-        selectedConfigs = self.configTableWidget.selectionModel().selectedRows()
-        if len(selectedConfigs) > 0:
-            configIds=[]
-            configNames = []
-            descs = []
-            configMessages = "Do you want to save snapshots for the following configurations?\n"
-            for idx in selectedConfigs: 
-                configIds.append(str(self.configTableWidget.item(idx.row(), 4).text()))
-                descs.append(str(self.configTableWidget.item(idx.row(), 1).text()))
-                tmp = str(self.configTableWidget.item(idx.row(), 0).text())
-                configNames.append(tmp)
-                configMessages += " - "+tmp+"\n"
     
-            reply = QMessageBox.question(self, 'Message',
-                                         configMessages,                                          
-                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            
-            if reply == QMessageBox.Yes:
-                self.saveSnapshotData(configNames, descs)
+    def __getComment(self):
+        cdlg = commentdlg.CommentDlg()
+        cdlg.exec_()
+        if cdlg.isAccepted:
+            return (cdlg.result())
+        else:
+            return None
+    
+    def saveMachinePreviewAction(self):
+        if self.isPreviewSaved:
+            QMessageBox.warning(self,
+                "Warning",
+                "Preview (id: %s) for config (%s) has been save already." %(self.previewId, self.previewConfName))
+            return
+        elif self.previewId == None or self.previewConfName == None:
+            QMessageBox.warning(self,
+                "Warning",
+                "No preview to save.")
+        reply = QMessageBox.question(self, 'Message',
+                             "Do you want to flag this preview as a good snapshot?",                                          
+                             QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            comment = self.__getComment()
+        else:
+            return
+        # comment result always returns a tuple
+        # it return like (user, comment note)
+        if comment and isinstance(comment, tuple):
+            if comment[0] and comment[1]:
+                self.saveMachinePreviewData(self.previewId, self.previewConfName, comment)
             else:
-                return  
+                QMessageBox.warning(self,
+                    "Warning",
+                    "Either user name or comment is empty.")
+                return
         else:
             QMessageBox.warning(self,
                 "Warning",
-                "You did not select any configuration yet.")
+                "Comment is cancelled.")
             return
+        self.isPreviewSaved = True
 
-    def saveSelectedSnapshotAction(self):
-        curWidget = self.snapshotTabWidget.currentWidget()
-        eid = self.__find_key(self.tabWindowDict, curWidget)
-        try:
-            cid, desc, c_name = self.e2cDict[eid]
-            configMessages = "Do you want to save snapshots for the following configurations?\n - %s\n" %(c_name)
-            reply = QMessageBox.question(self, 'Message',
-                                         configMessages,                                          
-                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            
-            if reply == QMessageBox.Yes:
-                self.saveSnapshotData([c_name], [desc])
-            else:
-                return
-        except:  
+    def getMachinePreviewAction(self):
+        selectedConfig = self.configTableWidget.selectionModel().selectedRows()
+        lc = len(selectedConfig)
+        if lc != 1:
             QMessageBox.warning(self,
                 "Warning",
-                "No configuration was found.")
+                "Please select one configuration, and one only.")
             return
+
+        self.previewId = None
+        self.previewConfName = None
+        
+#        cid = str(self.configTableWidget.item(selectedConfig[0].row(), 4).text())
+        cname = str(self.configTableWidget.item(selectedConfig[0].row(), 0).text())
+        eid, data = self.getMachinePreviewData(cname)
+        self.pv4cDict[str(eid)] = data['PV Name']
+        self.data4eid[str(eid)] = data
+        
+        try:
+            tabWidget = self.tabWindowDict['preview']
+            index = self.snapshotTabWidget.indexOf(tabWidget)
+        except:
+            tabWidget = QTableWidget()
+            index = self.snapshotTabWidget.currentIndex() + 1
+            self.tabWindowDict['preview'] = tabWidget
+        
+        tabWidget.clear()
+        
+        self.setSnapshotTable(data, tabWidget)
+        tabWidget.resizeColumnsToContents()
+        label = QString.fromUtf8((cname+': Preview'))
+        self.snapshotTabWidget.addTab(tabWidget, label)
+
+        self.snapshotTabWidget.setTabText(index, label)        
+        self.snapshotTabWidget.setCurrentIndex(index)
+        
+        self.previewId = eid
+        self.previewConfName = cname
+        self.isPreviewSaved = False
         
 #        self.__doSaveSnapshot(selectedConfigs)
     def __find_key(self, dic, val):
@@ -203,8 +260,105 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         return [k for k, v in dic.iteritems() if v == val][0]
 
     def restoreSnapshotAction(self):
-        print ('Reserved for restoring snapshot action')
-  
+        curWidget = self.snapshotTabWidget.currentWidget()
+        if not isinstance(curWidget, QTableWidget):
+            return
+        
+        eid = self.__find_key(self.tabWindowDict, curWidget)
+        if eid == 'comment' or eid == 'preview':
+            QMessageBox.warning(self, 'Warning', 'Can not restore selected snapshot.')
+            return
+        pvlist = self.pv4cDict[str(eid)]
+        data = self.data4eid[str(eid)]
+        
+        print (pvlist)
+        print (data)
+        
+#        data['PV Name'] = pvnames
+#        data['Status'] = status
+#        data['Severity'] = severity
+#        data['Time stamp'] = ts
+#        data['Time stamp (nano)'] = ts_nano
+#        data['DBR'] = dbrtype
+#        data['S_value'] = s_value
+#        data['I_value'] = i_value
+#        data['D_value'] = d_value
+#        data['isConnected'] = isConnected
+
+    def getLiveMachineAction(self):
+        curWidget = self.snapshotTabWidget.currentWidget()
+        if isinstance(curWidget, QTableWidget):
+            eid = self.__find_key(self.tabWindowDict, curWidget)
+            if eid == 'preview':
+                eid = self.previewId
+            elif eid == 'comment':
+                return
+            pvlist = self.pv4cDict[str(eid)]
+            channelName, s_value, d_value, i_value, dbrtype, isConnected = self.getLiveMachine(pvlist)
+            dd = {}
+            noMatchedPv = []
+            for i in range(len(channelName)):
+                dd[channelName[i]] = i
+            rowCount = curWidget.rowCount()
+            for i in range(rowCount):
+                try:
+                    index = dd[str(curWidget.item(i, 0).text())]
+                except:
+                    noMatchedPv.append(channelName(index))
+                
+                if dbrtype[index] in self.epicsDouble:
+                    newitem = QTableWidgetItem(str(d_value[index]))
+                    curWidget.setItem(i, 6, newitem)
+                    newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
+                    
+                    if dbrtype[index] in self.epicsNoAccess:
+                        pass
+#                        if isConnected[index]:
+#                            pass
+#                        else:
+#                            pass
+                    else:
+                        saved_val = float(curWidget.item(i, 5).text())
+                        delta = d_value[index] - saved_val
+                        if abs(delta) < 1.0e-6:
+                            delta = 0.0 
+                        
+                        newitem = QTableWidgetItem(str(delta))
+                        curWidget.setItem(i, 7, newitem)
+                        newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)                    
+                elif dbrtype[index] in self.epicsLong:
+                    newitem = QTableWidgetItem(str(i_value[index]))
+                    curWidget.setItem(i, 6, newitem)
+                    newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
+                    
+                    if dbrtype[index] in self.epicsNoAccess:
+                        pass
+#                        if isConnected[index]:
+#                            pass
+#                        else:
+#                            pass
+                    else:
+                        saved_val = int(curWidget.item(i, 5).text())
+                        delta = d_value[index] - saved_val
+                        
+                        newitem = QTableWidgetItem(str(delta))
+                        curWidget.setItem(i, 7, newitem)
+                        newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
+
+                elif dbrtype[index] in self.epicsString:
+                    newitem = QTableWidgetItem(str(s_value[index]))
+                    curWidget.setItem(index, 6, newitem)
+                    newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
+            if len(noMatchedPv) > 0:
+                print ("Can not find the following pv for this snapshot: \n", noMatchedPv)
+            # list some pv 
+        else:
+            QMessageBox.warning(self, "Warning", "Not a snapshot.")
+            return
+        
+    def updateChanValue(self, pvlist, curWidget):
+        pass
+    
     def useTimeRange(self, state):
         if state == Qt.Checked:
             self.eventStartDateTime.setEnabled(True)
@@ -240,22 +394,23 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         for idx in selectedItems: 
             eventNames.append(str(self.eventTableWidget.item(idx.row(), 0).text()))
             eventTs.append(str(self.eventTableWidget.item(idx.row(), 1).text()))
-            eventIds.append(str(self.eventTableWidget.item(idx.row(), 3).text()))
+            eventIds.append(str(self.eventTableWidget.item(idx.row(), 4).text()))
             
         self.snapshotTabWidget.setStatusTip("Snapshot data")
         self.setSnapshotTabWindow(eventNames, eventTs, eventIds)
+        print (eventNames, eventTs, eventIds)
         
     def setConfigTable(self):
         data = self.retrieveConfigData()
         self.setTable(data, self.configTableWidget)
 
-    def snapshotTabSelector(self):
-        curWidget = self.snapshotTabWidget.currentWidget()
-        eid = self.__find_key(self.tabWindowDict, curWidget)
-        if eid != 'comment':
-#            print (eid)        
-            pvs = self.pv4cDict[str(eid)]
-#            print (len(pvs), pvs)
+#    def snapshotTabSelector(self):
+#        curWidget = self.snapshotTabWidget.currentWidget()
+#        eid = self.__find_key(self.tabWindowDict, curWidget)
+#        if eid != 'comment':
+##            print (eid)        
+#            pvs = self.pv4cDict[str(eid)]
+##            print (len(pvs), pvs)
     
     def setSnapshotTabWindow(self, eventNames, eventTs, eventIds):
         tabWidget = None
@@ -264,6 +419,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             self.snapshotTabWidget.removeTab(i)
 
         self.pv4cDict.clear()
+        self.data4eid.clear()
+        
         for i in range(len(eventIds)):
             if self.tabWindowDict.has_key(eventIds[i]):
                 tabWidget = self.tabWindowDict[eventIds[i]]
@@ -276,10 +433,12 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             self.setSnapshotTable(data, tabWidget)
             tabWidget.resizeColumnsToContents()
             ts = eventTs[i].split('.')[0]
+            
             label = QString.fromUtf8((eventNames[i]+': ' + ts))
             self.snapshotTabWidget.addTab(tabWidget, label)
             self.snapshotTabWidget.setTabText(i+1, label)
             self.pv4cDict[str(eventIds[i])] = data['PV Name']
+            self.data4eid[str(eventIds[i])] = data
                 
         self.snapshotTabWidget.setCurrentIndex(1)
         
@@ -303,9 +462,11 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
 
         if isinstance(data, odict) and isinstance(table, QTableWidget):
             nrows = len(data.values()[0])
-            #    ('pv name label',  'dbr_type label', 'string value', 'int value', 'double value', 'status label', 'severity label', 'ioc time stamp label', 'ioc time stamp nano label'),
+            #    ('pv name label',  'dbr_type label', 'string value', 'int value', 'double value', 'status label', 'severity label', 
+            #     'ioc time stamp label', 'ioc time stamp nano label'),
             # => (pv_name, status, severity, ioc_timestamp, saved value)
             ncols = len(data) - 4
+            ncols = ncols + 2  # 2 columns for live data and (live data - saved data)
             table.setRowCount(nrows)
             table.setColumnCount(ncols)
             table.setSortingEnabled(True)
@@ -321,20 +482,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             d_value = data['D_value']
             isConnected = data['isConnected']
 
-            # DBR_TYPE definition
-            #define DBF_STRING  0
-            #define DBF_INT     1
-            #define DBF_SHORT   1
-            #define DBF_FLOAT   2
-            #define DBF_ENUM    3
-            #define DBF_CHAR    4
-            #define DBF_LONG    5
-            #define DBF_DOUBLE  6
-            epicsLong   = [1, 4, 5]
-            epicsString = [0, 3]
-            epicsDouble = [2, 6]
-
-            keys = ['PV Name', 'Status', 'Severity', 'Time stamp', 'Connection', 'Saved value']
+            keys = ['PV Name', 'Status', 'Severity', 'Time stamp', 'Connection', 'Saved value', 'Live value', 'Delta']
             table.setHorizontalHeaderLabels(keys)
             
             for i in range(nrows):
@@ -360,18 +508,21 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                     newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
                     table.setItem(i, 4, newitem)
                     
-                if dbrtype[i] in epicsDouble:
+                if dbrtype[i] in self.epicsDouble:
                     newitem = QTableWidgetItem(str(d_value[i]))
                     table.setItem(i, 5, newitem)
                     newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
-                elif dbrtype[i] in epicsLong:
+                elif dbrtype[i] in self.epicsLong:
                     newitem = QTableWidgetItem(str(i_value[i]))
                     table.setItem(i, 5, newitem)
                     newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
-                elif dbrtype[i] in epicsString:
+                elif dbrtype[i] in self.epicsString:
                     newitem = QTableWidgetItem(str(s_value[i]))
                     newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
                     table.setItem(i, 5, newitem)
+                elif dbrtype[i] in self.epicsNoAccess:
+                    # channel are not connected.
+                    pass
                 else:
                     print('invalid dbr type (code = %s)'%(dbrtype[i]))
         else:
@@ -485,6 +636,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         event_ts = []
         event_desc = []
         c_names = []
+        event_initializer = []
         self.e2cDict.clear()
         if source == 'sqlite':
             if configids:
@@ -501,6 +653,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                         ts = str(datetime.datetime.fromtimestamp(time.mktime(time.strptime(res[3], self.time_format))) - self.UTC_OFFSET_TIMEDELTA)
                         event_ts.append(ts)
                         event_desc.append(res[2])
+                        event_initializer.append(str(res[4]))
                         self.e2cDict[str(res[0])] = [cid, res[2], confignames[i]]
         elif source == 'epics':
             if configids:
@@ -510,9 +663,11 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                     if self.timeRangeCheckBox.isChecked():
                         params['start'] = str(start)
                         params['end'] = str(end)
-                    eids, usertag, utctimes = self.mc.retrieveServiceEvents(params)
+                    eids, usertag, utctimes, initializer = self.mc.retrieveServiceEvents(params)
+
                     event_ids = event_ids[:] + (list(eids))[:]
                     event_desc = event_desc[:] + (list(usertag))[:]
+                    event_initializer = event_initializer[:] + (list(initializer))[:]
                     for j in range(len(eids)):
                         self.e2cDict[str(eids[j])] = [cid, usertag[j],confignames[i]]
                     for ut in utctimes:
@@ -524,6 +679,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         data['Config'] = c_names
         data['Time stamp'] = event_ts
         data['Description'] = event_desc
+        data['Initializer'] = event_initializer
         data['Id'] = event_ids
         return data
 
@@ -603,56 +759,82 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         
         return data
 
-    def saveSnapshotData(self, configNames, comments):
+    def saveMachinePreviewData(self, eventid, confname, comment):
         if source == 'sqlite':
             pass
         elif source == 'epics':
-            for i in range(len(configNames)):
-                count = 0
-                while (True):
-                    text, ok = QInputDialog.getText(self, 'Event Description', 
-                                                    'Enter description for %s: \n(Use default by click Cancel)'%configNames[i])
-                    if ok:
-                        reply = QMessageBox.question(self, 'Confirm',
-                            "Use description? \n%s"%text, QMessageBox.Yes | 
-                            QMessageBox.No, QMessageBox.No)
-                
-                        if reply == QMessageBox.Yes:
-                            comment = str(text)
-                            break
-                    else:
-                        reply = QMessageBox.question(self, 'Confirm',
-                            "Use default description? \n%s"%comments[i], QMessageBox.Yes | 
-                            QMessageBox.No, QMessageBox.No)
-                
-                        if reply == QMessageBox.Yes:
-                            comment = comments[i]
-                            break
-                    if count == 3:
-                        reply = QMessageBox.question(self, 'Confirm',
-                            "Do you want to cancel this operation?", QMessageBox.Yes | 
-                            QMessageBox.No, QMessageBox.No)
-                        if reply == QMessageBox.Yes:
-                            return
-                        else:
-                            count = 0
-                    else:
-                        count += 1
-                params = {'configname': configNames[i],
-                          'comment': comment,
-                          'servicename': 'masar'}
-                result = self.mc.saveSnapshot(params)
-                if not result:
-                    QMessageBox.warning(self,
-                        "Warning",
-                        "Failed to save snapshot for configuration %s"%(configNames[i]))
+            if not eventid:
+                QMessageBox.warning(self,
+                            "Warning",
+                            "Unknown event.")
+                return
 
-def main():
+            params = {'eventid':    str(eventid),
+                      'configname': str(confname),
+                      'user':       str(comment[0]),
+                      'desc':       str(comment[1])}
+            result = self.mc.updateSnapshotEvent(params)
+            if result:
+                QMessageBox.information(self,"Successful", 
+                                        " Succeed to save preview")
+            else:
+                QMessageBox.information(self, "Failures",
+                                        "Failed to save preview.")
+    
+    def getMachinePreviewData(self, configName):
+        if source == 'sqlite':
+            pass
+        elif source == 'epics':
+            params = {'configname': configName,
+                      'servicename': 'masar'}
+            
+            eventid, pvnames, s_value, d_value, i_value, dbrtype, isConnected, ts, ts_nano, severity, status = self.mc.saveSnapshot(params)
+            severity = list(severity)
+            status = list(status)
+    
+            for i in range(len(severity)):
+                try:
+                    severity[i] = self.severityDict[severity[i]]
+                except:
+                    severity[i] = 'N/A'
+                try:
+                    status[i] = self.alarmDict[status[i]]
+                except:
+                    status[i] = 'N/A'
+    
+            data = odict()
+            data['PV Name'] = pvnames
+            data['Status'] = status
+            data['Severity'] = severity
+            data['Time stamp'] = ts
+            data['Time stamp (nano)'] = ts_nano
+            data['DBR'] = dbrtype
+            data['S_value'] = s_value
+            data['I_value'] = i_value
+            data['D_value'] = d_value
+            data['isConnected'] = isConnected
+    
+            return (eventid, data)
+        
+    def getLiveMachine(self, pvlist):
+        if source == 'sqlite':
+            pass
+        elif source == 'epics':
+            params = {}
+            for pv in pvlist:
+                params[pv] = pv
+            # channelName,stringValue,doubleValue,longValue,dbrType,isConnected
+            return self.mc.getLiveMachine(params)
+
+def main(channelname = None):
     app = QApplication(sys.argv)
     app.setOrganizationName("NSLS II")
     app.setOrganizationDomain("BNL")
     app.setApplicationName("MASAR Viewer")
-    form = masarUI(source=source)
+    if channelname:
+        form = masarUI(channelname=channelname, source=source)
+    else:
+        form = masarUI(source=source)
     form.show()
     app.exec_()
 

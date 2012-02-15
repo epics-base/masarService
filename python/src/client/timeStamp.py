@@ -97,6 +97,9 @@ class TimeStamp(object) :
     def getNanoSeconds(self) :
         """Get the number of nanoSeconds within the second as an int."""
         return timeStampPy._getNano(self.cppPvt)
+    def getUserTag(self) :
+        """Get the number of user tag as an int."""
+        return timeStampPy._getUserTag(self.cppPvt)
     def put(self,secondsPastEpoch,nanoSeconds = 0) :
         """Set the time.
 

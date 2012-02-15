@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_masar.ui'
 #
-# Created: Tue Feb  7 15:00:31 2012
+# Created: Wed Feb 15 14:55:49 2012
 #      by: PyQt4 UI code generator 4.8.6
 #
 # WARNING! All changes made in this file will be lost!
@@ -176,18 +176,22 @@ class Ui_masar(object):
         self.verticalLayout.addWidget(self.snapshotTabWidget)
         self.horizontalLayout = QtGui.QHBoxLayout()
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
-        self.saveSnapshotButton = QtGui.QPushButton(self.mainwidget)
-        self.saveSnapshotButton.setText(QtGui.QApplication.translate("masar", "Save Current Snapshot", None, QtGui.QApplication.UnicodeUTF8))
-        self.saveSnapshotButton.setObjectName(_fromUtf8("saveSnapshotButton"))
-        self.horizontalLayout.addWidget(self.saveSnapshotButton)
+        self.machinePreviewButton = QtGui.QPushButton(self.mainwidget)
+        self.machinePreviewButton.setText(QtGui.QApplication.translate("masar", "Preview", None, QtGui.QApplication.UnicodeUTF8))
+        self.machinePreviewButton.setObjectName(_fromUtf8("machinePreviewButton"))
+        self.horizontalLayout.addWidget(self.machinePreviewButton)
+        self.saveCurrentPreviewButton = QtGui.QPushButton(self.mainwidget)
+        self.saveCurrentPreviewButton.setText(QtGui.QApplication.translate("masar", "Save Current Preview", None, QtGui.QApplication.UnicodeUTF8))
+        self.saveCurrentPreviewButton.setObjectName(_fromUtf8("saveCurrentPreviewButton"))
+        self.horizontalLayout.addWidget(self.saveCurrentPreviewButton)
         self.label = QtGui.QLabel(self.mainwidget)
         self.label.setText(_fromUtf8(""))
         self.label.setObjectName(_fromUtf8("label"))
         self.horizontalLayout.addWidget(self.label)
-        self.saveAllSnapshotButton = QtGui.QPushButton(self.mainwidget)
-        self.saveAllSnapshotButton.setText(QtGui.QApplication.translate("masar", "Save All Snapshot", None, QtGui.QApplication.UnicodeUTF8))
-        self.saveAllSnapshotButton.setObjectName(_fromUtf8("saveAllSnapshotButton"))
-        self.horizontalLayout.addWidget(self.saveAllSnapshotButton)
+        self.getLiveMachineButton = QtGui.QPushButton(self.mainwidget)
+        self.getLiveMachineButton.setText(QtGui.QApplication.translate("masar", "Get Live Machine", None, QtGui.QApplication.UnicodeUTF8))
+        self.getLiveMachineButton.setObjectName(_fromUtf8("getLiveMachineButton"))
+        self.horizontalLayout.addWidget(self.getLiveMachineButton)
         self.label_2 = QtGui.QLabel(self.mainwidget)
         self.label_2.setText(_fromUtf8(""))
         self.label_2.setObjectName(_fromUtf8("label_2"))
@@ -213,14 +217,14 @@ class Ui_masar(object):
         QtCore.QObject.connect(self.systemCombox, QtCore.SIGNAL(_fromUtf8("currentIndexChanged(QString)")), masar.systemComboxChanged)
         QtCore.QObject.connect(self.configFilterLineEdit, QtCore.SIGNAL(_fromUtf8("returnPressed()")), masar.configFilterChanged)
         QtCore.QObject.connect(self.fetchConfigButton, QtCore.SIGNAL(_fromUtf8("clicked()")), masar.fetchConfigAction)
-        QtCore.QObject.connect(self.saveAllSnapshotButton, QtCore.SIGNAL(_fromUtf8("clicked()")), masar.saveSnapshotAction)
+        QtCore.QObject.connect(self.saveCurrentPreviewButton, QtCore.SIGNAL(_fromUtf8("clicked()")), masar.saveMachinePreviewAction)
         QtCore.QObject.connect(self.eventFilterLineEdit, QtCore.SIGNAL(_fromUtf8("returnPressed()")), masar.eventFilterChanged)
         QtCore.QObject.connect(self.timeRangeCheckBox, QtCore.SIGNAL(_fromUtf8("stateChanged(int)")), masar.useTimeRange)
         QtCore.QObject.connect(self.fetchEventButton, QtCore.SIGNAL(_fromUtf8("clicked(void)")), masar.fetchEventAction)
         QtCore.QObject.connect(self.fetchSnapshotButton, QtCore.SIGNAL(_fromUtf8("clicked(void)")), masar.retrieveSnapshot)
         QtCore.QObject.connect(self.restoreMachineButton, QtCore.SIGNAL(_fromUtf8("clicked(void)")), masar.restoreSnapshotAction)
-        QtCore.QObject.connect(self.snapshotTabWidget, QtCore.SIGNAL(_fromUtf8("currentChanged(int)")), masar.snapshotTabSelector)
-        QtCore.QObject.connect(self.saveSnapshotButton, QtCore.SIGNAL(_fromUtf8("clicked()")), masar.saveSelectedSnapshotAction)
+        QtCore.QObject.connect(self.machinePreviewButton, QtCore.SIGNAL(_fromUtf8("clicked()")), masar.getMachinePreviewAction)
+        QtCore.QObject.connect(self.getLiveMachineButton, QtCore.SIGNAL(_fromUtf8("clicked()")), masar.getLiveMachineAction)
         QtCore.QMetaObject.connectSlotsByName(masar)
 
     def retranslateUi(self, masar):

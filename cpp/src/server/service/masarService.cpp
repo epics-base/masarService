@@ -46,15 +46,17 @@ void MasarService::request(
     ChannelRPCRequester::shared_pointer const & channelRPCRequester,
     epics::pvData::PVStructure::shared_pointer const & pvArgument)
 {
-    static int numberFunctions = 7;
-    static String functionNames[7] = {
+    static const int numberFunctions = 9;
+    static const String functionNames[numberFunctions] = {
         String("saveSnapshot"),
         String("retrieveSnapshot"),
         String("retrieveServiceConfigProps"),
         String("retrieveServiceConfigs"),
         String("saveServiceConfig"),
         String("retrieveServiceEvents"),
-        String("saveServiceEvent")
+        String("saveServiceEvent"),
+        String("updateSnapshotEvent"),
+        String("getLiveMachine")
     };
     String builder;
     builder += "pvArgument ";

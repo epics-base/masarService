@@ -11,7 +11,7 @@ from pymasar.pvgroup.pvgroup import (savePvGroup)
 from pymasar.pvgroup.pv import (saveGroupPvs)
 from pymasar.service.service import (saveService)
 from pymasar.service.serviceconfig import (saveServiceConfig, saveServicePvGroup, retrieveServiceConfigPVs)
-from pymasar.service.serviceevent import (saveServiceEvent)
+from pymasar.service.serviceevent import (saveServiceEvent, updateServiceEvent)
 from pymasar.utils import (save)
 from pymasar.masardata.masardata import (saveSnapshot)
 
@@ -148,7 +148,8 @@ def initServiceConfig():
 
 def dummyServiceEventNoData():
     for k, v in sorted(event4conf.items()):
-        saveServiceEvent(conn, __servicename, k, comment=v[0])
+        eid = saveServiceEvent(conn, __servicename, k)
+        updateServiceEvent(conn, eid, comment=v[0], approval=True, username="dummy user")
 
 def dummyServiceEventData():
     for k, v in sorted(event4conf.items()):
@@ -164,22 +165,33 @@ def dummyServiceEventData():
 #            value = random.randrange(-3.0, 2.0)
             value = random.uniform(-3.0, 2.0)
             data.append((pv, str(value), value, int(value), 6, 1, int(sec), int((sec-int(sec))*1e9), 0, 0, 0, ''))
-        saveSnapshot(conn, data, servicename=__servicename, configname=k, comment=v[0])
+        eid = saveSnapshot(conn, data, servicename=__servicename, configname=k)
+        updateServiceEvent(conn, eid[0], comment=v[0], approval=True, username="dummy user")
         
 if __name__ == '__main__':
-    try:
-        initPvGroups()
-        initService()
-        initServiceConfig()
-    except:
-        pass
-    import time
-    for i in range(10):
-        print (i, "save event without data")
-        dummyServiceEventNoData()
-        time.sleep(5.0)
-        print (i, "save event with dummy data")
-        dummyServiceEventData()
-        time.sleep(5.0)
+#    try:
+#        initPvGroups()
+#        initService()
+#        initServiceConfig()
+#    except:
+#        pass
+#    import time
+#    for i in range(10):
+#        print (i, "save event without data")
+#        dummyServiceEventNoData()
+#        time.sleep(5.0)
+#        print (i, "save event with dummy data")
+#        dummyServiceEventData()
+#        time.sleep(5.0)
+    eid = '341'
+    desc = 'a test snapshot'
+    user='test user'
+    import pymasar
+    print (eid, type(eid))
+    print (desc, type(desc))
+    print (user, type(user))
+
+    result = pymasar.service.serviceevent.updateServiceEvent(conn, int(eid), comment=desc, approval=True, username=user)
+
     save(conn)
     conn.close()

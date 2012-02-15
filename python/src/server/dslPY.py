@@ -27,7 +27,8 @@ class DSL(object) :
                    ("retrieveServiceConfigs", self.retrieveServiceConfigs),
                    ("retrieveServiceEvents", self.retrieveServiceEvents),
                    ("retrieveSnapshot", self.retrieveSnapshot),
-                   ("saveSnapshot", self.saveSnapshot))
+                   ("saveSnapshot", self.saveSnapshot),
+                   ('updateSnapshotEvent', self.updateSnapshotEvent))
         for (params, func) in actions:
             if re.match(params, fname):
                 return func(fargs)
@@ -100,7 +101,6 @@ class DSL(object) :
         conn = pymasar.utils.connect()
         result = pymasar.masardata.retrieveSnapshot(conn, eventid=eid,start=start,end=end,comment=comment)
         pymasar.utils.close(conn)
-
         return result
 #        return 'retrieveSnapshot'
     
@@ -164,9 +164,9 @@ class DSL(object) :
             return [-1]
     
     def retrieveChannelNames(self, params):
-        
-        key = ['servicename','configname','comment']
-        service, config, comment = self._parseParams(params, key)
+        #key = ['servicename','configname','comment']
+        key = ['servicename','configname']
+        service, config = self._parseParams(params, key)
         if not service:
             service = self.__servicename
         
@@ -174,3 +174,20 @@ class DSL(object) :
         result = pymasar.service.retrieveServiceConfigPVs(conn, config, servicename=service)
         pymasar.utils.close(conn)
         return result
+    
+    def updateSnapshotEvent(self, params):
+        {'eventid': '1234', 'desc': 'sza3edfcxv sergserw45strhgbuk87kr, mnbgr,lok,mnvgbf', 'configname': 'None', 'user': 'WD sdfsag'}
+        #key = ['eventid', 'user', 'desc', 'configname']
+        key = ['eventid', 'user', 'desc']
+        eid, user, desc = self._parseParams(params, key)
+        try:
+            conn = pymasar.utils.connect()
+            result = pymasar.service.serviceevent.updateServiceEvent(conn, int(eid), comment=str(desc), approval=True, username=str(user))
+            pymasar.utils.save(conn)
+            pymasar.utils.close(conn)
+            if result:
+                return [0, eid]
+            else:
+                return [-1, eid]
+        except:
+            return [-2, eid]

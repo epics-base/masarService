@@ -114,7 +114,7 @@ def updateServiceEvent(conn, eventid, comment=None, approval=False, username=Non
  
     sql = '''
     UPDATE service_event
-    SET service_event_user_tag = ?, service_event_approval=?, service_event_user_name=?
+    SET service_event_user_tag = ?, service_event_approval=?, service_event_user_name = ?
     WHERE service_event_id = ?
     '''
     try:
@@ -128,9 +128,8 @@ def updateServiceEvent(conn, eventid, comment=None, approval=False, username=Non
             approval = approval0
         if username==None:
             username = username0
-        
-        # each service event is a individual entity. Do not check the existence. 
-        cur.execute(sql, (comment, approval, username, eventid))
+        # each service event is a individual entity. Do not check the existence.
+        cur.execute(sql, (comment, approval, username, eventid)) 
     except sqlite3.Error, e:
         print ('Error %s' %e.args[0])
         raise
@@ -239,7 +238,7 @@ def retrieveServiceEvents(conn, configid=None,start=None, end=None, comment=None
         print ("Error %s" %e.args[0])
         raise
     
-    results = [('service_event_id', 'service_config_id', 'service_event_user_tag', 'service_event_UTC_time'),] + results[:]
+    results = [('service_event_id', 'service_config_id', 'service_event_user_tag', 'service_event_UTC_time', 'service_event_user_name'),] + results[:]
     return results
 
 if __name__ == '__main__':
