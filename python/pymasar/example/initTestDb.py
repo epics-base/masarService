@@ -36,7 +36,8 @@ pvgroups= {
     'sr_sext':      ('sr_sext.txt' , 'storage ring sext pvs'),
     'sr_vcor':      ('sr_vcor.txt' , 'storage ring vertical slow corrector'),
     'sr_vfcor':     ('sr_vfcor.txt' , 'storage ring vertical fast corrector'),
-    'test':         ('example.txt', 'server test')
+    'test':         ('example.txt', 'server test'),
+    'wftest':       ('exampleWf.txt', 'server test with waveform')
 }
 
 # dict format
@@ -59,7 +60,8 @@ masarconfigs= {
     'sr_sext':      ('storage ring sexts', 'sr'),
     'sr_vcor':      ('storage ring vertical slow corrector', 'sr'),
     'sr_vfcor':     ('storage ring vertical fast corrector', 'sr'),
-    'sr_test':      ('test pv config', 'sr')
+    'sr_test':      ('test pv config', 'sr'),
+    'wf_test':      ('waveform test pv config', 'sr')    
 }
 
 # service config: [pvgroup,]
@@ -81,7 +83,8 @@ pvg2config= {
     'sr_sext':   ['sr_sext'],
     'sr_vcor':   ['sr_vcor'],
     'sr_vfcor':  ['sr_vfcor'],
-    'sr_test':   ['test']
+    'sr_test':   ['test'],
+    'wf_test':   ['wftest']
 }
 
 #saveServiceEvent(conn, servicename, configname, comment=None):
@@ -103,7 +106,8 @@ event4conf = {
     'sr_quad':   ['masar event for storage ring quad'],
     'sr_sext':   ['masar event for storage ring sext'],
     'sr_vcor':   ['masar event for storage ring vertical corrector'],
-    'sr_vfcor':  ['masar event for storage ring vertical fast corrector']              
+    'sr_vfcor':  ['masar event for storage ring vertical fast corrector'],
+    'wf_test':   ['test with wf mixed case']
               }
 
 __servicename='masar'
@@ -169,29 +173,20 @@ def dummyServiceEventData():
         updateServiceEvent(conn, eid[0], comment=v[0], approval=True, username="dummy user")
         
 if __name__ == '__main__':
-#    try:
-#        initPvGroups()
-#        initService()
-#        initServiceConfig()
-#    except:
-#        pass
-#    import time
-#    for i in range(10):
-#        print (i, "save event without data")
-#        dummyServiceEventNoData()
-#        time.sleep(5.0)
-#        print (i, "save event with dummy data")
-#        dummyServiceEventData()
-#        time.sleep(5.0)
-    eid = '341'
-    desc = 'a test snapshot'
-    user='test user'
-    import pymasar
-    print (eid, type(eid))
-    print (desc, type(desc))
-    print (user, type(user))
-
-    result = pymasar.service.serviceevent.updateServiceEvent(conn, int(eid), comment=desc, approval=True, username=user)
+    try:
+        initPvGroups()
+        initService()
+        initServiceConfig()
+    except:
+        pass
+    import time
+    for i in range(10):
+        print (i, "save event without data")
+        dummyServiceEventNoData()
+        time.sleep(5.0)
+        print (i, "save event with dummy data")
+        dummyServiceEventData()
+        time.sleep(5.0)
 
     save(conn)
     conn.close()

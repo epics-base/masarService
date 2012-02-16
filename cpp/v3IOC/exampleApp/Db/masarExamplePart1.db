@@ -56,3 +56,9 @@ record(ao,"masarExample0004") {
     field(HSV,"MINOR")
 }
 
+record(waveform,"masarExampleWave") {
+#    feld(DTYP,"Test")
+    field(DESC, "Soft Waveform")
+    field(NELM,"100")
+#    field(FTVL,"double")
+}
