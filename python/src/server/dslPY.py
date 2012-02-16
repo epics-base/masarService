@@ -45,11 +45,6 @@ class DSL(object) :
             result = self.dispatch(func, argument)
         return (result, )
 
-    def toString(self) :
-        """Return a string that shows the message and severity"""
-#        return Alarm.alarmSeverityNames[self.severity] + " " + self.message;
-        pass
-
     def _parseParams(self, params, key):
         results = []
         if len(key) == 0:
@@ -78,12 +73,10 @@ class DSL(object) :
             service = self.__servicename
         if system == 'all':
             system = None
-#        print (service, config, version, system)
         conn = pymasar.utils.connect()
         result = pymasar.service.retrieveServiceConfigs(conn, servicename=service, configname=config, configversion=version, system=system)
         pymasar.utils.close(conn)
         return result
-#        return 'retrieveServiceConfigs'
     
     def retrieveServiceEvents(self, params):
         key = ['configid', 'start', 'end', 'comment']
@@ -92,17 +85,14 @@ class DSL(object) :
         result = pymasar.service.retrieveServiceEvents(conn, configid=cid,start=start, end=end, comment=comment)
         pymasar.utils.close(conn)
         return result
-#        return 'retrieveServiceEvents'
 
     def retrieveSnapshot(self, params): 
         key = ['eventid', 'start', 'end', 'comment']
         eid, start, end, comment = self._parseParams(params, key)
-#        print (eid, start, end, comment)
         conn = pymasar.utils.connect()
         result = pymasar.masardata.retrieveSnapshot(conn, eventid=eid,start=start,end=end,comment=comment)
         pymasar.utils.close(conn)
         return result
-#        return 'retrieveSnapshot'
     
     def saveSnapshot(self, params):
         key = ['servicename','configname','comment']
@@ -114,9 +104,6 @@ class DSL(object) :
         nttable = NTTable(rawdata)
         numberValueCount = nttable.getNumberValues()
         
-        # label = nttable.getLabel()
-        # print "label",label
-
         # values format: the value is raw data from IOC 
         # [(channel name,), (string value,),(double value,),(long value,),(dbr type),(is connected),
         #  (second past epoch,),(nano seconds,),(time stamp tag,),(alarm severity,),(alarm status,),(alarm message,)]
@@ -176,7 +163,6 @@ class DSL(object) :
         return result
     
     def updateSnapshotEvent(self, params):
-        {'eventid': '1234', 'desc': 'sza3edfcxv sergserw45strhgbuk87kr, mnbgr,lok,mnvgbf', 'configname': 'None', 'user': 'WD sdfsag'}
         #key = ['eventid', 'user', 'desc', 'configname']
         key = ['eventid', 'user', 'desc']
         eid, user, desc = self._parseParams(params, key)

@@ -15,7 +15,6 @@ class client():
         ntnv = NTNameValue(function,params)
         
         # now do issue + wait
-    #    channelRPC = ChannelRPC("masarService","record[process=true]field()")    
         channelRPC = ChannelRPC(self.channelname,"record[process=true]field()")
         channelRPC.issueConnect()
         if not channelRPC.waitConnect(1.0) :
@@ -31,12 +30,6 @@ class client():
         nttable.getTimeStamp(timeStamp.getTimeStampPy())
         return nttable
     
-    # example to operate a nttable
-    #    valueCounts = nttable.getNumberValues()
-    #    label = nttable.getLabel()
-    #    for i in range(valueCounts):
-    #        value = nttable.getValue(i)
-    
     def retrieveSystemList(self):
         function = 'retrieveServiceConfigProps'
         params = {}
@@ -45,15 +38,6 @@ class client():
         results = nttable.getValue(valueCounts-1)
         return (sorted(set(results)))
     
-    def retrieveServiceConfigProps(self, params):
-        function = 'retrieveServiceConfigProps'
-        print ("=== test %s ===" %function)
-        params = {'propname': 'system', 
-                  'configname': 'sr_qs'
-                  }
-        self.__clientRPC(function, params)
-        print ("=== test %s end ===" %function)
-        
     def retrieveServiceConfigs(self, params):
         function = 'retrieveServiceConfigs'
         nttable = self.__clientRPC(function, params)
@@ -66,7 +50,11 @@ class client():
     def retrieveServiceEvents(self, params):
         function = 'retrieveServiceEvents'
         nttable = self.__clientRPC(function, params)
-#        service_event_id,service_config_id,service_event_user_tag,service_event_UTC_time,service_event_user_name
+        # 0: service_event_id,
+        # 1: service_config_id,
+        # 2: service_event_user_tag,
+        # 3: service_event_UTC_time,
+        # 4: service_event_user_name
         return (nttable.getValue(0), 
                 nttable.getValue(2),
                 nttable.getValue(3),
@@ -74,9 +62,9 @@ class client():
     
     def retrieveSnapshot(self, params):
         function = 'retrieveSnapshot'
-#        [pv name,string value,double value,long value,
-#        dbr type,isConnected,secondsPastEpoch,nanoSeconds,timeStampTag,
-#        alarmSeverity,alarmStatus,alarmMessage]
+        # [pv name,string value,double value,long value,
+        #  dbr type,isConnected,secondsPastEpoch,nanoSeconds,timeStampTag,
+        #  alarmSeverity,alarmStatus,alarmMessage]
         nttable = self.__clientRPC(function, params)
         return (nttable.getValue(0), 
                 nttable.getValue(1), 
