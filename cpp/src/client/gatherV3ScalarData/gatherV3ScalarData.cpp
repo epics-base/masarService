@@ -140,9 +140,7 @@ static void connectionCallback(struct connection_handler_args args)
         int32 * pvalue = data.data;
         pvalue[offset] = dbrType;
         if(ca_element_count(chid)>1) {
-            String message(ca_name(chid));
-            message += " is an array instead of scalar";
-            throw std::runtime_error(message.c_str());
+           printf("warning %s is an array instead of scalar\n",ca_name(chid));
         }
         pvt->numberConnected++;
         if(pvt->state==connecting && pvt->numberConnected==pvt->numberChannels) {
