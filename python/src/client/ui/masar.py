@@ -347,18 +347,21 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 try:
                     index = dd[str(curWidget.item(i, 0).text())]
                 except:
-                    print (channelName(index))
-                    noMatchedPv.append(channelName(index))
+                    print (channelName[index])
+                    noMatchedPv.append(channelName[index])
                 
                 if dbrtype[index] in self.epicsDouble:
                     newitem = QTableWidgetItem(str(d_value[index]))
                     curWidget.setItem(i, 6, newitem)
                     newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
                     
-                    saved_val = float(curWidget.item(i, 5).text())
-                    delta = d_value[index] - saved_val
-                    if abs(delta) < 1.0e-6:
-                        delta = 0.0 
+                    saved_val = float(str(curWidget.item(i, 5).text()))
+                    if d_value[index] != None:
+                        delta = d_value[index] - saved_val
+                        if abs(delta) < 1.0e-6:
+                            delta = 0
+                    else:
+                        delta = None  
                     
                     newitem = QTableWidgetItem(str(delta))
                     curWidget.setItem(i, 7, newitem)
@@ -375,8 +378,11 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
 #                        else:
 #                            pass
                     else:
-                        saved_val = int(curWidget.item(i, 5).text())
-                        delta = d_value[index] - saved_val
+                        saved_val = int(float(str(curWidget.item(i, 5).text())))
+                        if i_value[index] != None:
+                            delta = i_value[index] - saved_val
+                        else:
+                            delta = None
                         
                         newitem = QTableWidgetItem(str(delta))
                         curWidget.setItem(i, 7, newitem)
