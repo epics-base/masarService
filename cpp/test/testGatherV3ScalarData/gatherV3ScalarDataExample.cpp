@@ -48,14 +48,17 @@ NTTable::shared_pointer getLiveMachine(
 void test()
 {
     String builder;
-    int n = 10;
+    int n = 9;
     String channelName[n];
-    char name[40];
-    for(int i=0; i<n-1; i++) {
-        sprintf(name,"masarExample%4.4d",i);
-        channelName[i] = String(name);
-    }
-    channelName[n-1] = "masarExampleWave";
+    channelName[0] = "masarExample0000";
+    channelName[1] = "masarExample0001";
+    channelName[2] = "masarExample0002";
+    channelName[3] = "masarExample0003";
+    channelName[4] = "masarExample0004";
+    channelName[5] = "masarExampleCharArray";
+    channelName[6] = "masarExampleStringArray";
+    channelName[7] = "masarExampleLongArray";
+    channelName[8] = "masarExampleDoubleArray";
 
     NTTable::shared_pointer pvt = getLiveMachine(channelName,n);
     PVBooleanArray * isConnected = static_cast<PVBooleanArray *>(pvt->getPVField(5));

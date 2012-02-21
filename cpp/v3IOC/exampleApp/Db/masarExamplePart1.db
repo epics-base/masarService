@@ -56,9 +56,25 @@ record(ao,"masarExample0004") {
     field(HSV,"MINOR")
 }
 
-record(waveform,"masarExampleWave") {
-#    feld(DTYP,"Test")
+record(waveform,"masarExampleCharArray") {
     field(DESC, "Soft Waveform")
     field(NELM,"100")
+    field(FTVL,"CHAR")
+}
+
+record(waveform,"masarExampleStringArray") {
+    field(DESC, "Soft Waveform")
+    field(NELM,"10")
+    field(FTVL,"STRING")
+}
+
+record(waveform,"masarExampleLongArray") {
+    field(DESC, "Soft Waveform")
+    field(NELM,"10")
+    field(FTVL,"LONG")
+}
+record(waveform,"masarExampleDoubleArray") {
+    field(DESC, "Soft Waveform")
+    field(NELM,"10")
     field(FTVL,"DOUBLE")
 }

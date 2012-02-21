@@ -31,7 +31,8 @@ enum State {
 enum V3RequestType {
     requestDouble,
     requestLong,
-    requestString
+    requestString,
+    requestCharArray
 };
 
 struct ChannelID
@@ -124,11 +125,16 @@ static void connectionCallback(struct connection_handler_args args)
     Lock xx(pvt->mutex);
     if(newState) {
         int dbrType = ca_field_type(chid);
+        unsigned long numberElements = ca_element_count(chid);
         switch(dbrType) {
         case DBF_STRING:
         case DBF_ENUM:
             id->requestType = requestString; break;
         case DBF_CHAR:
+            if(numberElements>1) {
+                id->requestType = requestCharArray; break;
+            }
+            // just fall through
         case DBF_INT:
         case DBF_LONG:
             id->requestType = requestLong; break;
@@ -144,6 +150,16 @@ static void connectionCallback(struct connection_handler_args args)
         pvt->pvDBRType->get(0,pvt->numberChannels,&data);
         int32 * pvalue = data.data;
         pvalue[offset] = dbrType;
+        BooleanArrayData booldata;
+        pvt->pvisArray->get(0,pvt->numberChannels,&booldata);
+        bool *isArray = booldata.data;
+        if(id->requestType==requestCharArray) {
+            isArray[offset] = false;
+        } else if(numberElements==1) {
+            isArray[offset] = false;
+        } else {
+            isArray[offset] = true;
+        }
         pvt->numberConnected++;
         if(pvt->state==connecting && pvt->numberConnected==pvt->numberChannels) {
             pvt->event.signal();
@@ -160,7 +176,6 @@ static void getCallback ( struct event_handler_args args )
     GatherV3ScalarDataPvt * pvt = id->pvt;
     if(pvt->state!=getting) return;
     int offset = id->offset;
-    unsigned long numberElements = ca_element_count(chid);
     Lock xx(pvt->mutex);
     pvt->numberCallbacks++;
     if ( args.status != ECA_NORMAL ) {
@@ -171,6 +186,7 @@ static void getCallback ( struct event_handler_args args )
           return;
     }
     id->getIsConnected = true;
+    unsigned long numberElements = args.count;
     // all DBR_TIME_XXX start with status,severity, timeStamp
     const struct dbr_time_double * pTime =
          ( const struct dbr_time_double * ) args.dbr;
@@ -184,9 +200,8 @@ static void getCallback ( struct event_handler_args args )
     BooleanArrayData booldata;
     StructureArrayData structdata;
     pvt->pvisArray->get(0,pvt->numberChannels,&booldata);
-    bool *isArray = booldata.data;
-    if(numberElements==1) {
-        isArray[offset] = false;
+    bool isArray = booldata.data[offset];
+    if(!isArray) {
         if(id->requestType==requestDouble) {
             const struct dbr_time_double * pTD =
                  ( const struct dbr_time_double * ) args.dbr;
@@ -229,11 +244,18 @@ static void getCallback ( struct event_handler_args args )
             pvt->pvstringValue->get(0,pvt->numberChannels,&stringdata);
             String * pvalue = stringdata.data;
             pvalue[offset] = String(pTS->value);
+        } else if(id->requestType==requestCharArray) {
+            const struct dbr_time_char * pTS =
+                 ( const struct dbr_time_char *) args.dbr;
+            // set to string array only
+            pvt->pvstringValue->get(0,pvt->numberChannels,&stringdata);
+            String * pvalue = stringdata.data;
+            const char *value = (const char *)(&pTS->value);
+            pvalue[offset] = String(value);
         } else {
             throw std::logic_error("unknown DBR_TYPE");
         }
     } else {
-        isArray[offset] = true;
         pvt->pvarrayValue->get(0,pvt->numberChannels,&structdata);
         PVStructure * pvStructure = structdata.data[offset];
         PVFieldPtrArray pvfields = pvStructure->getPVFields();
@@ -261,10 +283,10 @@ static void getCallback ( struct event_handler_args args )
                  ( const struct dbr_time_string * ) args.dbr;
             // set to string array only
             pvstringarray->setLength(numberElements);
-            pvstringarray->get(0,pvt->numberChannels,&stringdata);
+            pvstringarray->get(0,numberElements,&stringdata);
             String * pvalue = stringdata.data;
             const char *pfrom = pTS->value;
-            for(int i=0; i<numberElements; i++) {
+            for(unsigned long i=0; i<numberElements; i++) {
                 pvalue[i] = String(pfrom);
                 pfrom += MAX_STRING_SIZE;
             }
@@ -613,6 +635,7 @@ bool GatherV3ScalarData::get()
         int req = DBR_TIME_DOUBLE;
         if(requestType==requestLong) req = DBR_TIME_LONG;
         if(requestType==requestString) req = DBR_TIME_STRING;
+        if(requestType==requestCharArray) req = DBR_TIME_CHAR;
         int result = ca_array_get_callback(
             req,
             0,
@@ -725,6 +748,8 @@ bool GatherV3ScalarData::put()
             req = DBR_DOUBLE; pdata = &pdvalue[i]; break;
         case requestString:
             req = DBR_STRING; pdata = psvalue[i].c_str(); break;
+        case requestCharArray:
+            req = DBR_CHAR; pdata = psvalue[i].c_str(); break;
         }
         int result = ca_put_callback(
             req,
