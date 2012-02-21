@@ -7,6 +7,9 @@
 /* Author Marty Kraimer 2011.11 */
 
 #include <stdexcept>
+#include <vector>
+#include <sstream>
+
 #include <epicsExit.h>
 #include <alarm.h>
 #include <alarmString.h>
@@ -64,7 +67,8 @@ struct GatherV3ScalarDataPvt
     PVStructure::shared_pointer pvStructure;
     NTTable nttable;
     int numberChannels;
-    ChannelID **apchannelID; // array of  pointer to ChanneID
+//    ChannelID **apchannelID; // array of  pointer to ChanneID
+    std::vector<ChannelID *> apchannelID; // array of  pointer to ChanneID
     PVDoubleArray *pvdoubleValue;
     PVLongArray *pvlongValue;
     PVStringArray *pvstringValue;
@@ -296,7 +300,8 @@ GatherV3ScalarData::GatherV3ScalarData(
     pvt->pvtimeStamp.attach(pvStructure->getSubField("timeStamp"));
     pvt->pvalarm.attach(pvStructure->getSubField("alarm"));
     pvt->numberChannels = numberChannels;
-    ChannelID **apchannelID = new ChannelID*[numberChannels];
+//    ChannelID **apchannelID = new ChannelID*[numberChannels];
+    std::vector<ChannelID *> apchannelID(numberChannels);
     for(int i=0; i<numberChannels; i++) {
         ChannelID *pChannelID = new ChannelID();
         pChannelID->pvt = pvt;
@@ -416,7 +421,7 @@ GatherV3ScalarData::~GatherV3ScalarData()
         ChannelID *pChannelID = pvt->apchannelID[i];
         delete pChannelID;
     }
-    delete pvt->apchannelID;
+//    delete pvt->apchannelID;
     delete pvt;
 }
 
@@ -455,6 +460,7 @@ bool GatherV3ScalarData::connect(double timeOut)
         }
     }
     ca_flush_io();
+    std::stringstream ss;
     while(true) {
         int oldNumber = pvt->numberConnected;
         bool result = pvt->event.wait(timeOut);
@@ -463,11 +469,20 @@ bool GatherV3ScalarData::connect(double timeOut)
             return pvt->requestOK;
         }
         if(pvt->numberConnected!=pvt->numberChannels) {
-            char buf[30];
-            sprintf(buf,"%d channels of %d are not connected.",
-                (pvt->numberChannels - pvt->numberConnected),
-                 pvt->numberChannels);
-            pvt->message = String(buf);
+            ss.str("");
+            ss << (pvt->numberChannels - pvt->numberConnected);
+            String buf = ss.str();
+            buf += " channels of ";
+            ss.str("");
+            ss << pvt->numberChannels;
+            buf += ss.str();
+            buf += " are not connected.";
+//            char buf[30];
+//            sprintf(buf,"%d channels of %d are not connected.",
+//                (pvt->numberChannels - pvt->numberConnected),
+//                 pvt->numberChannels);
+//            pvt->message = String(buf);
+            pvt->message = buf;
             pvt->alarm.setMessage(pvt->message);
             pvt->alarm.setSeverity(invalidAlarm);
             pvt->alarm.setStatus(clientStatus);
