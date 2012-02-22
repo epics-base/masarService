@@ -99,14 +99,20 @@ static void messageCat(
     StringArrayData data;
     pvt->pvchannelName->get(0,pvt->numberChannels,&data);
     String name = data.data[channel];
-    int len = name.length();
-    char buf[len+30];
+    //int len = name.length();
+    //char buf[len+30];
     //following prevents compiler warning message
-    sprintf(buf,"%s %s for channel %s\n",
-        cafunc,
-        ca_message(castatus),
-        name.c_str());
-    pvt->message += String(buf);
+    //sprintf(buf,"%s %s for channel %s\n",
+    //    cafunc,
+    //    ca_message(castatus),
+    //    name.c_str());
+    // pvt->message += String(buf);
+    String buf = String(cafunc);
+    buf += " ";
+    buf += String(ca_message(castatus));
+    buf += " for channel ";
+    buf += name;
+    pvt->message += buf;
 }
 
 static void connectionCallback(struct connection_handler_args args)

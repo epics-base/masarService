@@ -556,8 +556,9 @@ static PVStructure::shared_pointer createResult(
         PyObject *list = 0;
         if(!PyArg_ParseTuple(result,"O!:dslPY", &PyList_Type,&list))
         {
-            printf("exception in createResult\n");
-            THROW_BASE_EXCEPTION("Wrong format for returned data from dslPY.");
+            printf("Wrong format for returned data from dslPY.\n");
+            //THROW_BASE_EXCEPTION("Wrong format for returned data from dslPY.");
+            return pvStructure;
         }
 
         if (functionName.compare("retrieveSnapshot")==0) {
