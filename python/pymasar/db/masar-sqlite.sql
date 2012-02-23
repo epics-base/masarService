@@ -8,6 +8,8 @@ CREATE TABLE "masar_data" (
   "s_value" VARCHAR(50) DEFAULT NULL,
   "d_value" REAL DEFAULT NULL,
   "l_value" INT DEFAULT NULL,
+  "array_value" BLOB DEFAULT NULL,
+  "is_array" INT DEFAULT NULL,
   "dbr_type" INT DEFAULT NULL,
   "isConnected" INT DEFAULT NULL,
   "ioc_timestamp" INT  NOT NULL,
