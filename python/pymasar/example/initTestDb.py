@@ -163,12 +163,20 @@ def dummyServiceEventData():
         import random
         import time
         # data from ioc
-        # ('pv name', 'string value', 'double value', 'long value', 'dbr type', 'isConnected', 'secondsPastEpoch', 'nanoSeconds', 'timeStampTag', 'alarmSeverity', 'alarmStatus', 'alarmMessage')
+        # ('pv name', 'string value', 'double value', 'long value', 'dbr type', 'isConnected', 
+        #  'secondsPastEpoch', 'nanoSeconds', 'timeStampTag', 'alarmSeverity', 'alarmStatus', 'alarmMessage',
+        #  'is_array', 'array_value')
+        flag = True
         for pv in pvlist:
             sec = time.time()
 #            value = random.randrange(-3.0, 2.0)
             value = random.uniform(-3.0, 2.0)
-            data.append((pv, str(value), value, int(value), 6, 1, int(sec), int((sec-int(sec))*1e9), 0, 0, 0, ''))
+            if flag:
+                data.append((pv, str(value), value, int(value), 6, 1, int(sec), int((sec-int(sec))*1e9), 0, 0, 0, '', flag, [value-2, value-1.0, value, value+1.0, value+2.0]))
+                flag = False
+            else:
+                data.append((pv, str(value), value, int(value), 6, 1, int(sec), int((sec-int(sec))*1e9), 0, 0, 0, '', flag, []))
+                flag = True
         eid = saveSnapshot(conn, data, servicename=__servicename, configname=k)
         updateServiceEvent(conn, eid[0], comment=v[0], approval=True, username="dummy user")
         

@@ -370,16 +370,16 @@ GatherV3Data::GatherV3Data(
     fields[1] = fieldCreate->createScalarArray("stringValue",pvString);
     fields[2] = fieldCreate->createScalarArray("doubleValue",pvDouble);
     fields[3] = fieldCreate->createScalarArray("longValue",pvLong);
-    fields[4] = fieldCreate->createStructureArray("arrayValue",arrStructure);
-    fields[5] = fieldCreate->createScalarArray("isArray",pvBoolean);
-    fields[6] = fieldCreate->createScalarArray("dbrType",pvInt);
-    fields[7] = fieldCreate->createScalarArray("isConnected",pvBoolean);
-    fields[8] = fieldCreate->createScalarArray("secondsPastEpoch",pvLong);
-    fields[9] = fieldCreate->createScalarArray("nanoSeconds",pvInt);
-    fields[10] = fieldCreate->createScalarArray("timeStampTag",pvInt);
-    fields[11] = fieldCreate->createScalarArray("alarmSeverity",pvInt);
-    fields[12] = fieldCreate->createScalarArray("alarmStatus",pvInt);
-    fields[13] = fieldCreate->createScalarArray("alarmMessage",pvString);
+    fields[4] = fieldCreate->createScalarArray("dbrType",pvInt);
+    fields[5] = fieldCreate->createScalarArray("isConnected",pvBoolean);
+    fields[6] = fieldCreate->createScalarArray("secondsPastEpoch",pvLong);
+    fields[7] = fieldCreate->createScalarArray("nanoSeconds",pvInt);
+    fields[8] = fieldCreate->createScalarArray("timeStampTag",pvInt);
+    fields[9] = fieldCreate->createScalarArray("alarmSeverity",pvInt);
+    fields[10] = fieldCreate->createScalarArray("alarmStatus",pvInt);
+    fields[11] = fieldCreate->createScalarArray("alarmMessage",pvString);
+    fields[12] = fieldCreate->createScalarArray("isArray",pvBoolean);
+    fields[13] = fieldCreate->createStructureArray("arrayValue",arrStructure);
 
     PVStructure::shared_pointer pvStructure = NTTable::create(
         false,true,true,n,fields);
@@ -435,7 +435,79 @@ GatherV3Data::GatherV3Data(
     for (int i=0; i<numberChannels; i++) plong[i] = 0.0;
     pvt->pvlongValue->setLength(numberChannels);
 
-    pvt->pvarrayValue = static_cast<PVStructureArray *>(pvt->nttable.getPVField(4));
+    pvt->pvDBRType = static_cast<PVIntArray *>(pvt->nttable.getPVField(4));
+    pvt->pvDBRType->setCapacity(numberChannels);
+    pvt->pvDBRType->setCapacityMutable(false);
+    pvt->pvDBRType->get(0,numberChannels,&intdata);
+    int *pDBRType = intdata.data;
+    for (int i=0; i<numberChannels; i++) pDBRType[i] = DBF_NO_ACCESS;
+    pvt->pvDBRType->setLength(numberChannels);
+
+    pvt->pvisConnected = static_cast<PVBooleanArray *>(pvt->nttable.getPVField(5));
+    pvt->pvisConnected->setCapacity(numberChannels);
+    pvt->pvisConnected->setCapacityMutable(false);
+    pvt->pvisConnected->get(0,numberChannels,&booldata);
+    bool *pbool = booldata.data;
+    for (int i=0; i<numberChannels; i++) pbool[i] = false;
+    pvt->pvisConnected->setLength(numberChannels);
+
+    pvt->pvsecondsPastEpoch = static_cast<PVLongArray *>(pvt->nttable.getPVField(6));
+    pvt->pvsecondsPastEpoch->setCapacity(numberChannels);
+    pvt->pvsecondsPastEpoch->setCapacityMutable(false);
+    pvt->pvsecondsPastEpoch->get(0,numberChannels,&longdata);
+    int64 *psecondsPastEpoch = longdata.data;
+    for (int i=0; i<numberChannels; i++) psecondsPastEpoch[i] = 0;
+    pvt->pvsecondsPastEpoch->setLength(numberChannels);
+
+    pvt->pvnanoSeconds = static_cast<PVIntArray *>(pvt->nttable.getPVField(7));
+    pvt->pvnanoSeconds->setCapacity(numberChannels);
+    pvt->pvnanoSeconds->setCapacityMutable(false);
+    pvt->pvnanoSeconds->get(0,numberChannels,&intdata);
+    int32 *pnanoSeconds = intdata.data;
+    for (int i=0; i<numberChannels; i++) pnanoSeconds[i] = 0;
+    pvt->pvnanoSeconds->setLength(numberChannels);
+
+    pvt->pvtimeStampTag = static_cast<PVIntArray *>(pvt->nttable.getPVField(8));
+    pvt->pvtimeStampTag->setCapacity(numberChannels);
+    pvt->pvtimeStampTag->setCapacityMutable(false);
+    pvt->pvtimeStampTag->get(0,numberChannels,&intdata);
+    int32 *ptimeStampTag = intdata.data;
+    for (int i=0; i<numberChannels; i++) ptimeStampTag[i] = 0;
+    pvt->pvtimeStampTag->setLength(numberChannels);
+
+    pvt->pvalarmSeverity = static_cast<PVIntArray *>(pvt->nttable.getPVField(9));
+    pvt->pvalarmSeverity->setCapacity(numberChannels);
+    pvt->pvalarmSeverity->setCapacityMutable(false);
+    pvt->pvalarmSeverity->get(0,numberChannels,&intdata);
+    int *palarmSeverity = intdata.data;
+    for (int i=0; i<numberChannels; i++) palarmSeverity[i] = INVALID_ALARM;
+    pvt->pvalarmSeverity->setLength(numberChannels);
+
+    pvt->pvalarmStatus = static_cast<PVIntArray *>(pvt->nttable.getPVField(10));
+    pvt->pvalarmStatus->setCapacity(numberChannels);
+    pvt->pvalarmStatus->setCapacityMutable(false);
+    pvt->pvalarmStatus->get(0,numberChannels,&intdata);
+    int *palarmStatus = intdata.data;
+    for (int i=0; i<numberChannels; i++) palarmStatus[i] = epicsAlarmComm;
+    pvt->pvalarmStatus->setLength(numberChannels);
+
+    pvt->pvalarmMessage = static_cast<PVStringArray *>(pvt->nttable.getPVField(11));
+    pvt->pvalarmMessage->setCapacity(numberChannels);
+    pvt->pvalarmMessage->setCapacityMutable(false);
+    pvt->pvalarmMessage->get(0,numberChannels,&strdata);
+    String *palarmMessage = strdata.data;
+    for (int i=0; i<numberChannels; i++) palarmMessage[i] = String();
+    pvt->pvalarmMessage->setLength(numberChannels);
+
+    pvt->pvisArray = static_cast<PVBooleanArray *>(pvt->nttable.getPVField(12));
+    pvt->pvisArray->setCapacity(numberChannels);
+    pvt->pvisArray->setCapacityMutable(false);
+    pvt->pvisArray->get(0,numberChannels,&booldata);
+    pbool = booldata.data;
+    for (int i=0; i<numberChannels; i++) pbool[i] = false;
+    pvt->pvisArray->setLength(numberChannels);
+
+    pvt->pvarrayValue = static_cast<PVStructureArray *>(pvt->nttable.getPVField(13));
     pvt->pvarrayValue->setCapacity(numberChannels);
     pvt->pvarrayValue->setCapacityMutable(false);
     pvt->pvarrayValue->get(0,numberChannels,&structdata);
@@ -447,78 +519,6 @@ GatherV3Data::GatherV3Data(
         ppPVStructure[i] = pvDataCreate->createPVStructure(0,pstructure);
     }
     pvt->pvarrayValue->setLength(numberChannels);
-
-    pvt->pvisArray = static_cast<PVBooleanArray *>(pvt->nttable.getPVField(5));
-    pvt->pvisArray->setCapacity(numberChannels);
-    pvt->pvisArray->setCapacityMutable(false);
-    pvt->pvisArray->get(0,numberChannels,&booldata);
-    bool *pbool = booldata.data;
-    for (int i=0; i<numberChannels; i++) pbool[i] = false;
-    pvt->pvisArray->setLength(numberChannels);
-
-    pvt->pvDBRType = static_cast<PVIntArray *>(pvt->nttable.getPVField(6));
-    pvt->pvDBRType->setCapacity(numberChannels);
-    pvt->pvDBRType->setCapacityMutable(false);
-    pvt->pvDBRType->get(0,numberChannels,&intdata);
-    int *pDBRType = intdata.data;
-    for (int i=0; i<numberChannels; i++) pDBRType[i] = DBF_NO_ACCESS;
-    pvt->pvDBRType->setLength(numberChannels);
-
-    pvt->pvisConnected = static_cast<PVBooleanArray *>(pvt->nttable.getPVField(7));
-    pvt->pvisConnected->setCapacity(numberChannels);
-    pvt->pvisConnected->setCapacityMutable(false);
-    pvt->pvisConnected->get(0,numberChannels,&booldata);
-    pbool = booldata.data;
-    for (int i=0; i<numberChannels; i++) pbool[i] = false;
-    pvt->pvisConnected->setLength(numberChannels);
-
-    pvt->pvsecondsPastEpoch = static_cast<PVLongArray *>(pvt->nttable.getPVField(8));
-    pvt->pvsecondsPastEpoch->setCapacity(numberChannels);
-    pvt->pvsecondsPastEpoch->setCapacityMutable(false);
-    pvt->pvsecondsPastEpoch->get(0,numberChannels,&longdata);
-    int64 *psecondsPastEpoch = longdata.data;
-    for (int i=0; i<numberChannels; i++) psecondsPastEpoch[i] = 0;
-    pvt->pvsecondsPastEpoch->setLength(numberChannels);
-
-    pvt->pvnanoSeconds = static_cast<PVIntArray *>(pvt->nttable.getPVField(9));
-    pvt->pvnanoSeconds->setCapacity(numberChannels);
-    pvt->pvnanoSeconds->setCapacityMutable(false);
-    pvt->pvnanoSeconds->get(0,numberChannels,&intdata);
-    int32 *pnanoSeconds = intdata.data;
-    for (int i=0; i<numberChannels; i++) pnanoSeconds[i] = 0;
-    pvt->pvnanoSeconds->setLength(numberChannels);
-
-    pvt->pvtimeStampTag = static_cast<PVIntArray *>(pvt->nttable.getPVField(10));
-    pvt->pvtimeStampTag->setCapacity(numberChannels);
-    pvt->pvtimeStampTag->setCapacityMutable(false);
-    pvt->pvtimeStampTag->get(0,numberChannels,&intdata);
-    int32 *ptimeStampTag = intdata.data;
-    for (int i=0; i<numberChannels; i++) ptimeStampTag[i] = 0;
-    pvt->pvtimeStampTag->setLength(numberChannels);
-
-    pvt->pvalarmSeverity = static_cast<PVIntArray *>(pvt->nttable.getPVField(11));
-    pvt->pvalarmSeverity->setCapacity(numberChannels);
-    pvt->pvalarmSeverity->setCapacityMutable(false);
-    pvt->pvalarmSeverity->get(0,numberChannels,&intdata);
-    int *palarmSeverity = intdata.data;
-    for (int i=0; i<numberChannels; i++) palarmSeverity[i] = INVALID_ALARM;
-    pvt->pvalarmSeverity->setLength(numberChannels);
-
-    pvt->pvalarmStatus = static_cast<PVIntArray *>(pvt->nttable.getPVField(12));
-    pvt->pvalarmStatus->setCapacity(numberChannels);
-    pvt->pvalarmStatus->setCapacityMutable(false);
-    pvt->pvalarmStatus->get(0,numberChannels,&intdata);
-    int *palarmStatus = intdata.data;
-    for (int i=0; i<numberChannels; i++) palarmStatus[i] = epicsAlarmComm;
-    pvt->pvalarmStatus->setLength(numberChannels);
-
-    pvt->pvalarmMessage = static_cast<PVStringArray *>(pvt->nttable.getPVField(13));
-    pvt->pvalarmMessage->setCapacity(numberChannels);
-    pvt->pvalarmMessage->setCapacityMutable(false);
-    pvt->pvalarmMessage->get(0,numberChannels,&strdata);
-    String *palarmMessage = strdata.data;
-    for (int i=0; i<numberChannels; i++) palarmMessage[i] = String();
-    pvt->pvalarmMessage->setLength(numberChannels);
 
     pvt->state = idle;
     pvt->numberConnected = 0;

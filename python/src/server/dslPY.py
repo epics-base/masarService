@@ -105,14 +105,14 @@ class DSL(object) :
         numberValueCount = nttable.getNumberValues()
         
         # values format: the value is raw data from IOC 
-        # [(channel name,), (string value,),(double value,),(long value,),(dbr type),(is connected),
+        # [(channel name,), (string value,),(double value,),(long value,),(arrayValue),(isArray),(dbr type),(is connected),
         #  (second past epoch,),(nano seconds,),(time stamp tag,),(alarm severity,),(alarm status,),(alarm message,)]
         values = []
 
         # data format: the data is prepared to save into rdb
         # rawdata format
         # [('channel name', 'string value', 'double value', 'long value', 'dbr type', 'is connected', 
-        #  'seconds past epoch', 'nano seconds', 'time stamp tag', 'alarm severity', 'alarm status', 'alarm message'),
+        #  'seconds past epoch', 'nano seconds', 'time stamp tag', 'alarm severity', 'alarm status', 'alarm message', 'is_array', 'array_value'),
         #  ...
         # ]
         datas = []

@@ -148,21 +148,29 @@ static PVStructure::shared_pointer retrieveSnapshot(PyObject * list)
 
     // create fields
     // set label for each field
-    //  ('pv name', 'string value', 'double value', 'long value', 'dbr type', 'isConnected',
-    //   'secondsPastEpoch', 'nanoSeconds', 'timeStampTag', 'alarmSeverity', 'alarmStatus', 'alarmMessage')]]
+    // ('pv name', 'string value', 'double value', 'long value', 'dbr type', 'isConnected',
+    //  'secondsPastEpoch', 'nanoSeconds', 'timeStampTag', 'alarmSeverity', 'alarmStatus', 'alarmMessage'
+    //  'is_array', 'array_value')
     FieldConstPtr fields[tuple_size];
     for (ssize_t i = 0; i < tuple_size; i ++){
         if (i == 0 || i == 1 || i == 11) { // pv_name: 0, string value: 1, alarm message: 11
             fields[i] = fieldCreate->createScalarArray(PyString_AsString(PyTuple_GetItem(head, i)), pvString);
         } else if (i == 2) { // double value: 2
             fields[i] = fieldCreate->createScalarArray(PyString_AsString(PyTuple_GetItem(head, i)), pvDouble);
-        }
-//        else if (i == 5) { // isConnected: 5
-//            fields[i] = fieldCreate->createScalarArray(PyString_AsString(PyTuple_GetItem(head, i)), pvBoolean);
-//        }
-        else {
-            //long value: 3, dbr type: 4, secondsPastEpoch: 6, nanoSeconds: 7, timeStampTag: 8, alarmSeverity: 9, alarmStatus: 10
+        } else if(i!=13) {
+            // long value: 3, dbr type: 4, secondsPastEpoch: 6, nanoSeconds: 7, timeStampTag: 8,
+            // alarmSeverity: 9, alarmStatus: 10, is_array: 12
             fields[i] = fieldCreate->createScalarArray(PyString_AsString(PyTuple_GetItem(head, i)), pvLong);
+        } else {
+            // for array value operation
+            int naf = 3;
+            FieldConstPtrArray arrfields = new FieldConstPtr[naf];
+            arrfields[0] = fieldCreate->createScalarArray("stringValue",pvString);
+            arrfields[1] = fieldCreate->createScalarArray("doubleValue",pvDouble);
+            arrfields[2] = fieldCreate->createScalarArray("intValue",pvInt);
+            StructureConstPtr arrStructure = fieldCreate->createStructure(
+                 "arrayValue",naf,arrfields);
+            fields[i] = fieldCreate->createStructureArray(PyString_AsString(PyTuple_GetItem(head, i)), arrStructure);
         }
     }
 
@@ -172,27 +180,47 @@ static PVStructure::shared_pointer retrieveSnapshot(PyObject * list)
     NTTable ntTable(pvStructure);
 
     PyObject * data_array = PyList_GetItem(list, 1); // get data array
-    Py_ssize_t dataLen = PyList_Size(data_array) - 1; // data length in each field
+    // data length in each field
+    // (the first row is a description instead of real data)
+    Py_ssize_t numberChannels = PyList_Size(data_array) - 1;
 
-    if (dataLen > 0) {
+    // initilize PVStructureArray for waveform/array record
+    PVStructureArray *pvarrayValue = static_cast<PVStructureArray *>(ntTable.getPVField(13));
+    pvarrayValue->setCapacity(numberChannels);
+    pvarrayValue->setCapacityMutable(false);
+    StructureArrayData structdata;
+    pvarrayValue->get(0,numberChannels,&structdata);
+    PVStructure ** ppPVStructure = structdata.data;
+    StructureConstPtr pstructure = pvarrayValue->getStructureArray()->getStructure();
+    PVDataCreate *pvDataCreate = getPVDataCreate();
+    for (int i=0; i<numberChannels; i++) {
+        ppPVStructure[i] = pvDataCreate->createPVStructure(0,pstructure);
+    }
+    pvarrayValue->setLength(numberChannels);
+
+    if (numberChannels > 0) {
         std::vector<std::vector<String> > pvNames (strFieldLen);
         for (size_t i = 0; i < pvNames.size(); i++){
-            pvNames[i].resize(dataLen);
+            pvNames[i].resize(numberChannels);
         }
-        std::vector<double> dVals(dataLen);
+        std::vector<double> dVals(numberChannels);
         std::vector<std::vector<int64> > lVals(tuple_size-strFieldLen-1); //[dataLen];
         for(size_t i=0; i<lVals.size(); i++) {
-            lVals[i].resize(dataLen);
+            lVals[i].resize(numberChannels);
         }
 
         // Get values for each fields from list
         PyObject * sublist;
-        for (int index = 0; index < dataLen; index++ ){
+
+        pvarrayValue->get(0,numberChannels,&structdata);
+
+        for (int index = 0; index < numberChannels; index++ ){
             sublist = PyList_GetItem(data_array, index+1);
-            for (int i = 0; i < tuple_size; i ++) {
+            for (int i = 0; i < tuple_size-1; i ++) { // tuple_size -1: do not parse waveform tuple directly.
                 PyObject * temp = PyTuple_GetItem(sublist, i);
-                //  ('pv name', 'string value', 'double value', 'long value', 'dbr type', 'isConnected',
-                // 'secondsPastEpoch', 'nanoSeconds', 'timeStampTag', 'alarmSeverity', 'alarmStatus', 'alarmMessage')]]
+                // ('pv name', 'string value', 'double value', 'long value', 'dbr type', 'isConnected',
+                //  'secondsPastEpoch', 'nanoSeconds', 'timeStampTag', 'alarmSeverity', 'alarmStatus', 'alarmMessage'
+                //  'is_array', 'array_value')
                 if (i == 0 ) { // pv_name: 0
                     // PyString_Check for type check?
                     if (PyString_AsString (temp) == NULL) {
@@ -217,11 +245,96 @@ static PVStructure::shared_pointer retrieveSnapshot(PyObject * list)
                 } else if (i == 2) { // double value: 2
                     // PyDouble_Check for type check?
                     dVals[index] = PyFloat_AsDouble (temp);
-                } else {
+                } else if (i!=13){
                     // long value: 3, dbr type: 4, isConnected: 5, secondsPastEpoch: 6, nanoSeconds: 7,
-                    // timeStampTag: 8, alarmSeverity: 9, alarmStatus: 10
+                    // timeStampTag: 8, alarmSeverity: 9, alarmStatus: 10, is_array: 12
                     // PyLong_Check for type check?
-                    lVals[i-3][index] = PyLong_AsLongLong (temp);
+                    if (i == 12) {
+                        lVals[i-4][index] = PyLong_AsLongLong (temp);
+                    } else {
+                        lVals[i-3][index] = PyLong_AsLongLong (temp);
+                    }
+                }
+            }
+
+            PVStructure * pvStructure = structdata.data[index];
+            if (lVals[8][index] == 1) {
+                // EPICS DBR type
+                //#define    DBF_STRING  0
+                //#define    DBF_INT     1
+                //#define    DBF_SHORT   1
+                //#define    DBF_FLOAT   2
+                //#define    DBF_ENUM    3
+                //#define    DBF_CHAR    4
+                //#define    DBF_LONG    5
+                //#define    DBF_DOUBLE  6
+                // check EPICS dbr type
+                PyObject * arrayValueList = PyTuple_GetItem(sublist, 13);
+                PVFieldPtrArray pvfields = pvStructure->getPVFields();
+
+                if (lVals[1][index] == 1 || lVals[1][index] == 4 || lVals[1][index] == 5){
+                    // integer type
+                    IntArrayData intdata;
+                    PVIntArray *pvintarray = static_cast<PVIntArray *>(pvfields[2]);
+                    if (PyList_Check(arrayValueList)) {
+                        size_t array_len = (size_t)PyList_Size(arrayValueList);
+                        pvintarray->setLength(array_len);
+                        pvintarray->get(0,array_len,&intdata);
+                        int32 * pvalue = intdata.data;
+                        for (size_t array_index = 0; array_index < array_len; array_index++){
+                            pvalue[array_index] = PyLong_AsLong(PyList_GetItem(arrayValueList, array_index));
+                        }
+                    } else if (PyTuple_Check(arrayValueList)) {
+                        size_t array_len = (size_t)PyTuple_Size(arrayValueList);
+                        pvintarray->setLength(array_len);
+                        pvintarray->get(0,array_len,&intdata);
+                        int32 * pvalue = intdata.data;
+                        for (size_t array_index = 0; array_index < array_len; array_index++){
+                            pvalue[array_index] = PyLong_AsLong(PyTuple_GetItem(arrayValueList, array_index));
+                        }
+                    }
+                } else if (lVals[1][index] == 0) {
+                    // string
+                    StringArrayData stringdata;
+                    PVStringArray *pvstringarray = static_cast<PVStringArray *>(pvfields[0]);
+                    if (PyList_Check(arrayValueList)) {
+                        size_t array_len = (size_t )PyList_Size(arrayValueList);
+                        pvstringarray->setLength(array_len);
+                        pvstringarray->get(0,array_len,&stringdata);
+                        String * pvalue = stringdata.data;
+                        for (size_t array_index = 0; array_index < array_len; array_index++){
+                            pvalue[array_index] = PyString_AsString(PyList_GetItem(arrayValueList, array_index));
+                        }
+                    } else if (PyTuple_Check(arrayValueList)) {
+                        size_t array_len = (size_t )PyTuple_Size(arrayValueList);
+                        pvstringarray->setLength(array_len);
+                        pvstringarray->get(0,array_len,&stringdata);
+                        String * pvalue = stringdata.data;
+                        for (size_t array_index = 0; array_index < array_len; array_index++){
+                            pvalue[array_index] = PyString_AsString(PyTuple_GetItem(arrayValueList, array_index));
+                        }
+                    }
+                } else if (lVals[1][index] == 2 || lVals[1][index] == 6) {
+                    // float or double
+                    DoubleArrayData doubledata;
+                    PVDoubleArray *pvdoublearray = static_cast<PVDoubleArray *>(pvfields[1]);
+                    if (PyList_Check(arrayValueList)) {
+                        size_t array_len = (size_t )PyList_Size(arrayValueList);
+                        pvdoublearray->setLength(array_len);
+                        pvdoublearray->get(0,array_len,&doubledata);
+                        double * pvalue = doubledata.data;
+                        for (size_t array_index = 0; array_index < array_len; array_index++){
+                            pvalue[array_index] = PyFloat_AsDouble(PyList_GetItem(arrayValueList, array_index));
+                        }
+                    } else if (PyTuple_Check(arrayValueList)) {
+                        size_t array_len = (size_t )PyTuple_Size(arrayValueList);
+                        pvdoublearray->setLength(array_len);
+                        pvdoublearray->get(0,array_len,&doubledata);
+                        double * pvalue = doubledata.data;
+                        for (size_t array_index = 0; array_index < array_len; array_index++){
+                            pvalue[array_index] = PyFloat_AsDouble(PyTuple_GetItem(arrayValueList, array_index));
+                        }
+                    }
                 }
             }
         }
@@ -233,27 +346,30 @@ static PVStructure::shared_pointer retrieveSnapshot(PyObject * list)
         for (int i = 0; i < tuple_size; i ++) {
             if (i == 0 ) { // pv_name: 0
                 pvStr = static_cast<PVStringArray *>(ntTable.getPVField(i));
-                pvStr -> put (0, dataLen, &(pvNames[0])[0], 0);
+                pvStr -> put (0, numberChannels, &(pvNames[0])[0], 0);
             } else if (i == 1) { // string value: 1
                 pvStr = static_cast<PVStringArray *>(ntTable.getPVField(i));
-                pvStr -> put (0, dataLen, &(pvNames[1])[0], 0);
+                pvStr -> put (0, numberChannels, &(pvNames[1])[0], 0);
             } else if (i == 11 ) { // alarm message: 11
                 pvStr = static_cast<PVStringArray *>(ntTable.getPVField(11));
-                pvStr -> put (0, dataLen, &(pvNames[2])[0], 0);
+                pvStr -> put (0, numberChannels, &(pvNames[2])[0], 0);
             }else if (i == 2) { // double value: 2
                 pvDVal = static_cast<PVDoubleArray *>(ntTable.getPVField(i));
-                pvDVal -> put (0, dataLen, &dVals[0], 0);
-            } else {
+                pvDVal -> put (0, numberChannels, &dVals[0], 0);
+            } else if (i!=13){
                 // long value: 3, dbr type: 4, isConnected: 5, secondsPastEpoch: 6, nanoSeconds: 7,
-                // timeStampTag: 8, alarmSeverity: 9, alarmStatus: 10
+                // timeStampTag: 8, alarmSeverity: 9, alarmStatus: 10, is_array: 12
                 pvLVal = static_cast<PVLongArray *>(ntTable.getPVField(i));
-                pvLVal -> put (0, dataLen, &(lVals[i-3])[0], 0);
+                if (i == 12)
+                    pvLVal -> put (0, numberChannels, &(lVals[i-4])[0], 0);
+                else
+                    pvLVal -> put (0, numberChannels, &(lVals[i-3])[0], 0);
+            } else {
             }
         }
     }
 
     // set label strings
-//    String labelVals [tuple_size];
     std::vector<String> labelVals (tuple_size);
     for (int i = 0; i < tuple_size; i ++) {
         labelVals[i] = fields[i]->getFieldName();
@@ -261,33 +377,16 @@ static PVStructure::shared_pointer retrieveSnapshot(PyObject * list)
     PVStringArray *label = ntTable.getLabel();
     label->put(0,tuple_size,&(labelVals)[0],0);
 
-//    PVAlarm pvAlarm;
-//    Alarm alarm;
-//    ntTable.attachAlarm(pvAlarm);
-//    alarm.setMessage("test alarm");
-//    alarm.setSeverity(majorAlarm);
-//    alarm.setStatus(clientStatus);
-//    pvAlarm.set(alarm);
-
     // set time stamp
     PVTimeStamp pvTimeStamp;
     ntTable.attachTimeStamp(pvTimeStamp);
     TimeStamp timeStamp;
     timeStamp.getCurrent();
     timeStamp.setUserTag(0);
-//    bool result = pvTimeStamp.set(timeStamp);
     pvTimeStamp.set(timeStamp);
 
     return pvStructure;
 }
-
-//static PVStructure::shared_pointer retrieveServiceEvents(PyObject * list)
-//{
-//}
-//static PVStructure::shared_pointer retrieveServiceConfigProps(
-//        PyObject * list)
-//{
-//}
 
 static PVStructure::shared_pointer retrieveServiceConfigEvents(PyObject * list, long numeric)
 {
@@ -305,8 +404,6 @@ static PVStructure::shared_pointer retrieveServiceConfigEvents(PyObject * list, 
     int fieldLen = list_len - 1; // length - label header
 
     FieldCreate *fieldCreate = getFieldCreate();
-    //    NTField *ntField = NTField::get();
-    //    PVNTField *pvntField = PVNTField::get();
 
     // create fields
     // set label for each field
@@ -323,13 +420,11 @@ static PVStructure::shared_pointer retrieveServiceConfigEvents(PyObject * list, 
         false,true,true,tuple_size,fields);
     NTTable ntTable(pvStructure);
 
-
-//    int64 scIdVals [numeric][list_len-1];
     std::vector<std::vector<int64> > scIdVals(numeric);
     for(size_t i=0; i<scIdVals.size(); i++) {
         scIdVals[i].resize(list_len-1);
     }
-//    String vals [tuple_size-numeric][fieldLen];
+
     std::vector<std::vector<String> > vals (tuple_size-numeric);
     for (size_t i = 0; i < vals.size(); i++){
         vals[i].resize(fieldLen);
@@ -369,7 +464,6 @@ static PVStructure::shared_pointer retrieveServiceConfigEvents(PyObject * list, 
     }
 
     // set label strings
-//    String labelVals [tuple_size];
     std::vector<String> labelVals(tuple_size);
     for (int i = 0; i < tuple_size; i ++) {
         labelVals[i] = fields[i]->getFieldName();
@@ -377,21 +471,11 @@ static PVStructure::shared_pointer retrieveServiceConfigEvents(PyObject * list, 
     PVStringArray *label = ntTable.getLabel();
     label->put(0,tuple_size, &(labelVals)[0],0);
 
-//    Set alarm and severity
-//    PVAlarm pvAlarm;
-//    Alarm alarm;
-//    PVStructurePtr palarms[n];
-//    ntTable.attachAlarm(pvAlarm);
-//    alarm.setMessage("test alarm");
-//    alarm.setSeverity(majorAlarm);
-//    alarm.setStatus(clientStatus);
-//    pvAlarm.set(alarm);
     PVTimeStamp pvTimeStamp;
     ntTable.attachTimeStamp(pvTimeStamp);
     TimeStamp timeStamp;
     timeStamp.getCurrent();
     timeStamp.setUserTag(0);
-//    bool result = pvTimeStamp.set(timeStamp);
     pvTimeStamp.set(timeStamp);
 
     return pvStructure;
@@ -401,9 +485,6 @@ static PVStructure::shared_pointer saveSnapshot(PyObject * list, PVStructure::sh
 {
     // Get save masar event id
     // -1 means saveSnapshot failure
-//    PyObject * plist = PyTuple_GetItem(list, 0);
-//    PyObject * pstatus = PyList_GetItem(plist,0);
-//    int64 eid = PyLong_AsLongLong(pstatus);
     int64 eid = -2;
     if (PyTuple_Check(list)){
         PyObject * plist = PyTuple_GetItem(list, 0);
@@ -670,7 +751,6 @@ PVStructure::shared_pointer DSL_RDB::request(
         PyTuple_SetItem(pyTuple2, 1, pyDict);
         PyObject *result = PyEval_CallObject(prequest,pyTuple2);
         pvReturn = saveSnapshot(result, data, message);
-//        pvReturn = createResult(result,functionName);
         Py_DECREF(result);
     } else {
         // A tuple is needed to pass to Python as parameter.

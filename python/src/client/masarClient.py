@@ -64,7 +64,7 @@ class client():
         function = 'retrieveSnapshot'
         # [pv name,string value,double value,long value,
         #  dbr type,isConnected,secondsPastEpoch,nanoSeconds,timeStampTag,
-        #  alarmSeverity,alarmStatus,alarmMessage]
+        #  alarmSeverity,alarmStatus,alarmMessage, is_array, array_value]
         nttable = self.__clientRPC(function, params)
         return (nttable.getValue(0), 
                 nttable.getValue(1), 

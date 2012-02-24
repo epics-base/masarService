@@ -62,8 +62,8 @@ if __name__ == '__main__':
 #    testRetrieveServiceConfigProps()
 #    testRetrieveServiceEvents()
 #    testRetrieveSnapshot(eventid='365')
-    testRetrieveServiceConfigPVs()
+#    testRetrieveServiceConfigPVs()
 #    testRetrieveSnapshot(eventid='35')
-#    testRetrieveSnapshot(eventid='10')
+    testRetrieveSnapshot(eventid='19')
 #
 #    testSaveSnapshot()
