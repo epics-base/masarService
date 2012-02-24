@@ -1,4 +1,4 @@
-/* gatherV3ScalarData.h */
+/* gatherV3Data.h */
 /*
  * Copyright - See the COPYRIGHT that is included with this distribution.
  * This code is distributed subject to a Software License Agreement found
@@ -41,30 +41,30 @@ namespace epics { namespace pvAccess {
  * @author mrk
  *
  */
-class GatherV3ScalarData :
-    public std::tr1::enable_shared_from_this<GatherV3ScalarData>
+class GatherV3Data :
+    public std::tr1::enable_shared_from_this<GatherV3Data>
 {
 public:
-    POINTER_DEFINITIONS(GatherV3ScalarData);
+    POINTER_DEFINITIONS(GatherV3Data);
     /**
      * Constructor
      * @param channelNames   The array of channelNames to gather
      * @param numberChannels The number of channels to gather.
      * @param type           The data type. Must be int, double, or string
      */
-    GatherV3ScalarData(
+    GatherV3Data(
         epics::pvData::String channelNames[],
         int numberChannels);
     /**
      * Destructor
      */
-    ~GatherV3ScalarData();
+    ~GatherV3Data();
     /**
      * Connect to the V3 channels.
      * @param timeOut Timeout is seconds to wait.
      * @returns (false,true) If (not connected, is connected) to all channels.
-     * It not connected to all channels getMessage can be called to
-     * find out why. Also isConnected shows the status of each channel.
+     * If not connected to all channels getMessage can be called to find out why.
+     * isConnected shows the status of each channel.
      * Connect can not be called again until disconnect is called.
      */
     bool connect(double timeOut);
@@ -85,13 +85,11 @@ public:
     bool get();
     /**
      * put new values to the V3 channels.
-     * NOTE: get MUST be called by the same thread that calls connect.
+     * NOTE: put MUST be called by the same thread that calls connect.
      * @returns (false,true) If (all, not all ) puts were successful.
      * If false getMessage can be called to get the reason.
      * If any channel is disconnected then false is returned.
-     * The data must be in the return values from
-     * getLongValue, getDoubleValue, getStringValue.
-     * For each channel the one used depends on the channel DBRType.
+     * The data must be put into the NTTable returned by getNTTable.
      */
     bool put();
     /**
@@ -170,11 +168,11 @@ public:
      */
     epics::pvData::PVStringArray  *getChannelName();
 private:
-    GatherV3ScalarData::shared_pointer getPtrSelf()
+    GatherV3Data::shared_pointer getPtrSelf()
     {
         return shared_from_this();
     }
-    class GatherV3ScalarDataPvt *pvt;
+    class GatherV3DataPvt *pvt;
 };
 
 }}

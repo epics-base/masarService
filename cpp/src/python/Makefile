@@ -8,6 +8,7 @@ LIBSRCS += timeStampPy.cpp
 LIBSRCS += channelRPCPy.cpp
 LIBSRCS += ntnameValuePy.cpp
 LIBSRCS += nttablePy.cpp
+LIBSRCS += gatherV3DataPy.cpp
 
 LIBRARY = masarPy
 

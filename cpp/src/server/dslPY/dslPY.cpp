@@ -20,7 +20,7 @@
 #include <pv/dsl.h>
 #include <pv/nt.h>
 
-#include <pv/gatherV3ScalarData.h>
+#include <pv/gatherV3Data.h>
 
 namespace epics { namespace masar { 
 
@@ -582,8 +582,8 @@ static PVStructure::shared_pointer createResult(
 static PVStructure::shared_pointer getLiveMachine(
         String channelName [], int numberChannels, String * message)
 {
-    GatherV3ScalarData::shared_pointer gather = GatherV3ScalarData::shared_pointer(
-        new GatherV3ScalarData(channelName,numberChannels));
+    GatherV3Data::shared_pointer gather = GatherV3Data::shared_pointer(
+        new GatherV3Data(channelName,numberChannels));
 
     // wait one second, which is a magic number for now.
     // The waiting time might be removed later after stability test.

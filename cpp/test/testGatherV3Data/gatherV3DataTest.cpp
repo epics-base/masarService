@@ -1,17 +1,17 @@
-/*gatherV3ScalarDataTest.cpp */
+/*gatherV3DataTest.cpp */
 
 /* Author: Marty Kraimer */
 
 #include <pv/CDRMonitor.h>
 #include <epicsExit.h>
 
-#include <pv/gatherV3ScalarData.h>
+#include <pv/gatherV3Data.h>
 
 using namespace std;
 using namespace epics::pvData;
 using namespace epics::pvAccess;
 
-void testGet(bool debug,GatherV3ScalarData::shared_pointer gather)
+void testGet(bool debug,GatherV3Data::shared_pointer gather)
 {
     String builder;
     PVStructure::shared_pointer nttable = gather->getNTTable();
@@ -42,7 +42,7 @@ void testGet(bool debug,GatherV3ScalarData::shared_pointer gather)
     }
 }
 
-void testConnect(bool debug,GatherV3ScalarData::shared_pointer gather)
+void testConnect(bool debug,GatherV3Data::shared_pointer gather)
 {
     bool result = gather->connect(1.0);
     if(!result) {
@@ -68,8 +68,8 @@ void test(bool debug)
         sprintf(name,"masarExample%4.4d",i);
         channelName[i] = String(name);
     }
-    GatherV3ScalarData::shared_pointer gather = GatherV3ScalarData::shared_pointer(
-        new GatherV3ScalarData(channelName,n));
+    GatherV3Data::shared_pointer gather = GatherV3Data::shared_pointer(
+        new GatherV3Data(channelName,n));
     PVStructure::shared_pointer nttable = gather->getNTTable();
     if(debug) {
         builder.clear();

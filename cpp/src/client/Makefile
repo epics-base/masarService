@@ -15,9 +15,9 @@ CLIENT = $(TOP)/src/client/
 #INC += xxx.h
 #LIBSRCS += masarPVA.cpp
 
-SRC_DIRS += $(CLIENT)gatherV3ScalarData
-INC += gatherV3ScalarData.h
-LIBSRCS += gatherV3ScalarData.cpp
+SRC_DIRS += $(CLIENT)gatherV3Data
+INC += gatherV3Data.h
+LIBSRCS += gatherV3Data.cpp
 
 SRC_DIRS += $(CLIENT)ezchannelRPC
 INC += ezchannelRPC.h

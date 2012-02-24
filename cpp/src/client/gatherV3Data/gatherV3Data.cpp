@@ -1,4 +1,4 @@
-/* gatherV3ScalarData.cpp */
+/* gatherV3Data.cpp */
 /*
  * Copyright - See the COPYRIGHT that is included with this distribution.
  * This code is distributed subject to a Software License Agreement found
@@ -14,13 +14,13 @@
 #include <alarm.h>
 #include <alarmString.h>
 
-#include <pv/gatherV3ScalarData.h>
+#include <pv/gatherV3Data.h>
 
 namespace epics { namespace pvAccess {
 
 using namespace epics::pvData;
 
-struct GatherV3ScalarDataPvt;
+struct GatherV3DataPvt;
 
 enum State {
     idle,
@@ -40,7 +40,7 @@ enum V3RequestType {
 
 struct ChannelID
 {
-    GatherV3ScalarDataPvt *pvt;
+    GatherV3DataPvt *pvt;
     chid theChid;
     int offset;
     V3RequestType requestType;
@@ -51,14 +51,14 @@ struct ChannelID
     epicsTimeStamp  stamp;         
 };
 
-struct GatherV3ScalarDataPvt
+struct GatherV3DataPvt
 {
-    GatherV3ScalarDataPvt(
+    GatherV3DataPvt(
           PVStructure::shared_pointer const & pvStructure)
     : pvStructure(pvStructure),
       nttable(NTTable(pvStructure))
     {}
-    ~GatherV3ScalarDataPvt(){}
+    ~GatherV3DataPvt(){}
     Mutex mutex;
     Event event;
     PVTimeStamp pvtimeStamp;
@@ -94,7 +94,7 @@ struct GatherV3ScalarDataPvt
 
 // concatenate a new message onto message
 static void messageCat(
-    GatherV3ScalarDataPvt *pvt,const char *cafunc,int castatus,int channel)
+    GatherV3DataPvt *pvt,const char *cafunc,int castatus,int channel)
 {
     StringArrayData data;
     pvt->pvchannelName->get(0,pvt->numberChannels,&data);
@@ -119,7 +119,7 @@ static void connectionCallback(struct connection_handler_args args)
 {
     chid        chid = args.chid;
     ChannelID *id = static_cast<ChannelID *>(ca_puser(chid));
-    GatherV3ScalarDataPvt * pvt = id->pvt;
+    GatherV3DataPvt * pvt = id->pvt;
     if(pvt->state==destroying) return;
     int offset = id->offset;
 
@@ -128,7 +128,7 @@ static void connectionCallback(struct connection_handler_args args)
     bool isConnected = data.data[offset];
     bool newState = ((ca_state(chid)==cs_conn) ? true : false);
     if(isConnected==newState) {
-        printf("gatherV3ScalarData connectionCallback."
+        printf("gatherV3Data connectionCallback."
                " Why extra connection callback?\n");
         return;
     }
@@ -183,7 +183,7 @@ static void getCallback ( struct event_handler_args args )
 {
     chid        chid = args.chid;
     ChannelID *id = static_cast<ChannelID *>(ca_puser(chid));
-    GatherV3ScalarDataPvt * pvt = id->pvt;
+    GatherV3DataPvt * pvt = id->pvt;
     if(pvt->state!=getting) return;
     int offset = id->offset;
     Lock xx(pvt->mutex);
@@ -314,7 +314,7 @@ static void putCallback ( struct event_handler_args args )
 {
     chid        chid = args.chid;
     ChannelID *id = static_cast<ChannelID *>(ca_puser(chid));
-    GatherV3ScalarDataPvt * pvt = id->pvt;
+    GatherV3DataPvt * pvt = id->pvt;
     if(pvt->state!=putting) return;
     int offset = id->offset;
     Lock xx(pvt->mutex);
@@ -331,7 +331,7 @@ static void putCallback ( struct event_handler_args args )
     }
 }
 
-GatherV3ScalarData::GatherV3ScalarData(
+GatherV3Data::GatherV3Data(
     String channelNames[],
     int numberChannels)
 : pvt(0)
@@ -383,7 +383,7 @@ GatherV3ScalarData::GatherV3ScalarData(
 
     PVStructure::shared_pointer pvStructure = NTTable::create(
         false,true,true,n,fields);
-    pvt = new GatherV3ScalarDataPvt(pvStructure);
+    pvt = new GatherV3DataPvt(pvStructure);
     pvt->nttable.attachTimeStamp(pvt->pvtimeStamp);
     pvt->nttable.attachAlarm(pvt->pvalarm);
     pvt->pvtimeStamp.attach(pvStructure->getSubField("timeStamp"));
@@ -530,7 +530,7 @@ GatherV3ScalarData::GatherV3ScalarData(
 //printf("pvStructure\n%s\n",builder.c_str());
 }
 
-GatherV3ScalarData::~GatherV3ScalarData()
+GatherV3Data::~GatherV3Data()
 {
     if(pvt->state!=idle) disconnect();
     for(int i=0; i<pvt->numberChannels; i++) {
@@ -541,11 +541,11 @@ GatherV3ScalarData::~GatherV3ScalarData()
     delete pvt;
 }
 
-bool GatherV3ScalarData::connect(double timeOut)
+bool GatherV3Data::connect(double timeOut)
 {
     if(pvt->state!=idle) {
         throw std::logic_error(
-            "GatherV3ScalarData::connect only legal when state is idle\n");
+            "GatherV3Data::connect only legal when state is idle\n");
     }
     SEVCHK(ca_context_create(ca_enable_preemptive_callback),"ca_context_create");
     pvt->threadId = epicsThreadGetIdSelf();
@@ -613,13 +613,13 @@ bool GatherV3ScalarData::connect(double timeOut)
     return false;
 }
 
-void GatherV3ScalarData::disconnect()
+void GatherV3Data::disconnect()
 {
     Lock xx(pvt->mutex);
     if(pvt->state==idle) return;
     if(pvt->threadId!=epicsThreadGetIdSelf()) {
         throw std::logic_error(
-            "GatherV3ScalarData::disconnect must be same thread that called connect\n");
+            "GatherV3Data::disconnect must be same thread that called connect\n");
     }
     int numberChannels = pvt->numberChannels;
     pvt->state = destroying;
@@ -631,14 +631,14 @@ void GatherV3ScalarData::disconnect()
     pvt->state = idle;
 }
 
-bool GatherV3ScalarData::get()
+bool GatherV3Data::get()
 {
     if(pvt->state!=connected) {
-        throw std::logic_error("GatherV3ScalarData::get illegal state\n");
+        throw std::logic_error("GatherV3Data::get illegal state\n");
     }
     if(pvt->threadId!=epicsThreadGetIdSelf()) {
         throw std::logic_error(
-            "GatherV3ScalarData::get must be same thread that called connect\n");
+            "GatherV3Data::get must be same thread that called connect\n");
     }
     pvt->state = getting;
     pvt->numberCallbacks = 0;
@@ -729,14 +729,14 @@ bool GatherV3ScalarData::get()
     return pvt->requestOK;
 }
 
-bool GatherV3ScalarData::put()
+bool GatherV3Data::put()
 {
     if(pvt->state!=connected) {
-        throw std::logic_error("GatherV3ScalarData::put illegal state\n");
+        throw std::logic_error("GatherV3Data::put illegal state\n");
     }
     if(pvt->threadId!=epicsThreadGetIdSelf()) {
         throw std::logic_error(
-            "GatherV3ScalarData::put must be same thread that called connect\n");
+            "GatherV3Data::put must be same thread that called connect\n");
     }
     pvt->state = putting;
     pvt->numberCallbacks = 0;
@@ -802,72 +802,72 @@ bool GatherV3ScalarData::put()
     return pvt->requestOK;
 }
 
-String GatherV3ScalarData::getMessage()
+String GatherV3Data::getMessage()
 {
     return pvt->message;
 }
 
-PVStructure::shared_pointer GatherV3ScalarData::getNTTable()
+PVStructure::shared_pointer GatherV3Data::getNTTable()
 {
     return pvt->pvStructure;
 }
 
-PVDoubleArray * GatherV3ScalarData::getDoubleValue()
+PVDoubleArray * GatherV3Data::getDoubleValue()
 {
     return pvt->pvdoubleValue;
 }
 
-PVLongArray * GatherV3ScalarData::getLongValue()
+PVLongArray * GatherV3Data::getLongValue()
 {
     return pvt->pvlongValue;
 }
 
-PVStringArray * GatherV3ScalarData::getStringValue()
+PVStringArray * GatherV3Data::getStringValue()
 {
     return pvt->pvstringValue;
 }
 
-PVLongArray * GatherV3ScalarData::getSecondsPastEpoch()
+PVLongArray * GatherV3Data::getSecondsPastEpoch()
 {
     return pvt->pvsecondsPastEpoch;
 }
 
-PVIntArray * GatherV3ScalarData::getNanoSeconds()
+PVIntArray * GatherV3Data::getNanoSeconds()
 {
     return pvt->pvnanoSeconds;
 }
 
-PVIntArray * GatherV3ScalarData::getTimeStampTag()
+PVIntArray * GatherV3Data::getTimeStampTag()
 {
     return pvt->pvtimeStampTag;
 }
 
-PVIntArray * GatherV3ScalarData::getAlarmSeverity()
+PVIntArray * GatherV3Data::getAlarmSeverity()
 {
     return pvt->pvalarmSeverity;
 }
 
-PVIntArray * GatherV3ScalarData::getAlarmStatus()
+PVIntArray * GatherV3Data::getAlarmStatus()
 {
     return pvt->pvalarmStatus;
 }
 
-PVStringArray * GatherV3ScalarData::getAlarmMessage()
+PVStringArray * GatherV3Data::getAlarmMessage()
 {
     return pvt->pvalarmMessage;
 }
 
-PVIntArray * GatherV3ScalarData::getDBRType()
+PVIntArray * GatherV3Data::getDBRType()
 {
     return pvt->pvDBRType;
 }
 
-PVBooleanArray * GatherV3ScalarData::getIsConnected()
+PVBooleanArray * GatherV3Data::getIsConnected()
 {
     return pvt->pvisConnected;
 }
 
-PVStringArray * GatherV3ScalarData::getChannelName()
+PVStringArray * GatherV3Data::getChannelName()
 {
     return pvt->pvchannelName;
 }

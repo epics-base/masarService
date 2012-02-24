@@ -1,11 +1,11 @@
-/*gatherV3ScalarDataExample.cpp */
+/*gatherV3DataExample.cpp */
 
 /* Author: Marty Kraimer */
 
 #include <pv/CDRMonitor.h>
 #include <epicsExit.h>
 
-#include <pv/gatherV3ScalarData.h>
+#include <pv/gatherV3Data.h>
 
 using namespace std;
 using namespace epics::pvData;
@@ -21,8 +21,8 @@ void test()
         sprintf(name,"masarExample%4.4d",i);
         channelName[i] = String(name);
     }
-    GatherV3ScalarData::shared_pointer gather = GatherV3ScalarData::shared_pointer(
-        new GatherV3ScalarData(channelName,n));
+    GatherV3Data::shared_pointer gather = GatherV3Data::shared_pointer(
+        new GatherV3Data(channelName,n));
     bool result = gather->connect(1.0);
     if(!result) {
         printf("connect failed\n%s\n",gather->getMessage().c_str());

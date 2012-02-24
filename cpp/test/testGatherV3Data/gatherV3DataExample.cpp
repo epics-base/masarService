@@ -1,11 +1,11 @@
-/*gatherV3ScalarDataExample.cpp */
+/*gatherV3DataExample.cpp */
 
 /* Author: Marty Kraimer */
 
 #include <pv/CDRMonitor.h>
 #include <epicsExit.h>
 
-#include <pv/gatherV3ScalarData.h>
+#include <pv/gatherV3Data.h>
 
 using namespace std;
 using namespace epics::pvData;
@@ -14,8 +14,8 @@ using namespace epics::pvAccess;
 NTTable::shared_pointer getLiveMachine(
         String channelName [], int numberChannels)
 {
-    GatherV3ScalarData::shared_pointer gather = GatherV3ScalarData::shared_pointer(
-        new GatherV3ScalarData(channelName,numberChannels));
+    GatherV3Data::shared_pointer gather = GatherV3Data::shared_pointer(
+        new GatherV3Data(channelName,numberChannels));
 
     // wait one second, which is a magic number for now.
     // The waiting time might be removed later after stability test.
@@ -67,8 +67,8 @@ void test()
     printf("%s\n", builder.c_str());
 
 //    // do itself.
-//    GatherV3ScalarData::shared_pointer gather = GatherV3ScalarData::shared_pointer(
-//        new GatherV3ScalarData(channelName,n));
+//    GatherV3Data::shared_pointer gather = GatherV3Data::shared_pointer(
+//        new GatherV3Data(channelName,n));
 //    bool result = gather->connect(5.0);
 //    if(!result) {
 //        printf("connect failed\n%s\n",gather->getMessage().c_str());
