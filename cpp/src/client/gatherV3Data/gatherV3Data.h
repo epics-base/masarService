@@ -121,6 +121,13 @@ public:
      */
     epics::pvData::PVStringArray *getStringValue();
     /**
+     * Get the array of values for each V3 channel.
+     * @returns The array.
+     * This is an array of PVStructure that holds data for
+     * V3 array channels.
+     */
+    epics::pvData::PVStructureArray *getArrayValue();
+    /**
      * Get the array of secondsPastEpoch for each V3 channel.
      * The epoch is midnight 1970 UTC time.
      * @returns The array of seconds.
@@ -157,6 +164,11 @@ public:
      * @returns The array.
      */
     epics::pvData::PVIntArray *getDBRType();
+    /**
+     * Get the array which indicates if V3 channel is an array
+     * @returns The array.
+     */
+    epics::pvData::PVBooleanArray *getIsArray();
     /**
      * Get the array of connection state for each V3 channel.
      * @returns The array.

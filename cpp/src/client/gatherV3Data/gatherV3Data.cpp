@@ -99,14 +99,6 @@ static void messageCat(
     StringArrayData data;
     pvt->pvchannelName->get(0,pvt->numberChannels,&data);
     String name = data.data[channel];
-    //int len = name.length();
-    //char buf[len+30];
-    //following prevents compiler warning message
-    //sprintf(buf,"%s %s for channel %s\n",
-    //    cafunc,
-    //    ca_message(castatus),
-    //    name.c_str());
-    // pvt->message += String(buf);
     String buf = String(cafunc);
     buf += " ";
     buf += String(ca_message(castatus));
@@ -684,7 +676,7 @@ bool GatherV3Data::get()
         if(pvt->numberCallbacks==oldNumber) break;
     }
     if(!result) {
-        pvt->message += "timeout";
+        pvt->message += " timeout";
         pvt->requestOK = false;
         pvt->alarm.setMessage(pvt->message);
         pvt->alarm.setSeverity(invalidAlarm);
@@ -756,32 +748,89 @@ bool GatherV3Data::put()
     StringArrayData sdata;
     pvt->pvstringValue->get(0,pvt->numberChannels,&sdata);
     String * psvalue = sdata.data;
+    StructureArrayData structdata;
+    pvt->pvarrayValue->get(0,pvt->numberChannels,&structdata);
+    PVStructurePtr *parrayvalue = structdata.data;
+    BooleanArrayData booldata;
+    pvt->pvisArray->get(0,pvt->numberChannels,&booldata);
+    bool *isArray = booldata.data;
     for(int i=0; i< pvt->numberChannels; i++) {
         ChannelID *channelId = pvt->apchannelID[i];
         chid theChid = channelId->theChid;
         V3RequestType requestType = channelId->requestType;
+        unsigned long count = 1;
+        unsigned long sizebuf = 0;
+        char *buffer = 0;
         const void *pdata = 0;
         int req = 0;
-        switch(requestType) {
-        case requestLong:
-            req = DBR_LONG; pdata = &plvalue[i]; break;
-        case requestDouble:
-            req = DBR_DOUBLE; pdata = &pdvalue[i]; break;
-        case requestString:
-            req = DBR_STRING; pdata = psvalue[i].c_str(); break;
-        case requestCharArray:
-            req = DBR_CHAR; pdata = psvalue[i].c_str(); break;
+        if(isArray[i]) {
+            switch(requestType) {
+                case requestLong: {
+                    req = DBR_LONG;
+                    PVIntArray *pvvalue = static_cast<PVIntArray *>(
+                         parrayvalue[i]->getScalarArrayField("intValue",pvInt));
+                    count = pvvalue->getLength();
+                    IntArrayData idata;
+                    pvvalue->get(0,count,&idata);
+                    pdata = idata.data;
+                }
+                break;
+                case requestDouble: {
+                    req = DBR_DOUBLE;
+                    PVDoubleArray *pvvalue = static_cast<PVDoubleArray *>(
+                         parrayvalue[i]->getScalarArrayField("doubleValue",pvDouble));
+                    count = pvvalue->getLength();
+                    pvvalue->get(0,count,&ddata);
+                    pdata = ddata.data;
+                }
+                break;
+                case requestString: {
+                    req = DBR_STRING;
+                    PVStringArray *pvvalue = static_cast<PVStringArray *>(
+                         parrayvalue[i]->getScalarArrayField("stringValue",pvString));
+                    int length = pvvalue->getLength();
+                    pvvalue->get(0,length,&sdata);
+                    sizebuf = length*MAX_STRING_SIZE;
+                    count = length;
+                    buffer = new char[sizebuf];
+                    memset(buffer,0,sizebuf);
+                    pdata = buffer;
+                    char *p = buffer;
+                    for(int j=0; j< length; j++) {
+                        String value = sdata.data[j];
+                        const char *pfrom = value.c_str();
+                        int num = value.length();
+                        if(num>=MAX_STRING_SIZE) num = MAX_STRING_SIZE-1;
+                        memcpy(p,pfrom,num);
+                        p += MAX_STRING_SIZE;
+                    }
+                }
+                break;
+            }
+        } else {
+            switch(requestType) {
+            case requestLong:
+                req = DBR_LONG; pdata = &plvalue[i]; break;
+            case requestDouble:
+                req = DBR_DOUBLE; pdata = &pdvalue[i]; break;
+            case requestString:
+                req = DBR_STRING; pdata = psvalue[i].c_str(); break;
+            case requestCharArray:
+                req = DBR_CHAR; pdata = psvalue[i].c_str(); break;
+            }
         }
-        int result = ca_put_callback(
+        int result = ca_array_put_callback(
             req,
+            count,
             theChid,
             pdata,
             putCallback,
             pvt->apchannelID[i]);
         if(result!=ECA_NORMAL) {
-            messageCat(pvt,"ca_get_callback",result,i);
+            messageCat(pvt,"ca_put_callback",result,i);
             pvt->requestOK = false;
         }
+        if(sizebuf>0) delete[] pdata;
     }
     ca_flush_io();
     bool result = false;
@@ -792,7 +841,7 @@ bool GatherV3Data::put()
         if(pvt->numberCallbacks==oldNumber) break;
     }
     if(!result) {
-        pvt->message += "timeout";
+        pvt->message += " timeout";
         pvt->requestOK = false;
         pvt->alarm.setMessage(pvt->message);
         pvt->alarm.setSeverity(invalidAlarm);
@@ -825,6 +874,11 @@ PVLongArray * GatherV3Data::getLongValue()
 PVStringArray * GatherV3Data::getStringValue()
 {
     return pvt->pvstringValue;
+}
+
+PVStructureArray * GatherV3Data::getArrayValue()
+{
+    return pvt->pvarrayValue;
 }
 
 PVLongArray * GatherV3Data::getSecondsPastEpoch()
@@ -860,6 +914,11 @@ PVStringArray * GatherV3Data::getAlarmMessage()
 PVIntArray * GatherV3Data::getDBRType()
 {
     return pvt->pvDBRType;
+}
+
+PVBooleanArray * GatherV3Data::getIsArray()
+{
+    return pvt->pvisArray;
 }
 
 PVBooleanArray * GatherV3Data::getIsConnected()
