@@ -75,12 +75,17 @@ class client():
                 nttable.getValue(6),
                 nttable.getValue(7),
                 nttable.getValue(9),
-                nttable.getValue(10))
+                nttable.getValue(10),
+                nttable.getValue(12),
+                nttable.getValue(13))
     
     def saveSnapshot(self, params):
         function = 'saveSnapshot'
         nttable = self.__clientRPC(function, params)
         ts = TimeStamp()
+        # [pv name,string value,double value,long value,
+        #  dbr type,isConnected,secondsPastEpoch,nanoSeconds,timeStampTag,
+        #  alarmSeverity,alarmStatus,alarmMessage, is_array, array_value]
         nttable.getTimeStamp(ts.getTimeStampPy())
         return (ts.getUserTag(),
                 nttable.getValue(0), 
@@ -92,7 +97,9 @@ class client():
                 nttable.getValue(6),
                 nttable.getValue(7),
                 nttable.getValue(9),
-                nttable.getValue(10))
+                nttable.getValue(10),
+                nttable.getValue(12),
+                nttable.getValue(13))
 
     def updateSnapshotEvent(self, params):
         function = 'updateSnapshotEvent'
@@ -102,13 +109,15 @@ class client():
     def getLiveMachine(self, params):
         function = 'getLiveMachine'
         nttable = self.__clientRPC(function, params)
-        # channelName,stringValue,doubleValue,longValue,dbrType,isConnected
+        # channelName,stringValue,doubleValue,longValue,dbrType,isConnected, is_array, array_value
         return (nttable.getValue(0),
                 nttable.getValue(1),
                 nttable.getValue(2),
                 nttable.getValue(3),
                 nttable.getValue(4),
-                nttable.getValue(5))
+                nttable.getValue(5),
+                nttable.getValue(12),
+                nttable.getValue(13))
     
 if __name__ == '__main__':
     mc = client()

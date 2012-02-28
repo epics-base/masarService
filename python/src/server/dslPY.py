@@ -16,6 +16,18 @@ class DSL(object) :
     def __init__(self) :
         """constructor"""
         self.__servicename = 'masar'
+        #define    DBF_STRING  0
+        #define    DBF_INT     1
+        #define    DBF_SHORT   1
+        #define    DBF_FLOAT   2
+        #define    DBF_ENUM    3
+        #define    DBF_CHAR    4
+        #define    DBF_LONG    5
+        #define    DBF_DOUBLE  6
+        self.epicsInt    = [1, 4, 5]
+        self.epicsString = [0, 3]
+        self.epicsDouble = [2, 6]
+        self.epicsNoAccess = [7]
         
     def __del__(self) :
         """destructor"""
@@ -105,8 +117,8 @@ class DSL(object) :
         numberValueCount = nttable.getNumberValues()
         
         # values format: the value is raw data from IOC 
-        # [(channel name,), (string value,),(double value,),(long value,),(arrayValue),(isArray),(dbr type),(is connected),
-        #  (second past epoch,),(nano seconds,),(time stamp tag,),(alarm severity,),(alarm status,),(alarm message,)]
+        # [(channel name,), (string value,),(double value,),(long value,),(dbr type),(is connected),
+        #  (second past epoch,),(nano seconds,),(time stamp tag,),(alarm severity,),(alarm status,),(alarm message,), (is_array), (array_value)]
         values = []
 
         # data format: the data is prepared to save into rdb
@@ -118,10 +130,25 @@ class DSL(object) :
         datas = []
         dataLen = len(nttable.getValue(0))
         
+        dbrtype = nttable.getValue(4)
+        is_array = nttable.getValue(12)
         # get IOC raw data
         for i in range(numberValueCount):
-            values.append(list(nttable.getValue(i)))
-
+            if i == 13:
+                raw_array_value = nttable.getValue(i)
+                array_value = []
+                for j in range(len(is_array)):
+                    if dbrtype[j] in self.epicsDouble:
+                        array_value.append(raw_array_value[j][1])
+                    elif dbrtype[j] in self.epicsInt:
+                        array_value.append(raw_array_value[j][2])
+                    elif dbrtype[j] in self.epicsString:
+                        array_value.append(raw_array_value[j][0])
+                    elif dbrtype[j] in self.epicsNoAccess:
+                        array_value.append(raw_array_value[j][0])
+                values.append(array_value)
+            else:
+                values.append(list(nttable.getValue(i)))
         # problem when a negative value is passed from C++
         #define DBF_FLOAT   2
         #define DBF_DOUBLE  6

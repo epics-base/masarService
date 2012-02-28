@@ -258,6 +258,7 @@ static PVStructure::shared_pointer retrieveSnapshot(PyObject * list)
             }
 
             PVStructure * pvStructure = structdata.data[index];
+            // retrieve array value
             if (lVals[8][index] == 1) {
                 // EPICS DBR type
                 //#define    DBF_STRING  0
@@ -385,6 +386,9 @@ static PVStructure::shared_pointer retrieveSnapshot(PyObject * list)
     timeStamp.setUserTag(0);
     pvTimeStamp.set(timeStamp);
 
+//    String buf;
+//    pvStructure->toString(&buf);
+//    printf("%s\n", buf.c_str());
     return pvStructure;
 }
 

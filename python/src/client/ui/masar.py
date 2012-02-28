@@ -15,7 +15,7 @@ import time
 import datetime
 
 from PyQt4.QtGui import (QApplication, QMainWindow, QMessageBox, QTableWidgetItem, QTableWidget)
-from PyQt4.QtCore import (QDateTime, Qt, QString)
+from PyQt4.QtCore import (QDateTime, Qt, QString, QObject, SIGNAL)
 
 try:
     _fromUtf8 = QString.fromUtf8
@@ -31,6 +31,7 @@ else:
 
 import ui_masar
 import commentdlg
+from showarrayvaluedlg import ShowArrayValueDlg
 
 __version__ = "0.0.1"
 
@@ -117,6 +118,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.e2cDict = {} # event to config dictionary
         self.pv4cDict = {} # pv name list for each selected configuration
         self.data4eid = {}
+        self.arrayData = {} # store all array data
         
         self.__service = 'masar'
         if source == 'epics':
@@ -130,7 +132,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.time_format = "%Y-%m-%d %H:%M:%S"
         self.previewId = None
         self.previewConfName = None
-        
+        self.isPreviewSaved = True
+
         # DBR_TYPE definition
         #define DBF_STRING  0
         #define DBF_INT     1
@@ -226,7 +229,6 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.previewId = None
         self.previewConfName = None
         
-#        cid = str(self.configTableWidget.item(selectedConfig[0].row(), 4).text())
         cname = str(self.configTableWidget.item(selectedConfig[0].row(), 0).text())
         eid, data = self.getMachinePreviewData(cname)
         self.pv4cDict[str(eid)] = data['PV Name']
@@ -239,17 +241,9 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             tabWidget = QTableWidget()
             index = self.snapshotTabWidget.count()
             self.tabWindowDict['preview'] = tabWidget
+            QObject.connect(tabWidget, SIGNAL(_fromUtf8("cellDoubleClicked (int,int)")), self.__showArrayData)
         
-#        tabWidget = self.tabWindowDict['preview']
-#        tabWidget.clear()
-#        
-#        index = self.snapshotTabWidget.indexOf(tabWidget)
-#        # create a new widget.
-#        # problem to reuse widget: sorting
-#        tabWidget = QTableWidget()
-#        self.tabWindowDict['preview'] = tabWidget
-        
-        self.setSnapshotTable(data, tabWidget)
+        self.setSnapshotTable(data, tabWidget, eid)
         tabWidget.resizeColumnsToContents()
         label = QString.fromUtf8((cname+': Preview'))
         self.snapshotTabWidget.addTab(tabWidget, label)
@@ -261,7 +255,6 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.previewConfName = cname
         self.isPreviewSaved = False
         
-#        self.__doSaveSnapshot(selectedConfigs)
     def __find_key(self, dic, val):
         """return the key of dictionary dic given the value"""
         return [k for k, v in dic.iteritems() if v == val][0]
@@ -282,10 +275,14 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         d_val = data['D_value']
         i_val = data['I_value']
         dbrtype = data['DBR']
+        is_array = data['isArray']
+        array_value = data['arrayValue']
         
         r_data = []
         for index in range(len(pvlist)):
-            if dbrtype[index] in self.epicsDouble:
+            if is_array[index]:
+                r_data.append(array_value[index])
+            elif dbrtype[index] in self.epicsDouble:
                 r_data.append(d_val[index])
             elif dbrtype[index] in self.epicsLong:
                 r_data.append(i_val[index])
@@ -294,7 +291,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             elif dbrtype[index] in self.epicsNoAccess:
                 QMessageBox.warning(self, 'Warning', 'Cannot restore machine.Value unknown for pv: %s'%(pvlist[index]))
                 return
-        
+    
         bad_pvs = []
         try:
             results = cav3.caput(list(pvlist), r_data)
@@ -309,18 +306,9 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             for bad_pv in bad_pvs:
                 message += " -- "+bad_pv + "\n"
             QMessageBox.warning(self, 'Warning', message)
+        else:
+            QMessageBox.information(self, "Success", "Successfully restore machine with selected snapshot.")
         
-#        data['PV Name'] = pvnames
-#        data['Status'] = status
-#        data['Severity'] = severity
-#        data['Time stamp'] = ts
-#        data['Time stamp (nano)'] = ts_nano
-#        data['DBR'] = dbrtype
-#        data['S_value'] = s_value
-#        data['I_value'] = i_value
-#        data['D_value'] = d_value
-#        data['isConnected'] = isConnected
-
     def getLiveMachineAction(self):
         curWidget = self.snapshotTabWidget.currentWidget()
         if isinstance(curWidget, QTableWidget):
@@ -332,76 +320,63 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             elif eid == 'comment':
                 return # nothing should do here
             pvlist = self.pv4cDict[str(eid)]
-            channelName, s_value, d_value, i_value, dbrtype, isConnected = self.getLiveMachineData(pvlist)
-            
+            channelName, s_value, d_value, i_value, dbrtype, isConnected, is_array, array_value = self.getLiveMachineData(pvlist)
+
             dd = {}
             noMatchedPv = []
             
             # put channel name and its order into a dictionary
             for i in range(len(channelName)):
-                dd[channelName[i]] = i
+                dd[str(channelName[i])] = i
             
             # get table rows
             rowCount = curWidget.rowCount()
             for i in range(rowCount):
                 try:
                     index = dd[str(curWidget.item(i, 0).text())]
+                    if is_array[index]:
+                        self.__setTableItem(curWidget, i, 6, 'array')
+                        self.arrayData[channelName[index]+"_"+str(eid)+'_live'] = array_value[index]
+                    else:
+                        if dbrtype[index] in self.epicsDouble:
+                            self.__setTableItem(curWidget, i, 6, str(d_value[index]))
+        
+                            try:
+                                saved_val = float(str(curWidget.item(i, 5).text()))
+                                if d_value[index] != None:
+                                    delta = d_value[index] - saved_val
+                                    if abs(delta) < 1.0e-6:
+                                        delta = 0
+                                else:
+                                    delta = None
+                            except:
+                                delta='N/A'
+                            self.__setTableItem(curWidget, i, 7, str(delta))
+                        elif dbrtype[index] in self.epicsLong:
+                            self.__setTableItem(curWidget, i, 6, str(i_value[index]))
+        
+                            if dbrtype[index] in self.epicsNoAccess:
+                                pass
+                            else:
+                                try:
+                                    saved_val = int(float(str(curWidget.item(i, 5).text())))
+                                    if i_value[index] != None:
+                                        delta = i_value[index] - saved_val
+                                    else:
+                                        delta = None
+                                except:
+                                    delta='N/A'
+                                self.__setTableItem(curWidget, i, 7, str(delta))
+                        elif dbrtype[index] in self.epicsString:
+                            self.__setTableItem(curWidget, i, 6, str(s_value[index]))
                 except:
-                    print (channelName[index])
-                    noMatchedPv.append(channelName[index])
-                
-                if dbrtype[index] in self.epicsDouble:
-                    newitem = QTableWidgetItem(str(d_value[index]))
-                    curWidget.setItem(i, 6, newitem)
-                    newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
-                    
-                    saved_val = float(str(curWidget.item(i, 5).text()))
-                    if d_value[index] != None:
-                        delta = d_value[index] - saved_val
-                        if abs(delta) < 1.0e-6:
-                            delta = 0
-                    else:
-                        delta = None  
-                    
-                    newitem = QTableWidgetItem(str(delta))
-                    curWidget.setItem(i, 7, newitem)
-                    newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)                    
-                elif dbrtype[index] in self.epicsLong:
-                    newitem = QTableWidgetItem(str(i_value[index]))
-                    curWidget.setItem(i, 6, newitem)
-                    newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
-                    
-                    if dbrtype[index] in self.epicsNoAccess:
-                        pass
-#                        if isConnected[index]:
-#                            pass
-#                        else:
-#                            pass
-                    else:
-                        saved_val = int(float(str(curWidget.item(i, 5).text())))
-                        if i_value[index] != None:
-                            delta = i_value[index] - saved_val
-                        else:
-                            delta = None
-                        
-                        newitem = QTableWidgetItem(str(delta))
-                        curWidget.setItem(i, 7, newitem)
-                        newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
-
-                elif dbrtype[index] in self.epicsString:
-                    newitem = QTableWidgetItem(str(s_value[index]))
-                    curWidget.setItem(i, 6, newitem)
-                    newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
+                    noMatchedPv.append(str(curWidget.item(i, 0).text()))
             if len(noMatchedPv) > 0:
                 print ("Can not find the following pv for this snapshot: \n", noMatchedPv)
-            # list some pv 
         else:
             QMessageBox.warning(self, "Warning", "Not a snapshot.")
             return
         
-    def updateChanValue(self, pvlist, curWidget):
-        pass
-    
     def useTimeRange(self, state):
         if state == Qt.Checked:
             self.eventStartDateTime.setEnabled(True)
@@ -445,14 +420,6 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
     def setConfigTable(self):
         data = self.retrieveConfigData()
         self.setTable(data, self.configTableWidget)
-
-#    def snapshotTabSelector(self):
-#        curWidget = self.snapshotTabWidget.currentWidget()
-#        eid = self.__find_key(self.tabWindowDict, curWidget)
-#        if eid != 'comment':
-##            print (eid)        
-#            pvs = self.pv4cDict[str(eid)]
-##            print (len(pvs), pvs)
     
     def setSnapshotTabWindow(self, eventNames, eventTs, eventIds):
         tabWidget = None
@@ -462,6 +429,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
 
         self.pv4cDict.clear()
         self.data4eid.clear()
+        self.arrayData.clear()
         
         for i in range(len(eventIds)):
             if self.tabWindowDict.has_key(eventIds[i]):
@@ -469,10 +437,11 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             else:
                 tabWidget = QTableWidget()
                 self.tabWindowDict[eventIds[i]] = tabWidget
+                QObject.connect(tabWidget, SIGNAL(_fromUtf8("cellDoubleClicked (int,int)")), self.__showArrayData)
             
             data = self.retrieveMasarData(eventid=eventIds[i])
             tabWidget.clear()
-            self.setSnapshotTable(data, tabWidget)
+            self.setSnapshotTable(data, tabWidget, eventIds[i])
             tabWidget.resizeColumnsToContents()
             ts = eventTs[i].split('.')[0]
             
@@ -481,9 +450,40 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             self.snapshotTabWidget.setTabText(i+1, label)
             self.pv4cDict[str(eventIds[i])] = data['PV Name']
             self.data4eid[str(eventIds[i])] = data
-                
+            
         self.snapshotTabWidget.setCurrentIndex(1)
         
+    def __showArrayData(self, row, column):
+        if column != 5 and column != 6: # display the array value only
+            print ('wrong column', row, column)
+            return
+        curWidget = self.snapshotTabWidget.currentWidget()
+        if not isinstance(curWidget, QTableWidget):
+            QMessageBox.warning(self, 'Warning', 'No snapshot is selected yet.')
+            return
+        
+        eid = self.__find_key(self.tabWindowDict, curWidget)
+        if eid == 'comment':
+            QMessageBox.warning(self, 'Warning', 'It is comment panel.')
+
+        if eid == 'preview':
+            eid = self.previewId
+        pvname = str(curWidget.item(row, 0).text())
+        try:
+            arraySaved = self.arrayData[pvname+'_'+str(eid)]
+        except:
+            QMessageBox.warning(self, 'Warning', 'No array data found for this pv.')
+            return
+        if eid != 'preview':
+            try:
+                arrayLive = self.arrayData[pvname+"_"+str(eid)+'_live']
+                arrardlg = ShowArrayValueDlg(pvname, arraySaved, arrayLive)
+            except:
+                arrardlg = ShowArrayValueDlg(pvname, arraySaved)
+        else:
+            arrardlg = ShowArrayValueDlg(pvname, arraySaved)
+        arrardlg.exec_()
+    
     def setEventTable(self, data):
         self.setTable(data, self.eventTableWidget)
 
@@ -496,7 +496,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
             table.setItem(row, col, newitem)
                 
-    def setSnapshotTable(self, data, table):
+    def setSnapshotTable(self, data, table, eventid):
         if data:
             length = len(data.values()[0])
         else:
@@ -517,11 +517,11 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         
             nrows = len(data.values()[0])
             #    ('pv name label',  'dbr_type label', 'string value', 'int value', 'double value', 'status label', 'severity label', 
-            #     'ioc time stamp label', 'ioc time stamp nano label'),
+            #     'ioc time stamp label', 'ioc time stamp nano label', 'is_array', 'array_value'),
             # => (pv_name, status, severity, ioc_timestamp, saved value)
-            # ncols = len(data) - 4
+            # ncols = len(data) - 6
             # ncols = ncols + 2  # 2 columns for live data and (live data - saved data)
-            ncols = len(data) - 2
+            ncols = len(data) - 4
             table.setRowCount(nrows)
             table.setColumnCount(ncols)
             
@@ -535,6 +535,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             i_value = data['I_value']
             d_value = data['D_value']
             isConnected = data['isConnected']
+            is_array = data['isArray'] 
+            array_value = data['arrayValue']
             
             keys = ['PV Name', 'Status', 'Severity', 'Time stamp', 'Connection', 'Saved value', 'Live value', 'Delta']
             table.setHorizontalHeaderLabels(keys)
@@ -542,83 +544,30 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             for i in range(nrows):
                 if pvnames[i]:
                     self.__setTableItem(table, i, 0, pvnames[i])
-#                    item = table.item(i, 0)
-#                    if item:
-#                        item.setText(pvnames[i])
-#                    else:
-#                        newitem = QTableWidgetItem(pvnames[i])
-#                        newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
-#                        table.setItem(i, 0, newitem)
                 if status[i]:
                     self.__setTableItem(table, i, 1, str(status[i]))
-#                    item = table.item(i, 1)
-#                    if item:
-#                        item.setText(str(status[i]))
-#                    else:
-#                        newitem = QTableWidgetItem(str(status[i]))
-#                        newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
-#                        table.setItem(i, 1, newitem)
                 if severity[i]:
                     self.__setTableItem(table, i, 2, str(severity[i]))
-#                    item = table.item(i, 2)
-#                    if item:
-#                        item.setText(severity[i])
-#                    else:
-#                        newitem = QTableWidgetItem(str(severity[i]))
-#                        newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
-#                        table.setItem(i, 2, newitem)
                 if ts[i]:
                     dt = str(datetime.datetime.fromtimestamp(ts[i]+ts_nano[i]*1.0e-9))
                     self.__setTableItem(table, i, 3, dt)
-#                    item = table.item(i, 3)
-#                    if item:
-#                        item.setText(dt)
-#                    else:
-#                        newitem = QTableWidgetItem(dt)
-#                        newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
-#                        table.setItem(i, 3, newitem)
                 if isConnected[i]:
                     self.__setTableItem(table, i, 4, str(bool(isConnected[i])))
-#                    item = table.item(i, 4)
-#                    if item:
-#                        item.setText(str(bool(isConnected[i])))
-#                    else:
-#                        newitem = QTableWidgetItem(str(bool(isConnected[i])))
-#                        newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
-#                        table.setItem(i, 4, newitem)
-
-                if dbrtype[i] in self.epicsDouble:
-                    self.__setTableItem(table, i, 5, str(d_value[i]))
-#                    item = table.item(i, 5)
-#                    if item:
-#                        item.setText(str(d_value[i]))
-#                    else:
-#                        newitem = QTableWidgetItem(str(d_value[i]))
-#                        table.setItem(i, 5, newitem)
-#                        newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
-                elif dbrtype[i] in self.epicsLong:
-                    self.__setTableItem(table, i, 5, str(i_value[i]))
-#                    item = table.item(i, 5)
-#                    if item:
-#                        item.setText(str(i_value[i]))
-#                    else:
-#                        newitem = QTableWidgetItem(str(i_value[i]))
-#                        table.setItem(i, 5, newitem)
-#                        newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
-                elif dbrtype[i] in self.epicsString:
-                    self.__setTableItem(table, i, 5, str(s_value[i]))
-#                    item = table.item(i, 5)
-#                    if item:
-#                        item.setText(str(s_value[i]))
-#                    else:
-#                        newitem = QTableWidgetItem(str(s_value[i]))
-#                        newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
-#                        table.setItem(i, 5, newitem)
-                elif dbrtype[i] in self.epicsNoAccess:
-                    # channel are not connected.
-                    pass
+                if is_array[i]:
+                    self.__setTableItem(table, i, 5, 'array')
+                    self.arrayData[pvnames[i]+'_'+str(eventid)] = array_value[i]
                 else:
-                    print('invalid dbr type (code = %s)'%(dbrtype[i]))
+                    if dbrtype[i] in self.epicsDouble:
+                        self.__setTableItem(table, i, 5, str(d_value[i]))
+                    elif dbrtype[i] in self.epicsLong:
+                        self.__setTableItem(table, i, 5, str(i_value[i]))
+                    elif dbrtype[i] in self.epicsString:
+                        self.__setTableItem(table, i, 5, str(s_value[i]))
+                    elif dbrtype[i] in self.epicsNoAccess:
+                        # channel are not connected.
+                        pass
+                    else:
+                        print('invalid dbr type (code = %s)'%(dbrtype[i]))
             table.setSortingEnabled(True)
         else:
             raise "Either given data is not an instance of OrderedDict or table is not an instance of QtGui.QTableWidget"
@@ -784,7 +733,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             # result format:
             # ('user tag', 'event UTC time', 'service config name', 'service name'),
             # ('pv name', 'string value', 'double value', 'long value', 'dbr type', 'isConnected', 
-            #  'secondsPastEpoch', 'nanoSeconds', 'timeStampTag', 'alarmSeverity', 'alarmStatus', 'alarmMessage')
+            #  'secondsPastEpoch', 'nanoSeconds', 'timeStampTag', 'alarmSeverity', 'alarmStatus', 'alarmMessage'
+            #  'is_array', 'array_value')
             results = pymasar.masardata.masardata.retrieveSnapshot(conn, eventid=eventid)[1]
             pvnames = []
             s_value = []
@@ -798,6 +748,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             severity = []
             status = []
             alarm_message = []
+            is_array = []
+            array_value = []
 
             if len(results) > 2:
                 for i in range(2, len(results)):
@@ -815,6 +767,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                     severity.append(res[9])
                     status.append(res[10])
                     alarm_message.append(res[11])
+                    is_array.extend(res[12])
+                    array_value.extend(res[13])
             data['PV Name'] = pvnames
             data['Status'] = status
             data['Severity'] = severity
@@ -825,12 +779,14 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             data['I_value'] = i_value
             data['D_value'] = d_value
             data['isConnected'] = isConnected
+            data['isArray'] = is_array
+            data['arrayValue'] = array_value
         elif source == 'epics':
             params = {'eventid': eventid}
-            pvnames, s_value, d_value, i_value, dbrtype, isConnected, ts, ts_nano, severity, status = self.mc.retrieveSnapshot(params)
+            pvnames, s_value, d_value, i_value, dbrtype, isConnected, ts, ts_nano, severity, status, is_array, raw_array_value = self.mc.retrieveSnapshot(params)
             severity = list(severity)
             status = list(status)
-
+        array_value = []
         for i in range(len(severity)):
             try:
                 severity[i] = self.severityDict[severity[i]]
@@ -840,6 +796,17 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 status[i] = self.alarmDict[status[i]]
             except:
                 status[i] = 'N/A'
+
+            if dbrtype[i] in self.epicsLong:
+                array_value.append(raw_array_value[i][2])
+            elif dbrtype[i] in self.epicsDouble:
+                array_value.append(raw_array_value[i][1])
+            elif dbrtype[i] in self.epicsString:
+                # string value
+                array_value.append(raw_array_value[i][0])
+            elif dbrtype[i] in self.epicsNoAccess:
+                # when the value is no_access, use the double value no matter what it is
+                array_value.append(raw_array_value[i][1])
 
         data['PV Name'] = pvnames
         data['Status'] = status
@@ -851,6 +818,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         data['I_value'] = i_value
         data['D_value'] = d_value
         data['isConnected'] = isConnected
+        data['isArray'] = is_array
+        data['arrayValue'] = array_value
         
         return data
 
@@ -883,10 +852,11 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             params = {'configname': configName,
                       'servicename': 'masar'}
             
-            eventid, pvnames, s_value, d_value, i_value, dbrtype, isConnected, ts, ts_nano, severity, status = self.mc.saveSnapshot(params)
+            eventid, pvnames, s_value, d_value, i_value, dbrtype, isConnected, ts, ts_nano, severity, status, is_array, raw_array_value = self.mc.saveSnapshot(params)
             severity = list(severity)
             status = list(status)
     
+            array_value = []
             for i in range(len(severity)):
                 try:
                     severity[i] = self.severityDict[severity[i]]
@@ -896,7 +866,18 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                     status[i] = self.alarmDict[status[i]]
                 except:
                     status[i] = 'N/A'
-    
+
+                if dbrtype[i] in self.epicsLong:
+                    array_value.append(raw_array_value[i][2])
+                elif dbrtype[i] in self.epicsDouble:
+                    array_value.append(raw_array_value[i][1])
+                elif dbrtype[i] in self.epicsString:
+                    # string value
+                    array_value.append(raw_array_value[i][0])
+                elif dbrtype[i] in self.epicsNoAccess:
+                    # when the value is no_access, use the double value no matter what it is
+                    array_value.append(raw_array_value[i][1])
+            
             data = odict()
             data['PV Name'] = pvnames
             data['Status'] = status
@@ -908,7 +889,9 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             data['I_value'] = i_value
             data['D_value'] = d_value
             data['isConnected'] = isConnected
-    
+            data['isArray'] = is_array
+            data['arrayValue'] = array_value
+
             return (eventid, data)
         
     def getLiveMachineData(self, pvlist):
@@ -918,8 +901,22 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             params = {}
             for pv in pvlist:
                 params[pv] = pv
-            # channelName,stringValue,doubleValue,longValue,dbrType,isConnected
-            return self.mc.getLiveMachine(params)
+            # channelName,stringValue,doubleValue,longValue,dbrType,isConnected, is_array, array_value
+            array_value = []
+            channelName,stringValue,doubleValue,longValue,dbrtype,isConnected,is_array, raw_array_value = self.mc.getLiveMachine(params)
+            for i in range(len(is_array)):
+                if dbrtype[i] in self.epicsLong:
+                    array_value.append(raw_array_value[i][2])
+                elif dbrtype[i] in self.epicsDouble:
+                    array_value.append(raw_array_value[i][1])
+                elif dbrtype[i] in self.epicsString:
+                    # string value
+                    array_value.append(raw_array_value[i][0])
+                elif dbrtype[i] in self.epicsNoAccess:
+                    # when the value is no_access, use the double value no matter what it is
+                    array_value.append(raw_array_value[i][1])
+            
+            return (channelName,stringValue,doubleValue,longValue,dbrtype,isConnected,is_array, array_value)
 
 def main(channelname = None):
     app = QApplication(sys.argv)

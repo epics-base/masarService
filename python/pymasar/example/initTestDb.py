@@ -187,14 +187,14 @@ if __name__ == '__main__':
         initServiceConfig()
     except:
         pass
-    import time
-    for i in range(10):
-        print (i, "save event without data")
-        dummyServiceEventNoData()
-        time.sleep(5.0)
-        print (i, "save event with dummy data")
-        dummyServiceEventData()
-        time.sleep(5.0)
+#    import time
+#    for i in range(10):
+#        print (i, "save event without data")
+#        dummyServiceEventNoData()
+#        time.sleep(5.0)
+#        print (i, "save event with dummy data")
+#        dummyServiceEventData()
+#        time.sleep(5.0)
 
     save(conn)
     conn.close()

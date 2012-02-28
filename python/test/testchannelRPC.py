@@ -81,9 +81,47 @@ def retrieveServiceEvents():
 def retrieveSnapshot():
     function = 'retrieveSnapshot'
     print ("=== test %s ===" %function)
-    params = {'eventid': '24'}
+    params = {'eventid': '365'}
 #    params = {'eventid': '132'}
-    __clientRPC(function, params)
+    nttable = __clientRPC(function, params)
+    # should return 
+    # 'pv name': 0
+    # 'string value': 1
+    # 'double value': 2
+    # 'long value': 3
+    # 'dbr type': 4
+    # 'isConnected': 5
+    # 'secondsPastEpoch': 6
+    # 'nanoSeconds': 7
+    # 'timeStampTag': 8
+    # 'alarmSeverity': 9
+    # 'alarmStatus': 10
+    # 'alarmMessage': 11
+    # 'is_array': 12
+    # 'array_value'13
+    numbers = nttable.getNumberValues()
+    print (numbers)
+    label = nttable.getLabel()
+    print (label)
+    dbr_type = nttable.getValue(4)
+    is_array = nttable.getValue(12)
+    print (is_array)
+    raw_array_value = nttable.getValue(13)
+    print (raw_array_value)
+    array_value = []
+    epicsint    = [1, 4, 5]
+    epicsString = [0]
+    epicsDouble = [2, 6]
+
+    for i in range(len(is_array)):
+        if dbr_type[i] in epicsint:
+            array_value.append(raw_array_value[i][2])
+        elif dbr_type[i] in epicsDouble:
+            array_value.append(raw_array_value[i][1])
+        elif dbr_type[i] in epicsString:
+            array_value.append(raw_array_value[i][0])
+    print (array_value)
+    print (len(is_array), len(array_value))
     print ("=== test %s end ===" %function)
 
 def saveSnapshot():

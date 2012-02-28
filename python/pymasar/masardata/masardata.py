@@ -13,18 +13,6 @@ import sqlite3
 from pymasar.utils import checkConnection
 from pymasar.service.serviceevent import (saveServiceEvent, retrieveServiceEvents)
 
-#define    DBF_STRING  0
-#define    DBF_INT     1
-#define    DBF_SHORT   1
-#define    DBF_FLOAT   2
-#define    DBF_ENUM    3
-#define    DBF_CHAR    4
-#define    DBF_LONG    5
-#define    DBF_DOUBLE  6
-epicsint    = [1, 4, 5]
-epicsString = [0]
-epicsDouble = [2, 6]
-
 def saveSnapshot(conn, data, servicename=None, configname=None, comment=None,approval=False):
     """
     save a snapshot (masar event) with data.

@@ -62,7 +62,7 @@ void test()
                 PVStringArray * pvValue = static_cast<PVStringArray *>(
                     pvStructure->getScalarArrayField("stringValue",pvString));
                 int num = 4;
-                String value[4] {"aaa","bbb","ccc","ddd"};
+                String value[4] = {"aaa","bbb","ccc","ddd"};
                 pvValue->put(0,num,value,0);
                 break;
             }
@@ -72,7 +72,7 @@ void test()
                 PVIntArray * pvValue = static_cast<PVIntArray *>(
                     pvStructure->getScalarArrayField("intValue",pvInt));
                 int num = 4;
-                int32 value[4] {1,2,3,4};
+                int32 value[4] = {1,2,3,4};
                 pvValue->put(0,num,value,0);
                  break;
             }
@@ -81,7 +81,7 @@ void test()
                 PVDoubleArray * pvValue = static_cast<PVDoubleArray *>(
                     pvStructure->getScalarArrayField("doubleValue",pvDouble));
                 int num = 4;
-                double value[4] {1e1,1e2,1e3,1e4};
+                double value[4] = {1e1,1e2,1e3,1e4};
                 pvValue->put(0,num,value,0);
                  break;
             }
