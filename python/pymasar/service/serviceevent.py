@@ -194,29 +194,27 @@ def retrieveServiceEvents(conn, configid=None,start=None, end=None, comment=None
     checkConnection(conn)
     results = None
     
-    if comment == None:
-        comment = '%'
-    else:
-        comment = comment.replace("*","%").replace("?","_")
-        
-    if user == None:
-        user = "%"
-    else:
-        user = user.replace("*","%").replace("?","_")
-    
     try:
         cur = conn.cursor()
         sql = '''
         select service_event_id, service_config_id, service_event_user_tag, service_event_UTC_time, service_event_user_name
-        from service_event where service_event_approval = 1 and service_event_user_tag like ? and service_event_user_name like ?
+        from service_event where service_event_approval = 1 
         '''
+
+        if comment != None:
+            comment = comment.replace("*","%").replace("?","_")
+            sql += ' and service_event_user_tag like "%s" ' %(comment)
+        
+        if user != None:
+            user = user.replace("*","%").replace("?","_")
+            sql += ' and service_event_user_name like "%s" ' %(user)
         
         if (start is None) and (end is None):
             if configid is None:
-                cur.execute(sql, (comment, user, ))
+                cur.execute(sql, )
             else:
                 sql += ' and service_config_id = ?'
-                cur.execute(sql, (comment, user, configid, ))
+                cur.execute(sql, (configid, ))
         else:
             sql += ' and service_event_UTC_time > ? and service_event_UTC_time < ? '
             if end is None:
@@ -228,10 +226,10 @@ def retrieveServiceEvents(conn, configid=None,start=None, end=None, comment=None
                 raise Exception('Time range error')
             
             if configid is None:
-                cur.execute(sql, (comment, user, start, end, ))
+                cur.execute(sql, (start, end, ))
             else:
                 sql += ' and service_config_id = ? '
-                cur.execute(sql, (comment, user, start, end, configid, ))
+                cur.execute(sql, (start, end, configid, ))
         results = cur.fetchall()
     except sqlite3.Error, e:
         print ("Error %s" %e.args[0])
