@@ -176,6 +176,8 @@ def retrieveServiceConfigs(conn, servicename=None, configname=None, configversio
     select service_config.service_config_id, service_config_name, service_config_desc, service_config_create_date, service_config_version, service_config.service_id
     from service_config '''
     results = None
+    if configname != None:
+        configname = configname.replace("*","%").replace("?","_")
     try:
         cur = conn.cursor()
         join = False

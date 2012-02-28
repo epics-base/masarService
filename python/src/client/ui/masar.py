@@ -128,6 +128,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         
         self.currentConfigFilter = str(self.configFilterLineEdit.text())
         self.eventConfigFilter = str(self.eventFilterLineEdit.text())
+        self.initializerText = str(self.initializerTextEdit.text())
         self.UTC_OFFSET_TIMEDELTA = datetime.datetime.utcnow() - datetime.datetime.now()
         self.time_format = "%Y-%m-%d %H:%M:%S"
         self.previewId = None
@@ -174,6 +175,9 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
     def fetchConfigAction(self):
         self.setConfigTable()
         self.configTableWidget.resizeColumnsToContents()
+        
+    def initializerTextChanged(self):
+        self.initializerText = str(self.initializerTextEdit.text())
     
     def __getComment(self):
         cdlg = commentdlg.CommentDlg()
@@ -655,7 +659,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                     config_version.append(res[4])
         elif source == 'epics':
             params = {"system": self.system,
-                      "servicename": self.__service}
+                      "servicename": self.__service,
+                      "configname": self.currentConfigFilter}
             config_id, config_name, config_desc, config_date, config_version = self.mc.retrieveServiceConfigs(params)
         data['Name'] = config_name
         data['Description'] = config_desc
@@ -703,7 +708,9 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             if configids:
                 for i in range(len(configids)):
                     cid = configids[i]
-                    params = {'configid': cid}
+                    params = {'configid': cid,
+                              "comment": self.eventConfigFilter,
+                              "user": self.initializerText}
                     if self.timeRangeCheckBox.isChecked():
                         params['start'] = str(start)
                         params['end'] = str(end)

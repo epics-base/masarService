@@ -91,10 +91,10 @@ class DSL(object) :
         return result
     
     def retrieveServiceEvents(self, params):
-        key = ['configid', 'start', 'end', 'comment']
-        cid, start, end, comment = self._parseParams(params, key)
+        key = ['configid', 'start', 'end', 'comment', 'user']
+        cid, start, end, comment, user = self._parseParams(params, key)
         conn = pymasar.utils.connect()
-        result = pymasar.service.retrieveServiceEvents(conn, configid=cid,start=start, end=end, comment=comment)
+        result = pymasar.service.retrieveServiceEvents(conn, configid=cid,start=start, end=end, comment=comment, user=user)
         pymasar.utils.close(conn)
         return result
 

@@ -1,6 +1,5 @@
 caput -S masarExampleCharArray abcdefghijklmn
-caput -a masarExampleDoubleArray 5 1.1 -2.2 3.3 4.4 5.5
-caput -a masarExampleLongArray 5  1000 2000 3000 4000 5000
-caput -a masarExampleStringArray  5 aaa bbb ccc ddd eee
-caput -a masarExampleWave 5 1.1 -2.2 3.3 4.4 5.5
+caput -a masarExampleDoubleArray 5 1.1 -2.2 3.3 4.4 5.5 6.6
+caput -a masarExampleLongArray 5  1000 2000 3000 4000 5000 6000
+caput -a masarExampleStringArray  5 aaa bbb ccc ddd eee ffff
 
