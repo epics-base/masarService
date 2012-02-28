@@ -207,8 +207,7 @@ static PyObject * _getUserTag(PyObject *willBeNull, PyObject *args)
 
 static char _initDoc[] = "_init timeStampPy.";
 static char _destroyDoc[] = "_destroy timeStampPy.";
-static char _getTimeStampPyDoc[] = "_getTimeStampPy timeStampPy.";
-static char _gettimeStampDoc[] = "_get timeStamppy.";
+static char _getTimeStampDoc[] = "_getTimeStampPy timeStampPy.";
 static char _getSecondsDoc[] = "_getSeconds timeStampPy.";
 static char _setSecondsDoc[] = "_setSeconds timeStampPy.";
 static char _getNanoDoc[] = "_getNano timeStampPy.";
@@ -218,12 +217,12 @@ static char _getUserTagDoc[] = "_getUserTag timeStampPy.";
 static PyMethodDef methods[] = {
     {"_init",_init,METH_VARARGS,_initDoc},
     {"_destroy",_destroy,METH_VARARGS,_destroyDoc},
-    {"_getTimeStampPy",_getTimeStampPy,METH_VARARGS,_getTimeStampPyDoc},
+    {"_getTimeStampPy",_getTimeStampPy,METH_VARARGS,_getTimeStampDoc},
     {"_getSeconds",_getSeconds,METH_VARARGS,_getSecondsDoc},
     {"_setSeconds",_setSeconds,METH_VARARGS,_setSecondsDoc},
     {"_getNano",_getNano,METH_VARARGS,_getNanoDoc},
     {"_setNano",_setNano,METH_VARARGS,_setNanoDoc},
-    {"_getUserTag",_getUserTag,METH_VARARGS,_getNanoDoc},
+    {"_getUserTag",_getUserTag,METH_VARARGS,_getUserTagDoc},
     {NULL,NULL,0,NULL}
 };
 

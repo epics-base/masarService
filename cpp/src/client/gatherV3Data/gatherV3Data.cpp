@@ -806,6 +806,11 @@ bool GatherV3Data::put()
                     }
                 }
                 break;
+            default:
+                 printf(
+                     "%s warning gatherV3Data::put has unsupported type %d\n",
+                     ca_name(theChid),requestType);
+                    
             }
         } else {
             switch(requestType) {
@@ -830,7 +835,7 @@ bool GatherV3Data::put()
             messageCat(pvt,"ca_put_callback",result,i);
             pvt->requestOK = false;
         }
-        if(sizebuf>0) delete[] pdata;
+        if(sizebuf>0) delete[] buffer;
     }
     ca_flush_io();
     bool result = false;

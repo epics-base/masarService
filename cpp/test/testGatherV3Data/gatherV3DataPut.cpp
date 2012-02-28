@@ -62,7 +62,11 @@ void test()
                 PVStringArray * pvValue = static_cast<PVStringArray *>(
                     pvStructure->getScalarArrayField("stringValue",pvString));
                 int num = 4;
-                String value[4] = {"aaa","bbb","ccc","ddd"};
+                String value[4];
+                value[0] = "aaa";
+                value[1] = "bbb";
+                value[2] = "ccc";
+                value[3] = "ddd";
                 pvValue->put(0,num,value,0);
                 break;
             }
