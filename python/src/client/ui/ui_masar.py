@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_masar.ui'
 #
-# Created: Tue Feb 28 10:24:34 2012
+# Created: Tue Feb 28 15:38:13 2012
 #      by: PyQt4 UI code generator 4.8.6
 #
 # WARNING! All changes made in this file will be lost!
@@ -49,7 +49,7 @@ class Ui_masar(object):
         self.systemCombox.setObjectName(_fromUtf8("systemCombox"))
         self.configGridLayout.addWidget(self.systemCombox, 0, 1, 1, 1)
         self.configFilterLabel = QtGui.QLabel(self.layoutWidget)
-        self.configFilterLabel.setText(QtGui.QApplication.translate("masar", "Config Fiter", None, QtGui.QApplication.UnicodeUTF8))
+        self.configFilterLabel.setText(QtGui.QApplication.translate("masar", "Config Filter", None, QtGui.QApplication.UnicodeUTF8))
         self.configFilterLabel.setObjectName(_fromUtf8("configFilterLabel"))
         self.configGridLayout.addWidget(self.configFilterLabel, 1, 0, 1, 1)
         self.configFilterLineEdit = QtGui.QLineEdit(self.layoutWidget)
@@ -117,11 +117,11 @@ class Ui_masar(object):
         self.initializerTextEdit.setObjectName(_fromUtf8("initializerTextEdit"))
         self.eventGridLayout.addWidget(self.initializerTextEdit, 1, 3, 1, 1)
         self.eventFilterLabel = QtGui.QLabel(self.layoutWidget1)
-        self.eventFilterLabel.setText(QtGui.QApplication.translate("masar", "Event Fiter", None, QtGui.QApplication.UnicodeUTF8))
+        self.eventFilterLabel.setText(QtGui.QApplication.translate("masar", "Event Desc", None, QtGui.QApplication.UnicodeUTF8))
         self.eventFilterLabel.setObjectName(_fromUtf8("eventFilterLabel"))
         self.eventGridLayout.addWidget(self.eventFilterLabel, 0, 0, 1, 1)
         self.ByWho = QtGui.QLabel(self.layoutWidget1)
-        self.ByWho.setText(QtGui.QApplication.translate("masar", "By Who", None, QtGui.QApplication.UnicodeUTF8))
+        self.ByWho.setText(QtGui.QApplication.translate("masar", "Author", None, QtGui.QApplication.UnicodeUTF8))
         self.ByWho.setObjectName(_fromUtf8("ByWho"))
         self.eventGridLayout.addWidget(self.ByWho, 1, 0, 1, 1)
         self.eventVerticalLayout.addLayout(self.eventGridLayout)

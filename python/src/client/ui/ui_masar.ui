@@ -51,7 +51,7 @@
            <item row="1" column="0">
             <widget class="QLabel" name="configFilterLabel">
              <property name="text">
-              <string>Config Fiter</string>
+              <string>Config Filter</string>
              </property>
             </widget>
            </item>
@@ -183,14 +183,14 @@
            <item row="0" column="0">
             <widget class="QLabel" name="eventFilterLabel">
              <property name="text">
-              <string>Event Fiter</string>
+              <string>Event Desc</string>
              </property>
             </widget>
            </item>
            <item row="1" column="0">
             <widget class="QLabel" name="ByWho">
              <property name="text">
-              <string>By Who</string>
+              <string>Author</string>
              </property>
             </widget>
            </item>

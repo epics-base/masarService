@@ -339,7 +339,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 try:
                     index = dd[str(curWidget.item(i, 0).text())]
                     if is_array[index]:
-                        self.__setTableItem(curWidget, i, 6, 'array')
+                        self.__setTableItem(curWidget, i, 6, '['+str(array_value[index])[1:8]+' ..., ...]')
                         self.arrayData[channelName[index]+"_"+str(eid)+'_live'] = array_value[index]
                     else:
                         if dbrtype[index] in self.epicsDouble:
@@ -558,7 +558,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 if isConnected[i]:
                     self.__setTableItem(table, i, 4, str(bool(isConnected[i])))
                 if is_array[i]:
-                    self.__setTableItem(table, i, 5, 'array')
+                    self.__setTableItem(table, i, 5, '['+str(array_value[i])[1:8]+' ..., ...]')
                     self.arrayData[pvnames[i]+'_'+str(eventid)] = array_value[i]
                 else:
                     if dbrtype[i] in self.epicsDouble:
@@ -685,7 +685,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         event_ts = []
         event_desc = []
         c_names = []
-        event_initializer = []
+        event_author = []
         self.e2cDict.clear()
         if source == 'sqlite':
             if configids:
@@ -702,7 +702,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                         ts = str(datetime.datetime.fromtimestamp(time.mktime(time.strptime(res[3], self.time_format))) - self.UTC_OFFSET_TIMEDELTA)
                         event_ts.append(ts)
                         event_desc.append(res[2])
-                        event_initializer.append(str(res[4]))
+                        event_author.append(str(res[4]))
                         self.e2cDict[str(res[0])] = [cid, res[2], confignames[i]]
         elif source == 'epics':
             if configids:
@@ -718,7 +718,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
 
                     event_ids = event_ids[:] + (list(eids))[:]
                     event_desc = event_desc[:] + (list(usertag))[:]
-                    event_initializer = event_initializer[:] + (list(initializer))[:]
+                    event_author = event_author[:] + (list(initializer))[:]
                     for j in range(len(eids)):
                         self.e2cDict[str(eids[j])] = [cid, usertag[j],confignames[i]]
                     for ut in utctimes:
@@ -728,9 +728,9 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                     
         data = odict()
         data['Config'] = c_names
-        data['Time stamp'] = event_ts
         data['Description'] = event_desc
-        data['Initializer'] = event_initializer
+        data['Author'] = event_author
+        data['Time stamp'] = event_ts
         data['Id'] = event_ids
         return data
 
