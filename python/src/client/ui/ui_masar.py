@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_masar.ui'
 #
-# Created: Tue Feb 28 15:38:13 2012
+# Created: Thu Mar  1 14:54:56 2012
 #      by: PyQt4 UI code generator 4.8.6
 #
 # WARNING! All changes made in this file will be lost!
@@ -112,10 +112,10 @@ class Ui_masar(object):
         self.eventFilterLineEdit.setText(QtGui.QApplication.translate("masar", "*", None, QtGui.QApplication.UnicodeUTF8))
         self.eventFilterLineEdit.setObjectName(_fromUtf8("eventFilterLineEdit"))
         self.eventGridLayout.addWidget(self.eventFilterLineEdit, 0, 3, 1, 1)
-        self.initializerTextEdit = QtGui.QLineEdit(self.layoutWidget1)
-        self.initializerTextEdit.setText(QtGui.QApplication.translate("masar", "*", None, QtGui.QApplication.UnicodeUTF8))
-        self.initializerTextEdit.setObjectName(_fromUtf8("initializerTextEdit"))
-        self.eventGridLayout.addWidget(self.initializerTextEdit, 1, 3, 1, 1)
+        self.authorTextEdit = QtGui.QLineEdit(self.layoutWidget1)
+        self.authorTextEdit.setText(QtGui.QApplication.translate("masar", "*", None, QtGui.QApplication.UnicodeUTF8))
+        self.authorTextEdit.setObjectName(_fromUtf8("authorTextEdit"))
+        self.eventGridLayout.addWidget(self.authorTextEdit, 1, 3, 1, 1)
         self.eventFilterLabel = QtGui.QLabel(self.layoutWidget1)
         self.eventFilterLabel.setText(QtGui.QApplication.translate("masar", "Event Desc", None, QtGui.QApplication.UnicodeUTF8))
         self.eventFilterLabel.setObjectName(_fromUtf8("eventFilterLabel"))
@@ -232,7 +232,7 @@ class Ui_masar(object):
         QtCore.QObject.connect(self.fetchConfigButton, QtCore.SIGNAL(_fromUtf8("clicked()")), masar.fetchConfigAction)
         QtCore.QObject.connect(self.saveCurrentPreviewButton, QtCore.SIGNAL(_fromUtf8("clicked()")), masar.saveMachinePreviewAction)
         QtCore.QObject.connect(self.eventFilterLineEdit, QtCore.SIGNAL(_fromUtf8("textChanged(QString)")), masar.eventFilterChanged)
-        QtCore.QObject.connect(self.initializerTextEdit, QtCore.SIGNAL(_fromUtf8("textChanged(QString)")), masar.initializerTextChanged)
+        QtCore.QObject.connect(self.authorTextEdit, QtCore.SIGNAL(_fromUtf8("textChanged(QString)")), masar.authorTextChanged)
         QtCore.QObject.connect(self.timeRangeCheckBox, QtCore.SIGNAL(_fromUtf8("stateChanged(int)")), masar.useTimeRange)
         QtCore.QObject.connect(self.fetchEventButton, QtCore.SIGNAL(_fromUtf8("clicked(void)")), masar.fetchEventAction)
         QtCore.QObject.connect(self.fetchSnapshotButton, QtCore.SIGNAL(_fromUtf8("clicked(void)")), masar.retrieveSnapshot)

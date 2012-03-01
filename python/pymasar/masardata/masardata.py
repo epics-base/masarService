@@ -226,29 +226,32 @@ def retrieveSnapshot(conn, eventid=None,start=None, end=None, comment=None,appro
     where service_event_id = ? 
     '''
 
-    if eventid:
-        data= __retrieveMasarData(conn, eventid)
-#        data = datahead + data[:]
-        
-        cur = conn.cursor()
-        cur.execute(sql, (eventid,))
-        result =cur.fetchall()
-        data = result[:] + data[:]
-        dataset.append(data)
-    else:
-        results = retrieveServiceEvents(conn, start=start, end=end, comment=comment, approval=approval)
-#        print ("event retults = ", results)
-        sql += ' and service_config_id = ?  and service_event_approval = 1 '
-        for result in results[1:]:
-            data= __retrieveMasarData(conn, result[0])
-#            data = datahead + data[:]
-    
+    try:
+        if eventid:
+            data= __retrieveMasarData(conn, eventid)
+    #        data = datahead + data[:]
+            
             cur = conn.cursor()
-            cur.execute(sql, (result[0], result[1],))
+            cur.execute(sql, (eventid,))
             result =cur.fetchall()
             data = result[:] + data[:]
             dataset.append(data)
-    dataset = datahead[:] + dataset[:]
+        else:
+            results = retrieveServiceEvents(conn, start=start, end=end, comment=comment, approval=approval)
+    #        print ("event retults = ", results)
+            sql += ' and service_config_id = ?  and service_event_approval = 1 '
+            for result in results[1:]:
+                data= __retrieveMasarData(conn, result[0])
+    #            data = datahead + data[:]
+        
+                cur = conn.cursor()
+                cur.execute(sql, (result[0], result[1],))
+                result =cur.fetchall()
+                data = result[:] + data[:]
+                dataset.append(data)
+        dataset = datahead[:] + dataset[:]
+    except:
+        raise
     return dataset
 
 def __retrieveMasarData(conn, eventid):

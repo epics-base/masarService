@@ -10,7 +10,6 @@ from __future__ import print_function
 #from __future__ import unicode_literals
 
 import sys
-import os
 import time
 import datetime
 
@@ -33,46 +32,28 @@ import ui_masar
 import commentdlg
 from showarrayvaluedlg import ShowArrayValueDlg
 
+import masarClient
+
 __version__ = "0.0.1"
 
 def usage():
-    print("""usage: masar.py [source]
+    print("""usage: masar.py [option]
 
-Sources to get data (which can be given in any of the forms shown):
--e  --epics      epics [default]
--i  --irmis      irmis 
--l  --sqlite     sqlite
-or
+command option:
 -h  --help       help
-
-source defaults to epics
 
 masar.py v {0}. Copyright (c) 2011 Brookhaven National Laboratory. All rights reserved.
 """.format(__version__))
     sys.exit()
 
-source = 'epics'
 args = sys.argv[1:]
 while args:
     arg = args.pop(0)
-    if arg in ("-i", "--irmis", "irmis"):
-        print ('use IRMIS as data source')
-        source = 'irmis'
-    elif arg in ("-l", "--sqlite", "sqlite"):
-        print ('use SQLite as data source')
-        source = 'sqlite'
-        import pymasar
-        import sqlite3
-        __db = '/'.join((os.path.abspath(os.path.dirname(__file__)), '../../../pymasar/example', 'masar.db'))
-        conn = sqlite3.connect(__db)
-    elif arg in ("-e", "--epics", "epics"):
-        print ('use EPICS V4 as data source')
-    elif arg in ("-h", "--help", "help"):
+    if arg in ("-h", "--help", "help"):
         usage()
     else:
-        print ('Unknown data source. use EPICS V4 as data source')
-if source == 'epics':
-    import masarClient
+        print ('Unknown option.')
+
 
 # have to put this as last import, otherwise, import error. 
 import cothread.catools as cav3
@@ -110,7 +91,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                  22: 'ALARM_NSTATUS'
     }
 
-    def __init__(self, parent=None, channelname='masarService', source='epics'):
+    def __init__(self, channelname='masarService', parent=None):
         super(masarUI, self).__init__(parent)
         self.setupUi(self)
         self.__setDateTime()
@@ -121,14 +102,13 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.arrayData = {} # store all array data
         
         self.__service = 'masar'
-        if source == 'epics':
-            self.mc = masarClient.client(channelname)
+        self.mc = masarClient.client(channelname)
         
         self.__initSystemBomboBox()
         
         self.currentConfigFilter = str(self.configFilterLineEdit.text())
         self.eventConfigFilter = str(self.eventFilterLineEdit.text())
-        self.initializerText = str(self.initializerTextEdit.text())
+        self.authorText = str(self.authorTextEdit.text())
         self.UTC_OFFSET_TIMEDELTA = datetime.datetime.utcnow() - datetime.datetime.now()
         self.time_format = "%Y-%m-%d %H:%M:%S"
         self.previewId = None
@@ -176,8 +156,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.setConfigTable()
         self.configTableWidget.resizeColumnsToContents()
         
-    def initializerTextChanged(self):
-        self.initializerText = str(self.initializerTextEdit.text())
+    def authorTextChanged(self):
+        self.authorText = str(self.authorTextEdit.text())
     
     def __getComment(self):
         cdlg = commentdlg.CommentDlg()
@@ -234,30 +214,33 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.previewConfName = None
         
         cname = str(self.configTableWidget.item(selectedConfig[0].row(), 0).text())
-        eid, data = self.getMachinePreviewData(cname)
-        self.pv4cDict[str(eid)] = data['PV Name']
-        self.data4eid[str(eid)] = data
-        
-        try:
-            tabWidget = self.tabWindowDict['preview']
-            index = self.snapshotTabWidget.indexOf(tabWidget)
-        except:
-            tabWidget = QTableWidget()
-            index = self.snapshotTabWidget.count()
-            self.tabWindowDict['preview'] = tabWidget
-            QObject.connect(tabWidget, SIGNAL(_fromUtf8("cellDoubleClicked (int,int)")), self.__showArrayData)
-        
-        self.setSnapshotTable(data, tabWidget, eid)
-        tabWidget.resizeColumnsToContents()
-        label = QString.fromUtf8((cname+': Preview'))
-        self.snapshotTabWidget.addTab(tabWidget, label)
-
-        self.snapshotTabWidget.setTabText(index, label)        
-        self.snapshotTabWidget.setCurrentIndex(index)
-        
-        self.previewId = eid
-        self.previewConfName = cname
-        self.isPreviewSaved = False
+        result = self.getMachinePreviewData(cname)
+        if result:
+            eid = result[0]
+            data = result[1]
+            self.pv4cDict[str(eid)] = data['PV Name']
+            self.data4eid[str(eid)] = data
+            
+            try:
+                tabWidget = self.tabWindowDict['preview']
+                index = self.snapshotTabWidget.indexOf(tabWidget)
+            except:
+                tabWidget = QTableWidget()
+                index = self.snapshotTabWidget.count()
+                self.tabWindowDict['preview'] = tabWidget
+                QObject.connect(tabWidget, SIGNAL(_fromUtf8("cellDoubleClicked (int,int)")), self.__showArrayData)
+            
+            self.setSnapshotTable(data, tabWidget, eid)
+            tabWidget.resizeColumnsToContents()
+            label = QString.fromUtf8((cname+': Preview'))
+            self.snapshotTabWidget.addTab(tabWidget, label)
+    
+            self.snapshotTabWidget.setTabText(index, label)        
+            self.snapshotTabWidget.setCurrentIndex(index)
+            
+            self.previewId = eid
+            self.previewConfName = cname
+            self.isPreviewSaved = False
         
     def __find_key(self, dic, val):
         """return the key of dictionary dic given the value"""
@@ -324,59 +307,69 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             elif eid == 'comment':
                 return # nothing should do here
             pvlist = self.pv4cDict[str(eid)]
-            channelName, s_value, d_value, i_value, dbrtype, isConnected, is_array, array_value = self.getLiveMachineData(pvlist)
+            
+            data = self.getLiveMachineData(pvlist)
+            if data:
+                channelName = data[0]
+                s_value = data[1]
+                d_value = data[2]
+                i_value = data[3]
+                dbrtype = data[4]
+#                isConnected = data[5]
+                is_array = data[6]
+                array_value = data[7]
 
-            dd = {}
-            noMatchedPv = []
+                dd = {}
+                noMatchedPv = []
+                
+                # put channel name and its order into a dictionary
+                for i in range(len(channelName)):
+                    dd[str(channelName[i])] = i
+                
+                # get table rows
+                rowCount = curWidget.rowCount()
+                for i in range(rowCount):
+                    try:
+                        index = dd[str(curWidget.item(i, 0).text())]
+                        if is_array[index]:
+                            self.__setTableItem(curWidget, i, 6, '['+str(array_value[index])[1:8]+' ..., ...]')
+                            self.arrayData[channelName[index]+"_"+str(eid)+'_live'] = array_value[index]
+                        else:
+                            if dbrtype[index] in self.epicsDouble:
+                                self.__setTableItem(curWidget, i, 6, str(d_value[index]))
             
-            # put channel name and its order into a dictionary
-            for i in range(len(channelName)):
-                dd[str(channelName[i])] = i
-            
-            # get table rows
-            rowCount = curWidget.rowCount()
-            for i in range(rowCount):
-                try:
-                    index = dd[str(curWidget.item(i, 0).text())]
-                    if is_array[index]:
-                        self.__setTableItem(curWidget, i, 6, '['+str(array_value[index])[1:8]+' ..., ...]')
-                        self.arrayData[channelName[index]+"_"+str(eid)+'_live'] = array_value[index]
-                    else:
-                        if dbrtype[index] in self.epicsDouble:
-                            self.__setTableItem(curWidget, i, 6, str(d_value[index]))
-        
-                            try:
-                                saved_val = float(str(curWidget.item(i, 5).text()))
-                                if d_value[index] != None:
-                                    delta = d_value[index] - saved_val
-                                    if abs(delta) < 1.0e-6:
-                                        delta = 0
-                                else:
-                                    delta = None
-                            except:
-                                delta='N/A'
-                            self.__setTableItem(curWidget, i, 7, str(delta))
-                        elif dbrtype[index] in self.epicsLong:
-                            self.__setTableItem(curWidget, i, 6, str(i_value[index]))
-        
-                            if dbrtype[index] in self.epicsNoAccess:
-                                pass
-                            else:
                                 try:
-                                    saved_val = int(float(str(curWidget.item(i, 5).text())))
-                                    if i_value[index] != None:
-                                        delta = i_value[index] - saved_val
+                                    saved_val = float(str(curWidget.item(i, 5).text()))
+                                    if d_value[index] != None:
+                                        delta = d_value[index] - saved_val
+                                        if abs(delta) < 1.0e-6:
+                                            delta = 0
                                     else:
                                         delta = None
                                 except:
                                     delta='N/A'
                                 self.__setTableItem(curWidget, i, 7, str(delta))
-                        elif dbrtype[index] in self.epicsString:
-                            self.__setTableItem(curWidget, i, 6, str(s_value[index]))
-                except:
-                    noMatchedPv.append(str(curWidget.item(i, 0).text()))
-            if len(noMatchedPv) > 0:
-                print ("Can not find the following pv for this snapshot: \n", noMatchedPv)
+                            elif dbrtype[index] in self.epicsLong:
+                                self.__setTableItem(curWidget, i, 6, str(i_value[index]))
+            
+                                if dbrtype[index] in self.epicsNoAccess:
+                                    pass
+                                else:
+                                    try:
+                                        saved_val = int(float(str(curWidget.item(i, 5).text())))
+                                        if i_value[index] != None:
+                                            delta = i_value[index] - saved_val
+                                        else:
+                                            delta = None
+                                    except:
+                                        delta='N/A'
+                                    self.__setTableItem(curWidget, i, 7, str(delta))
+                            elif dbrtype[index] in self.epicsString:
+                                self.__setTableItem(curWidget, i, 6, str(s_value[index]))
+                    except:
+                        noMatchedPv.append(str(curWidget.item(i, 0).text()))
+                if len(noMatchedPv) > 0:
+                    print ("Can not find the following pv for this snapshot: \n", noMatchedPv)
         else:
             QMessageBox.warning(self, "Warning", "Not a snapshot.")
             return
@@ -398,9 +391,9 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             configNames.append(str(self.configTableWidget.item(idx.row(), 0).text()))
         
         data = self.retrieveEventData(configids=configIds, confignames=configNames)
-        
-        self.setEventTable(data)
-        self.eventTableWidget.resizeColumnsToContents()
+        if data:
+            self.setEventTable(data)
+            self.eventTableWidget.resizeColumnsToContents()
     
     def retrieveSnapshot(self):
         selectedItems = self.eventTableWidget.selectionModel().selectedRows()
@@ -423,17 +416,12 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         
     def setConfigTable(self):
         data = self.retrieveConfigData()
-        self.setTable(data, self.configTableWidget)
+        if data:
+            self.setTable(data, self.configTableWidget)
     
     def setSnapshotTabWindow(self, eventNames, eventTs, eventIds):
         tabWidget = None
-        
-        for i in range(self.snapshotTabWidget.count(), 0, -1):
-            self.snapshotTabWidget.removeTab(i)
-
-        self.pv4cDict.clear()
-        self.data4eid.clear()
-        self.arrayData.clear()
+        isNew = True
         
         for i in range(len(eventIds)):
             if self.tabWindowDict.has_key(eventIds[i]):
@@ -444,22 +432,31 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 QObject.connect(tabWidget, SIGNAL(_fromUtf8("cellDoubleClicked (int,int)")), self.__showArrayData)
             
             data = self.retrieveMasarData(eventid=eventIds[i])
-            tabWidget.clear()
-            self.setSnapshotTable(data, tabWidget, eventIds[i])
-            tabWidget.resizeColumnsToContents()
-            ts = eventTs[i].split('.')[0]
+            if data:
+                if isNew:
+                    for i in range(self.snapshotTabWidget.count(), 0, -1):
+                        self.snapshotTabWidget.removeTab(i)
             
-            label = QString.fromUtf8((eventNames[i]+': ' + ts))
-            self.snapshotTabWidget.addTab(tabWidget, label)
-            self.snapshotTabWidget.setTabText(i+1, label)
-            self.pv4cDict[str(eventIds[i])] = data['PV Name']
-            self.data4eid[str(eventIds[i])] = data
+                    self.pv4cDict.clear()
+                    self.data4eid.clear()
+                    self.arrayData.clear()
+                    isNew = False
+
+                tabWidget.clear()
+                self.setSnapshotTable(data, tabWidget, eventIds[i])
+                tabWidget.resizeColumnsToContents()
+                ts = eventTs[i].split('.')[0]
+                
+                label = QString.fromUtf8((eventNames[i]+': ' + ts))
+                self.snapshotTabWidget.addTab(tabWidget, label)
+                self.snapshotTabWidget.setTabText(i+1, label)
+                self.pv4cDict[str(eventIds[i])] = data['PV Name']
+                self.data4eid[str(eventIds[i])] = data
             
         self.snapshotTabWidget.setCurrentIndex(1)
         
     def __showArrayData(self, row, column):
         if column != 5 and column != 6: # display the array value only
-            print ('wrong column', row, column)
             return
         curWidget = self.snapshotTabWidget.currentWidget()
         if not isinstance(curWidget, QTableWidget):
@@ -620,53 +617,30 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             raise "Either given data is not an instance of OrderedDict or table is not an instance of QtGui.QTableWidget"
 
     def getSystemList(self):
-        if source == 'sqlite':
-            results = pymasar.service.retrieveServiceConfigProps(conn)
-            system = []
-            for result in results[1:]:
-                system.append(result[3])
-            return sorted(set(system))
-        elif source == 'epics':
-            try:
-                return self.mc.retrieveSystemList()
-            except:
-                QMessageBox.warning(self,
-                                    "Warning",
-                                    "Cannot connect to MASAR server.\nPlease check the serviceName, network connection, and service status.")
+        try:
+            return self.mc.retrieveSystemList()
+        except:
+            QMessageBox.warning(self,
+                                "Warning",
+                                "Cannot connect to MASAR server.\nPlease check the serviceName, network connection, and service status.")
 
-                return
+            return
     
     def retrieveConfigData(self):
         data = odict()
-        if source == 'sqlite':
-            results = pymasar.service.retrieveServiceConfigs(conn, servicename=self.__service, system=self.system)[1:]
-            # the rturned data format looks like
-            # [(service_config_id, service_config_name, service_config_desc, service_config_create_date, 
-            #   service_config_version, and service_name)]
 
-            #  + self.UTC_OFFSET_TIMEDELTA
-            config_id = []
-            config_name = []
-            config_desc = []
-            config_date = []
-            config_version = []
-            if results:
-                for res in results:
-                    config_id.append(str(res[0]))
-                    config_name.append(res[1])
-                    config_desc.append(res[2])
-                    config_date.append(res[3])
-                    config_version.append(res[4])
-        elif source == 'epics':
-            params = {"system": self.system,
-                      "servicename": self.__service,
-                      "configname": self.currentConfigFilter}
-            config_id, config_name, config_desc, config_date, config_version = self.mc.retrieveServiceConfigs(params)
-        data['Name'] = config_name
-        data['Description'] = config_desc
-        data['Date'] = config_date
-        data['Version'] = config_version
-        data['Id'] = config_id
+        params = {"system": self.system,
+                  "servicename": self.__service,
+                  "configname": self.currentConfigFilter}
+        rpcResult = self.mc.retrieveServiceConfigs(params)
+        if not rpcResult:
+            return False
+        
+        data['Name'] = rpcResult[1]
+        data['Description'] = rpcResult[2]
+        data['Date'] = rpcResult[3]
+        data['Version'] = rpcResult[4]
+        data['Id'] = rpcResult[0]
         return data
     
     def retrieveEventData(self,configids=None,confignames=None):
@@ -687,44 +661,36 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         c_names = []
         event_author = []
         self.e2cDict.clear()
-        if source == 'sqlite':
-            if configids:
-                for i in range(len(configids)):
-                    cid = configids[i]
-                    if self.timeRangeCheckBox.isChecked():
-                        results = pymasar.service.retrieveServiceEvents(conn, configid= cid, start=start, end=end)
-                    else:
-                        results = pymasar.service.retrieveServiceEvents(conn, configid= cid)
-                    #service_event_id, service_config_id, service_event_user_tag, service_event_UTC_time, service_event_serial_tag
-                    for res in results[1:]:
-                        c_names.append(confignames[i])
-                        event_ids.append(str(res[0]))
-                        ts = str(datetime.datetime.fromtimestamp(time.mktime(time.strptime(res[3], self.time_format))) - self.UTC_OFFSET_TIMEDELTA)
-                        event_ts.append(ts)
-                        event_desc.append(res[2])
-                        event_author.append(str(res[4]))
-                        self.e2cDict[str(res[0])] = [cid, res[2], confignames[i]]
-        elif source == 'epics':
-            if configids:
-                for i in range(len(configids)):
-                    cid = configids[i]
-                    params = {'configid': cid,
-                              "comment": self.eventConfigFilter,
-                              "user": self.initializerText}
-                    if self.timeRangeCheckBox.isChecked():
-                        params['start'] = str(start)
-                        params['end'] = str(end)
-                    eids, usertag, utctimes, initializer = self.mc.retrieveServiceEvents(params)
 
-                    event_ids = event_ids[:] + (list(eids))[:]
-                    event_desc = event_desc[:] + (list(usertag))[:]
-                    event_author = event_author[:] + (list(initializer))[:]
-                    for j in range(len(eids)):
-                        self.e2cDict[str(eids[j])] = [cid, usertag[j],confignames[i]]
-                    for ut in utctimes:
-                        c_names.append(confignames[i])
-                        ts = str(datetime.datetime.fromtimestamp(time.mktime(time.strptime(ut, self.time_format))) - self.UTC_OFFSET_TIMEDELTA)
-                        event_ts.append(ts)
+        if configids:
+            for i in range(len(configids)):
+                cid = configids[i]
+                params = {'configid': cid,
+                          "comment": self.eventConfigFilter,
+                          "user": self.authorText}
+                if self.timeRangeCheckBox.isChecked():
+                    params['start'] = str(start)
+                    params['end'] = str(end)
+                
+                rpcResult = self.mc.retrieveServiceEvents(params)
+                if not rpcResult:
+                    return False
+                eids = rpcResult[0]
+                usertag = rpcResult[1]
+                utctimes = rpcResult[2]
+                author = rpcResult[3]
+
+                event_ids = event_ids[:] + (list(eids))[:]
+                event_desc = event_desc[:] + (list(usertag))[:]
+                event_author = event_author[:] + (list(author))[:]
+                for j in range(len(eids)):
+                    self.e2cDict[str(eids[j])] = [cid, usertag[j],confignames[i]]
+                for ut in utctimes:
+                    c_names.append(confignames[i])
+                    ts = str(datetime.datetime.fromtimestamp(time.mktime(time.strptime(ut, self.time_format))) - self.UTC_OFFSET_TIMEDELTA)
+                    event_ts.append(ts)
+        else:
+            return False
                     
         data = odict()
         data['Config'] = c_names
@@ -736,63 +702,24 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
 
     def retrieveMasarData(self, eventid=None):
         data = odict()
-        if source == 'sqlite':
-            # result format:
-            # ('user tag', 'event UTC time', 'service config name', 'service name'),
-            # ('pv name', 'string value', 'double value', 'long value', 'dbr type', 'isConnected', 
-            #  'secondsPastEpoch', 'nanoSeconds', 'timeStampTag', 'alarmSeverity', 'alarmStatus', 'alarmMessage'
-            #  'is_array', 'array_value')
-            results = pymasar.masardata.masardata.retrieveSnapshot(conn, eventid=eventid)[1]
-            pvnames = []
-            s_value = []
-            d_value = []
-            i_value = []
-            dbrtype = []
-            isConnected = []
-            ts = []
-            ts_nano = []
-            ts_tag = []
-            severity = []
-            status = []
-            alarm_message = []
-            is_array = []
-            array_value = []
 
-            if len(results) > 2:
-                for i in range(2, len(results)):
-                    res = results[i]
-
-                    pvnames.append(res[0])
-                    s_value.append(res[1])
-                    d_value.append(res[2])
-                    i_value.append(res[3])
-                    dbrtype.append(res[4])
-                    isConnected.append(res[5])
-                    ts.append(res[6])
-                    ts_nano.append(res[7])
-                    ts_tag.append(res[8])
-                    severity.append(res[9])
-                    status.append(res[10])
-                    alarm_message.append(res[11])
-                    is_array.extend(res[12])
-                    array_value.extend(res[13])
-            data['PV Name'] = pvnames
-            data['Status'] = status
-            data['Severity'] = severity
-            data['Time stamp'] = ts
-            data['Time stamp (nano)'] = ts_nano
-            data['DBR'] = dbrtype
-            data['S_value'] = s_value
-            data['I_value'] = i_value
-            data['D_value'] = d_value
-            data['isConnected'] = isConnected
-            data['isArray'] = is_array
-            data['arrayValue'] = array_value
-        elif source == 'epics':
-            params = {'eventid': eventid}
-            pvnames, s_value, d_value, i_value, dbrtype, isConnected, ts, ts_nano, severity, status, is_array, raw_array_value = self.mc.retrieveSnapshot(params)
-            severity = list(severity)
-            status = list(status)
+        params = {'eventid': eventid}
+        rpcResult = self.mc.retrieveSnapshot(params)
+        if not rpcResult:
+            return False
+        pvnames = rpcResult[0]
+        s_value = rpcResult[1]
+        d_value = rpcResult[2]
+        i_value = rpcResult[3]
+        dbrtype = rpcResult[4]
+        isConnected = rpcResult[5]
+        ts = rpcResult[6]
+        ts_nano = rpcResult[7]
+        severity = list(rpcResult[8])
+        status = list(rpcResult[9])
+        is_array = rpcResult[10]
+        raw_array_value  = rpcResult[11]
+        
         array_value = []
         for i in range(len(severity)):
             try:
@@ -831,99 +758,113 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         return data
 
     def saveMachinePreviewData(self, eventid, confname, comment):
-        if source == 'sqlite':
-            pass
-        elif source == 'epics':
-            if not eventid:
-                QMessageBox.warning(self,
-                            "Warning",
-                            "Unknown event.")
-                return
+        if not eventid:
+            QMessageBox.warning(self,
+                        "Warning",
+                        "Unknown event.")
+            return
 
-            params = {'eventid':    str(eventid),
-                      'configname': str(confname),
-                      'user':       str(comment[0]),
-                      'desc':       str(comment[1])}
-            result = self.mc.updateSnapshotEvent(params)
-            if result:
-                QMessageBox.information(self,"Successful", 
-                                        " Succeed to save preview")
-            else:
-                QMessageBox.information(self, "Failures",
-                                        "Failed to save preview.")
-    
+        params = {'eventid':    str(eventid),
+                  'configname': str(confname),
+                  'user':       str(comment[0]),
+                  'desc':       str(comment[1])}
+        result = self.mc.updateSnapshotEvent(params)
+        if result:
+            QMessageBox.information(self,"Successful", 
+                                    " Succeed to save preview")
+        else:
+            QMessageBox.information(self, "Failures",
+                                    "Failed to save preview.")
+
     def getMachinePreviewData(self, configName):
-        if source == 'sqlite':
-            pass
-        elif source == 'epics':
-            params = {'configname': configName,
-                      'servicename': 'masar'}
-            
-            eventid, pvnames, s_value, d_value, i_value, dbrtype, isConnected, ts, ts_nano, severity, status, is_array, raw_array_value = self.mc.saveSnapshot(params)
-            severity = list(severity)
-            status = list(status)
-    
-            array_value = []
-            for i in range(len(severity)):
-                try:
-                    severity[i] = self.severityDict[severity[i]]
-                except:
-                    severity[i] = 'N/A'
-                try:
-                    status[i] = self.alarmDict[status[i]]
-                except:
-                    status[i] = 'N/A'
+        params = {'configname': configName,
+                  'servicename': 'masar'}
+        
+        rpcResult = self.mc.saveSnapshot(params)
+        if not rpcResult:
+            return False
+        eventid = rpcResult[0]
+        pvnames = rpcResult[1]
+        s_value = rpcResult[2]
+        d_value = rpcResult[3]
+        i_value = rpcResult[4]
+        dbrtype = rpcResult[5]
+        isConnected = rpcResult[6]
+        ts = rpcResult[7]
+        ts_nano = list(rpcResult[8])
+        severity = list(rpcResult[9])
+        status = list(rpcResult[10])
+        is_array = rpcResult[11]
+        raw_array_value  = rpcResult[12]
 
-                if dbrtype[i] in self.epicsLong:
-                    array_value.append(raw_array_value[i][2])
-                elif dbrtype[i] in self.epicsDouble:
-                    array_value.append(raw_array_value[i][1])
-                elif dbrtype[i] in self.epicsString:
-                    # string value
-                    array_value.append(raw_array_value[i][0])
-                elif dbrtype[i] in self.epicsNoAccess:
-                    # when the value is no_access, use the double value no matter what it is
-                    array_value.append(raw_array_value[i][1])
-            
-            data = odict()
-            data['PV Name'] = pvnames
-            data['Status'] = status
-            data['Severity'] = severity
-            data['Time stamp'] = ts
-            data['Time stamp (nano)'] = ts_nano
-            data['DBR'] = dbrtype
-            data['S_value'] = s_value
-            data['I_value'] = i_value
-            data['D_value'] = d_value
-            data['isConnected'] = isConnected
-            data['isArray'] = is_array
-            data['arrayValue'] = array_value
+        array_value = []
+        for i in range(len(severity)):
+            try:
+                severity[i] = self.severityDict[severity[i]]
+            except:
+                severity[i] = 'N/A'
+            try:
+                status[i] = self.alarmDict[status[i]]
+            except:
+                status[i] = 'N/A'
 
-            return (eventid, data)
+            if dbrtype[i] in self.epicsLong:
+                array_value.append(raw_array_value[i][2])
+            elif dbrtype[i] in self.epicsDouble:
+                array_value.append(raw_array_value[i][1])
+            elif dbrtype[i] in self.epicsString:
+                # string value
+                array_value.append(raw_array_value[i][0])
+            elif dbrtype[i] in self.epicsNoAccess:
+                # when the value is no_access, use the double value no matter what it is
+                array_value.append(raw_array_value[i][1])
+        
+        data = odict()
+        data['PV Name'] = pvnames
+        data['Status'] = status
+        data['Severity'] = severity
+        data['Time stamp'] = ts
+        data['Time stamp (nano)'] = ts_nano
+        data['DBR'] = dbrtype
+        data['S_value'] = s_value
+        data['I_value'] = i_value
+        data['D_value'] = d_value
+        data['isConnected'] = isConnected
+        data['isArray'] = is_array
+        data['arrayValue'] = array_value
+
+        return (eventid, data)
         
     def getLiveMachineData(self, pvlist):
-        if source == 'sqlite':
-            pass
-        elif source == 'epics':
-            params = {}
-            for pv in pvlist:
-                params[pv] = pv
-            # channelName,stringValue,doubleValue,longValue,dbrType,isConnected, is_array, array_value
-            array_value = []
-            channelName,stringValue,doubleValue,longValue,dbrtype,isConnected,is_array, raw_array_value = self.mc.getLiveMachine(params)
-            for i in range(len(is_array)):
-                if dbrtype[i] in self.epicsLong:
-                    array_value.append(raw_array_value[i][2])
-                elif dbrtype[i] in self.epicsDouble:
-                    array_value.append(raw_array_value[i][1])
-                elif dbrtype[i] in self.epicsString:
-                    # string value
-                    array_value.append(raw_array_value[i][0])
-                elif dbrtype[i] in self.epicsNoAccess:
-                    # when the value is no_access, use the double value no matter what it is
-                    array_value.append(raw_array_value[i][1])
-            
-            return (channelName,stringValue,doubleValue,longValue,dbrtype,isConnected,is_array, array_value)
+        params = {}
+        for pv in pvlist:
+            params[pv] = pv
+        # channelName,stringValue,doubleValue,longValue,dbrType,isConnected, is_array, array_value
+        array_value = []
+        rpcResult = self.mc.getLiveMachine(params)
+        if not rpcResult:
+            return False
+        channelName = rpcResult[0]
+        stringValue = rpcResult[1]
+        doubleValue = rpcResult[2]
+        longValue = rpcResult[3]
+        dbrtype = rpcResult[4]
+        isConnected = rpcResult[5]
+        is_array = rpcResult[6]
+        raw_array_value = rpcResult[7]
+        for i in range(len(is_array)):
+            if dbrtype[i] in self.epicsLong:
+                array_value.append(raw_array_value[i][2])
+            elif dbrtype[i] in self.epicsDouble:
+                array_value.append(raw_array_value[i][1])
+            elif dbrtype[i] in self.epicsString:
+                # string value
+                array_value.append(raw_array_value[i][0])
+            elif dbrtype[i] in self.epicsNoAccess:
+                # when the value is no_access, use the double value no matter what it is
+                array_value.append(raw_array_value[i][1])
+        
+        return (channelName,stringValue,doubleValue,longValue,dbrtype,isConnected,is_array, array_value)
 
 def main(channelname = None):
     app = QApplication(sys.argv)
@@ -931,9 +872,9 @@ def main(channelname = None):
     app.setOrganizationDomain("BNL")
     app.setApplicationName("MASAR Viewer")
     if channelname:
-        form = masarUI(channelname=channelname, source=source)
+        form = masarUI(channelname=channelname)
     else:
-        form = masarUI(source=source)
+        form = masarUI()
     form.show()
     app.exec_()
 

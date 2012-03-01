@@ -174,7 +174,7 @@
             </widget>
            </item>
            <item row="1" column="3">
-            <widget class="QLineEdit" name="initializerTextEdit">
+            <widget class="QLineEdit" name="authorTextEdit">
              <property name="text">
               <string>*</string>
              </property>
@@ -468,10 +468,10 @@
    </hints>
   </connection>
   <connection>
-   <sender>initializerTextEdit</sender>
+   <sender>authorTextEdit</sender>
    <signal>textChanged(QString)</signal>
    <receiver>masar</receiver>
-   <slot>initializerTextChanged()</slot>
+   <slot>authorTextChanged()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>20</x>
@@ -592,6 +592,6 @@
   <slot>retrieveSnapshot()</slot>
   <slot>restoreSnapshotAction()</slot>
   <slot>getLiveMachineAction()</slot>
-  <slot>initializerTextChanged()</slot>
+  <slot>authorTextChanged()</slot>
  </slots>
 </ui>

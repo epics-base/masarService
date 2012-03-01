@@ -99,29 +99,31 @@ def retrieveSnapshot():
     # 'alarmMessage': 11
     # 'is_array': 12
     # 'array_value'13
-    numbers = nttable.getNumberValues()
-    print (numbers)
+    # numbers = nttable.getNumberValues()
     label = nttable.getLabel()
-    print (label)
-    dbr_type = nttable.getValue(4)
-    is_array = nttable.getValue(12)
-    print (is_array)
-    raw_array_value = nttable.getValue(13)
-    print (raw_array_value)
-    array_value = []
-    epicsint    = [1, 4, 5]
-    epicsString = [0]
-    epicsDouble = [2, 6]
-
-    for i in range(len(is_array)):
-        if dbr_type[i] in epicsint:
-            array_value.append(raw_array_value[i][2])
-        elif dbr_type[i] in epicsDouble:
-            array_value.append(raw_array_value[i][1])
-        elif dbr_type[i] in epicsString:
-            array_value.append(raw_array_value[i][0])
-    print (array_value)
-    print (len(is_array), len(array_value))
+    
+    if label[0] == 'status' and not nttable.getValue(0)[0]:
+        print (nttable)
+    else:
+        dbr_type = nttable.getValue(4)
+        is_array = nttable.getValue(12)
+        print (is_array)
+        raw_array_value = nttable.getValue(13)
+        print (raw_array_value)
+        array_value = []
+        epicsint    = [1, 4, 5]
+        epicsString = [0]
+        epicsDouble = [2, 6]
+    
+        for i in range(len(is_array)):
+            if dbr_type[i] in epicsint:
+                array_value.append(raw_array_value[i][2])
+            elif dbr_type[i] in epicsDouble:
+                array_value.append(raw_array_value[i][1])
+            elif dbr_type[i] in epicsString:
+                array_value.append(raw_array_value[i][0])
+        print (array_value)
+        print (len(is_array), len(array_value))
     print ("=== test %s end ===" %function)
 
 def saveSnapshot():
@@ -131,13 +133,14 @@ def saveSnapshot():
 #              'servicename': 'masar'}
     params = {'configname': 'sr_test',
               'servicename': 'masar'}
-    __clientRPC(function, params)
+    nttable = __clientRPC(function, params)
+    print(nttable)
     print ("=== test %s end ===" %function)
 
 if __name__ == '__main__':
-#    retrieveSystemList()
-#    retrieveServiceConfigs()
-#    retrieveServiceConfigProps()
-#    retrieveServiceEvents()
+    retrieveSystemList()
+    retrieveServiceConfigs()
+    retrieveServiceConfigProps()
+    retrieveServiceEvents()
     retrieveSnapshot()
-#    saveSnapshot()
+    saveSnapshot()

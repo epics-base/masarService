@@ -132,19 +132,66 @@ bool DSL_RDB::init()
 
 void DSL_RDB::destroy() {}
 
+static PVStructure::shared_pointer noDataEnetry(std::string message) {
+    FieldCreate *fieldCreate = getFieldCreate();
+
+    FieldConstPtr fields = fieldCreate->createScalarArray("status",pvBoolean);
+    PVStructure::shared_pointer pvStructure = NTTable::create(
+        false,true,true,1, &fields);
+
+    NTTable ntTable(pvStructure);
+
+    PVBooleanArray * pvBoolVal = static_cast<PVBooleanArray *>(ntTable.getPVField(0));
+    bool temp [] = {false};
+    pvBoolVal -> put (0, 1, temp, 0);
+
+    // set label strings
+    String labelVals  = fields->getFieldName();
+    PVStringArray *label = ntTable.getLabel();
+    label->put(0,1,&labelVals,0);
+
+    // Set alarm and severity
+    PVAlarm pvAlarm;
+    Alarm alarm;
+    ntTable.attachAlarm(pvAlarm);
+
+    alarm.setMessage(message);
+    alarm.setSeverity(majorAlarm);
+    alarm.setStatus(clientStatus);
+    pvAlarm.set(alarm);
+
+    // set time stamp
+    PVTimeStamp pvTimeStamp;
+    ntTable.attachTimeStamp(pvTimeStamp);
+    TimeStamp timeStamp;
+    timeStamp.getCurrent();
+    timeStamp.setUserTag(0);
+    // bool result = pvTimeStamp.set(timeStamp);
+    pvTimeStamp.set(timeStamp);
+
+    return pvStructure;
+}
+
 static PVStructure::shared_pointer retrieveSnapshot(PyObject * list)
 {
     Py_ssize_t top_len = PyList_Size(list);
     if (top_len != 2) {
-        THROW_BASE_EXCEPTION("Wrong format for returned data from dslPY when retrieving masar data.");
+        return noDataEnetry("Wrong format for returned data from dslPY when retrieving masar data.");
     }
-    size_t strFieldLen = 3; // pv name, s_value, and alarm message are stored as string.
-
-    FieldCreate *fieldCreate = getFieldCreate();
-
     PyObject * head_array = PyList_GetItem(list, 0); // get head array
     PyObject * head = PyList_GetItem(head_array, 1); // get label array
     Py_ssize_t tuple_size = PyTuple_Size(head);
+
+    PyObject * data_array = PyList_GetItem(list, 1); // get data array
+    // data length in each field
+    // (the first row is a description instead of real data)
+    Py_ssize_t numberChannels = PyList_Size(data_array) - 1;
+    if (numberChannels < 0)
+        return noDataEnetry("no channel found in this snapshot.");
+
+    size_t strFieldLen = 3; // pv name, s_value, and alarm message are stored as string.
+
+    FieldCreate *fieldCreate = getFieldCreate();
 
     // create fields
     // set label for each field
@@ -178,11 +225,6 @@ static PVStructure::shared_pointer retrieveSnapshot(PyObject * list)
     PVStructure::shared_pointer pvStructure = NTTable::create(
         false,true,true,tuple_size,fields);
     NTTable ntTable(pvStructure);
-
-    PyObject * data_array = PyList_GetItem(list, 1); // get data array
-    // data length in each field
-    // (the first row is a description instead of real data)
-    Py_ssize_t numberChannels = PyList_Size(data_array) - 1;
 
     // initilize PVStructureArray for waveform/array record
     PVStructureArray *pvarrayValue = static_cast<PVStructureArray *>(ntTable.getPVField(13));
@@ -395,7 +437,6 @@ static PVStructure::shared_pointer retrieveSnapshot(PyObject * list)
 static PVStructure::shared_pointer retrieveServiceConfigEvents(PyObject * list, long numeric)
 {
     Py_ssize_t list_len = PyList_Size(list);
-
     // data order in the tuple
     // for example result of service config
     // (service_config_id, service_config_name, service_config_desc, service_config_create_date,
@@ -498,48 +539,12 @@ static PVStructure::shared_pointer saveSnapshot(PyObject * list, PVStructure::sh
         PyObject * pstatus = PyList_GetItem(list,0);
         eid = PyLong_AsLongLong(pstatus);
     } else {
-        printf("updateSnapshotEvent return: not a tuple, nor list\n");
-        THROW_BASE_EXCEPTION("Wrong format for returned data from dslPY.");
+        // updateSnapshotEvent return: not a tuple, nor list.
+        return noDataEnetry("Wrong format for returned data from dslPY.");
     }
 
     if (eid == -1) {
-        FieldCreate *fieldCreate = getFieldCreate();
-
-        FieldConstPtr fields = fieldCreate->createScalarArray("status",pvBoolean);
-        PVStructure::shared_pointer pvStructure = NTTable::create(
-            false,true,true,1, &fields);
-
-        NTTable ntTable(pvStructure);
-
-        PVBooleanArray * pvBoolVal = static_cast<PVBooleanArray *>(ntTable.getPVField(0));
-        bool temp [] = {false};
-        pvBoolVal -> put (0, 1, temp, 0);
-
-        // set label strings
-        String labelVals  = fields->getFieldName();
-        PVStringArray *label = ntTable.getLabel();
-        label->put(0,1,&labelVals,0);
-
-        // Set alarm and severity
-        PVAlarm pvAlarm;
-        Alarm alarm;
-        ntTable.attachAlarm(pvAlarm);
-
-        alarm.setMessage("Machine preview failed. " + message);
-        alarm.setSeverity(majorAlarm);
-        alarm.setStatus(clientStatus);
-        pvAlarm.set(alarm);
-
-        // set time stamp
-        PVTimeStamp pvTimeStamp;
-        ntTable.attachTimeStamp(pvTimeStamp);
-        TimeStamp timeStamp;
-        timeStamp.getCurrent();
-        timeStamp.setUserTag(0);
-        // bool result = pvTimeStamp.set(timeStamp);
-        pvTimeStamp.set(timeStamp);
-
-        return pvStructure;
+        return noDataEnetry("Machine preview failed. "+ message);
     } else {
         NTTable ntTable(data);
 
@@ -566,7 +571,6 @@ static PVStructure::shared_pointer saveSnapshot(PyObject * list, PVStructure::sh
     }
 }
 
-
 static PVStructure::shared_pointer updateSnapshotEvent(PyObject * list)
 {
     // Get save masar event id
@@ -580,8 +584,8 @@ static PVStructure::shared_pointer updateSnapshotEvent(PyObject * list)
         PyObject * pstatus = PyList_GetItem(list,0);
         eid = PyLong_AsLongLong(pstatus);
     } else {
-        printf("updateSnapshotEvent return: not a tuple, nor list\n");
-        THROW_BASE_EXCEPTION("updateSnapshotEvent return: not a tuple, nor list.");
+        // updateSnapshotEvent return: not a tuple, nor list.
+        return noDataEnetry("Wrong format for returned data from dslPY.");
     }
 
     FieldCreate *fieldCreate = getFieldCreate();
@@ -647,13 +651,10 @@ static PVStructure::shared_pointer createResult(
         }
 
         if (functionName.compare("retrieveSnapshot")==0) {
-    //    if (functionName == "retrieveSnapshot") {
             pvStructure = retrieveSnapshot(list);
         } else if (functionName.compare("retrieveServiceEvents")==0) {
-    //        if (functionName == "retrieveServiceEvents") {
             pvStructure = retrieveServiceConfigEvents(list, 2);
         } else if (functionName.compare("retrieveServiceConfigs")==0) {
-    //        if ( functionName == "retrieveServiceConfigs") {
             pvStructure = retrieveServiceConfigEvents(list, 1);
         } else if (functionName.compare("retrieveServiceConfigProps")==0) {
             pvStructure = retrieveServiceConfigEvents(list, 2);
@@ -733,29 +734,39 @@ PVStructure::shared_pointer DSL_RDB::request(
         // put dictionary into the tuple
         PyTuple_SetItem(pyTuple, 0, pyDict);
         PyObject *pchannelnames = PyEval_CallObject(pgetchannames,pyTuple);
-        Py_ssize_t list_len = PyList_Size(pchannelnames);
+        Py_DECREF(pyTuple);
+        if(pchannelnames == NULL) {
+            pvReturn = noDataEnetry("Failed to retrieve channel names.");
+        } else {
+            Py_ssize_t list_len = PyList_Size(pchannelnames);
 
-        String channames[list_len];
-        PyObject * name;
-        for (ssize_t i = 0; i < list_len; i ++) {
-            name = PyList_GetItem(pchannelnames, i);
-            channames[i] = PyString_AsString(name);
+            String channames[list_len];
+            PyObject * name;
+            for (ssize_t i = 0; i < list_len; i ++) {
+                name = PyList_GetItem(pchannelnames, i);
+                channames[i] = PyString_AsString(name);
+            }
+            Py_DECREF(pchannelnames);
+            String message;
+            PVStructure::shared_pointer data = getLiveMachine(channames, list_len, &message);
+
+            // create a tuple is needed to pass to Python as parameter.
+            PyObject * pdata = PyCapsule_New(&data,"pvStructure",0);
+            PyObject * pyTuple2 = PyTuple_New(2);
+
+            // first value is the data from live machine
+            PyTuple_SetItem(pyTuple2, 0, pdata);
+            // second value is the dictionary
+            PyTuple_SetItem(pyTuple2, 1, pyDict);
+            PyObject *result = PyEval_CallObject(prequest,pyTuple2);
+            Py_DECREF(pyTuple2);
+            if(result == NULL) {
+                pvReturn = noDataEnetry("Failed to save snapshot.");
+            } else {
+                pvReturn = saveSnapshot(result, data, message);
+                Py_DECREF(result);
+            }
         }
-        Py_DECREF(pchannelnames);
-        String message;
-        PVStructure::shared_pointer data = getLiveMachine(channames, list_len, &message);
-
-        // create a tuple is needed to pass to Python as parameter.
-        PyObject * pdata = PyCapsule_New(&data,"pvStructure",0);
-        PyObject * pyTuple2 = PyTuple_New(2);
-
-        // first value is the data from live machine
-        PyTuple_SetItem(pyTuple2, 0, pdata);
-        // second value is the dictionary
-        PyTuple_SetItem(pyTuple2, 1, pyDict);
-        PyObject *result = PyEval_CallObject(prequest,pyTuple2);
-        pvReturn = saveSnapshot(result, data, message);
-        Py_DECREF(result);
     } else {
         // A tuple is needed to pass to Python as parameter.
         PyObject * pyTuple = PyTuple_New(1);
@@ -763,10 +774,14 @@ PVStructure::shared_pointer DSL_RDB::request(
         PyTuple_SetItem(pyTuple, 0, pyDict);
 
         PyObject *result = PyEval_CallObject(prequest,pyTuple);
-        pvReturn = createResult(result,functionName);
-        Py_DECREF(result);
+        Py_DECREF(pyTuple);
+        if(result == NULL) {
+            pvReturn = noDataEnetry("No data entry found in database.");
+        } else {
+            pvReturn = createResult(result,functionName);
+            Py_DECREF(result);
+        }
     }
-
     PyGILState_Release(gstate);
     return pvReturn;
 }

@@ -222,8 +222,7 @@ def retrieveServiceConfigs(conn, servicename=None, configname=None, configversio
             cur.execute('select service_name from service where service_id = ?',(results[i][5],))
             
             results[i] = results[i][:-1] + (cur.fetchone()[0],) # replace service_config_id with service_config_name
-    except sqlite3.Error, e:
-        print ("Error %s:" % e.args[0])
+    except:
         raise
 #        sys.exit()
     results = [('service_config_id', 'service_config_name', 'service_config_desc', 'service_config_create_date', 'service_config_version', 'service_name'),] + results[:]

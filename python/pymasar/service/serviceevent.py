@@ -231,8 +231,7 @@ def retrieveServiceEvents(conn, configid=None,start=None, end=None, comment=None
                 sql += ' and service_config_id = ? '
                 cur.execute(sql, (start, end, configid, ))
         results = cur.fetchall()
-    except sqlite3.Error, e:
-        print ("Error %s" %e.args[0])
+    except:
         raise
     
     results = [('service_event_id', 'service_config_id', 'service_event_user_tag', 'service_event_UTC_time', 'service_event_user_name'),] + results[:]

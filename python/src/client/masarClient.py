@@ -29,11 +29,20 @@ class client():
         nttable.getAlarm(alarm.getAlarmPy())    
         nttable.getTimeStamp(timeStamp.getTimeStampPy())
         return nttable
-    
+    def __isFault(self, nttable):        
+        label = nttable.getLabel()
+        if label[0] == 'status' and not nttable.getValue(0)[0]:
+            return True
+        return False
+
     def retrieveSystemList(self):
         function = 'retrieveServiceConfigProps'
         params = {}
         nttable = self.__clientRPC(function, params)
+
+        if self.__isFault(nttable):
+            return False
+        
         valueCounts = nttable.getNumberValues()
         results = nttable.getValue(valueCounts-1)
         return (sorted(set(results)))
@@ -41,6 +50,10 @@ class client():
     def retrieveServiceConfigs(self, params):
         function = 'retrieveServiceConfigs'
         nttable = self.__clientRPC(function, params)
+        
+        if self.__isFault(nttable):
+            return False
+        
         return (nttable.getValue(0),
                 nttable.getValue(1),
                 nttable.getValue(2),
@@ -50,6 +63,10 @@ class client():
     def retrieveServiceEvents(self, params):
         function = 'retrieveServiceEvents'
         nttable = self.__clientRPC(function, params)
+
+        if self.__isFault(nttable):
+            return False
+        
         # 0: service_event_id,
         # 1: service_config_id,
         # 2: service_event_user_tag,
@@ -66,6 +83,10 @@ class client():
         #  dbr type,isConnected,secondsPastEpoch,nanoSeconds,timeStampTag,
         #  alarmSeverity,alarmStatus,alarmMessage, is_array, array_value]
         nttable = self.__clientRPC(function, params)
+
+        if self.__isFault(nttable):
+            return False
+        
         return (nttable.getValue(0), 
                 nttable.getValue(1), 
                 nttable.getValue(2),
@@ -82,6 +103,10 @@ class client():
     def saveSnapshot(self, params):
         function = 'saveSnapshot'
         nttable = self.__clientRPC(function, params)
+
+        if self.__isFault(nttable):
+            return False
+        
         ts = TimeStamp()
         # [pv name,string value,double value,long value,
         #  dbr type,isConnected,secondsPastEpoch,nanoSeconds,timeStampTag,
@@ -104,11 +129,19 @@ class client():
     def updateSnapshotEvent(self, params):
         function = 'updateSnapshotEvent'
         nttable = self.__clientRPC(function, params)
+#
+#        if self.__isFault(nttable):
+#            return False
+        
         return nttable.getValue(0)[0]
     
     def getLiveMachine(self, params):
         function = 'getLiveMachine'
         nttable = self.__clientRPC(function, params)
+
+        if self.__isFault(nttable):
+            return False
+        
         # channelName,stringValue,doubleValue,longValue,dbrType,isConnected, is_array, array_value
         return (nttable.getValue(0),
                 nttable.getValue(1),
@@ -118,33 +151,3 @@ class client():
                 nttable.getValue(5),
                 nttable.getValue(12),
                 nttable.getValue(13))
-    
-if __name__ == '__main__':
-    mc = client()
-    mc.retrieveSystemList()
-    params = {'system': 'bd1',
-              'servicename': 'masar'}
-    mc.retrieveServiceConfigs(params)
-#    retrieveServiceConfigProps()
-#    retrieveServiceEvents()
-#    retrieveSnapshot()
-
-    #    params = {'configname': 'sr_bpm',
-    #              'servicename': 'masar'}
-#        params = {'configname': 'sr_test',
-#                  'servicename': 'masar'}
-
-    params = {'configname': 'ltbd1_quad',
-              'servicename': 'masar'}
-    if mc.saveSnapshot(params):
-        print ("Successfully saved a snapshot.")
-    else:
-        print ("Failed to save a snapshot.")
-    # example to operate a nttable
-#    valueCounts = nttable.getNumberValues()
-#    print (valueCounts)
-#    label = nttable.getLabel()
-#    print (label)
-#    for i in range(valueCounts):
-#        value = nttable.getValue(i)
-#        print (value)
