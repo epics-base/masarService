@@ -1,0 +1,50 @@
+record(waveform,"masarExampleBigArray01") {
+    field(DESC, "Soft Waveform")
+    field(NELM,"50000")
+    field(FTVL,"DOUBLE")
+}
+record(waveform,"masarExampleBigArray02") {
+    field(DESC, "Soft Waveform")
+    field(NELM,"50000")
+    field(FTVL,"DOUBLE")
+}
+record(waveform,"masarExampleBigArray03") {
+    field(DESC, "Soft Waveform")
+    field(NELM,"50000")
+    field(FTVL,"DOUBLE")
+}
+record(waveform,"masarExampleBigArray04") {
+    field(DESC, "Soft Waveform")
+    field(NELM,"50000")
+    field(FTVL,"DOUBLE")
+}
+record(waveform,"masarExampleBigArray05") {
+    field(DESC, "Soft Waveform")
+    field(NELM,"50000")
+    field(FTVL,"DOUBLE")
+}
+record(waveform,"masarExampleBigArray06") {
+    field(DESC, "Soft Waveform")
+    field(NELM,"50000")
+    field(FTVL,"DOUBLE")
+}
+record(waveform,"masarExampleBigArray07") {
+    field(DESC, "Soft Waveform")
+    field(NELM,"50000")
+    field(FTVL,"DOUBLE")
+}
+record(waveform,"masarExampleBigArray08") {
+    field(DESC, "Soft Waveform")
+    field(NELM,"50000")
+    field(FTVL,"DOUBLE")
+}
+record(waveform,"masarExampleBigArray09") {
+    field(DESC, "Soft Waveform")
+    field(NELM,"50000")
+    field(FTVL,"DOUBLE")
+}
+record(waveform,"masarExampleBigArray10") {
+    field(DESC, "Soft Waveform")
+    field(NELM,"50000")
+    field(FTVL,"DOUBLE")
+}
