@@ -677,6 +677,7 @@ static PVStructure::shared_pointer getLiveMachine(
     * message = gather->getMessage();
     if(!result) {
         printf("connect failed\n%s\n",gather->getMessage().c_str());
+        return noDataEnetry("connect failed "+gather->getMessage());
     }
     if((*message).length() == 0) {
         *message = "All channels are connected.";
@@ -734,7 +735,6 @@ PVStructure::shared_pointer DSL_RDB::request(
         // put dictionary into the tuple
         PyTuple_SetItem(pyTuple, 0, pyDict);
         PyObject *pchannelnames = PyEval_CallObject(pgetchannames,pyTuple);
-        Py_DECREF(pyTuple);
         if(pchannelnames == NULL) {
             pvReturn = noDataEnetry("Failed to retrieve channel names.");
         } else {
@@ -759,14 +759,15 @@ PVStructure::shared_pointer DSL_RDB::request(
             // second value is the dictionary
             PyTuple_SetItem(pyTuple2, 1, pyDict);
             PyObject *result = PyEval_CallObject(prequest,pyTuple2);
-            Py_DECREF(pyTuple2);
             if(result == NULL) {
                 pvReturn = noDataEnetry("Failed to save snapshot.");
             } else {
                 pvReturn = saveSnapshot(result, data, message);
                 Py_DECREF(result);
             }
+            Py_DECREF(pyTuple2);
         }
+        Py_DECREF(pyTuple);
     } else {
         // A tuple is needed to pass to Python as parameter.
         PyObject * pyTuple = PyTuple_New(1);

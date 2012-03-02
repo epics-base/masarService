@@ -22,7 +22,12 @@ class ShowArrayValueDlg(QDialog):
 
         # add label
         pvnameLabel = QLabel()
-        pvnameLabel.setText('Array value for\n  '+pvname)
+        label = 'Saved value (%s)' %(len(savedValue))
+        if liveValue != None:
+            label += ', Live value (%s)'%(len(liveValue))
+        
+        label += ' for\n  '+pvname
+        pvnameLabel.setText(label)
         
         # layout
         layout = QVBoxLayout(self)

@@ -282,11 +282,13 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         bad_pvs = []
         try:
             results = cav3.caput(list(pvlist), r_data)
+            
             for res in results:
                 if not res.ok:
                     bad_pvs.append(res.name)
         except:
             QMessageBox.warning(self, 'Warning', 'Error during restoring snapshot to live machine.')
+            return
         
         if len(bad_pvs) > 0:
             message = "Restore failed for the following pvs:\n"
@@ -434,8 +436,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             data = self.retrieveMasarData(eventid=eventIds[i])
             if data:
                 if isNew:
-                    for i in range(self.snapshotTabWidget.count(), 0, -1):
-                        self.snapshotTabWidget.removeTab(i)
+                    for j in range(self.snapshotTabWidget.count(), 0, -1):
+                        self.snapshotTabWidget.removeTab(j)
             
                     self.pv4cDict.clear()
                     self.data4eid.clear()

@@ -37,7 +37,8 @@ bigarray = ['masarExampleBigArray01',
     'masarExampleBigArray07',
     'masarExampleBigArray08',
     'masarExampleBigArray09',
-    'masarExampleBigArray10']
+    'masarExampleBigArray10',
+    'masarExampleDoubleArray']
 arrayval = []
 for pv in bigarray:
     nelm = (int) (caget(pv+'.NELM'))
@@ -47,3 +48,14 @@ for pv in bigarray:
     arrayval.append(array)
 
 caput(bigarray, arrayval)
+
+smallarray = ['masarExampleCharArray',
+    'masarExampleLongArray',
+    'masarExampleStringArray']
+
+#'abcdefghijkl', 
+sarrayval = [[97,98,99,100,101,102,103,104,105,106,107,108,109,110],
+             [1000,2000,3000,4000,5000,6000,7000,8000,9000,9999],
+             ['aaaaa','bbbbb','ccccc','ddddd','eeeee','fffff','ggggg','hhhhh','iiiii','jjjjj']]
+caput(smallarray, sarrayval)
+
