@@ -58,8 +58,38 @@ record(ao,"masarExample0004") {
 
 record(waveform,"masarExampleCharArray") {
     field(DESC, "Soft Waveform")
-    field(NELM,"100")
+    field(NELM,"1000")
     field(FTVL,"CHAR")
+}
+
+record(waveform,"masarExampleUCharArray") {
+    field(DESC, "Soft Waveform")
+    field(NELM,"1000")
+    field(FTVL,"UCHAR")
+}
+
+record(waveform,"masarExampleShortArray") {
+    field(DESC, "Soft Waveform")
+    field(NELM,"1000")
+    field(FTVL,"SHORT")
+}
+
+record(waveform,"masarExampleUShortArray") {
+    field(DESC, "Soft Waveform")
+    field(NELM,"1000")
+    field(FTVL,"USHORT")
+}
+
+record(waveform,"masarExampleLongArray") {
+    field(DESC, "Soft Waveform")
+    field(NELM,"1000")
+    field(FTVL,"LONG")
+}
+
+record(waveform,"masarExampleULongArray") {
+    field(DESC, "Soft Waveform")
+    field(NELM,"1000")
+    field(FTVL,"ULONG")
 }
 
 record(waveform,"masarExampleStringArray") {
@@ -68,13 +98,14 @@ record(waveform,"masarExampleStringArray") {
     field(FTVL,"STRING")
 }
 
-record(waveform,"masarExampleLongArray") {
+record(waveform,"masarExampleFloatArray") {
     field(DESC, "Soft Waveform")
-    field(NELM,"10")
-    field(FTVL,"LONG")
+    field(NELM,"1000")
+    field(FTVL,"FLOAT")
 }
+
 record(waveform,"masarExampleDoubleArray") {
     field(DESC, "Soft Waveform")
-    field(NELM,"10")
+    field(NELM,"1000")
     field(FTVL,"DOUBLE")
 }

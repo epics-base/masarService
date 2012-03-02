@@ -37,7 +37,8 @@ pvgroups= {
     'sr_vcor':      ('sr_vcor.txt' , 'storage ring vertical slow corrector'),
     'sr_vfcor':     ('sr_vfcor.txt' , 'storage ring vertical fast corrector'),
     'test':         ('example.txt', 'server test'),
-    'wftest':       ('exampleWf.txt', 'server test with waveform')
+    'wftest':       ('exampleWf.txt', 'server test with waveform'),
+    'bigwftest':    ('exampleBigWf.txt', 'server test with big waveform')
 }
 
 # dict format
@@ -61,7 +62,8 @@ masarconfigs= {
     'sr_vcor':      ('storage ring vertical slow corrector', 'sr'),
     'sr_vfcor':     ('storage ring vertical fast corrector', 'sr'),
     'sr_test':      ('test pv config', 'sr'),
-    'wf_test':      ('waveform test pv config', 'sr')    
+    'wf_test':      ('waveform test pv config', 'sr'),
+    'bwf_test':     ('big waveform test pv config', 'sr')
 }
 
 # service config: [pvgroup,]
@@ -84,7 +86,8 @@ pvg2config= {
     'sr_vcor':   ['sr_vcor'],
     'sr_vfcor':  ['sr_vfcor'],
     'sr_test':   ['test'],
-    'wf_test':   ['wftest']
+    'wf_test':   ['wftest'],
+    'bwf_test':  ['wftest', 'bigwftest']
 }
 
 #saveServiceEvent(conn, servicename, configname, comment=None):
@@ -107,7 +110,8 @@ event4conf = {
     'sr_sext':   ['masar event for storage ring sext'],
     'sr_vcor':   ['masar event for storage ring vertical corrector'],
     'sr_vfcor':  ['masar event for storage ring vertical fast corrector'],
-    'wf_test':   ['test with wf mixed case']
+    'wf_test':   ['test with wf mixed case'],
+    'bwf_test':  ['test with big waveform'] 
               }
 
 __servicename='masar'
@@ -187,14 +191,6 @@ if __name__ == '__main__':
         initServiceConfig()
     except:
         pass
-#    import time
-#    for i in range(10):
-#        print (i, "save event without data")
-#        dummyServiceEventNoData()
-#        time.sleep(5.0)
-#        print (i, "save event with dummy data")
-#        dummyServiceEventData()
-#        time.sleep(5.0)
 
     save(conn)
     conn.close()

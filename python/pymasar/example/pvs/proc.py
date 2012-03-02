@@ -1,4 +1,3 @@
-import os
 from cothread.catools import *
 import random
 
@@ -28,6 +27,7 @@ for line in lines2:
 initpv(scalarpvs)
 initpv(wfpvs)
 
+# double, float 
 bigarray = ['masarExampleBigArray01', 
     'masarExampleBigArray02',
     'masarExampleBigArray03',
@@ -38,6 +38,7 @@ bigarray = ['masarExampleBigArray01',
     'masarExampleBigArray08',
     'masarExampleBigArray09',
     'masarExampleBigArray10',
+    'masarExampleFloatArray',
     'masarExampleDoubleArray']
 arrayval = []
 for pv in bigarray:
@@ -46,16 +47,53 @@ for pv in bigarray:
     for i in range(nelm):
         array.append(random.uniform(-5.0, 5.0))
     arrayval.append(array)
-
 caput(bigarray, arrayval)
 
-smallarray = ['masarExampleCharArray',
-    'masarExampleLongArray',
-    'masarExampleStringArray']
+# char, short, int, and long
+intarraypv = ['masarExampleCharArray',
+    'masarExampleShortArray',
+    'masarExampleLongArray']
+chararray = []
+nelm=(int) (caget(intarraypv[0]+'.NELM'))
+for i in range(nelm):
+    chararray.append(random.randrange(-128,128))
+nelm = (int) (caget(intarraypv[1]+'.NELM'))
+intarray = []
+for i in range(nelm):
+    intarray.append(random.randrange(-32768, 32768))
+nelm = (int) (caget(intarraypv[2]+'.NELM'))
+longarray = []
+for i in range(nelm):
+    longarray.append(random.randrange(-2147483648, 2147483648))
+array=[]
+array.append(chararray)
+array.append(intarray)
+array.append(longarray)
+caput(intarraypv, array)
 
-#'abcdefghijkl', 
-sarrayval = [[97,98,99,100,101,102,103,104,105,106,107,108,109,110],
-             [1000,2000,3000,4000,5000,6000,7000,8000,9000,9999],
-             ['aaaaa','bbbbb','ccccc','ddddd','eeeee','fffff','ggggg','hhhhh','iiiii','jjjjj']]
-caput(smallarray, sarrayval)
+# unsigned char, short, int, and long
+uintarraypv = ['masarExampleUCharArray',
+    'masarExampleUShortArray',
+    'masarExampleULongArray']
+uchararray = []
+nelm=(int) (caget(uintarraypv[0]+'.NELM'))
+for i in range(nelm):
+    uchararray.append(random.randrange(0,256))
+nelm = (int) (caget(uintarraypv[1]+'.NELM'))
+uintarray = []
+for i in range(nelm):
+    uintarray.append(random.randrange(0, 65536))
+nelm = (int) (caget(uintarraypv[2]+'.NELM'))
+ulongarray = []
+for i in range(nelm):
+    ulongarray.append(random.randrange(0, 4294967296))
+uarray=[]
+uarray.append(uchararray)
+uarray.append(uintarray)
+uarray.append(ulongarray)
+caput(uintarraypv, uarray)
 
+# string
+stringpv = 'masarExampleStringArray'
+strpvval = ['aaaaa','bbbbb','ccccc','ddddd','eeeee','fffff','ggggg','hhhhh','iiiii','jjjjj']
+caput(stringpv, strpvval)

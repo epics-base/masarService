@@ -34,8 +34,7 @@ enum State {
 enum V3RequestType {
     requestDouble,
     requestLong,
-    requestString,
-    requestCharArray
+    requestString
 };
 
 struct ChannelID
@@ -133,10 +132,7 @@ static void connectionCallback(struct connection_handler_args args)
         case DBF_ENUM:
             id->requestType = requestString; break;
         case DBF_CHAR:
-            if(numberElements>1) {
-                id->requestType = requestCharArray; break;
-            }
-            // just fall through
+        case DBF_SHORT:
         case DBF_INT:
         case DBF_LONG:
             id->requestType = requestLong; break;
@@ -155,9 +151,7 @@ static void connectionCallback(struct connection_handler_args args)
         BooleanArrayData booldata;
         pvt->pvisArray->get(0,pvt->numberChannels,&booldata);
         bool *isArray = booldata.data;
-        if(id->requestType==requestCharArray) {
-            isArray[offset] = false;
-        } else if(numberElements==1) {
+        if(numberElements==1) {
             isArray[offset] = false;
         } else {
             isArray[offset] = true;
@@ -246,14 +240,6 @@ static void getCallback ( struct event_handler_args args )
             pvt->pvstringValue->get(0,pvt->numberChannels,&stringdata);
             String * pvalue = stringdata.data;
             pvalue[offset] = String(pTS->value);
-        } else if(id->requestType==requestCharArray) {
-            const struct dbr_time_char * pTS =
-                 ( const struct dbr_time_char *) args.dbr;
-            // set to string array only
-            pvt->pvstringValue->get(0,pvt->numberChannels,&stringdata);
-            String * pvalue = stringdata.data;
-            const char *value = (const char *)(&pTS->value);
-            pvalue[offset] = String(value);
         } else {
             throw std::logic_error("unknown DBR_TYPE");
         }
@@ -517,9 +503,6 @@ GatherV3Data::GatherV3Data(
     pvt->numberCallbacks = 0;
     pvt->requestOK = false;
     pvt->threadId = 0;
-//String builder;
-//pvStructure->toString(&builder);
-//printf("pvStructure\n%s\n",builder.c_str());
 }
 
 GatherV3Data::~GatherV3Data()
@@ -529,7 +512,6 @@ GatherV3Data::~GatherV3Data()
         ChannelID *pChannelID = pvt->apchannelID[i];
         delete pChannelID;
     }
-//    delete pvt->apchannelID;
     delete pvt;
 }
 
@@ -586,11 +568,6 @@ bool GatherV3Data::connect(double timeOut)
             ss << pvt->numberChannels;
             buf += ss.str();
             buf += " are not connected.";
-//            char buf[30];
-//            sprintf(buf,"%d channels of %d are not connected.",
-//                (pvt->numberChannels - pvt->numberConnected),
-//                 pvt->numberChannels);
-//            pvt->message = String(buf);
             pvt->message = buf;
             pvt->alarm.setMessage(pvt->message);
             pvt->alarm.setSeverity(invalidAlarm);
@@ -648,7 +625,6 @@ bool GatherV3Data::get()
         int req = DBR_TIME_DOUBLE;
         if(requestType==requestLong) req = DBR_TIME_LONG;
         if(requestType==requestString) req = DBR_TIME_STRING;
-        if(requestType==requestCharArray) req = DBR_TIME_CHAR;
         int result = ca_array_get_callback(
             req,
             0,
@@ -820,8 +796,6 @@ bool GatherV3Data::put()
                 req = DBR_DOUBLE; pdata = &pdvalue[i]; break;
             case requestString:
                 req = DBR_STRING; pdata = psvalue[i].c_str(); break;
-            case requestCharArray:
-                req = DBR_CHAR; pdata = psvalue[i].c_str(); break;
             }
         }
         int result = ca_array_put_callback(
