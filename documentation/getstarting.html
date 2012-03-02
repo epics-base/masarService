@@ -1,0 +1,323 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head>
+  
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <meta name="keywords" content="EPICS, EPICSv4" />
+
+<!-- Include the epicsv4 base.css, and the css for epics v4 documents -->
+  <link rel="stylesheet" type="text/css" href="http://epics-pvdata.sourceforge.net/base.css" /> 
+  <link rel="stylesheet" type="text/css" href="http://epics-pvdata.sourceforge.net/epicsv4.css" />
+  <title>MASAR Get Starting</title>
+  
+  <style type="text/css">
+/*<![CDATA[*/
+
+
+/*]]>*/</style>
+</head><body>
+<div class="head">
+<h1>MASAR GET STARTING<br />
+</h1>
+
+<!-- Maturity: Working Draft or Request for Comments, or Recommendation, and date.  -->
+<h2 class="nocount" id="L50">MASAR Get Starting, Editors Draft,
+02-Mar-2012</h2>
+<dl>
+  <dt>This version:</dt>
+  <dd><a href="http://epics-pvdata.sourceforge.net/masarService_20120112.html">getStarting_20120302.html</a></dd>
+  <dt><br />
+  </dt>
+  <dt>Previous version:</dt>
+  <dd><a href="http://epics-pvdata.sourceforge.net/masarService_20120112.html">getStarting.html</a></dd>
+  <dt>Editors:</dt>
+  <dd>Guobao Shen, BNL</dd>
+  <dd>Marty Kraimer, BNL</dd>
+</dl>
+</div>
+
+<h2>Abstract</h2>
+
+<p>MASAR is a V4 middle layer service that consists of both client and
+server. The MASAR service creates, saves, and retrieves
+snapshots of
+data from a set of V3 channels, and the MASAR client presents the data,
+compares a snapshot data with live data, and restores snapshot data
+back to V3 channels. It uses channelRPC mechanism for networking
+communication.<br />
+</p>
+
+<p>It is one of a set of related products:</p>
+
+<dl>
+
+  <dt><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/masarService.html">pvData</a></dt>
+  <dd>pvData (Process Variable Daata) defines and implements an
+efficent way to store, access, and transmit memory resident structured
+data.</dd>
+  <dt><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/pvAccessCPP/raw-file/tip/documentation/pvAccessCPP.html">pvAccess</a></dt>
+  <dd>pvAccess is network support for transmitting pvData.</dd>
+  <dt><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/pvIOCCPP/raw-file/tip/documentation/pvIOCCPP.html">pvIOC</a></dt>
+  <dd>A pvIOC is a processing engine, which has a network accessable
+smart real time database. The
+database consists of memory resident records. Each record has a name
+that is uniquie within the local area network and contains a top level
+pvData structure. A pvAccess server is provided so that the records can
+be accesed via
+the network.</dd>
+  <a style="font-weight: bold;" href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/pvIOCCPP/raw-file/tip/documentation/pvIOCCPP.html">normativeType</a><dd>A
+normative type definition for EPICS V4 structure.<br />
+  </dd>
+</dl>
+
+<p>The products are all part of the <a href="http://epics-pvdata.sourceforge.net/">V4</a> implementation of <a href="http://www.aps.anl.gov/epics/">
+Experimental Physics and Industrial Control System.</a></p>
+
+
+<h2>Status of this Document</h2>
+
+<p>This is the 02-Mar-2012 version of the MASAR getStarting.<br />
+</p>
+
+<h2>Known Problem</h2>
+
+<p>This should not be a problem, at least not the problem of MASAR but
+pvAccess client factory. If ClientFactory.stop is called, Python will
+quit undesired when Python terminates.</p>
+
+<p>The reason is [by Matej Sekoranja in private communication]:
+"ClientFactory works like a singleton. You can call start() many times,
+but it will be initialized only once until stop() is called. You can
+call stop() many times also. ClientFactory is thread-safe. This is why
+I need to have a static mutex."</p>
+
+<p>it is fine if ClientFactory::start() is called for every instance of
+for example EZChannelRPC. But if ClientFactory.stop() is called when
+instance is deleted, it deletes [by Matej Sekoranja] "pvAccess context
+after first EZChannelRPC instance is called. If you have many RPCs this
+might cause you problems". It "might not be idea when user will do:
+create - destroy EZChannelRPC for each call.". "If programmer does not
+call it and process exits, no harm done..."</p>
+
+
+<h2>Preference</h2>
+
+An arbitrary number of snapshot definitions can be created and
+saved
+in a
+relational database. One snapshot definition defines a set of V3
+channels
+from
+which to collect data. For each snapshot definition an arbitrary set of
+snapshots can be
+obtained
+and saved in the relational database.
+<p>A client can retrieve any saved snapshot, configuration, and header
+information for each snapshot event.</p>
+
+<p>This service uses pvData/pvAccess for all communication between a
+client and
+the MASAR service.</p>
+
+<p>This product is implemented with C++ and python and available via an
+<a href="http://epics-pvdata.sourceforge.net/LICENSE.html">open source
+license</a>. It is current released
+for testing, and has been installed successfully on most popular
+operating systems including Debian, Ubuntu, Fedora, and MAC OS-X. <br />
+</p>
+
+<h2>Installation</h2>
+
+
+<p>For now the only way to obtain the MASAR is from the
+sourceforge
+mercurial repository. Please refer the "MASAR Installation" for the
+detailed building and installation procedure.<br />
+</p>
+
+
+<h2>Configuration</h2>
+
+<p>
+After installing all required modules, it is almost ready to go. 
+One more step is to prepare Python environment.
+</p>
+
+<h3>Create symbol link for Python/C module<br />
+</h3>
+
+Python looks the shared library to load modules. You need to create
+some symbol links if it is not done yet.
+
+<pre>
+$ cd
+$ cd ~/V4/masarService/cpp/src/python
+$ python generateSOLinks.py
+</pre>
+
+If you did not set EPICS_HOST_ARCH environment, you will be promoted as below:
+<pre>EPICS_HOST_ARCH is not setted.<br />Please specify EPICS_HOST_ARCH:</pre>
+
+<p>You can specify your host architecture here, for example,
+linux-x86_64 if you are using a 64-bit linux machine. 
+An error will occur as below if the EPICS_HOST_ARCH is wrong:
+</p>
+
+<pre>
+EPICS_HOST_ARCH is not setted.
+Please specify EPICS_HOST_ARCH:linux-x86
+Traceback (most recent call last):
+  File "generateSOLinks.py", line 32, in &lt;module&gt;
+    fileList = os.listdir(libDir)
+OSError: [Errno 2] No such file or directory: '../../lib/linux-x86'
+</pre>
+
+<p>An alternative solution is to set the environment before running
+generateSOLinks.py, for example:<br />
+</p>
+
+<pre>$ export EPICS_HOST_ARCH=linux-x86_64</pre>
+
+<h3>PYTHONPATH.</h3>
+After above preparation, you need set the PYTHONPATH to allow Python interpreter to find it.
+<pre>
+$ export PYTHONPATH=~/V4/masarService/python:~/V4/masarService/cpp/src/python
+$ export PYTHONPATH=${PYTHONPATH}:~/V4/masarService/python/src/client:~/V4/masarService/python/src/server
+</pre>
+
+<p>
+Now all required environment variable are set, and it is ready to launch the server and client.
+</p>
+
+<h2>
+Run server/client<br />
+</h2>
+<p>
+Now it is ready to run both your server and client.<br />
+The following packages are needed to run MASAR server on
+your machine.</p>
+<ul>
+  <li>Python 2.7 or above</li>
+  <li>SQLite3 3.7 or above</li>
+</ul>
+
+<h3>Launch MASAR service</h3>
+<pre>
+$ cd ~/V4/masarService/cpp
+$ ./bin/linux-x86_64/masarServiceRun
+</pre>
+
+You will see the following output
+<pre>
+ChannelBaseProvider::ChannelBaseProvider pvService
+VERSION : CA Server v0.9.0
+PROVIDER_NAMES : pvService
+BEACON_ADDR_LIST : 
+AUTO_BEACON_ADDR_LIST : 1
+BEACON_PERIOD : 15
+BROADCAST_PORT : 5067
+SERVER_PORT : 5066
+RCV_BUFFER_SIZE : 16384
+IGNORE_ADDR_LIST: 
+STATE : INITIALIZED
+masarService
+Type exit to stop: 
+</pre>
+
+<p>
+You have started the server now successfully.
+However, if you see this output:
+</p>
+
+<pre>
+ChannelBaseProvider::ChannelBaseProvider pvService
+VERSION : CA Server v0.9.0
+PROVIDER_NAMES : pvService
+BEACON_ADDR_LIST : 
+AUTO_BEACON_ADDR_LIST : 1
+BEACON_PERIOD : 15
+BROADCAST_PORT : 5067
+SERVER_PORT : 5066
+RCV_BUFFER_SIZE : 16384
+IGNORE_ADDR_LIST: 
+STATE : INITIALIZED
+<span style="color: rgb(204, 0, 0);">DSL_RDB::init dslPY does not exist or is not a python module</span>
+masarService
+Type exit to stop: 
+</pre>
+
+<p>which means the PYTHONPATH is not set correctly.<br />
+</p>
+<p>
+To stop server, type "exit" and you will get the following message:
+<pre>
+Type exit to stop: 
+exit
+ServiceChannelRPC::~ServiceChannelRPC()
+MasarService::destroy()
+PVServiceProvider::~PVServiceProvider
+PVServiceProvider::destroy
+void PVTop::destroy()
+PVTop::~PVTop()
+MasarService::~MasarService()
+close SQLite3 connection.
+ChannelBaseProvider::~ChannelBaseProvider
+</pre>
+</p>
+<h3>launch MASAR default GUI.</h3>
+<p>The following packages are needed to run MASAR client on
+your machine.</p>
+<ul>
+  <li>Python 2.7 or above</li>
+  <li>PyQt4 4.8 or above</li>
+</ul>
+
+
+You are able to find a lunch script, masarClient, under your installed directory (masarService/cpp).
+Or save the following script into for example masarClient: <br />
+<pre>
+#!/usr/bin/python
+
+import sys
+import os
+
+try:
+    import ui.masar as masar
+except:
+    import sys
+    root = os.path.abspath(os.path.dirname(__file__))
+    sys.path.append("/".join([root, "../python"]))
+    sys.path.append("/".join([root, "src/python"]))
+    sys.path.append("/".join([root, "../python/src/client"]))
+    import ui.masar as masar
+    
+masar.main()
+</pre>
+You might need to change the root if you put it in different directory,
+or append correctly directory if on different system, Windows for example. 
+Otherwise, you will get Python ImportError like:
+<pre>
+$ python masarClient 
+Traceback (most recent call last):
+  File "masarClient", line 15, in <module>
+    import ui.masar as masar
+ImportError: No module named ui.masar
+</pre>
+
+<h3>
+Python API 
+</h3>
+The default PyQt4 GUI covers most operation requirements. For advanced requirement, 
+using MASAR inside Python scripting environment, a Python API is available. Please refer MASAR user manual for details.
+
+<h2>
+Relational Database Configuration
+</h2>
+To make the server useful, you need to configure the underneath database for your own purpose.
+Currently, the MASAR uses SQLite3 database to store all configurations and data. Please refer MASAR user manual for details.
+<hr>
+<address> Guobao Shen, BNL</address>
+
+<!-- hhmts start -->
+Last modified: Fri Mar  2 16:08:17 EST 2012<!-- hhmts end -->
+<hr>
+</body></html>
