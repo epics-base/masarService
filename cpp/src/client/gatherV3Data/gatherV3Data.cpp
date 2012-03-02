@@ -133,7 +133,6 @@ static void connectionCallback(struct connection_handler_args args)
             id->requestType = requestString; break;
         case DBF_CHAR:
         case DBF_SHORT:
-        case DBF_INT:
         case DBF_LONG:
             id->requestType = requestLong; break;
         case DBF_FLOAT:
