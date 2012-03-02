@@ -1,8 +1,49 @@
 import os
+from cothread.catools import *
+import random
+
 f = open('example.txt', 'r')
-lines = f.readlines()
+lines1 = f.readlines()
 f.close()
 
-for line in lines:
-    cmd_string = 'caput %s.PROC 1' %(line[:-1])
-    os.system(cmd_string)
+f = open('exampleWf.txt', 'r')
+lines2 = f.readlines()
+f.close()
+
+def initpv(pvlists):
+    pvs = []
+    values = []
+    for pv in pvlists:
+        pvs.append(pv+'.PROC')
+        values.append(1)
+    caput(pvs, values)
+
+scalarpvs = []
+wfpvs = []
+for line in lines1:
+    scalarpvs.append(line[:-1])
+for line in lines2:
+    wfpvs.append(line[:-1])
+
+initpv(scalarpvs)
+initpv(wfpvs)
+
+bigarray = ['masarExampleBigArray01', 
+    'masarExampleBigArray02',
+    'masarExampleBigArray03',
+    'masarExampleBigArray04',
+    'masarExampleBigArray05',
+    'masarExampleBigArray06',
+    'masarExampleBigArray07',
+    'masarExampleBigArray08',
+    'masarExampleBigArray09',
+    'masarExampleBigArray10']
+arrayval = []
+for pv in bigarray:
+    nelm = (int) (caget(pv+'.NELM'))
+    array = []
+    for i in range(nelm):
+        array.append(random.uniform(-5.0, 5.0))
+    arrayval.append(array)
+
+caput(bigarray, arrayval)

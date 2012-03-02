@@ -8,3 +8,13 @@ masarExampleCharArray
 masarExampleDoubleArray
 masarExampleLongArray
 masarExampleStringArray
+masarExampleBigArray01
+masarExampleBigArray02
+masarExampleBigArray03
+masarExampleBigArray04
+masarExampleBigArray05
+masarExampleBigArray06
+masarExampleBigArray07
+masarExampleBigArray08
+masarExampleBigArray09
+masarExampleBigArray10
