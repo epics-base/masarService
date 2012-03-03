@@ -1,0 +1,4 @@
+This is a EPICS V3 test database for various record type.
+
+The V3 IOC can be started with command
+softIoc st.cmd

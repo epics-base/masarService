@@ -7,8 +7,12 @@ Created on Dec 8, 2011
 import os
 import sqlite3
 
+try:
+    __db=os.environ['MASAR_SQLITE_DB']
+except KeyError:
+    raise
+
 def connect():
-    __db = '/'.join((os.path.abspath(os.path.dirname(__file__)), 'example', 'masar.db'))
     return sqlite3.connect(__db)
 
 def checkConnection(conn):

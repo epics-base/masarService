@@ -1,0 +1,8 @@
+This is an integrated unit test for PYMASAR module.
+PYMASAR is a Python interface to access SQLite3 MASAR domain/schema.
+
+MASAR server uses SQLite3 as underneath relational database,
+which accesses SQLite3 through PYMASAR.
+
+Run unit test:
+trial test_doc.py

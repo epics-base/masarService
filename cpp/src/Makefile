@@ -8,6 +8,8 @@ DIRS += server
 
 DIRS += python
 
+DIRS += masarServiceRun
+
 include $(TOP)/configure/RULES_DIRS
 
 
