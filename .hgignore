@@ -1,4 +1,8 @@
-QtC-pvAccess.creator.user
+QtC-masar.config
+QtC-masar.creator
+QtC-masar.creator.user
+QtC-masar.files
+QtC-masar.includes
 
 syntax: glob
 .DS_Store
@@ -6,14 +10,12 @@ syntax: glob
 ./include
 ./lib
 ./doc
-./db
 ./dbd
 ./envPaths
 ./documentation/html
 ./O.*
 ./*.pyc
 ./*.so
-./documentation/html
 ./RELEASE.local
 ./CONFIG_SITE.local
 

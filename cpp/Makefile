@@ -10,11 +10,6 @@ src_DEPEND_DIRS = configure
 DIRS += test
 test_DEPEND_DIRS = src
 
-DIRS += v3IOC
-test_DEPEND_DIRS = src
-
-DIRS += iocBoot
-
 include $(TOP)/configure/RULES_TOP
 
 
