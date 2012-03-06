@@ -177,13 +177,18 @@ generateSOLinks.py, for example:<br />
 
 <pre>$ export EPICS_HOST_ARCH=linux-x86_64</pre>
 
-<h3>PYTHONPATH.</h3>
+<h3>PYTHONPATH</h3>
 After above preparation, you need set the PYTHONPATH to allow Python interpreter to find it.
 <pre>
 $ export PYTHONPATH=~/V4/masarService/python:~/V4/masarService/cpp/src/python
 $ export PYTHONPATH=${PYTHONPATH}:~/V4/masarService/python/src/client:~/V4/masarService/python/src/server
 </pre>
-
+<h3>MASAR SQLite database</h3>
+You also need to set the MASAR_SQLITE_DB to allow PYMASAR module to find the SQLite3 database. 
+Here is an example:
+<pre>
+export MASAR_SQLITE_DB=~/V4/masarService/example/masar.db
+</pre>
 <p>
 Now all required environment variable are set, and it is ready to launch the server and client.
 </p>

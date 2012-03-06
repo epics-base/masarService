@@ -189,7 +189,7 @@ The server has 4 layers:
 <ul>
   <li>Service communication control: the pvAccess channel RPC instance;</li>
   <li>Service: parse the command from client, and determine response action;</li>
-  <li>Channel Access Client: this is bidirectional access to IOC, which is read data from IOC only;</li>
+  <li>Channel Access Client: this is unidirectional access to IOC, which is read data from IOC only;</li>
   <li>DSL (data source layer): this is a interface with Python domain, which is the same level with Channel Access Client.</li>
   <ul>
       <li>PYMASAR: A Python module to access SQLite3 database, which is supported by default currently;</li>
@@ -267,6 +267,10 @@ is one field of masar_data table, and might be separated as a standalone table i
 been shifted to POSIX time already.</li>
 <li>All timestamps in service_event, service_config, and pv_group tables are the time when inserting data into database.
 This means that the time stamp for a particular snapshot is exact the time when the data is inserted into database.</li>
+<li>Since the enum is converted to a string, it captures its label (display value) instead of its real value(0, 1, ...).
+Advantage doing that is if there is any changes on enum label, it probably means some logics have been changed. It is better
+to throw a message to show that explicitly.
+</li>
 </ol>
 </p>
 <h3>
@@ -274,18 +278,32 @@ Functions
 </h3>
 <p>
 The MASAR supports 6 fundamental functions to access SQLite3/IRMIS:
-<ul>
+<ol>
   <li><b>retrieveServiceConfigProps</b>: get a list from RDB that how many sub-systems are defined;</li>
   <li><b>retrieveServiceConfigs</b>: get a list of configurations with given conditions;</li>
   <li><b>retrieveServiceEvents</b>: get a list how many snapshot events have been taken with given conditions;</li>
   <li><b>retrieveSnapshot</b>: get real snapshot data;</li>
   <li><b>saveSnapshot</b>: save a snapshot into database;</li>
   <li><b>updateSnapshotEvent</b>: update a particular snapshot, for example flag a snapshot as approved;</li>
-</ul>
-As shown above, the compare and restore functions, which are implemented in the client side, are not part of server. 
+</ol>
+Function <b>NOT supported</b> by the server:
+<ol>
+  <li>Comparing two different snapshots or a archived snapshot with current live machine.</li>
+  <li>Comparing a archived snapshot with current live machine (supported in default PyQt4 GUI).</li>
+  <li>Restoring machine to a particular snapshot status (supported in default PyQt4 GUI). 
+  The MASAR server has unidirectional access to EPICS V3 IOC, which means reads value only.</li>
+  <li>Change pv name. We thought about pv name changes, but we will not support this function.</li>
+  <li>Add new pv name to existing configuration. We thought about adding a new pv name to a group, 
+  but will not support it currently. User is encouraged to create a new configuration.</li>
+  <li>Reuse configuration name. We have a request that new group maintains old group name and old group becomes deprecated. 
+  But this will not be in initial implementation.</li>
+  <li>Version control for configuration changes. We considered to adopt version control to tracking configuration changes, 
+  for example, adding a new pv to existing pv_group, changing group name, and so on. But this will not be in initial implementation.</li>
+</ol>
+
 </p>
 <h3>
-Data format
+Data Format
 </h3>
 <p>
 When a MASAR request is sent from client to server, NTNameValue type is used to carry 
