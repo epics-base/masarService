@@ -19,9 +19,9 @@
 <h2 class="nocount">MASAR User Manual, Editors Draft, 05-Mar-2012</h2>
 <dl>
   <dt>This version:</dt>
-  <dd><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/usermanual.html">usermanual_20120305.html</a></dd>
+  <dd><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/userManual.html">userManual_20120305.html</a></dd>
   <dt>Latest version:</dt>
-  <dd><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/usermanual.html">usermanual.html</a></dd>
+  <dd><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/userManual.html">userManual.html</a></dd>
   <dt>Editors:</dt>
   <dd>Guobao Shen, BNL<br>
 Marty Kraimer, BNL<span style="font-weight: bold;"></span></dd>
@@ -59,6 +59,12 @@ Since EPICS V4 channelRPC server is implemented in C++, interface between V4 pro
 is implemented using Python/C. A Python API is provided for client user, and a default PyQt4 GUI is 
 developed for end user.</p>
 
+<p>
+The products are all part of the <a href="http://epics-pvdata.sourceforge.net">V4</a> implementation of 
+<a href="http://www.aps.anl.gov/epics">Experimental Physics and Industrial Control System</a>, 
+which are available via an <a href="http://epics-pvdata.sourceforge.net/LICENSE.html">open source license</a>.
+</p>
+
 <p>For now the only way to obtain the MASAR service is from the
 sourceforge mercurial repository. No binary package is provided at
 current stage. Same as all EPICS V4 modules, MASAR service can be checked out 
@@ -78,7 +84,7 @@ A quick reference is as below for how to compile and use MASAR:
 </p>
 <ul>
   <li>
-  <a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/getStarting.html">MASAR Get Starting</a>
+  <a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/getstarting.html">MASAR Get Starting</a>
   </li>
   <li>
   <a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/installation.html">MASAR Installation</a>
@@ -87,7 +93,7 @@ A quick reference is as below for how to compile and use MASAR:
 
 <h2>System Requirement</h2>
 <p>
-To run MASAR on you machine, you need some modules including EPICS V3 and V4 run-time library and Python for both client and server.
+To run MASAR on you machine, you need Python and some modules including EPICS V3 and V4 run-time library for both client and server.
 </p>
 <p>
 Python:
@@ -105,15 +111,15 @@ which can be downloaded from <a href="http://www.aps.anl.gov/epics/base/R3-14/12
 V4</a> (managed by mercurial on source forge)<br>
   </li>
   <ul>
-    <li><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/pvDataCPP/">pvDataCPP</a>
+    <li><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/pvDataCPP/raw-file/tip/documentation/pvDataCPP.html">pvDataCPP</a>
     </li>
-    <li><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/pvAccessCPP/">pvAccessCPP</a>
+    <li><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/pvAccessCPP/raw-file/tip/documentation/pvAccessCPP.html">pvAccessCPP</a>
     </li>
-    <li><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/pvIOCCPP/">pIOCCPP</a></li>
+    <li><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/pvIOCCPP/raw-file/tip/documentation/pvIOCCPP.html">pIOCCPP</a></li>
     <li><a href="http://epics-pvdata.sourceforge.net/alpha/normativeTypes/normativeTypes.html">normativeTypes</a><br>
 The normative types implementation is under alpha version, which is
 under alphaCPP module.</li>
-    <li><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/usermanual.html">MASAR</a>
+    <li><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/userManual.html">MASAR</a>
     </li>
   </ul>
 </ul>
@@ -235,13 +241,25 @@ The MASAR server can take a snapshot for any combination of EPICS pv, including 
 enum, byte (8-bit), short (16-bit), int (32-bit), long (which is same with integer in EPICS V3), float,
 and double, and/or waveform/array pv with any above types. Since the data types supported by both Python
 and SQLite3/IRMIS are string, int, and real, the types are casted as below:
-<pre>
-enum, string -> string
-byte, short, int/long -> long
-float, double -> double
-</pre>
-For waveform data, it is serialized into a binary format, and stored as a BLOB. At current stage, the BLOB
-is one field of masar_data table, and might be saved in a separated table if there is any performance issue.
+<table>
+  <tbody>
+    <tr>
+      <td style="text-align:center">epics data type</td><td style="text-align:center">data type carried by MASAR</td>
+    </tr>
+    <tr>
+      <td style="text-align:center">enum, string</td><td style="text-align:center">string</td>
+    </tr>
+    <tr>
+      <td style="text-align:center">byte, short, int/long</td><td style="text-align:center">long</td>
+    </tr>
+    <tr>
+      <td style="text-align:center">float, double</td><td style="text-align:center">double</td>
+    </tr>
+  </tbody>
+</table>
+
+The waveform data is casted following above rule, and stored as a BLOB in database after serialized into a binary. At current stage, the BLOB
+is one field of masar_data table, and might be separated as a standalone table if there is any performance issue.
 <p>
 <b>NOTE</b>: 
 <ol>

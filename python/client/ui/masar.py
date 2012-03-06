@@ -281,11 +281,10 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
     
         bad_pvs = []
         try:
-            results = cav3.caput(list(pvlist), r_data)
-            
+            results = cav3.caput(list(pvlist), r_data, wait=True, throw=False)
             for res in results:
                 if not res.ok:
-                    bad_pvs.append(res.name)
+                    bad_pvs.append(res)
         except:
             QMessageBox.warning(self, 'Warning', 'Error during restoring snapshot to live machine.')
             return
@@ -293,7 +292,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         if len(bad_pvs) > 0:
             message = "Restore failed for the following pvs:\n"
             for bad_pv in bad_pvs:
-                message += " -- "+bad_pv + "\n"
+                message += " -- "+bad_pv.name + ": "+cav3.cadef.ca_message(bad_pv.errorcode) + "\n"
             QMessageBox.warning(self, 'Warning', message)
         else:
             QMessageBox.information(self, "Success", "Successfully restore machine with selected snapshot.")
@@ -302,10 +301,10 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         """
         display max 8 characters in a table cell
         """
-        array_text = str(array_value[index])
+        array_text = str(arrayvalue)
 
-        if len(str(array_value[index])) > 8:
-            array_text = str(array_value[index])[:8]+' ..., ...)'
+        if len(str(array_text)) > 8:
+            array_text = str(array_text)[:8]+' ..., ...)'
 
         return array_text
 
@@ -568,7 +567,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 if isConnected[i]:
                     self.__setTableItem(table, i, 4, str(bool(isConnected[i])))
                 if is_array[i]:
-                    self.__setTableItem(table, i, 5, self.__arrayTextFormat(array_value[index]))
+                    self.__setTableItem(table, i, 5, self.__arrayTextFormat(array_value[i]))
                     self.arrayData[pvnames[i]+'_'+str(eventid)] = array_value[i]
                 else:
                     if dbrtype[i] in self.epicsDouble:
