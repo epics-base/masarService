@@ -1,0 +1,328 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html><head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="keywords" content="EPICS, EPICSv4">
+  <!-- Include the epicsv4 base.css, and the css for epics v4 documents -->
+  <link rel="stylesheet" type="text/css" href="http://epics-pvdata.sourceforge.net/base.css" /> 
+  <link rel="stylesheet" type="text/css" href="http://epics-pvdata.sourceforge.net/epicsv4.css" />
+  <title>MASAR User Manual</title>
+  
+  <style type="text/css">
+/*<![CDATA[*/
+
+
+/*]]>*/</style></head><body>
+<div class="head">
+<h1>MASAR USER MANUAL<br>
+</h1>
+<!-- Maturity: Working Draft or Request for Comments, or Recommendation, and date. -->
+<h2 class="nocount">MASAR User Manual, Editors Draft, 05-Mar-2012</h2>
+<dl>
+  <dt>This version:</dt>
+  <dd><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/usermanual.html">usermanual_20120305.html</a></dd>
+  <dt>Latest version:</dt>
+  <dd><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/usermanual.html">usermanual.html</a></dd>
+  <dt>Editors:</dt>
+  <dd>Guobao Shen, BNL<br>
+Marty Kraimer, BNL<span style="font-weight: bold;"></span></dd>
+</dl>
+<dl>
+</dl>
+<hr>
+</div>
+
+<!-- Header material -->
+<h2 class="nocount" id="abstract">Abstract</h2>
+
+<p>MASAR (MAchine Snapshot, Archiving, and Retrieve) is a service which
+is implemented under EPICS V4 framework. It consists of both server and
+client that are implemented in C++/Python. The server part is responsible to
+take machine snapshot, archives data in relational database, and
+retrieves data back to client. The client part provides a default GUI to retrieve
+data, compares data with live machine, and restores machine with given snapshot
+data. A Python interface for scripting user.
+</p>
+
+<h2 class="nocount" id="status">Status of this Document</h2>
+
+<p>This is the 05-Mar-2012 version of the MASAR User Manual. </p>
+
+<h2>Introduction</h2>
+
+<p>MASAR is implemented in C++/Python, which is using EPICS V4 channelRPC
+mechanism for network communication. Current implementation is using SQLite3 as
+underneath relational database, and a Python module so-called PYMASAR is developed to access
+SQLite3. 
+</p>
+<p>
+Since EPICS V4 channelRPC server is implemented in C++, interface between V4 processing and PYMASAR
+is implemented using Python/C. A Python API is provided for client user, and a default PyQt4 GUI is 
+developed for end user.</p>
+
+<p>For now the only way to obtain the MASAR service is from the
+sourceforge mercurial repository. No binary package is provided at
+current stage. Same as all EPICS V4 modules, MASAR service can be checked out 
+from its mercurial repository on source forge. If there is an error such as
+<pre>abort: error: Connection refused
+</pre>
+during checking out, it probably means that you have some problems with your network setting, 
+for example http proxy setting. You can try to set your http_proxy environment, for example, 
+on BASH shell:
+<pre>
+export http_proxy=http://your.proxy.server.name:port
+</pre>
+</p>
+
+<p>
+A quick reference is as below for how to compile and use MASAR:
+</p>
+<ul>
+  <li>
+  <a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/getStarting.html">MASAR Get Starting</a>
+  </li>
+  <li>
+  <a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/installation.html">MASAR Installation</a>
+  </li>
+</ul>
+
+<h2>System Requirement</h2>
+<p>
+To run MASAR on you machine, you need some modules including EPICS V3 and V4 run-time library and Python for both client and server.
+</p>
+<p>
+Python:
+<ul>
+  <li>Python 2.7 or above</li>
+</ul>
+</p>
+<p>EPICS modules:
+</p>
+<ul>
+  <li>EPICS V3 base R3.14.11 or above. Current release is R3.14.2,
+which can be downloaded from <a href="http://www.aps.anl.gov/epics/base/R3-14/12.php">here</a>.<br>
+  </li>
+  <li><a href="http://epics-pvdata.sourceforge.net/">EPICS
+V4</a> (managed by mercurial on source forge)<br>
+  </li>
+  <ul>
+    <li><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/pvDataCPP/">pvDataCPP</a>
+    </li>
+    <li><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/pvAccessCPP/">pvAccessCPP</a>
+    </li>
+    <li><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/pvIOCCPP/">pIOCCPP</a></li>
+    <li><a href="http://epics-pvdata.sourceforge.net/alpha/normativeTypes/normativeTypes.html">normativeTypes</a><br>
+The normative types implementation is under alpha version, which is
+under alphaCPP module.</li>
+    <li><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/usermanual.html">MASAR</a>
+    </li>
+  </ul>
+</ul>
+
+<p>
+For MASAR server, you need:</p>
+<ul>
+  <li>SQLite3 3.7 or above</li>
+</ul>
+<p>For MASAR client default GUI:</p>
+<ul>
+  <li>PyQt4 4.8 or above</li>
+</ul>
+
+<p>Currently, MASAR has been installed on the following systems:</p>
+<ul>
+  <li>Ubuntu 11.04 (Natty Narwhal)<br>
+  </li>
+  <li>Debian 7.0 (Wheezy)</li>
+  <li>Fedora 14</li>
+  <li>Fedora 16</li>
+  <li>Mac OS-X 10.6.8 (Snow Leopard)<br>
+  </li>
+</ul>
+<p>
+
+<h2>Terminology</h2>
+Addition to the term used by EPICS community, MASAR defines some new terms for its convenience as below:
+<ul>
+  <li>pv group: a collection of pv name, which has name, pv list, description, and date;</li>
+  <li>service config: a unique config, which has name, pv/pv group list, description, and which system it belongs to;</li>
+  <li>system: identify which sub system of each configuration belongs to;</li>
+  <li>service event: description of each particular snapshot, including comment, author name, date, and status;</li>
+  <li>snapshot: real data of each snapshot event.</li>
+  <li>interface name convention</li>
+  <ul>
+    <li>putXXXX(): put into a live machine, more specifically, an EPICS live pv</li>
+    <li>getXXXX(): get from a live machine, more specifically, an EPICS live pv</li>
+    <li>saveXXX(): save into a RDB</li>
+    <li>retrieveXXX(): retrieve from a RDB</li>
+  </ul>
+</ul>
+
+<h2>System Architecture</h2>
+<h3>
+Schematic
+</h3>
+The MASAR consists of client and server part, which is as below:
+</p>
+<table>
+  <tbody>
+    <tr>
+      <td><img src="masar/masar.png" width="480" height="360"></td>
+    </tr>
+    <tr>
+      <td style="text-align:center">MASAR Architecture</td>
+    </tr>
+  </tbody>
+</table>
+<p>
+The client has a client API library in Python, which can be used by both Python scripting, and GUI. A default PyQt4 GUI is
+developed for data viewing, snapshot taking, comparing a snapshot with live machine, and restoring machine to a particular
+status using a snapshot.
+</p>
+<p>
+The server has 4 layers:
+<ul>
+  <li>Service communication control: the pvAccess channel RPC instance;</li>
+  <li>Service: parse the command from client, and determine response action;</li>
+  <li>Channel Access Client: this is bidirectional access to IOC, which is read data from IOC only;</li>
+  <li>DSL (data source layer): this is a interface with Python domain, which is the same level with Channel Access Client.</li>
+  <ul>
+      <li>PYMASAR: A Python module to access SQLite3 database, which is supported by default currently;</li>
+      <li>PYIRMIS: A Python module to access IRMIS/MySQL database, which is going to be supported.</li>
+  </ul>
+  <li>Data layer.</li>
+  <ul>
+      <li>IOC: live machine data;</li>
+      <li>IRMIS: static data, which can have all machine configuration.</li>
+      <li>MASAR: embedded inside PYMASAR, which is dedicated to MASAR service.</li>
+  </ul>
+</ul>
+</p>
+<h3>
+SQLite3 Schema
+</h3>
+Currently, SQLite3 is the first database supported by MASAR service. Its original schema is inherited from IRMIS,
+and now is as below:
+<table>
+  <tbody>
+    <tr>
+      <td><img src="masar/masar-sqlite-eer.png" width="480" height="360"></td>
+    </tr>
+    <tr>
+      <td style="text-align:center">MASAR SQLite3 Schema</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>
+IRMIS Schema
+</h3>
+Principally, with the support of Python database access, switching between different relational database will be seamless.
+To minimize the effort when switching from SQLite to IRMIS, we try to keep the schema
+same with SQLite3 as much as possible.
+<table>
+  <tbody>
+    <tr>
+      <td><img src="masar/masar-eer.png" width="480" height="480"></td>
+    </tr>
+    <tr>
+      <td style="text-align:center">MASAR IRMIS Schema</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>MASAR Server</h2>
+The MASAR server can take a snapshot for any combination of EPICS pv, including scalar pv with string, 
+enum, byte (8-bit), short (16-bit), int (32-bit), long (which is same with integer in EPICS V3), float,
+and double, and/or waveform/array pv with any above types. Since the data types supported by both Python
+and SQLite3/IRMIS are string, int, and real, the types are casted as below:
+<pre>
+enum, string -> string
+byte, short, int/long -> long
+float, double -> double
+</pre>
+For waveform data, it is serialized into a binary format, and stored as a BLOB. At current stage, the BLOB
+is one field of masar_data table, and might be saved in a separated table if there is any performance issue.
+<p>
+<b>NOTE</b>: 
+<ol>
+<li>All time inside database uses UTC/POSIX time, which means the IOC time, seconds past EPOCH has
+been shifted to POSIX time already.</li>
+<li>All timestamps in service_event, service_config, and pv_group tables are the time when inserting data into database.
+This means that the time stamp for a particular snapshot is exact the time when the data is inserted into database.</li>
+</ol>
+</p>
+<h3>
+Functions
+</h3>
+<p>
+The MASAR supports 6 fundamental functions to access SQLite3/IRMIS:
+<ul>
+  <li><b>retrieveServiceConfigProps</b>: get a list from RDB that how many sub-systems are defined;</li>
+  <li><b>retrieveServiceConfigs</b>: get a list of configurations with given conditions;</li>
+  <li><b>retrieveServiceEvents</b>: get a list how many snapshot events have been taken with given conditions;</li>
+  <li><b>retrieveSnapshot</b>: get real snapshot data;</li>
+  <li><b>saveSnapshot</b>: save a snapshot into database;</li>
+  <li><b>updateSnapshotEvent</b>: update a particular snapshot, for example flag a snapshot as approved;</li>
+</ul>
+As shown above, the compare and restore functions, which are implemented in the client side, are not part of server. 
+</p>
+<h3>
+Data format
+</h3>
+<p>
+When a MASAR request is sent from client to server, NTNameValue type is used to carry 
+parameters, which is as below:
+<pre>
+structure NTNameValue
+   string[]    names
+   string[]    values
+   string      function xxxxxx // function name as above
+</pre>
+
+The name/value pair is converted into a Python dictionary inside service layer, and transferred to PYMASAR/PYIRMIS layer.
+Acceptable names for above 6 functions are listed as below:
+<pre>
+retrieveServiceConfigProps:
+        names = ["propname", "servicename", "configname"]
+retrieveServiceConfigs:
+        names = ["servicename", "configname", "system"]
+retrieveServiceEvents:
+        names = ["configid", "start", "end", "comment", "user"]
+retrieveSnapshot: 
+        names = ["eventid", "start", "end", "comment"]
+saveSnapshot:
+        names = ["servicename","configname","comment"]
+updateSnapshotEvent:
+        names = ["eventid", "user", "desc"]
+</pre>
+</p>
+<p>
+The results from server are carried using a NTTable as below:
+<pre>
+structure NTTable
+    structure timeStamp
+        long secondsPastEpoch 0
+        int nanoSeconds 0
+        int userTag 0
+    structure alarm
+        int severity 0
+        int status 0
+        string message 
+    string[] label [...]
+    ... // value field 
+</pre>
+</p>
+
+<h3>
+Database configuration
+</h3>
+For NSLS II, a default pv_group, which is a collection of pv names, will be configured in advance. User can either use the default pv_group configuration, or, with administrative privilege, create a new configuration. If a client wants to combine pv_groups, it creates, again with administrative privilege/authorization, a new configuration. Each configuration has a name, description, and created time. One configuration might have more than one snapshot event associated with it where the snapshots are taken separately at different times.
+
+
+<hr>
+<address> Guobao Shen, BNL</address>
+
+<!-- hhmts start -->
+Last modified: Mon Mar  5 16:53:07 EST 2012<!-- hhmts end -->
+<hr>
+</body></html>

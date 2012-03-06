@@ -677,7 +677,8 @@ static PVStructure::shared_pointer getLiveMachine(
     * message = gather->getMessage();
     if(!result) {
         printf("connect failed\n%s\n",gather->getMessage().c_str());
-        return noDataEnetry("connect failed "+gather->getMessage());
+        if (gather->getConnectedChannels() == 0)
+            return noDataEnetry("connect failed "+gather->getMessage());
     }
     if((*message).length() == 0) {
         *message = "All channels are connected.";

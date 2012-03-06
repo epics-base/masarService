@@ -298,6 +298,17 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         else:
             QMessageBox.information(self, "Success", "Successfully restore machine with selected snapshot.")
         
+    def __arrayTextFormat(self, arrayvalue):
+        """
+        display max 8 characters in a table cell
+        """
+        array_text = str(array_value[index])
+
+        if len(str(array_value[index])) > 8:
+            array_text = str(array_value[index])[:8]+' ..., ...)'
+
+        return array_text
+
     def getLiveMachineAction(self):
         curWidget = self.snapshotTabWidget.currentWidget()
         if isinstance(curWidget, QTableWidget):
@@ -334,7 +345,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                     try:
                         index = dd[str(curWidget.item(i, 0).text())]
                         if is_array[index]:
-                            self.__setTableItem(curWidget, i, 6, '['+str(array_value[index])[1:8]+' ..., ...]')
+                            self.__setTableItem(curWidget, i, 6, self.__arrayTextFormat(array_value[index]))
                             self.arrayData[channelName[index]+"_"+str(eid)+'_live'] = array_value[index]
                         else:
                             if dbrtype[index] in self.epicsDouble:
@@ -557,7 +568,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 if isConnected[i]:
                     self.__setTableItem(table, i, 4, str(bool(isConnected[i])))
                 if is_array[i]:
-                    self.__setTableItem(table, i, 5, '['+str(array_value[i])[1:8]+' ..., ...]')
+                    self.__setTableItem(table, i, 5, self.__arrayTextFormat(array_value[index]))
                     self.arrayData[pvnames[i]+'_'+str(eventid)] = array_value[i]
                 else:
                     if dbrtype[i] in self.epicsDouble:

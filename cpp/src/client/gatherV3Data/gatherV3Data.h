@@ -179,6 +179,11 @@ public:
      * @returns The array.
      */
     epics::pvData::PVStringArray  *getChannelName();
+    /**
+      * Get connected channel number
+      * @return channel number
+      */
+    int getConnectedChannels();
 private:
     GatherV3Data::shared_pointer getPtrSelf()
     {

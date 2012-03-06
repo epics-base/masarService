@@ -908,5 +908,8 @@ PVStringArray * GatherV3Data::getChannelName()
 {
     return pvt->pvchannelName;
 }
-
+int GatherV3Data::getConnectedChannels()
+{
+    return pvt->numberConnected;
+}
 }}

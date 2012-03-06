@@ -19,9 +19,9 @@
 <h2 class="nocount">MASAR Installation, Editors Draft, 29-Feb-2012</h2>
 <dl>
   <dt>This version:</dt>
-  <dd><a href="http://epics-pvdata.sourceforge.net/gettingStarted_20120120.html">installation_20120229.html</a></dd>
+  <dd><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/installation.html">installation_20120229.html</a></dd>
   <dt>Latest version:</dt>
-  <dd><a href="http://epics-pvdata.sourceforge.net/gettingStarted_20120120.html">installation</a><a href="./gettingStarted_files/gettingStarted.html">.html</a></dd>
+  <dd><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/installation.html">installation.html</a></dd>
   <dt>Editors:</dt>
   <dd>Guobao Shen, BNL<br>
 Marty Kraimer, BNL<span style="font-weight: bold;"></span></dd>
@@ -44,7 +44,7 @@ take machine snapshot, archive data in relational database, and
 retrieve data
 back to client. The client part provides a default GUI to retrieve
 data,
-compare data with live machine, and resotre machine using snapshot
+compare data with live machine, and restore machine using snapshot
 data. A
 Python interface for scripting user. This document describes how to
 start to
@@ -61,7 +61,7 @@ service, and running MASAR server and client. </p>
 <h2>Introduction</h2>
 
 <p>MASAR is implemented in C++/Python, which is using channelRPC
-machanism to
+mechanism to
 network communication. Current implementation is using SQLite3 as
 underneath
 RDB, and a Python module so-called PYMASAR is developed to access
@@ -121,16 +121,16 @@ which can be downloaded from <a href="http://www.aps.anl.gov/epics/base/R3-14/12
 V4</a> (managed by mercurial on source forge)<br>
   </li>
   <ul>
-    <li><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/pvDataCPP/">pvDataCPP</a>,
-which can be checked out from sourceforge mecurial repo as below<br>
+    <li><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/pvDataCPP/raw-file/tip/documentation/pvDataCPP.html">pvDataCPP</a>,
+which can be checked out from sourceforge mercurial repo as below<br>
     </li>
-    <li><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/pvAccessCPP/">pvAccessCPP</a>
+    <li><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/pvAccessCPP/raw-file/tip/documentation/pvAccessCPP.html">pvAccessCPP</a>
     </li>
-    <li><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/pvIOCCPP/">pIOCCPP</a></li>
-    <li><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/alphaCPP">normativeTypes</a><br>
+    <li><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/pvIOCCPP/raw-file/tip/documentation/pvIOCCPP.html">pIOCCPP</a></li>
+    <li><a href="http://epics-pvdata.sourceforge.net/alpha/normativeTypes/normativeTypes.html">normativeTypes</a><br>
 The normative types implementation is under alpha version, which is
 under alphaCPP module.</li>
-    <li><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService">MASAR</a>
+    <li><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/getstarting.html">MASAR</a>
 module itself is part os EPICS V4.<br>
     </li>
   </ul>
@@ -140,7 +140,7 @@ module itself is part os EPICS V4.<br>
 
 </ul>
 
-<p>All EPICS V4 modules can be checked out from its mercurial repostory
+<p>All EPICS V4 modules can be checked out from its mercurial repository
 on source forge. If there is an error such like "abort: error:
 Connection refused"
 when checking out modules from mercurial repository, it probably means

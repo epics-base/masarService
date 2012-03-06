@@ -115,6 +115,8 @@ class DSL(object) :
         rawdata = params[0]
         nttable = NTTable(rawdata)
         numberValueCount = nttable.getNumberValues()
+        if numberValueCount == 1 and 'status' == nttable.getLabel()[0] and not nttable.getValue(0)[0]:
+            raise
         
         # values format: the value is raw data from IOC 
         # [(channel name,), (string value,),(double value,),(long value,),(dbr type),(is connected),
