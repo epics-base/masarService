@@ -15,6 +15,8 @@
 #include <epicsMutex.h>
 #include <epicsEvent.h>
 #include <epicsThread.h>
+#include <pv/CDRMonitor.h>
+#include <epicsExit.h>
 
 #include <epicsExport.h>
 
@@ -33,7 +35,7 @@ using namespace epics::pvAccess;
 using namespace epics::pvIOC;
 using namespace epics::masar;
 
-int main(int argc,char *argv[])
+void masarService(const char * name)
 {
     PVServiceChannelCTX::shared_pointer myCTX
         = PVServiceChannelCTX::shared_pointer(new PVServiceChannelCTX());
@@ -41,8 +43,9 @@ int main(int argc,char *argv[])
         = MasarService::shared_pointer(new MasarService());
     ServiceChannelRPC::shared_pointer serviceChannelRPC
         = ServiceChannelRPC::shared_pointer(
-            new ServiceChannelRPC("masarService",service));
-    cout << "masarService\n";
+            new ServiceChannelRPC(name,service));
+    cout << name;
+    cout << "\n";
     string str;
     while(true) {
         cout << "Type exit to stop: \n";
@@ -50,6 +53,15 @@ int main(int argc,char *argv[])
         if(str.compare("exit")==0) break;
         
     }
-    return(0);
 }
 
+int main(int argc,char *argv[])
+{
+    const char *name = "masarService";
+    if(argc>1) name = argv[1];
+    masarService(name);
+    epicsExitCallAtExits();
+    epicsThreadSleep(1.0);
+    CDRMonitor::get().show(stdout,true);
+    return (0);
+}

@@ -34,7 +34,6 @@
 #include <pv/pvAlarm.h>
 #include <pv/timeStamp.h>
 #include <pv/pvTimeStamp.h>
-#include <pv/nt.h>
 
 
 namespace epics { namespace pvAccess { 
