@@ -42,6 +42,12 @@ retrieves data back to client. The client part provides a default GUI to retriev
 data, compares data with live machine, and restores machine with given snapshot
 data. A Python interface for scripting user.
 </p>
+<p>
+The server takes machine snapshot according pre-defined configuration. When server 
+receives a command from client to take a machine snapshot, server retrieves pv name
+list according the received parameters first, gets pv value from V3 IOC, and saves
+data into database.
+</p>
 
 <h2 class="nocount" id="status">Status of this Document</h2>
 
@@ -352,6 +358,31 @@ structure NTTable
 <h3>
 Database configuration
 </h3>
+
+
+1. note: I do not split the PV list in multi files
+  - pv group name: LTD1_Quad
+     pv group description/comment: Linac to dump1 beam line Quads magnets setpoint
+     pv list: refer to file ltd1_Quad_PV
+
+  - pv group name: LTD1_HCor
+     pv group description/comment: Linac to dump1 beam line Horizontal corrector magnets setpoint
+     pv list: refer to file ltd1_HCor_PV
+
+   - pv group name: LTD1_VCor
+      pv group description/comment: Linac to dump1 beam line Vertical corrector magnets setpoint
+      pv list: refer to file ltd1_VCor_PV
+
+   - pv group name: LTD1_Bend
+      pv group description/comment: Linac to dump1 beam line Vertical corrector magnets setpoint
+      pv list: refer to file ltd1_Bend_PV
+
+2.
+   - unique configuration name: LTD1_MG_All
+      the system of this configuration belongs to: LTD1
+      description/comment: Linac to dump1 beam line all magnets setpoint
+      pv groups name: LTD1_Quad, LTD1_HCor, LTD1_VCor, LTD1_Bend
+
 For NSLS II, a default pv_group, which is a collection of pv names, will be configured in advance. User can either use the default pv_group configuration, or, with administrative privilege, create a new configuration. If a client wants to combine pv_groups, it creates, again with administrative privilege/authorization, a new configuration. Each configuration has a name, description, and created time. One configuration might have more than one snapshot event associated with it where the snapshots are taken separately at different times.
 
 

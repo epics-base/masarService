@@ -10,8 +10,7 @@ except:
     root = os.path.abspath(os.path.dirname(__file__))
     sys.path.append("/".join([root, "../python"]))
     sys.path.append("/".join([root, "src/python"]))
-    sys.path.append("/".join([root, "../python/src/client"]))
-#    sys.path.append("/".join([root, "python/src/server"]))
+    sys.path.append("/".join([root, "../python/client"]))
     import ui.masar as masar
     
 masar.main()

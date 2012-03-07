@@ -644,7 +644,14 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         params = {"system": self.system,
                   "servicename": self.__service,
                   "configname": self.currentConfigFilter}
-        rpcResult = self.mc.retrieveServiceConfigs(params)
+        try:
+            rpcResult = self.mc.retrieveServiceConfigs(params)
+        except:
+            QMessageBox.warning(self,
+                                "Warning",
+                                "Exception happened during retrieving configurations.")
+            return False
+        
         if not rpcResult:
             return False
         
@@ -683,8 +690,13 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 if self.timeRangeCheckBox.isChecked():
                     params['start'] = str(start)
                     params['end'] = str(end)
-                
-                rpcResult = self.mc.retrieveServiceEvents(params)
+                try:
+                    rpcResult = self.mc.retrieveServiceEvents(params)
+                except:
+                    QMessageBox.warning(self,
+                                "Warning",
+                                "Except happened during retrieving events.")
+                    return False
                 if not rpcResult:
                     return False
                 eids = rpcResult[0]
@@ -716,7 +728,14 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         data = odict()
 
         params = {'eventid': eventid}
-        rpcResult = self.mc.retrieveSnapshot(params)
+        
+        try:
+            rpcResult = self.mc.retrieveSnapshot(params)
+        except:
+            QMessageBox.warning(self,
+                                "Warning",
+                                "Except happened during retrieving snapshot data.")
+            return False
         if not rpcResult:
             return False
         pvnames = rpcResult[0]
@@ -780,7 +799,13 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                   'configname': str(confname),
                   'user':       str(comment[0]),
                   'desc':       str(comment[1])}
-        result = self.mc.updateSnapshotEvent(params)
+        try:
+            result = self.mc.updateSnapshotEvent(params)
+        except:
+            QMessageBox.warning(self,
+                                "Warning",
+                                "Except happened during update snapshot event.")
+            return False
         if result:
             QMessageBox.information(self,"Successful", 
                                     " Succeed to save preview")
@@ -792,7 +817,13 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         params = {'configname': configName,
                   'servicename': 'masar'}
         
-        rpcResult = self.mc.saveSnapshot(params)
+        try:
+            rpcResult = self.mc.saveSnapshot(params)
+        except:
+            QMessageBox.warning(self,
+                                "Warning",
+                                "Except happened during getting machine preview.")
+            return False
         if not rpcResult:
             return False
         eventid = rpcResult[0]
@@ -853,7 +884,13 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             params[pv] = pv
         # channelName,stringValue,doubleValue,longValue,dbrType,isConnected, is_array, array_value
         array_value = []
-        rpcResult = self.mc.getLiveMachine(params)
+        try:
+            rpcResult = self.mc.getLiveMachine(params)
+        except:
+            QMessageBox.warning(self,
+                                "Warning",
+                                "Except happened during getting live machine.")
+            return False
         if not rpcResult:
             return False
         channelName = rpcResult[0]

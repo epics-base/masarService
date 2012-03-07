@@ -36,12 +36,12 @@ class ChannelRPC(object) :
         """Destructor Destroys the connection to the server"""
         channelRPCPy._destroy(self.cppPvt)
     def connect(self,timeout) :
-        """Connect to the channelRPC servicei
+        """Connect to the channelRPC service
 
           timeout is in seconds."""
         result = channelRPCPy._connect(self.cppPvt,timeout);
         if result==None :
-             return True
+            return True
         return False
     def issueConnect(self) :
         """issueConnect to the channelRPC servicei.i
@@ -57,7 +57,7 @@ class ChannelRPC(object) :
         returns true or false"""
         result = channelRPCPy._waitConnect(self.cppPvt,timeout);
         if result==None :
-             return True
+            return True
         return False
     def request(self,argument,lastRequest) :
         """Send a channelRPC request
