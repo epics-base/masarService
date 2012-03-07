@@ -26,4 +26,22 @@ TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
 
 # Set RULES here if you want to take build rules from somewhere
 # other than EPICS_BASE:
+
+
+#RELEASE.local must define variables like the following:
+
+
+#PYTHON=python2.7
+#PYTHON_BASE=/usr
+#$(PYTHON)_DIR = $(PYTHON_BASE)/lib64/$(PYTHON)/config
+#
+#REPBASE=/home/mrk/hg
+#PVDATA=${REPBASE}/pvDataCPP
+#PVACCESS=${REPBASE}/pvAccessCPP
+#PVIOC=${REPBASE}/pvIOCCPP
+#NT=${REPBASE}/alphaCPP/normativeTypes
+#MASAR=${REPBASE}/masarService/cpp
+
+#EPICS_BASE=/home/install/epics/base
+
 -include $(TOP)/configure/RELEASE.local

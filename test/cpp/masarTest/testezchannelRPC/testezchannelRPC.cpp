@@ -5,6 +5,9 @@
 #include <pv/CDRMonitor.h>
 #include <pv/ezchannelRPC.h>
 
+#include <pv/nttable.h>
+#include <pv/ntnameValue.h>
+
 using namespace std;
 using namespace epics::pvData;
 using namespace epics::pvAccess;
