@@ -15,12 +15,14 @@ using namespace epics::pvData;
 
 static void deleteStatic(void *)
 {
-// If the following is called python will crash.
-//    ClientFactory::stop();
+    ClientFactory::stop();
 }
 
 static void initStatic(void *) {
     ClientFactory::start();
+    // This is registered after the ClientFactory is created.
+    // epicsExitCallAtExits() or epicsExit() should be called first before
+    // exiting client application.
     epicsAtExit(&deleteStatic,0);
 }
 

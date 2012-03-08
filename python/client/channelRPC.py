@@ -7,6 +7,14 @@
 
 import channelRPCPy
 
+def epicsExit() :
+    """unregister ClientFactory::start().
+    This function should only be called right before Python exit.
+    It will make sure epicsExitCallAtExits() be called if there is any registered.
+    Python will crash without this call but there is any registered.
+    """
+    channelRPCPy._epicsExitCallAtExits()
+
 class ChannelRPC(object) :
     """Create a ChannelRPC
 

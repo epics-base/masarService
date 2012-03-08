@@ -1,4 +1,5 @@
 from channelRPC import ChannelRPC as ChannelRPC
+from channelRPC import epicsExit
 from ntnameValue import NTNameValue as NTNameValue
 from nttable import NTTable as NTTable
 from alarm import Alarm as Alarm
@@ -138,9 +139,13 @@ def saveSnapshot():
     print ("=== test %s end ===" %function)
 
 if __name__ == '__main__':
-    retrieveSystemList()
-    retrieveServiceConfigs()
-    retrieveServiceConfigProps()
-    retrieveServiceEvents()
-    retrieveSnapshot()
-    saveSnapshot()
+    try:
+        retrieveSystemList()
+        retrieveServiceConfigs()
+        retrieveServiceConfigProps()
+        retrieveServiceEvents()
+        retrieveSnapshot()
+        saveSnapshot()
+    except:
+        pass
+    epicsExit()

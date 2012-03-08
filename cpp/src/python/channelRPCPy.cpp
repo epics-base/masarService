@@ -330,6 +330,15 @@ static PyObject * _getMessage(PyObject *willBeNull, PyObject *args)
     return pyObject;
 }
 
+static PyObject * _epicsExitCallAtExits(PyObject *willBeNull, PyObject *args)
+{
+    Py_BEGIN_ALLOW_THREADS
+        epicsExitCallAtExits();
+    Py_END_ALLOW_THREADS
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
 static char _init1Doc[] = "_init1 channelRPCPy.";
 static char _init2Doc[] = "_init2 channelRPCPy.";
 static char _destroyDoc[] = "_destroy channelRPCPy.";
@@ -340,6 +349,7 @@ static char _requestDoc[] = "_request.";
 static char _issueRequestDoc[] = "_issueRequest.";
 static char _waitRequestDoc[] = "_waitRequest.";
 static char _getMessageDoc[] = "_getMessage.";
+static char _epicsExitCallAtExitsDoc[] = "_epicsExitCallAtExits.";
 
 static PyMethodDef methods[] = {
     {"_init1",_init1,METH_VARARGS,_init1Doc},
@@ -352,6 +362,7 @@ static PyMethodDef methods[] = {
     {"_issueRequest",_issueRequest,METH_VARARGS,_issueRequestDoc},
     {"_waitRequest",_waitRequest,METH_VARARGS,_waitRequestDoc},
     {"_getMessage",_getMessage,METH_VARARGS,_getMessageDoc},
+    {"_epicsExitCallAtExits",_epicsExitCallAtExits,METH_VARARGS,_epicsExitCallAtExitsDoc},
     {NULL,NULL,0,NULL}
 };
 
