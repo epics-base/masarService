@@ -1,3 +1,5 @@
+import sys
+
 from channelRPC import ChannelRPC as ChannelRPC
 from channelRPC import epicsExit
 from ntnameValue import NTNameValue as NTNameValue
@@ -148,4 +150,4 @@ if __name__ == '__main__':
         saveSnapshot()
     except:
         pass
-    epicsExit()
+    sys.exit(epicsExit())

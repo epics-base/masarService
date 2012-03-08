@@ -927,7 +927,7 @@ def main(channelname = None):
         form = masarUI()
     form.show()
     app.exec_()
-    epicsExit()
+    sys.exit(epicsExit())
 
 if __name__ == '__main__':
     main()
