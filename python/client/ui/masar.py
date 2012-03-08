@@ -33,6 +33,7 @@ import commentdlg
 from showarrayvaluedlg import ShowArrayValueDlg
 
 import masarClient
+from channelRPC import epicsExit 
 
 __version__ = "0.0.1"
 
@@ -926,6 +927,7 @@ def main(channelname = None):
         form = masarUI()
     form.show()
     app.exec_()
+    epicsExit()
 
 if __name__ == '__main__':
     main()
