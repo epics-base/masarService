@@ -48,13 +48,11 @@ def createSqliteDb():
         print ("Not going to overwrite existing SQLite db.")
         sys.exit()
     else:
-        print ("create a new SQLite db.")
+        print ("create a new SQLite db: %s."%(__sqlitedb__))
 
     conn = None
     sqlfile = None
     try:
-        conn = sqlite3.connect(__sqlitedb__)
-        cur = conn.cursor()
         if __sql__ is None:
             from pymasar.db.masarsqlite import SQL
         else:
@@ -64,6 +62,8 @@ def createSqliteDb():
             print ('SQLite script is empty. Cannot create SQLite db.')
             sys.exit()
         else:
+            conn = sqlite3.connect(__sqlitedb__)
+            cur = conn.cursor()
             cur.executescript(SQL)
     except sqlite3.Error, e:
         print ("Error %s:" % e.args[0])
@@ -94,7 +94,6 @@ All rights reserved.
     sys.exit()
 
 if __name__ == '__main__':
-    print (sys.argv)
     args = sys.argv[1:]
     while args:
         arg = args.pop(0)
@@ -103,7 +102,7 @@ if __name__ == '__main__':
             print (__sql__)
         elif arg in ("-db", "--database"):
             __sqlitedb__ = args.pop(0)
-            print (__sqlitedb__)
+            print ("SQLite3 database: ", __sqlitedb__)
         elif arg in ("-h", "--help", "help"):
             usage()
     createSqliteDb()

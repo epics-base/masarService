@@ -19,12 +19,12 @@ class client():
         channelRPC.issueConnect()
         if not channelRPC.waitConnect(1.0) :
             print channelRPC.getMessage()
-            exit(1)
+            raise Exception(channelRPC.getMessage())
         channelRPC.issueRequest(ntnv.getNTNameValue(),False)
         result = channelRPC.waitRequest()
         if(result==None) :
             print channelRPC.getMessage()
-            exit(1)
+            raise Exception(channelRPC.getMessage())
         nttable = NTTable(result)
         nttable.getAlarm(alarm.getAlarmPy())    
         nttable.getTimeStamp(timeStamp.getTimeStampPy())

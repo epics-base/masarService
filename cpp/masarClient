@@ -3,6 +3,11 @@
 import sys
 import os
 
+channel = "masarService"
+args = sys.argv[1:]
+if len(args) > 0:
+    channel = args[0]
+
 try:
     import ui.masar as masar
 except:
@@ -13,4 +18,4 @@ except:
     sys.path.append("/".join([root, "../python/client"]))
     import ui.masar as masar
     
-masar.main()
+masar.main(channelname=channel)

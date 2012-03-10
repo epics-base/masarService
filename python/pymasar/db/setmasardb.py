@@ -19,7 +19,6 @@ except KeyError:
     raise
 
 __version__ = 'beta1'
-
 __service = 'masar'
 
 from settings import (pvgroups, configs, pvg2config)
@@ -52,14 +51,15 @@ for i in range(len(args)):
 
 class Setmasardb():
     
-    def __init__(self, db, servicename='masar', servicedesc= 'machine snapshot, archiving, and retrieve service'):
+    def __init__(self, db, filepath, servicename='masar', servicedesc= 'machine snapshot, archiving, and retrieve service'):
         self.servicename=servicename
         self.servicedesc = servicedesc
         self.conn = sqlite3.connect(db)
+        self.__filepath = filepath
 
     def savePvGroups(self):        
         for k,v in sorted(pvgroups.items()):
-            __file = '/'.join((os.path.abspath(os.path.dirname(__file__)), 'pvs', v[0]))
+            __file = "/".join((self.__filepath, v[0]))
             if os.path.exists(__file): 
                 if os.path.isfile(__file):
                     pvlist = None
@@ -76,9 +76,9 @@ class Setmasardb():
                             f.close()
                     print ('Finished saving pvs in {0}'.format(v[0]))
                 else:
-                    print ("""PV list ({0}) is not a file.""".format(v[0]))
+                    raise Exception ("""PV list ({0}) is not a file.""".format(v[0]))
             else:
-                print ("""Can not find pv list file ({0})""".format(v[0]))
+                raise Exception ("""Can not find pv list file ({0})""".format(v[0]))
     
     def saveServiceConfig(self):
         for k, v in sorted(configs.items()):
@@ -97,7 +97,19 @@ class Setmasardb():
         self.conn.close()
         
 def main():
-    mdb = Setmasardb(__db)
+    PV_LIST_ROOT = '/'.join((os.path.abspath(os.path.dirname(__file__)), 'pvs'))
+    if sys.version_info[:2] > (3,0):
+        root = input ('Please give absolute ROOT PATH of your pv list files \n[default: %s]:\n'%(PV_LIST_ROOT))
+    else:
+        root = raw_input('Please give absolute ROOT PATH of your pv list files \n[default: %s]:\n'%(PV_LIST_ROOT))
+    root = root.strip()
+    if root != '':
+        PV_LIST_ROOT = root
+        print ("Use new ROOT: %s"%(PV_LIST_ROOT))
+    else:
+        print ("Not ROOT directory is specified. Use default.")
+
+    mdb = Setmasardb(__db, PV_LIST_ROOT)
     try:
         mdb.savePvGroups()
     except:

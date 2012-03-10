@@ -47,15 +47,6 @@ masar.py v {0}. Copyright (c) 2011 Brookhaven National Laboratory. All rights re
 """.format(__version__))
     sys.exit()
 
-args = sys.argv[1:]
-while args:
-    arg = args.pop(0)
-    if arg in ("-h", "--help", "help"):
-        usage()
-    else:
-        print ('Unknown option.')
-
-
 # have to put this as last import, otherwise, import error. 
 import cothread.catools as cav3
 
@@ -421,7 +412,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         eventIds = []
         for idx in selectedItems: 
             eventNames.append(str(self.eventTableWidget.item(idx.row(), 0).text()))
-            eventTs.append(str(self.eventTableWidget.item(idx.row(), 1).text()))
+            eventTs.append(str(self.eventTableWidget.item(idx.row(), 3).text()))
             eventIds.append(str(self.eventTableWidget.item(idx.row(), 4).text()))
             
         self.snapshotTabWidget.setStatusTip("Snapshot data")
@@ -930,4 +921,12 @@ def main(channelname = None):
     sys.exit(epicsExit())
 
 if __name__ == '__main__':
+    args = sys.argv[1:]
+    while args:
+        arg = args.pop(0)
+        if arg in ("-h", "--help", "help"):
+            usage()
+        else:
+            print ('Unknown option.')   
+
     main()
