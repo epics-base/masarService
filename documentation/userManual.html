@@ -401,8 +401,8 @@ masarExample0001
 masarExample0999</pre>
 
 <p>The SQL file is masars-qlite.sql. File createSqliteDb.py is the Python
-script that create an SQLite3 database. . An example of how tp create a MASAR
-datatbase is:</p>
+script that create an SQLite3 database. An example of how to create a MASAR
+database is:</p>
 <pre>$cd masarService/example
 $python ../python/pymasar/db/createSqliteDb.py</pre>
 This creates a new MASAR database called "masar.db" that is located in the
@@ -422,7 +422,7 @@ Do you want to overwrite it? Yes, [N]o (default = No):</pre>
 
 <p>Choose Yes to overwrite current masar.db file, otherwise No. </p>
 
-<p>If you want give database file a name instead of using default "masar.db",
+<p>If you want to give database file a name instead of using default "masar.db",
 you can do </p>
 <pre>$ python ../python/pymasar/db/createSqliteDb.py -db test.db
 SQLite3 database:  test.db
@@ -450,7 +450,7 @@ Script, setmasardb.py initialize the database. This is also located in:</p>
 
 <p>The following is an example showing how to configure MASAR database. </p>
 
-<p>Site-specific information is configured in settings.p, which has format as
+<p>Site-specific information is configured in settings.py, which has format as
 below: </p>
 <pre># pv group name: [pv list file, description]
 pvgroups= {
@@ -632,15 +632,16 @@ generateSOLinks.py, for example:<br>
 
 <h3>PYTHONPATH</h3>
 The PYTHONPATH must be defined as follows. It could be defined in .bash_profile 
-<pre>$ export PYTHONPATH=~/V4/masarService/python
-export PYTHONPATH=${PYTHONPATH}:~/V4/masarService/cpp/src/python
-export PYTHONPATH=${PYTHONPATH}:~/V4/masarService/python/client
-export PYTHONPATH=${PYTHONPATH}:~/V4/masarService/python/server</pre>
+<pre>
+$ export PYTHONPATH=~/V4/masarService/python
+$ export PYTHONPATH=${PYTHONPATH}:~/V4/masarService/cpp/src/python
+$ export PYTHONPATH=${PYTHONPATH}:~/V4/masarService/python/client
+$ export PYTHONPATH=${PYTHONPATH}:~/V4/masarService/python/server</pre>
 
 <h3>MASAR SQLite database</h3>
 You also need to set the MASAR_SQLITE_DB to allow PYMASAR module to find the
 SQLite3 database. Here is an example. It can also be put in .bash_profile
-<pre>export MASAR_SQLITE_DB=~/V4/masarService/example/masar.db</pre>
+<pre>$ export MASAR_SQLITE_DB=~/V4/masarService/example/masar.db</pre>
 
 <p>Now it is ready to go. </p>
 
