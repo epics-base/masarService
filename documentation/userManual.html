@@ -27,7 +27,7 @@
 <dl>
   <dt>This version:</dt>
     <dd><a
-      href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/userManual.html">userManual_20120309.html</a></dd>
+      href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/userManual.html">userManual_20120313.html</a></dd>
   <dt>Latest version:</dt>
     <dd><a
       href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/userManual.html">userManual.html</a></dd>
@@ -85,15 +85,6 @@ license</a>. </p>
 mercurial repository. No binary package is currently provided. Like other EPICS
 V4 modules, MASAR service can be checked out from its mercurial repository on
 source forge.</p>
-
-<p><span style="color:#ff0000">GUOBAO IS THE FOLLOWING NECESSARY</span> If
-there is an error such as </p>
-<pre>abort: error: Connection refused</pre>
-during checking out, it probably means that you have some problems with your
-network setting, for example http proxy setting. You can try to set your
-http_proxy environment, for example, on BASH shell: 
-<pre>export http_proxy=http://your.proxy.server.name:port</pre>
-
 <h2>System Requirement</h2>
 
 <p>To run MASAR on you machine, Python and various EPICS V3 and V4 run-time
@@ -277,16 +268,17 @@ there is any performance issue.
 
 <p></p>
 
-<p>The MASAR supports 6 fundamental functions: </p>
+<p>The MASAR server side supports 6 fundamental functions to talk with RDB: </p>
 <ol>
-  <li><b>retrieveServiceConfigProps</b>: get a list from RDB of many
-    sub-systems are defined. <span style="color:#ff0000">GUOBAO I DO NOT
-    UNDERSTAND WHAT THIS IS.</span></li>
+  <li><b>retrieveServiceConfigProps</b>: current MASAR database schema defines an 
+  associated property table, service_config_prop, to host some user defined properties.
+  One typical use is which sub-system one particular configuration belongs to. This function
+  is to get a full list of sub-system that are defined for MASAR service in database.
+  </li>
   <li><b>retrieveServiceConfigs</b>: get a list of the snapshot configurations
-    based on filter based on shapshot names..</li>
+    with filter based on snapshot names.</li>
   <li><b>retrieveServiceEvents</b>: get a list how many snapshot events have
-    been taken with filters based on snapshot names, author, and time
-  range.</li>
+    been taken with filters based on snapshot names, author, and time range.</li>
   <li><b>retrieveSnapshot</b>: get real snapshot data;</li>
   <li><b>saveSnapshot</b>: save a snapshot into database;</li>
   <li><b>updateSnapshotEvent</b>: update a particular snapshot, for example
@@ -294,26 +286,29 @@ there is any performance issue.
 </ol>
 Function <b>NOT supported</b> by the server: 
 <ol>
-  <li>Comparing two different snapshots or a archived snapshot with current
-    live machine.</li>
-  <li>Comparing an archived snapshot with current live machine (supported in
-    default PyQt4 GUI).</li>
-  <li>Restoring machine to a particular snapshot status (supported in default
-    PyQt4 GUI). The MASAR server has unidirectional access to EPICS V3 IOC,
-    which means reads value only.</li>
-  <li>Change pv name. We thought about pv name changes, but we will not support
-    this function.</li>
+  <li>Comparing two different snapshots. This is a function inside client part, and user
+  can do it using Python interface.</li>
+  <li>Comparing an archived snapshot with current live machine. This is a function 
+  inside client part, and is supported in PyQt4 GUI by default.</li>
+  <li>Restoring machine to a particular snapshot status. The MASAR server has 
+  unidirectional access to EPICS V3 IOC, which means reads value only. Restoring is
+  a function inside client part, and is supported in PyQt4 GUI by default.</li>
+  <li>Change pv name. We thought about pv name changes, but do not support
+    this function at current release.</li>
   <li>Add new pv name to existing configuration. We thought about adding a new
-    pv name to a group, but will not support it currently. User is encouraged
-    to create a new configuration. GUOBAO HOW DOES USER CREATE
-  CONFIGURATION</li>
+    pv name to a group, but do not support it at current release. Since adding a new
+    pv is changing the configuration definition in fact, it is encouraged to create a new
+    configuration. Please refer 
+    "Database configuration" section about how to create a new configuration. User 
+    is encouraged to define a new configuration, then ask service manager or database 
+    administrator to load the configuration into database. </li>
   <li>Reuse configuration name. We have a request that new group maintains old
-    group name and old group becomes deprecated. But this will not be in
-    initial implementation.</li>
+    group name and old group becomes deprecated. But this is not in the initial 
+    implementation.</li>
   <li>Version control for configuration changes. We considered to adopt version
     control to tracking configuration changes, for example, adding a new pv to
-    existing pv_group, changing group name, and so on. But this will not be in
-    initial implementation.</li>
+    existing pv_group, changing group name, and so on. But this is not in the initial 
+    implementation.</li>
 </ol>
 
 <h3>Data Format </h3>
@@ -414,7 +409,7 @@ This creates a new MASAR database called "masar.db" that is located in the
 example directory. If there is an error like: 
 <pre>create a new SQLite db.
 Traceback (most recent call last):
-  File "../python/pymasar/db/createSqliteDb.py", line 109, in &lt;              module&gt;
+  File "../python/pymasar/db/createSqliteDb.py", line 109, in &lt;module&gt;
     createSqliteDb()
   File "../python/pymasar/db/createSqliteDb.py", line 59, in createSqliteDb
     from pymasar.db.masarsqlite import SQL
@@ -438,9 +433,9 @@ create a new SQLite db: test.db.</pre>
 <pre>export MASAR_SQLITE_DB=~/V4/masarService/example/masar.db</pre>
 If the database is named differently, use right database file name. 
 
-<h3>Database initialization </h3>
+<h3>Database configuration </h3>
 
-<p>This section is also only for an SQLite3database and again the files
+<p>This section is also only for an SQLite3 database and again the files
 described below are located in:</p>
 <pre>masarService/python/pymasar/db</pre>
 
@@ -540,7 +535,16 @@ $ hg clone http://epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/pvAccessCP
 $ hg clone http://epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/pvIOCCPP
 $ hg clone http://epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/alphaCPP
 
-$ hg clone http://epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/masarService</pre>
+$ hg clone http://epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/masarService
+</pre>
+
+<p>If you are inside an internal network, and have some proxy setting, you might hit a
+connection error during cloning a module like:
+<pre>abort: error: Connection refused</pre>
+Please consulate your network manager, or you can try to set your
+http_proxy environment, for example, on BASH shell: 
+<pre>export http_proxy=http://your.proxy.server.name:port</pre>
+
 NOTE: Make sure you have following line in each module in configure/RELEASE.
 Suggest to put it as the last line if it is not. 
 <pre>-include $(TOP)/configure/RELEASE.local</pre>
@@ -553,7 +557,7 @@ Then
 <pre>$ make</pre>
 
 <h3>Install pvAccessCPP</h3>
-<pre>$ cd ../pvAccessCPP&lt; </pre>
+<pre>$ cd ../pvAccessCPP </pre>
 Add the following to configure/RELEASE.local 
 <pre>PVDATA=~/V4/pvDataCPP
 EPICS_BASE=/usr/lib/epics</pre>
@@ -1055,7 +1059,7 @@ The restore result can be confirmed by comparing the live machine again as:
   Guobao Shen, BNL 
 </address>
 <!-- hhmts start -->
-Last modified: Fri Mar 9 22:14:42 EST 2012<!-- hhmts end -->
+Last modified: Tue Mar 13 11:44:57 EDT 2012<!-- hhmts end -->
 <hr>
 </body>
 </html>
