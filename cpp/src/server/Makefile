@@ -17,7 +17,7 @@ SRC_DIRS += $(SERVER)/dslPY
 INC += dslPY.h
 LIBSRCS += dslPY.cpp
 
-masarService_LIBS += Com pvData pvAccess pvIOC nt masarClient
+masarService_LIBS += masar nt pvIOC pvAccess pvData Com
 masarService_LIBS += $(PYTHON)
 
 

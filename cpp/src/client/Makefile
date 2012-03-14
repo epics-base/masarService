@@ -23,10 +23,10 @@ SRC_DIRS += $(CLIENT)ezchannelRPC
 INC += ezchannelRPC.h
 LIBSRCS += ezchannelRPC.cpp
 
-LIBRARY = masarClient
+LIBRARY = masar
 
-masarClient_LIBS += pvAccess pvData Com
-masarClient_LIBS += $(EPICS_BASE_HOST_LIBS)
+masar_LIBS += pvAccess pvData Com
+masar_LIBS += $(EPICS_BASE_HOST_LIBS)
 
 include $(TOP)/configure/RULES
 

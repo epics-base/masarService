@@ -29,7 +29,7 @@ def checkAnswer(answer):
         result = True
     return result
 
-def createSqliteDb():
+def createMasarDb():
     noOverwrite = False
     if os.path.exists(__sqlitedb__): 
         if os.path.isfile(__sqlitedb__):
@@ -105,4 +105,4 @@ if __name__ == '__main__':
             print ("SQLite3 database: ", __sqlitedb__)
         elif arg in ("-h", "--help", "help"):
             usage()
-    createSqliteDb()
+    createMasarDb()

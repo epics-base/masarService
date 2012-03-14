@@ -400,18 +400,18 @@ masarExample0001
  ...
 masarExample0999</pre>
 
-<p>The SQL file is masars-qlite.sql. File createSqliteDb.py is the Python
+<p>The SQL file is masars-qlite.sql. File createmasardb.py is the Python
 script that create an SQLite3 database. An example of how to create a MASAR
 database is:</p>
 <pre>$cd masarService/example
-$python ../python/pymasar/db/createSqliteDb.py</pre>
+$python ../python/pymasar/db/createmasardb.py</pre>
 This creates a new MASAR database called "masar.db" that is located in the
 example directory. If there is an error like: 
 <pre>create a new SQLite db.
 Traceback (most recent call last):
-  File "../python/pymasar/db/createSqliteDb.py", line 109, in &lt;module&gt;
-    createSqliteDb()
-  File "../python/pymasar/db/createSqliteDb.py", line 59, in createSqliteDb
+  File "../python/pymasar/db/createmasardb.py", line 109, in &lt;module&gt;
+    createMasarDb()
+  File "../python/pymasar/db/createmasardb.py", line 59, in createmasardb
     from pymasar.db.masarsqlite import SQL
 ImportError: No module named pymasar.db.masarsqlite</pre>
 Check the PYTHONPATH setting. 
@@ -424,7 +424,7 @@ Do you want to overwrite it? Yes, [N]o (default = No):</pre>
 
 <p>If you want to give database file a name instead of using default "masar.db",
 you can do </p>
-<pre>$ python ../python/pymasar/db/createSqliteDb.py -db test.db
+<pre>$ python ../python/pymasar/db/createmasardb.py -db test.db
 SQLite3 database:  test.db
 create a new SQLite db: test.db.</pre>
 
@@ -445,7 +445,7 @@ allowing MASAR server uses it. </p>
 
 <p>The database configuration, which is an administrative work, is separated
 from MASR service, and could be done through calling PYMASAR API. A Python
-Script, setmasardb.py initialize the database. This is also located in:</p>
+Script, configmasardb.py, initializes and configures the database. This is also located in:</p>
 <pre>masarService/python/pymasar/db</pre>
 
 <p>The following is an example showing how to configure MASAR database. </p>
@@ -487,10 +487,10 @@ pvg2config= {
     The value of each key is a collection list of pv group name. </li>
 </ol>
 
-<p>After the settings.py is configured, setmasardb.py creaates the database.
+<p>After the settings.py is configured, configmasardb.py creates the database.
 Assume the database is called masar.db, and is located in
 masarService/example</p>
-<pre>$ python ../python/pymasar/db/setmasardb.py</pre>
+<pre>$ python ../python/pymasar/db/configmasardb.py</pre>
 it requests the absolute path of pv list file directory. 
 <pre>Please give absolute ROOT PATH of your pv list files 
 [default: /home/xxxx/V4/masarService/python/pymasar/db/pvs]:</pre>

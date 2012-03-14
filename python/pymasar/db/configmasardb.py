@@ -49,7 +49,7 @@ for i in range(len(args)):
     else:
         print ('Unknown option.')
 
-class Setmasardb():
+class ConfigMasarDb():
     
     def __init__(self, db, filepath, servicename='masar', servicedesc= 'machine snapshot, archiving, and retrieve service'):
         self.servicename=servicename
@@ -109,7 +109,7 @@ def main():
     else:
         print ("Not ROOT directory is specified. Use default.")
 
-    mdb = Setmasardb(__db, PV_LIST_ROOT)
+    mdb = ConfigMasarDb(__db, PV_LIST_ROOT)
     try:
         mdb.savePvGroups()
     except:
