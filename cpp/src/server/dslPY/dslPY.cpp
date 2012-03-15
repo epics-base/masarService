@@ -71,7 +71,7 @@ DSL_RDB::~DSL_RDB()
 bool DSL_RDB::init()
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    PyObject * module = PyImport_ImportModule("dslPY");
+    PyObject * module = PyImport_ImportModule("masarserver.dslPY");
     if(module==0) {
         String message("dslPY");
         message += " does not exist or is not a python module";

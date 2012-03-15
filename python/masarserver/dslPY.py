@@ -8,8 +8,10 @@
 
 import re
 
-from nttable import NTTable
+from masarclient.nttable import NTTable
 import pymasar
+
+__all__=['DSL']
 
 class DSL(object) :
     """Implements an IRMIS request."""

@@ -32,8 +32,8 @@ import ui_masar
 import commentdlg
 from showarrayvaluedlg import ShowArrayValueDlg
 
-import masarClient
-from channelRPC import epicsExit 
+import masarclient.masarClient as masarClient
+from masarclient.channelRPC import epicsExit 
 
 __version__ = "0.0.1"
 
