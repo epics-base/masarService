@@ -82,9 +82,8 @@ href="http://epics-pvdata.sourceforge.net/LICENSE.html">open source
 license</a>. </p>
 
 <p>For now the only way to obtain the MASAR service is from the sourceforge
-mercurial repository. No binary package is currently provided. Like other EPICS
-V4 modules, MASAR service can be checked out from its mercurial repository on
-source forge.</p>
+mercurial repository. Binary packages will be available for Debian 7.0 (Wheezy).
+</p>
 <h2>System Requirement</h2>
 
 <p>To run MASAR on you machine, Python and various EPICS V3 and V4 run-time
@@ -509,8 +508,7 @@ configuration name (wf_test) exists already.</pre>
 <p>After finished the database configuration, it is ready to launch MASAR
 server. </p>
 
-<h2>Installation </h2>
-
+<h2>Install from source</h2>
 <p>At current stage, all EPICS V4 packages are available as source code, which
 can be checked out from by sourceforge mercurial repository. To compile all V4
 module Python 2.7 and EPICS V3 development packages must be installed. EPICS V3
@@ -518,10 +516,13 @@ base is available as a Debian package from <a
 href="http://epics.nsls2.bnl.gov/debian/">NSLS-II Debian package server</a>.
 Here we assume EPICS V3 base is installed under <span
 style="color: rgb(0, 153, 0);">/usr/lib/epics</span>. </p>
+
+<p>
 A step-by-step installation is introduced here, and the example is to show how
 to install whole packages on Ubuntu 11.04 x86_64 system. You should be able to
 install all modules on other systems following the same procedure. You can
 check your system architecture using for example on linux: 
+</p>
 <pre>$ uname -m<br>x86_64<br></pre>
 
 <h3>Preparation</h3>
@@ -635,8 +636,7 @@ The PYTHONPATH must be defined as follows. It could be defined in .bash_profile
 <pre>
 $ export PYTHONPATH=~/V4/masarService/python
 $ export PYTHONPATH=${PYTHONPATH}:~/V4/masarService/cpp/src/python
-$ export PYTHONPATH=${PYTHONPATH}:~/V4/masarService/python/client
-$ export PYTHONPATH=${PYTHONPATH}:~/V4/masarService/python/server</pre>
+</pre>
 
 <h3>MASAR SQLite database</h3>
 You also need to set the MASAR_SQLITE_DB to allow PYMASAR module to find the
@@ -856,7 +856,7 @@ check its data type by checking dbr_type.
 A default GUI is developed using PyQt4. A start script can be found under
 masarService/cpp. Here assume the MASAR server has been started with the name
 "MASARSERVICE:TEST:EXAMPLE". Client GUI can be launched as below: 
-<pre>$ python masarClient MASARSERVICE:TEST:EXAMPLE</pre>
+<pre>$ python masar MASARSERVICE:TEST:EXAMPLE</pre>
 A GUI will be launched as: 
 
 <table>
