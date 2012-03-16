@@ -25,8 +25,8 @@ LIBSRCS += ezchannelRPC.cpp
 
 LIBRARY = masar
 
-masar_LIBS += pvAccess pvData Com
-masar_LIBS += $(EPICS_BASE_HOST_LIBS)
+masar_LIBS += pvAccess pvData ca Com
+#masar_LIBS += $(EPICS_BASE_HOST_LIBS)
 
 include $(TOP)/configure/RULES
 
