@@ -1,4 +1,4 @@
-import dslPY as dsl
+import masarserver.dslPY as dsl
 
 test = dsl.DSL();
 

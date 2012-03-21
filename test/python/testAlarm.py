@@ -4,7 +4,7 @@
 # EPICS pvService is distributed subject to a Software License Agreement
 #    found in file LICENSE that is included with this distribution.
 # Author Marty Kraimer 2011.07
-from alarm import Alarm as Alarm
+from masarclient.alarm import Alarm as Alarm
 
 alarm = Alarm()
 print alarm

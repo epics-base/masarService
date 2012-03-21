@@ -5,7 +5,7 @@
 #    found in file LICENSE that is included with this distribution.
 # Author Marty Kraimer 2011.07
 import time
-from timeStamp import TimeStamp as TimeStamp
+from masarclient.timeStamp import TimeStamp as TimeStamp
 
 timeStamp = TimeStamp()
 timeStamp.getCurrent()
