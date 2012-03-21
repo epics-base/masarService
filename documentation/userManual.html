@@ -82,8 +82,46 @@ href="http://epics-pvdata.sourceforge.net/LICENSE.html">open source
 license</a>. </p>
 
 <p>For now the only way to obtain the MASAR service is from the sourceforge
-mercurial repository. Binary packages will be available for Debian 7.0 (Wheezy).
+mercurial repository. Binary packages are available for Debian 7.0 (Wheezy).
 </p>
+
+<h2>NOTE
+</h2>
+<b>
+<ol>
+  <li>In the database, time is stored as UTC/POSIX time started from Jan, 1st, 1970. 
+    There is a constant time shift in second since the seconds past EPOCH used by
+    EPICS V3 starts from Jan 1st, 1990.
+  </li>
+  <li> Since all time stored in the RDB is in the UTC time format, the client
+    Python API returns all raw data, which means time is in UTC format. This 
+    impacts the API user.
+  </li>
+  <li> For the human being reading convenience, the default PyQt4 GUI displays
+    it in local time.
+  </li>
+  <li>All timestamps in service_event, service_config, and pv_group tables are
+    the time when inserting data into database. This means that the time stamp
+    for a particular snapshot is the time when the data is inserted into
+    database.</li>
+  <li>Since the enum is converted to a string, it captures its label (display
+    value) instead of its real value(0, 1, ...). Advantage doing that is if
+    there is any changes on enum label, it probably means some V3 IOC database
+    logic has changed. It is better to throw a message to show that explicitly.
+  </li>
+  <li> The compare and restore functions are provided only in PyQt4 GUI. Client
+    user needs to use Python Client API to compare any sets of snapshot data, and
+    manipulate the data.
+  </li>
+  <li> For restore function, instead of slowly and synchronously ramping 
+    the value to given setting point, the MASAR GUI sets the value whatever
+    it is to the IOC directly. It might be dangerous if IOC or other gateway does 
+    not protect it. The restore function sets only the stored value back to IOC.
+  </li>
+  <li> The restore function does not verify a pv is a read-back or set-point.
+  </li>
+</ol>
+</b>
 <h2>System Requirement</h2>
 
 <p>To run MASAR on you machine, Python and various EPICS V3 and V4 run-time
@@ -246,22 +284,6 @@ The waveform data is casted following above rule, and stored as a BLOB in
 database after being serialized into binary. At current stage, the BLOB is one
 field of masar_data table, and might be separated as a standalone table if
 there is any performance issue. 
-
-<p><b>NOTE</b>: </p>
-<ol>
-  <li>In the database time is stored as UTC/POSIX time, which means the IOC
-    time, seconds past EPOCH has been shifted to POSIX time from V3 time which
-    is relative to 1990 instead of 1970.</li>
-  <li>All timestamps in service_event, service_config, and pv_group tables are
-    the time when inserting data into database. This means that the time stamp
-    for a particular snapshot is the time when the data is inserted into
-    database.</li>
-  <li>Since the enum is converted to a string, it captures its label (display
-    value) instead of its real value(0, 1, ...). Advantage doing that is if
-    there is any changes on enum label, it probably means some V3 IOC database
-    logic has changed. It is better to throw a message to show that explicitly.
-  </li>
-</ol>
 
 <h3>Functions </h3>
 
@@ -736,11 +758,7 @@ event:  totalConstruct 5 totalDestruct 5</pre>
 <h2>MASAR Client </h2>
 There are 2 ways to use MASAR client, using either the Python API or the
 default PyQt4 GUI. 
-<p>
-<b>NOTE</b>: <span style="color: rgb(204, 0, 0);">
-All time stored in the RDB is in the UTC time format, which means that the API returns time in UTC format. 
-For the human being reading convenience, the default PyQt4 GUI converts it to local time. </span>
-</p>
+
 <h3>Python API </h3>
 The client API is defined in masarClient.py. 
 
@@ -856,6 +874,83 @@ string, double and long. For a waveform/array, its value is carried in
 array_value. Client needs to check the pv is an array by checking is_array, and
 check its data type by checking dbr_type. 
 
+<p>
+Here is an example how to use the API:
+<pre>
+import sys
+
+from masarclient import masarClient
+from masarclient.channelRPC import epicsExit
+
+channel='masarService'
+
+mc = masarClient.client( channelname = channel)
+
+# retrieve all system defined in masar configuration
+print '==== retrieve system list ===='
+result = mc.retrieveSystemList()
+print result
+
+# retrieve all configuration with given constrains
+print '==== retrieve service config ===='
+params = {'system': 'LTD2'}
+result = mc.retrieveServiceConfigs(params)
+print result
+
+# retrieve all events list with given constrains
+print '==== retrieve service config ===='
+params = {'configid': '1'}
+result = mc.retrieveServiceEvents(params)
+print result
+
+# retrieve all events list with given constrains
+print '==== retrieve snapshot ===='
+params = {'eventid': '1'}
+result = mc.retrieveSnapshot(params)
+print result
+
+# get a machine preview and save it into database
+print '==== machine preview snapshot ===='
+params = {'configname': 'LTD2_SC_Daily_All',
+          'servicename': 'masar'}
+result = mc.saveSnapshot(params)
+print result
+
+# approve a machine preview
+print '==== approve machine preview snapshot ===='
+params = {'eventid':    '1',
+          'configname': 'LTD2_SC_Daily_All',
+          'user':       'test',
+          'desc':       'this is a good snapshot, and I approved it.'}
+result = mc.updateSnapshotEvent(params)
+print result
+
+# get a live machine with given pv list
+print '==== get live machine ===='
+pvlist = ['LTB-BI{BPM:1}LTB:MbAvgX-I',
+          'LTB-BI{BPM:1}LTB:MbStdX-I',
+          'LTB-BI{BPM:1}LTB:MbAvgY-I',
+          'LTB-BI{BPM:1}LTB:MbStdY-I',
+          'LTB-BI{BPM:1}LTB:Iavg-Calc',
+          'LTB-BI{BPM:1}LTB:Istd-Calc',
+          'LTB-BI{BPM:1}Rate:Update-SP',
+          'LTB-BI{BPM:2}LTB:MbAvgX-I',
+          'LTB-BI{BPM:2}LTB:MbStdX-I',
+          'LTB-BI{BPM:2}LTB:MbAvgY-I',
+          'LTB-BI{BPM:2}LTB:MbStdY-I',
+          'LTB-BI{BPM:2}LTB:Iavg-Calc',
+          'LTB-BI{BPM:2}LTB:Istd-Calc',
+          'LTB-BI{BPM:2}Rate:Update-SP']
+for pv in pvlist:
+    params[pv] = pv
+result = mc.getLiveMachine(params)
+print result
+
+# Call this function before exit.
+sys.exit(epicsExit())
+
+</pre>
+</p>
 <h3>Default GUI </h3>
 A default GUI is developed using PyQt4. A start script can be found under
 masarService/cpp. Here assume the MASAR server has been started with the name

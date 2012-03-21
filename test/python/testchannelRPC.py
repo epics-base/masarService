@@ -1,11 +1,11 @@
 import sys
 
-from channelRPC import ChannelRPC as ChannelRPC
-from channelRPC import epicsExit
-from ntnameValue import NTNameValue as NTNameValue
-from nttable import NTTable as NTTable
-from alarm import Alarm as Alarm
-from timeStamp import TimeStamp as TimeStamp
+from masarclient.channelRPC import ChannelRPC as ChannelRPC
+from masarclient.channelRPC import epicsExit
+from masarclient.ntnameValue import NTNameValue as NTNameValue
+from masarclient.nttable import NTTable as NTTable
+from masarclient.alarm import Alarm as Alarm
+from masarclient.timeStamp import TimeStamp as TimeStamp
 
 
 def __clientRPC(function, params):
