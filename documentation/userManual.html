@@ -736,7 +736,11 @@ event:  totalConstruct 5 totalDestruct 5</pre>
 <h2>MASAR Client </h2>
 There are 2 ways to use MASAR client, using either the Python API or the
 default PyQt4 GUI. 
-
+<p>
+<b>NOTE</b>: <span style="color: rgb(204, 0, 0);">
+All time stored in the RDB is in the UTC time format, which means that the API returns time in UTC format. 
+For the human being reading convenience, the default PyQt4 GUI converts it to local time. </span>
+</p>
 <h3>Python API </h3>
 The client API is defined in masarClient.py. 
 
