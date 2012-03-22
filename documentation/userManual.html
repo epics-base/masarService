@@ -23,11 +23,11 @@
 </h1>
 <!-- Maturity: Working Draft or Request for Comments, or Recommendation, and date. -->
 
-<h2 class="nocount">MASAR User Manual, Editors Draft, 13-Mar-2012</h2>
+<h2 class="nocount">MASAR User Manual, Editors Draft, 22-Mar-2012</h2>
 <dl>
   <dt>This version:</dt>
     <dd><a
-      href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/userManual.html">userManual_20120313.html</a></dd>
+      href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/userManual.html">userManual_20120322.html</a></dd>
   <dt>Latest version:</dt>
     <dd><a
       href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/userManual.html">userManual.html</a></dd>
@@ -761,11 +761,41 @@ default PyQt4 GUI.
 
 <h3>Python API </h3>
 The client API is defined in masarClient.py. 
+<ol>
+<li>client.<b>retrieveSystemList</b>()</li>
+<p>
+Retrieve all system and return as a list, or False if failed. 
+An example:
+<p>
+Example:
+<pre>
+import sys
 
-<p>client.<b>retrieveSystemList</b>()<br>
-Retrieve all system and return as a list, or False if failed. </p>
+from masarclient import masarClient
+from masarclient.channelRPC import epicsExit
 
-<p>client.<b>retrieveServiceConfigs</b>(params)<br>
+# Assume the service name is masarService
+# Consulate server manager to confirm it.
+channel='masarService'
+
+# initialize a masar client
+mc = masarClient.client( channelname = channel)
+
+# retrieve all system defined in masar configuration
+print '==== retrieve system list ===='
+result = mc.retrieveSystemList()
+print result
+
+# Call this function before exit.
+sys.exit(epicsExit())
+</pre>
+</p>
+
+</p>
+<li>
+client.<b>retrieveServiceConfigs</b>(params)
+</li>
+<p>
 Retrieve all configuration information. The params is as a dictionary which can
 have any combination of the following keys:<br>
 key names: </p>
@@ -773,13 +803,39 @@ key names: </p>
 It returns all configurations that satisfies the search constrains, or False if
 failed:<br>
 
-<pre>config id []
+<pre>
+config id []
 config name []
 config description []
-version []</pre>
+version []
+</pre>
 The version is a reserved function for future. 
+<p>
+Example:
+<pre>
+import sys
 
-<p>client.<b>retrieveServiceEvents</b>(params)<br>
+from masarclient import masarClient
+from masarclient.channelRPC import epicsExit
+
+# Assume the service name is masarService
+# Consulate server manager to confirm it.
+channel='masarService'
+
+# retrieve all configuration with given constrains
+# In this example, all configurations belonging to system "LTD2" 
+# are retrieved from RDB.
+print '==== retrieve service config ===='
+params = {'system': 'LTD2'}
+result = mc.retrieveServiceConfigs(params)
+print result
+
+# Call this function before exit.
+sys.exit(epicsExit())
+</pre>
+</p>
+<li>client.<b>retrieveServiceEvents</b>(params)</li>
+<p>
 Retrieve all events including event id, user comment, user name, and UTC
 time.<br>
 It retrieves all events without any V3 IOC data. The params is as a dictionary
@@ -795,9 +851,32 @@ failed:<br>
 event description []
 UTC date time  []
 author/user []</pre>
+<p>
+Example:
+<pre>
+import sys
 
-<p>client.<b>retrieveSnapshot</b>(params)<br>
-Retrieve a particular snapshot, which is flagged to be an approved snapshot,
+from masarclient import masarClient
+from masarclient.channelRPC import epicsExit
+
+# Assume the service name is masarService
+# Consulate server manager to confirm it.
+channel='masarService'
+
+# retrieve all events list with given constrains
+# In this example, all events belonging to configuration which has configid ("1")
+# are returned.
+print '==== retrieve service config ===='
+params = {'configid': '1'}
+result = mc.retrieveServiceEvents(params)
+print result
+
+# Call this function before exit.
+sys.exit(epicsExit())
+</pre>
+</p>
+<li>client.<b>retrieveSnapshot</b>(params)</li>
+<p>Retrieve a particular snapshot, which is flagged to be an approved snapshot,
 with all pv data.<br>
 The params is as a dictionary which can have any combination of the following
 keys:<br>
@@ -839,26 +918,101 @@ dbr_type.
         epicsDouble =   [2, 6]
         epicsNoAccess = [7]</pre>
 
-<p>client.<b>saveSnapshot</b>(params)<br>
-Save a snapshot into database, and does not flag it to be approved.<br>
+<p>
+Example:
+<pre>
+import sys
+
+from masarclient import masarClient
+from masarclient.channelRPC import epicsExit
+
+# Assume the service name is masarService
+# Consulate server manager to confirm it.
+channel='masarService'
+
+# retrieve snapshot data which event id = "1"
+# It return false if there isn't such snapshot.
+print '==== retrieve snapshot ===='
+params = {'eventid': '1'}
+result = mc.retrieveSnapshot(params)
+print result
+
+# Call this function before exit.
+sys.exit(epicsExit())
+</pre>
+</p>
+
+<li>client.<b>saveSnapshot</b>(params)</li>
+<p>
+This function is to take a machine preview. It gives user a opportunity to confirm
+whether the snapshot is good or not. The data will be saved into database with a default
+flag to identify that this preview is not approved by the user yet. 
 The params is as a dictionary which can have any combination of the following
 keys:<br>
-key names: </p>
+(key names): </p>
 <pre>["servicename","configname","comment"]</pre>
 The value of each key needs to be a string. It saves all data into database,
 and returns the same data back to the client, which means the return data is
 same the retrieveSnapshot function. 
+<p>
+Example:
+<pre>
+import sys
 
-<p>client.<b>updateSnapshotEvent</b>(params)<br>
-Flag a particular snapshot to be approved..<br>
+from masarclient import masarClient
+from masarclient.channelRPC import epicsExit
+
+# Assume the service name is masarService
+# Consulate server manager to confirm it.
+channel='masarService'
+
+# get a machine preview and save it into database
+# for configuration with name = 'LTD2_SC_Daily_All'
+print '==== machine preview snapshot ===='
+params = {'configname': 'LTD2_SC_Daily_All',
+          'servicename': 'masar'}
+result = mc.saveSnapshot(params)
+print result
+
+# Call this function before exit.
+sys.exit(epicsExit())
+</pre>
+</p>
+<li>client.<b>updateSnapshotEvent</b>(params)</li>
+<p>Flag a particular snapshot to be approved..<br>
 The params is as a dictionary which can have any combination of the following
 keys:<br>
 key names: </p>
 <pre>["eventid", "user", "desc"]</pre>
 The value of each key needs to be a string. It returns True if succeeded,
 otherwise, false. 
+<p>
+Example:
+<pre>
+import sys
 
-<p>client.<b>getLiveMachine</b>(params)<br>
+from masarclient import masarClient
+from masarclient.channelRPC import epicsExit
+
+# Assume the service name is masarService
+# Consulate server manager to confirm it.
+channel='masarService'
+
+# approve a machine preview which event id = '1'
+# it returns false if there is no event found with id='1'
+print '==== approve machine preview snapshot ===='
+params = {'eventid':    '1',
+          'user':       'test',
+          'desc':       'this is a good snapshot, and I approved it.'}
+result = mc.updateSnapshotEvent(params)
+print result
+
+# Call this function before exit.
+sys.exit(epicsExit())
+</pre>
+</p>
+<li>client.<b>getLiveMachine</b>(params)</li>
+<p>
 Get live data with given pv list. Following the same params format, it uses pv
 name as both key and value. It returns </p>
 <pre>pv name []
@@ -873,57 +1027,17 @@ Same as retrieveSnapshot function, for a scalar pv, its value is carried in
 string, double and long. For a waveform/array, its value is carried in
 array_value. Client needs to check the pv is an array by checking is_array, and
 check its data type by checking dbr_type. 
-
 <p>
-Here is an example how to use the API:
+Example:
 <pre>
 import sys
 
 from masarclient import masarClient
 from masarclient.channelRPC import epicsExit
 
+# Assume the service name is masarService
+# Consulate server manager to confirm it.
 channel='masarService'
-
-mc = masarClient.client( channelname = channel)
-
-# retrieve all system defined in masar configuration
-print '==== retrieve system list ===='
-result = mc.retrieveSystemList()
-print result
-
-# retrieve all configuration with given constrains
-print '==== retrieve service config ===='
-params = {'system': 'LTD2'}
-result = mc.retrieveServiceConfigs(params)
-print result
-
-# retrieve all events list with given constrains
-print '==== retrieve service config ===='
-params = {'configid': '1'}
-result = mc.retrieveServiceEvents(params)
-print result
-
-# retrieve all events list with given constrains
-print '==== retrieve snapshot ===='
-params = {'eventid': '1'}
-result = mc.retrieveSnapshot(params)
-print result
-
-# get a machine preview and save it into database
-print '==== machine preview snapshot ===='
-params = {'configname': 'LTD2_SC_Daily_All',
-          'servicename': 'masar'}
-result = mc.saveSnapshot(params)
-print result
-
-# approve a machine preview
-print '==== approve machine preview snapshot ===='
-params = {'eventid':    '1',
-          'configname': 'LTD2_SC_Daily_All',
-          'user':       'test',
-          'desc':       'this is a good snapshot, and I approved it.'}
-result = mc.updateSnapshotEvent(params)
-print result
 
 # get a live machine with given pv list
 print '==== get live machine ===='
@@ -941,6 +1055,8 @@ pvlist = ['LTB-BI{BPM:1}LTB:MbAvgX-I',
           'LTB-BI{BPM:2}LTB:Iavg-Calc',
           'LTB-BI{BPM:2}LTB:Istd-Calc',
           'LTB-BI{BPM:2}Rate:Update-SP']
+
+# formalize the params
 for pv in pvlist:
     params[pv] = pv
 result = mc.getLiveMachine(params)
@@ -948,9 +1064,9 @@ print result
 
 # Call this function before exit.
 sys.exit(epicsExit())
-
 </pre>
 </p>
+</ol>
 <h3>Default GUI </h3>
 A default GUI is developed using PyQt4. A start script can be found under
 masarService/cpp. Here assume the MASAR server has been started with the name
@@ -1159,7 +1275,7 @@ The restore result can be confirmed by comparing the live machine again as:
   Guobao Shen, BNL 
 </address>
 <!-- hhmts start -->
-Last modified: Tue Mar 13 11:44:57 EDT 2012<!-- hhmts end -->
+Last modified: Thu, 22 Mar 2012 09:53:55 -0400<!-- hhmts end -->
 <hr>
 </body>
 </html>

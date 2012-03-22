@@ -24,7 +24,7 @@ params = {'configid': '1'}
 result = mc.retrieveServiceEvents(params)
 print result
 
-# retrieve all events list with given constrains
+# retrieve snapshot data with event_id = 1
 print '==== retrieve snapshot ===='
 params = {'eventid': '1'}
 result = mc.retrieveSnapshot(params)
