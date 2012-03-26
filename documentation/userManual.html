@@ -23,11 +23,11 @@
 </h1>
 <!-- Maturity: Working Draft or Request for Comments, or Recommendation, and date. -->
 
-<h2 class="nocount">MASAR User Manual, Editors Draft, 22-Mar-2012</h2>
+<h2 class="nocount">MASAR User Manual, Editors Draft, 26-Mar-2012</h2>
 <dl>
   <dt>This version:</dt>
     <dd><a
-      href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/userManual.html">userManual_20120322.html</a></dd>
+      href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/userManual.html">userManual_20120326.html</a></dd>
   <dt>Latest version:</dt>
     <dd><a
       href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/userManual.html">userManual.html</a></dd>
@@ -40,6 +40,53 @@
 <hr>
 </div>
 <!-- Header material -->
+<h2 class="nocount" id="contents">Table of Contents</h2>
+<div class="toc">
+<ul>
+  <li><a href="#abstract">Abstract</a></li>
+  <li><a href="#status">Status of this Document</a></li>
+  <li><a href="#introduction">Introduction</a></li>
+  <li><a href="#note">NOTE</a></li>
+  <li><a href="#requirement">System Requirement</a></li>
+  <li><a href="#terminology">Terminology</a></li>
+  <li><a href="#architecture">System Architecture</a></li>
+  <li><a href="#server">MASAR Server</a></li>
+  <ul>
+    <li><a href="#functions">Functions</a></li>
+    <li><a href="#dataformat">Data Format</a></li>
+  </ul>
+  <li><a href="#database">Relational Database</a></li>
+  <ul>
+    <li><a href="#sqlite3">SQLite3 Schema</a></li>
+    <li><a href="#irmis">IRMIS Schema</a></li>
+    <li><a href="#createdb">Create Database</a></li>
+    <li><a href="#configdb">Database configuration</a></li>
+  </ul>
+  <li><a href="#installation">Install from source</a></li>
+  <ul>
+    <li><a href="#prepareinstall">Preparation</a></li>
+    <li><a href="#pvdatainstall">Install pvDataCPP</a></li>
+    <li><a href="#pvaccessinstall">Install pvAccessCPP</a></li>
+    <li><a href="#pviocinstall">Install pvIOCCPP</a></li>
+    <li><a href="#ntinstall">Install normativeTypes</a></li>
+    <li><a href="#masarinstall">Install masarService</a></li>
+  </ul>
+  <li><a href="#runserver">Run MASAR Server</a></li>
+  <ul>
+    <li><a href="#pythonc">Python/C module</a></li>
+    <li><a href="#pythonpath">PYTHONPATH</a></li>
+    <li><a href="#masardb">MASAR SQLite database</a></li>
+    <li><a href="#launchserver">Launch MASAR service</a></li>
+    <li><a href="#launchserver2">Launch MASAR with other name</a></li>
+    <li><a href="#stopserver">Stop MASAR service</a></li>
+  </ul>
+  <li><a href="#masarclient">MASAR Client</a></li>
+  <ul>
+    <li><a href="#pythonapi">Python API</a></li>
+    <li><a href="#clientgui">Default GUI</a></li>
+  </ul>
+</ul>
+</div>
 
 <h2 class="nocount" id="abstract">Abstract</h2>
 
@@ -60,9 +107,9 @@ channels from V3 IOC, and saves the data as a snapshot event into the database.
 
 <h2 class="nocount" id="status">Status of this Document</h2>
 
-<p>This is the 22-Mar-2012 version of the MASAR User Manual. </p>
+<p>This is the 26-Mar-2012 version of the MASAR User Manual. </p>
 
-<h2>Introduction</h2>
+<h2 id="introduction">Introduction</h2>
 
 <p>MASAR is implemented in C++ and Python. Network communication is implemented
 via the EPICS V4 channelRPC mechanism . The current implementation uses SQLite3
@@ -85,7 +132,7 @@ license</a>. </p>
 mercurial repository. Binary packages are available for Debian 7.0 (Wheezy).
 </p>
 
-<h2>NOTE
+<h2 id = "note">NOTE
 </h2>
 <b>
 <ol>
@@ -122,7 +169,7 @@ mercurial repository. Binary packages are available for Debian 7.0 (Wheezy).
   </li>
 </ol>
 </b>
-<h2>System Requirement</h2>
+<h2 id="requirement">System Requirement</h2>
 
 <p>To run MASAR on you machine, Python and various EPICS V3 and V4 run-time
 library are required for both client and server. </p>
@@ -184,7 +231,7 @@ library are required for both client and server. </p>
 
 <p></p>
 
-<h2>Terminology</h2>
+<h2 id="terminology">Terminology</h2>
 in addition to the terminology used by EPICS, MASAR defines the following: 
 <ul>
   <li>pv group: A unique group.It has a name, list of V3 channel names,
@@ -208,7 +255,7 @@ in addition to the terminology used by EPICS, MASAR defines the following:
   </li>
 </ul>
 
-<h2>System Architecture</h2>
+<h2 id="architecture">System Architecture</h2>
 The MASAR consists of client and server : 
 
 <table>
@@ -252,7 +299,7 @@ to a particular status using a snapshot. </p>
   </li>
 </ul>
 
-<h2>MASAR Server</h2>
+<h2 id="server">MASAR Server</h2>
 The MASAR server can take a snapshot for any combination of EPICS channels,
 including scalar channels of type string, enum, byte (8-bit), short (16-bit),
 int (32-bit), long (which is same with integer in EPICS V3), float, and double,
@@ -285,7 +332,7 @@ database after being serialized into binary. At current stage, the BLOB is one
 field of masar_data table, and might be separated as a standalone table if
 there is any performance issue. 
 
-<h3>Functions </h3>
+<h3 id="functions">Functions </h3>
 
 <p></p>
 
@@ -332,7 +379,7 @@ Function <b>NOT supported</b> by the server:
     implementation.</li>
 </ol>
 
-<h3>Data Format </h3>
+<h3 id="dataformat">Data Format </h3>
 
 <p>When a MASAR request is sent from client to server, NTNameValue type is used
 to carry parameters, which is as below: </p>
@@ -369,9 +416,9 @@ updateSnapshotEvent:
     string[] label [...]
     ... // value field </pre>
 
-<h2>Relational Database </h2>
+<h2 id="database">Relational Database </h2>
 
-<h3>SQLite3 Schema </h3>
+<h3 id="sqlite3">SQLite3 Schema </h3>
 Currently, SQLite3 is the only database supported by MASAR service. Its
 original schema is inherited from IRMIS, and now is as below: 
 
@@ -386,7 +433,7 @@ original schema is inherited from IRMIS, and now is as below:
   </tbody>
 </table>
 
-<h3>IRMIS Schema </h3>
+<h3 id="irmis">IRMIS Schema </h3>
 When IRMIS support is implemented the DSL layer will make switching between the
 different relational database almost seamless. However the database schemas
 must be similar. For example to minimize the effort when switching from SQLite
@@ -403,7 +450,7 @@ to IRMIS, the IRMIS schema will be similar to the SQLite3 schema.
   </tbody>
 </table>
 
-<h3>Create Database </h3>
+<h3 id="createdb">Create Database </h3>
 
 <p>This section is for <b>SQLite3</b> database only. The files for SQL are
 located in directory:</p>
@@ -454,7 +501,7 @@ create a new SQLite db: test.db.</pre>
 <pre>export MASAR_SQLITE_DB=~/V4/masarService/example/masar.db</pre>
 If the database is named differently, use right database file name. 
 
-<h3>Database configuration </h3>
+<h3 id="configdb">Database configuration </h3>
 
 <p>This section is also only for an SQLite3 database and again the files
 described below are located in:</p>
@@ -530,7 +577,7 @@ configuration name (wf_test) exists already.</pre>
 <p>After finished the database configuration, it is ready to launch MASAR
 server. </p>
 
-<h2>Install from source</h2>
+<h2 id="installation">Install from source</h2>
 <p>At current stage, all EPICS V4 packages are available as source code, which
 can be checked out from by sourceforge mercurial repository. To compile all V4
 module Python 2.7 and EPICS V3 development packages must be installed. EPICS V3
@@ -547,7 +594,7 @@ check your system architecture using for example on linux:
 </p>
 <pre>$ uname -m<br>x86_64<br></pre>
 
-<h3>Preparation</h3>
+<h3 id="prepareinstall">Preparation</h3>
 Here we assume you want to install all modules under ~/V4<br>
 
 <pre>$ cd
@@ -572,14 +619,14 @@ NOTE: Make sure you have following line in each module in configure/RELEASE.
 Suggest to put it as the last line if it is not. 
 <pre>-include $(TOP)/configure/RELEASE.local</pre>
 
-<h3>Install pvDataCPP </h3>
+<h3 id="pvdatainstall">Install pvDataCPP </h3>
 <pre>$ cd pvDataCPP</pre>
 Add the following to configure/RELEASE.local 
 <pre>EPICS_BASE=/usr/lib/epics</pre>
 Then 
 <pre>$ make</pre>
 
-<h3>Install pvAccessCPP</h3>
+<h3 id="pvaccessinstall">Install pvAccessCPP</h3>
 <pre>$ cd ../pvAccessCPP </pre>
 Add the following to configure/RELEASE.local 
 <pre>PVDATA=~/V4/pvDataCPP
@@ -587,7 +634,7 @@ EPICS_BASE=/usr/lib/epics</pre>
 Then 
 <pre>$ make</pre>
 
-<h3>Install pvIOCCPP </h3>
+<h3 id="pviocinstall">Install pvIOCCPP </h3>
 <pre>$ cd ../pvIOCCPP</pre>
 Add the following to configure/RELEASE.local 
 <pre>PVDATA=~/V4/pvDataCPP
@@ -596,7 +643,7 @@ EPICS_BASE=/usr/lib/epics</pre>
 Then 
 <pre>$ make</pre>
 
-<h3>Install normativeTypes</h3>
+<h3 id="ntinstall">Install normativeTypes</h3>
 <pre>$ cd ../alphaCPP/normativeTypes/</pre>
 Add the following to configure/RELEASE.local 
 <pre>PVDATA=~/V4/pvDataCPP
@@ -605,7 +652,7 @@ EPICS_BASE=/usr/lib/epics</pre>
 Then 
 <pre>$ make</pre>
 
-<h3>Install masarService </h3>
+<h3 id="masarinstall">Install masarService </h3>
 <pre>$ cd ../../masarService/cpp</pre>
 Add the following to configure/RELEASE.local 
 <pre>PYTHON=python2.7
@@ -623,13 +670,12 @@ Then
 <pre>$ make</pre>
 The installation procedure is complete if the above is successful. 
 
-<h2>Run MASAR Server </h2>
+<h2 id="runserver">Run MASAR Server </h2>
 
 <p>After installing all required modules and configuring the sql database the
 last step is to prepare and check the Python environment. </p>
 
-<h3>Python/C module<br>
-</h3>
+<h3 id="pythonc">Python/C module</h3>
 Python looks for the shared library to load modules. You need to create some
 symbol links if it is not done yet. 
 <pre>$ cd
@@ -653,21 +699,21 @@ generateSOLinks.py, for example:<br>
 </p>
 <pre>$ export EPICS_HOST_ARCH=linux-x86_64</pre>
 
-<h3>PYTHONPATH</h3>
+<h3 id="pythonpath">PYTHONPATH</h3>
 The PYTHONPATH must be defined as follows. It could be defined in .bash_profile 
 <pre>
 $ export PYTHONPATH=~/V4/masarService/python
 $ export PYTHONPATH=${PYTHONPATH}:~/V4/masarService/cpp/src/python
 </pre>
 
-<h3>MASAR SQLite database</h3>
+<h3 id="masardb">MASAR SQLite database</h3>
 You also need to set the MASAR_SQLITE_DB to allow PYMASAR module to find the
 SQLite3 database. Here is an example. It can also be put in .bash_profile
 <pre>$ export MASAR_SQLITE_DB=~/V4/masarService/example/masar.db</pre>
 
 <p>Now it is ready to go. </p>
 
-<h3>Launch MASAR service</h3>
+<h3 id="launchserver">Launch MASAR service</h3>
 
 <p>The following packages are needed to run MASAR server.</p>
 <ul>
@@ -711,7 +757,7 @@ Type exit to stop: </pre>
 <p>which means either the PYTHONPATH is not set correctly, or MASAR can not
 find. Check the MASAR_SQLITE_DB and PYTHONPATH. </p>
 
-<h3>Launch MASAR with other name</h3>
+<h3 id="launchserver2">Launch MASAR with other name</h3>
 Above description explains how to launch MASAR service with default name. Since
 a client uses the name to communicate with server, the server name can be given
 when launching it as below, for example to name the RPC channel as
@@ -733,7 +779,7 @@ STATE : INITIALIZED
 <span style="color: rgb(204, 0, 0);">MASARSERVICE:TEST:EXAMPLE</span>
 Type exit to stop: </pre>
 
-<h3>Stop MASAR service</h3>
+<h3 id="stopserver">Stop MASAR service</h3>
 
 <p>To stop server, type "exit" and you will get the following message: </p>
 <pre>Type exit to stop: 
@@ -755,11 +801,11 @@ LinkedList:  totalConstruct 4 totalDestruct 4
 LinkedListNode:  totalConstruct 6 totalDestruct 6
 event:  totalConstruct 5 totalDestruct 5</pre>
 
-<h2>MASAR Client </h2>
+<h2 id="masarclient">MASAR Client </h2>
 There are 2 ways to use MASAR client, using either the Python API or the
 default PyQt4 GUI. 
 
-<h3>Python API </h3>
+<h3 id="pythonapi">Python API </h3>
 The client API is defined in masarClient.py. 
 <ol>
 <li>client.<b>retrieveSystemList</b>()</li>
@@ -1067,7 +1113,7 @@ sys.exit(epicsExit())
 </pre>
 </p>
 </ol>
-<h3>Default GUI </h3>
+<h3 id="clientgui">Default GUI </h3>
 A default GUI is developed using PyQt4. A start script can be found under
 masarService/cpp. Here assume the MASAR server has been started with the name
 "MASARSERVICE:TEST:EXAMPLE". Client GUI can be launched as below: 
@@ -1275,7 +1321,7 @@ The restore result can be confirmed by comparing the live machine again as:
   Guobao Shen, BNL 
 </address>
 <!-- hhmts start -->
-Last modified: Thu, 22 Mar 2012 09:53:55 -0400<!-- hhmts end -->
+Last modified: Mon, 26 Mar 2012 09:21:13 -0400<!-- hhmts end -->
 <hr>
 </body>
 </html>
