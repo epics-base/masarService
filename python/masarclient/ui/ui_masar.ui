@@ -359,6 +359,13 @@
            </widget>
           </item>
           <item>
+           <widget class="QPushButton" name="saveDataFileButton">
+            <property name="text">
+             <string>Save to File</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QPushButton" name="restoreMachineButton">
             <property name="text">
              <string>Restore Machine</string>
@@ -579,6 +586,12 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>saveDataFileButton</sender>
+   <signal>clicked()</signal>
+   <receiver>masar</receiver>
+   <slot>saveDataFileAction()</slot>
+  </connection>
  </connections>
  <slots>
   <slot>systemComboxChanged(QString)</slot>
@@ -593,5 +606,6 @@
   <slot>restoreSnapshotAction()</slot>
   <slot>getLiveMachineAction()</slot>
   <slot>authorTextChanged()</slot>
+  <slot>saveDataFileAction()</slot>
  </slots>
 </ui>

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_masar.ui'
 #
-# Created: Thu Mar  1 14:54:56 2012
+# Created: Mon Mar 26 14:27:43 2012
 #      by: PyQt4 UI code generator 4.8.6
 #
 # WARNING! All changes made in this file will be lost!
@@ -209,6 +209,10 @@ class Ui_masar(object):
         self.label_2.setText(_fromUtf8(""))
         self.label_2.setObjectName(_fromUtf8("label_2"))
         self.horizontalLayout.addWidget(self.label_2)
+        self.saveDataFileButton = QtGui.QPushButton(self.layoutWidget2)
+        self.saveDataFileButton.setText(QtGui.QApplication.translate("masar", "Save to File", None, QtGui.QApplication.UnicodeUTF8))
+        self.saveDataFileButton.setObjectName(_fromUtf8("saveDataFileButton"))
+        self.horizontalLayout.addWidget(self.saveDataFileButton)
         self.restoreMachineButton = QtGui.QPushButton(self.layoutWidget2)
         self.restoreMachineButton.setText(QtGui.QApplication.translate("masar", "Restore Machine", None, QtGui.QApplication.UnicodeUTF8))
         self.restoreMachineButton.setObjectName(_fromUtf8("restoreMachineButton"))
@@ -239,6 +243,7 @@ class Ui_masar(object):
         QtCore.QObject.connect(self.restoreMachineButton, QtCore.SIGNAL(_fromUtf8("clicked(void)")), masar.restoreSnapshotAction)
         QtCore.QObject.connect(self.machinePreviewButton, QtCore.SIGNAL(_fromUtf8("clicked()")), masar.getMachinePreviewAction)
         QtCore.QObject.connect(self.getLiveMachineButton, QtCore.SIGNAL(_fromUtf8("clicked()")), masar.getLiveMachineAction)
+        QtCore.QObject.connect(self.saveDataFileButton, QtCore.SIGNAL(_fromUtf8("clicked()")), masar.saveDataFileAction)
         QtCore.QMetaObject.connectSlotsByName(masar)
 
     def retranslateUi(self, masar):

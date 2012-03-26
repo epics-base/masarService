@@ -1,36 +1,31 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html>
-<head>
+<html><head>
+
+
+
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  <meta name="keywords" content="EPICS, EPICSv4">
-  <!-- Include the epicsv4 base.css, and the css for epics v4 documents -->
-  <link rel="stylesheet" type="text/css"
-  href="http://epics-pvdata.sourceforge.net/base.css">
-  <link rel="stylesheet" type="text/css"
-  href="http://epics-pvdata.sourceforge.net/epicsv4.css">
-  <title>MASAR User Manual</title>
+  <meta name="keywords" content="EPICS, EPICSv4"><!-- Include the epicsv4 base.css, and the css for epics v4 documents -->
+  
+  <link rel="stylesheet" type="text/css" href="http://epics-pvdata.sourceforge.net/base.css">
+  <link rel="stylesheet" type="text/css" href="http://epics-pvdata.sourceforge.net/epicsv4.css"><title>MASAR User Manual</title>
+  
   <style type="text/css">
 /*<![CDATA[*/
 
 
-/*]]>*/</style>
-</head>
-
-<body>
+/*]]>*/</style></head><body>
 
 <div class="head">
 <h1>MASAR USER MANUAL<br>
 </h1>
 <!-- Maturity: Working Draft or Request for Comments, or Recommendation, and date. -->
-
+ display how many points in saved data
 <h2 class="nocount">MASAR User Manual, Editors Draft, 26-Mar-2012</h2>
 <dl>
   <dt>This version:</dt>
-    <dd><a
-      href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/userManual.html">userManual_20120326.html</a></dd>
+    <dd><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/userManual.html">userManual_20120326.html</a></dd>
   <dt>Latest version:</dt>
-    <dd><a
-      href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/userManual.html">userManual.html</a></dd>
+    <dd><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/userManual.html">userManual.html</a></dd>
   <dt>Editors:</dt>
     <dd>Guobao Shen, BNL<br>
       Marty Kraimer, BNL<span style="font-weight: bold;"></span></dd>
@@ -121,18 +116,15 @@ between the masar server and PYMASAR is implemented using Python/C. A Python
 API is provided for the client user, and a default PyQt4 GUI is developed for
 end user.</p>
 
-<p>The products are all part of the <a
-href="http://epics-pvdata.sourceforge.net">V4</a> implementation of <a
-href="http://www.aps.anl.gov/epics">Experimental Physics and Industrial Control
-System</a>, which are available via an <a
-href="http://epics-pvdata.sourceforge.net/LICENSE.html">open source
+<p>The products are all part of the <a href="http://epics-pvdata.sourceforge.net">V4</a> implementation of <a href="http://www.aps.anl.gov/epics">Experimental Physics and Industrial Control
+System</a>, which are available via an <a href="http://epics-pvdata.sourceforge.net/LICENSE.html">open source
 license</a>. </p>
 
 <p>For now the only way to obtain the MASAR service is from the sourceforge
 mercurial repository. Binary packages are available for Debian 7.0 (Wheezy).
 </p>
 
-<h2 id = "note">NOTE
+<h2 id="note">NOTE
 </h2>
 <b>
 <ol>
@@ -182,27 +174,21 @@ library are required for both client and server. </p>
 <p>EPICS modules: </p>
 <ul>
   <li>EPICS V3 base R3.14.11 or above. Current release is R3.14.2, which can be
-    downloaded from <a
-    href="http://www.aps.anl.gov/epics/base/R3-14/12.php">here</a>.<br>
+    downloaded from <a href="http://www.aps.anl.gov/epics/base/R3-14/12.php">here</a>.<br>
   </li>
   <li><a href="http://epics-pvdata.sourceforge.net/">EPICS V4</a> (managed by
     mercurial on source forge)<br>
 
     <ul>
-      <li><a
-        href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/pvDataCPP/raw-file/tip/documentation/pvDataCPP.html">pvDataCPP</a>
+      <li><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/pvDataCPP/raw-file/tip/documentation/pvDataCPP.html">pvDataCPP</a>
       </li>
-      <li><a
-        href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/pvAccessCPP/raw-file/tip/documentation/pvAccessCPP.html">pvAccessCPP</a>
+      <li><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/pvAccessCPP/raw-file/tip/documentation/pvAccessCPP.html">pvAccessCPP</a>
       </li>
-      <li><a
-        href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/pvIOCCPP/raw-file/tip/documentation/pvIOCCPP.html">pIOCCPP</a></li>
-      <li><a
-        href="http://epics-pvdata.sourceforge.net/alpha/normativeTypes/normativeTypes.html">normativeTypes</a><br>
+      <li><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/pvIOCCPP/raw-file/tip/documentation/pvIOCCPP.html">pIOCCPP</a></li>
+      <li><a href="http://epics-pvdata.sourceforge.net/alpha/normativeTypes/normativeTypes.html">normativeTypes</a><br>
         The normative types implementation is under alpha version, which is
         under alphaCPP module.</li>
-      <li><a
-        href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/userManual.html">masarService</a>
+      <li><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/userManual.html">masarService</a>
       </li>
     </ul>
   </li>
@@ -261,10 +247,10 @@ The MASAR consists of client and server :
 <table>
   <tbody>
     <tr>
-      <td><img src="masar/masar.png" width="480" height="360"></td>
+      <td><img src="masar/masar.png" height="360" width="480"></td>
     </tr>
     <tr>
-      <td style="text-align:center">MASAR Architecture</td>
+      <td style="text-align: center;">MASAR Architecture</td>
     </tr>
   </tbody>
 </table>
@@ -310,20 +296,20 @@ are casted as below:
 <table>
   <tbody>
     <tr>
-      <td style="text-align:center">epics data type</td>
-      <td style="text-align:center">data type carried by MASAR</td>
+      <td style="text-align: center;">epics data type</td>
+      <td style="text-align: center;">data type carried by MASAR</td>
     </tr>
     <tr>
-      <td style="text-align:center">enum, string</td>
-      <td style="text-align:center">string</td>
+      <td style="text-align: center;">enum, string</td>
+      <td style="text-align: center;">string</td>
     </tr>
     <tr>
-      <td style="text-align:center">byte, short, int/long</td>
-      <td style="text-align:center">long</td>
+      <td style="text-align: center;">byte, short, int/long</td>
+      <td style="text-align: center;">long</td>
     </tr>
     <tr>
-      <td style="text-align:center">float, double</td>
-      <td style="text-align:center">double</td>
+      <td style="text-align: center;">float, double</td>
+      <td style="text-align: center;">double</td>
     </tr>
   </tbody>
 </table>
@@ -383,38 +369,14 @@ Function <b>NOT supported</b> by the server:
 
 <p>When a MASAR request is sent from client to server, NTNameValue type is used
 to carry parameters, which is as below: </p>
-<pre>structure NTNameValue
-   string[]    names
-   string[]    values
-   string      function xxxxxx // function name as above</pre>
+<pre>structure NTNameValue<br>   string[]    names<br>   string[]    values<br>   string      function xxxxxx // function name as above</pre>
 The name/value pair is converted into a Python dictionary inside service layer,
 and transferred to PYMASAR/PYIRMIS layer. Acceptable names for above 6
 functions are listed as below: 
-<pre>retrieveServiceConfigProps:
-        names = ["propname", "servicename", "configname"]
-retrieveServiceConfigs:
-        names = ["servicename", "configname", "system"]
-retrieveServiceEvents:
-        names = ["configid", "start", "end", "comment", "user"]
-retrieveSnapshot: 
-        names = ["eventid", "start", "end", "comment"]
-saveSnapshot:
-        names = ["servicename","configname","comment"]
-updateSnapshotEvent:
-        names = ["eventid", "user", "desc"]</pre>
+<pre>retrieveServiceConfigProps:<br>        names = ["propname", "servicename", "configname"]<br>retrieveServiceConfigs:<br>        names = ["servicename", "configname", "system"]<br>retrieveServiceEvents:<br>        names = ["configid", "start", "end", "comment", "user"]<br>retrieveSnapshot: <br>        names = ["eventid", "start", "end", "comment"]<br>saveSnapshot:<br>        names = ["servicename","configname","comment"]<br>updateSnapshotEvent:<br>        names = ["eventid", "user", "desc"]</pre>
 
 <p>The results from server are carried using a NTTable as below: </p>
-<pre>structure NTTable
-    structure timeStamp
-        long secondsPastEpoch 0
-        int nanoSeconds 0
-        int userTag 0
-    structure alarm
-        int severity 0
-        int status 0
-        string message 
-    string[] label [...]
-    ... // value field </pre>
+<pre>structure NTTable<br>    structure timeStamp<br>        long secondsPastEpoch 0<br>        int nanoSeconds 0<br>        int userTag 0<br>    structure alarm<br>        int severity 0<br>        int status 0<br>        string message <br>    string[] label [...]<br>    ... // value field </pre>
 
 <h2 id="database">Relational Database </h2>
 
@@ -425,10 +387,10 @@ original schema is inherited from IRMIS, and now is as below:
 <table>
   <tbody>
     <tr>
-      <td><img src="masar/masar-sqlite-eer.png" width="480" height="360"></td>
+      <td><img src="masar/masar-sqlite-eer.png" height="360" width="480"></td>
     </tr>
     <tr>
-      <td style="text-align:center">MASAR SQLite3 Schema</td>
+      <td style="text-align: center;">MASAR SQLite3 Schema</td>
     </tr>
   </tbody>
 </table>
@@ -442,10 +404,10 @@ to IRMIS, the IRMIS schema will be similar to the SQLite3 schema.
 <table>
   <tbody>
     <tr>
-      <td><img src="masar/masar-eer.png" width="480" height="480"></td>
+      <td><img src="masar/masar-eer.png" height="480" width="480"></td>
     </tr>
     <tr>
-      <td style="text-align:center">MASAR IRMIS Schema</td>
+      <td style="text-align: center;">MASAR IRMIS Schema</td>
     </tr>
   </tbody>
 </table>
@@ -463,38 +425,25 @@ names. There is an example directory located in:</p>
 
 <p>It has a subdictory pvs that has example channel list files. For example
 pvs/example.txt contains:</p>
-<pre>masarExample0000
-masarExample0001
- ...
-masarExample0999</pre>
+<pre>masarExample0000<br>masarExample0001<br> ...<br>masarExample0999</pre>
 
 <p>The SQL file is masars-qlite.sql. File createmasardb.py is the Python
 script that create an SQLite3 database. An example of how to create a MASAR
 database is:</p>
-<pre>$cd masarService/example
-$python ../python/pymasar/db/createmasardb.py</pre>
+<pre>$cd masarService/example<br>$python ../python/pymasar/db/createmasardb.py</pre>
 This creates a new MASAR database called "masar.db" that is located in the
 example directory. If there is an error like: 
-<pre>create a new SQLite db.
-Traceback (most recent call last):
-  File "../python/pymasar/db/createmasardb.py", line 109, in &lt;module&gt;
-    createMasarDb()
-  File "../python/pymasar/db/createmasardb.py", line 59, in createmasardb
-    from pymasar.db.masarsqlite import SQL
-ImportError: No module named pymasar.db.masarsqlite</pre>
+<pre>create a new SQLite db.<br>Traceback (most recent call last):<br>  File "../python/pymasar/db/createmasardb.py", line 109, in &lt;module&gt;<br>    createMasarDb()<br>  File "../python/pymasar/db/createmasardb.py", line 59, in createmasardb<br>    from pymasar.db.masarsqlite import SQL<br>ImportError: No module named pymasar.db.masarsqlite</pre>
 Check the PYTHONPATH setting. 
 
 <p>If the "masar.db" exists already, you will be asked </p>
-<pre>SQLite database masar.db exists already.
-Do you want to overwrite it? Yes, [N]o (default = No):</pre>
+<pre>SQLite database masar.db exists already.<br>Do you want to overwrite it? Yes, [N]o (default = No):</pre>
 
 <p>Choose Yes to overwrite current masar.db file, otherwise No. </p>
 
 <p>If you want to give database file a name instead of using default "masar.db",
 you can do </p>
-<pre>$ python ../python/pymasar/db/createmasardb.py -db test.db
-SQLite3 database:  test.db
-create a new SQLite db: test.db.</pre>
+<pre>$ python ../python/pymasar/db/createmasardb.py -db test.db<br>SQLite3 database:  test.db<br>create a new SQLite db: test.db.</pre>
 
 <p>After created MASAR database, an environment variable needs to be set as
 (BASH environment) </p>
@@ -520,26 +469,7 @@ Script, configmasardb.py, initializes and configures the database. This is also 
 
 <p>Site-specific information is configured in settings.py, which has format as
 below: </p>
-<pre># pv group name: [pv list file, description]
-pvgroups= {
-    'test':         ['example.txt', 'server test'],
-    'wftest':       ['exampleWf.txt', 'server test with waveform'],
-    'bigwftest':    ['exampleBigWf.txt', 'server test with big waveform']
-}
-
-# config name: [config desc, system]
-configs= {
-    'sr_test':      ['test pv config', 'test'],
-    'wf_test':      ['waveform test pv config', 'test'],
-    'bwf_test':     ['big waveform test pv config', 'test']
-}
-
-# config name: [pvgroup,]
-pvg2config= {
-    'sr_test':   ['test'],
-    'wf_test':   ['wftest'],
-    'bwf_test':  ['wftest', 'bigwftest']
-}</pre>
+<pre># pv group name: [pv list file, description]<br>pvgroups= {<br>    'test':         ['example.txt', 'server test'],<br>    'wftest':       ['exampleWf.txt', 'server test with waveform'],<br>    'bigwftest':    ['exampleBigWf.txt', 'server test with big waveform']<br>}<br><br># config name: [config desc, system]<br>configs= {<br>    'sr_test':      ['test pv config', 'test'],<br>    'wf_test':      ['waveform test pv config', 'test'],<br>    'bwf_test':     ['big waveform test pv config', 'test']<br>}<br><br># config name: [pvgroup,]<br>pvg2config= {<br>    'sr_test':   ['test'],<br>    'wf_test':   ['wftest'],<br>    'bwf_test':  ['wftest', 'bigwftest']<br>}</pre>
 
 <p>There are 3 variables defined in settings.py </p>
 <ol>
@@ -560,8 +490,7 @@ Assume the database is called masar.db, and is located in
 masarService/example</p>
 <pre>$ python ../python/pymasar/db/configmasardb.py</pre>
 it requests the absolute path of pv list file directory. 
-<pre>Please give absolute ROOT PATH of your pv list files 
-[default: /home/xxxx/V4/masarService/python/pymasar/db/pvs]:</pre>
+<pre>Please give absolute ROOT PATH of your pv list files <br>[default: /home/xxxx/V4/masarService/python/pymasar/db/pvs]:</pre>
 here give the pv list directory PATH, for example
 /home/xxxx/V4/masarService/pvs: 
 <pre><span style="color: rgb(204, 0, 0);">/home/xxxx/V4/masarService/example/pvs</span>
@@ -570,9 +499,7 @@ Use new ROOT: /home/xxxx/V4/masarService/example/pvs</pre>
 <p>If the path is wrong, it raises an exception. After loading pv names into
 database, it tries to save configuration. If a configuration exists already, it
 reports for example, and ignores that configuration: </p>
-<pre>configuration name (bwf_test) exists already.
-configuration name (sr_test) exists already.
-configuration name (wf_test) exists already.</pre>
+<pre>configuration name (bwf_test) exists already.<br>configuration name (sr_test) exists already.<br>configuration name (wf_test) exists already.</pre>
 
 <p>After finished the database configuration, it is ready to launch MASAR
 server. </p>
@@ -581,10 +508,8 @@ server. </p>
 <p>At current stage, all EPICS V4 packages are available as source code, which
 can be checked out from by sourceforge mercurial repository. To compile all V4
 module Python 2.7 and EPICS V3 development packages must be installed. EPICS V3
-base is available as a Debian package from <a
-href="http://epics.nsls2.bnl.gov/debian/">NSLS-II Debian package server</a>.
-Here we assume EPICS V3 base is installed under <span
-style="color: rgb(0, 153, 0);">/usr/lib/epics</span>. </p>
+base is available as a Debian package from <a href="http://epics.nsls2.bnl.gov/debian/">NSLS-II Debian package server</a>.
+Here we assume EPICS V3 base is installed under <span style="color: rgb(0, 153, 0);">/usr/lib/epics</span>. </p>
 
 <p>
 A step-by-step installation is introduced here, and the example is to show how
@@ -597,20 +522,11 @@ check your system architecture using for example on linux:
 <h3 id="prepareinstall">Preparation</h3>
 Here we assume you want to install all modules under ~/V4<br>
 
-<pre>$ cd
-$ mkdir V4
-$ cd V4
-$ hg clone http://epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/pvDataCPP
-$ hg clone http://epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/pvAccessCPP
-$ hg clone http://epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/pvIOCCPP
-$ hg clone http://epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/alphaCPP
-
-$ hg clone http://epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/masarService
-</pre>
+<pre>$ cd<br>$ mkdir V4<br>$ cd V4<br>$ hg clone http://epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/pvDataCPP<br>$ hg clone http://epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/pvAccessCPP<br>$ hg clone http://epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/pvIOCCPP<br>$ hg clone http://epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/alphaCPP<br><br>$ hg clone http://epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/masarService<br></pre>
 
 <p>If you are inside an internal network, and have some proxy setting, you might hit a
 connection error during cloning a module like:
-<pre>abort: error: Connection refused</pre>
+</p><pre>abort: error: Connection refused</pre>
 Please consulate your network manager, or you can try to set your
 http_proxy environment, for example, on BASH shell: 
 <pre>export http_proxy=http://your.proxy.server.name:port</pre>
@@ -629,43 +545,28 @@ Then
 <h3 id="pvaccessinstall">Install pvAccessCPP</h3>
 <pre>$ cd ../pvAccessCPP </pre>
 Add the following to configure/RELEASE.local 
-<pre>PVDATA=~/V4/pvDataCPP
-EPICS_BASE=/usr/lib/epics</pre>
+<pre>PVDATA=~/V4/pvDataCPP<br>EPICS_BASE=/usr/lib/epics</pre>
 Then 
 <pre>$ make</pre>
 
 <h3 id="pviocinstall">Install pvIOCCPP </h3>
 <pre>$ cd ../pvIOCCPP</pre>
 Add the following to configure/RELEASE.local 
-<pre>PVDATA=~/V4/pvDataCPP
-PVACCESS=~/V4/pvAccessCPP
-EPICS_BASE=/usr/lib/epics</pre>
+<pre>PVDATA=~/V4/pvDataCPP<br>PVACCESS=~/V4/pvAccessCPP<br>EPICS_BASE=/usr/lib/epics</pre>
 Then 
 <pre>$ make</pre>
 
 <h3 id="ntinstall">Install normativeTypes</h3>
 <pre>$ cd ../alphaCPP/normativeTypes/</pre>
 Add the following to configure/RELEASE.local 
-<pre>PVDATA=~/V4/pvDataCPP
-PVACCESS=~/V4/pvAccessCPP
-EPICS_BASE=/usr/lib/epics</pre>
+<pre>PVDATA=~/V4/pvDataCPP<br>PVACCESS=~/V4/pvAccessCPP<br>EPICS_BASE=/usr/lib/epics</pre>
 Then 
 <pre>$ make</pre>
 
 <h3 id="masarinstall">Install masarService </h3>
 <pre>$ cd ../../masarService/cpp</pre>
 Add the following to configure/RELEASE.local 
-<pre>PYTHON=python2.7
-PYTHON_BASE=/usr
-$(PYTHON)_DIR = $(PYTHON_BASE)/lib/$(PYTHON)/config 
-NUMPY_CORE=${PYTHON_BASE}/lib/${PYTHON}/site-packages/numpy/core
-
-PVDATA=~/V4/pvDataCPP
-PVACCESS=~/V4/pvAccessCPP
-PVIOC=~/V4/pvIOCCPP
-NTTYPE=~/V4/alphaCPP/normativeTypes
-
-EPICS_BASE=/usr/lib/epics</pre>
+<pre>PYTHON=python2.7<br>PYTHON_BASE=/usr<br>$(PYTHON)_DIR = $(PYTHON_BASE)/lib/$(PYTHON)/config <br>NUMPY_CORE=${PYTHON_BASE}/lib/${PYTHON}/site-packages/numpy/core<br><br>PVDATA=~/V4/pvDataCPP<br>PVACCESS=~/V4/pvAccessCPP<br>PVIOC=~/V4/pvIOCCPP<br>NTTYPE=~/V4/alphaCPP/normativeTypes<br><br>EPICS_BASE=/usr/lib/epics</pre>
 Then 
 <pre>$ make</pre>
 The installation procedure is complete if the above is successful. 
@@ -678,21 +579,14 @@ last step is to prepare and check the Python environment. </p>
 <h3 id="pythonc">Python/C module</h3>
 Python looks for the shared library to load modules. You need to create some
 symbol links if it is not done yet. 
-<pre>$ cd
-$ cd ~/V4/masarService/cpp/src/python
-$ python generateSOLinks.py</pre>
+<pre>$ cd<br>$ cd ~/V4/masarService/cpp/src/python<br>$ python generateSOLinks.py</pre>
 If you did not set EPICS_HOST_ARCH environment, you will be promoted as below: 
 <pre>EPICS_HOST_ARCH is not setted.<br>Please specify EPICS_HOST_ARCH:</pre>
 
 <p>You can specify your host architecture here, for example, linux-x86_64 if
 you are using a 64-bit linux machine. An error will occur as below if the
 EPICS_HOST_ARCH is wrong: </p>
-<pre>EPICS_HOST_ARCH is not setted.
-Please specify EPICS_HOST_ARCH:linux-x86
-Traceback (most recent call last):
-  File "generateSOLinks.py", line 32, in &lt;module&gt;
-    fileList = os.listdir(libDir)
-OSError: [Errno 2] No such file or directory: '../../lib/linux-x86'</pre>
+<pre>EPICS_HOST_ARCH is not setted.<br>Please specify EPICS_HOST_ARCH:linux-x86<br>Traceback (most recent call last):<br>  File "generateSOLinks.py", line 32, in &lt;module&gt;<br>    fileList = os.listdir(libDir)<br>OSError: [Errno 2] No such file or directory: '../../lib/linux-x86'</pre>
 
 <p>An alternative solution is to set the environment before running
 generateSOLinks.py, for example:<br>
@@ -701,10 +595,7 @@ generateSOLinks.py, for example:<br>
 
 <h3 id="pythonpath">PYTHONPATH</h3>
 The PYTHONPATH must be defined as follows. It could be defined in .bash_profile 
-<pre>
-$ export PYTHONPATH=~/V4/masarService/python
-$ export PYTHONPATH=${PYTHONPATH}:~/V4/masarService/cpp/src/python
-</pre>
+<pre>$ export PYTHONPATH=~/V4/masarService/python<br>$ export PYTHONPATH=${PYTHONPATH}:~/V4/masarService/cpp/src/python<br></pre>
 
 <h3 id="masardb">MASAR SQLite database</h3>
 You also need to set the MASAR_SQLITE_DB to allow PYMASAR module to find the
@@ -720,37 +611,13 @@ SQLite3 database. Here is an example. It can also be put in .bash_profile
   <li>Python 2.7 or above</li>
   <li>SQLite3 3.7 or above</li>
 </ul>
-<pre>$ cd ~/V4/masarService/cpp
-$ ./bin/linux-x86_64/masarServiceRun</pre>
+<pre>$ cd ~/V4/masarService/cpp<br>$ ./bin/linux-x86_64/masarServiceRun</pre>
 You will see the following output 
-<pre>ChannelBaseProvider::ChannelBaseProvider pvService
-VERSION : CA Server v0.9.0
-PROVIDER_NAMES : pvService
-BEACON_ADDR_LIST : 
-AUTO_BEACON_ADDR_LIST : 1
-BEACON_PERIOD : 15
-BROADCAST_PORT : 5067
-SERVER_PORT : 5066
-RCV_BUFFER_SIZE : 16384
-IGNORE_ADDR_LIST: 
-STATE : INITIALIZED
-masarService
-Type exit to stop: </pre>
+<pre>ChannelBaseProvider::ChannelBaseProvider pvService<br>VERSION : CA Server v0.9.0<br>PROVIDER_NAMES : pvService<br>BEACON_ADDR_LIST : <br>AUTO_BEACON_ADDR_LIST : 1<br>BEACON_PERIOD : 15<br>BROADCAST_PORT : 5067<br>SERVER_PORT : 5066<br>RCV_BUFFER_SIZE : 16384<br>IGNORE_ADDR_LIST: <br>STATE : INITIALIZED<br>masarService<br>Type exit to stop: </pre>
 
 <p>You have started the server now successfully. However, if you see this
 output: </p>
-<pre>ChannelBaseProvider::ChannelBaseProvider pvService
-VERSION : CA Server v0.9.0
-PROVIDER_NAMES : pvService
-BEACON_ADDR_LIST : 
-AUTO_BEACON_ADDR_LIST : 1
-BEACON_PERIOD : 15
-BROADCAST_PORT : 5067
-SERVER_PORT : 5066
-RCV_BUFFER_SIZE : 16384
-IGNORE_ADDR_LIST: 
-STATE : INITIALIZED
-<span style="color: rgb(204, 0, 0);">DSL_RDB::init dslPY does not exist or is not a python module</span>
+<pre>ChannelBaseProvider::ChannelBaseProvider pvService<br>VERSION : CA Server v0.9.0<br>PROVIDER_NAMES : pvService<br>BEACON_ADDR_LIST : <br>AUTO_BEACON_ADDR_LIST : 1<br>BEACON_PERIOD : 15<br>BROADCAST_PORT : 5067<br>SERVER_PORT : 5066<br>RCV_BUFFER_SIZE : 16384<br>IGNORE_ADDR_LIST: <br>STATE : INITIALIZED<br><span style="color: rgb(204, 0, 0);">DSL_RDB::init dslPY does not exist or is not a python module</span>
 masarService
 Type exit to stop: </pre>
 
@@ -762,44 +629,15 @@ Above description explains how to launch MASAR service with default name. Since
 a client uses the name to communicate with server, the server name can be given
 when launching it as below, for example to name the RPC channel as
 "MASARSERVICE:TEST:EXAMPLE": 
-<pre>$ cd ~/V4/masarService/cpp
-$ ./bin/linux-x86_64/masarServiceRun MASARSERVICE:TEST:EXAMPLE</pre>
+<pre>$ cd ~/V4/masarService/cpp<br>$ ./bin/linux-x86_64/masarServiceRun MASARSERVICE:TEST:EXAMPLE</pre>
 it will shows 
-<pre>ChannelBaseProvider::ChannelBaseProvider pvService
-VERSION : CA Server v0.9.0
-PROVIDER_NAMES : pvService
-BEACON_ADDR_LIST : 
-AUTO_BEACON_ADDR_LIST : 1
-BEACON_PERIOD : 15
-BROADCAST_PORT : 5067
-SERVER_PORT : 5066
-RCV_BUFFER_SIZE : 16384
-IGNORE_ADDR_LIST: 
-STATE : INITIALIZED
-<span style="color: rgb(204, 0, 0);">MASARSERVICE:TEST:EXAMPLE</span>
+<pre>ChannelBaseProvider::ChannelBaseProvider pvService<br>VERSION : CA Server v0.9.0<br>PROVIDER_NAMES : pvService<br>BEACON_ADDR_LIST : <br>AUTO_BEACON_ADDR_LIST : 1<br>BEACON_PERIOD : 15<br>BROADCAST_PORT : 5067<br>SERVER_PORT : 5066<br>RCV_BUFFER_SIZE : 16384<br>IGNORE_ADDR_LIST: <br>STATE : INITIALIZED<br><span style="color: rgb(204, 0, 0);">MASARSERVICE:TEST:EXAMPLE</span>
 Type exit to stop: </pre>
 
 <h3 id="stopserver">Stop MASAR service</h3>
 
 <p>To stop server, type "exit" and you will get the following message: </p>
-<pre>Type exit to stop: 
-exit
-ServiceChannelRPC::~ServiceChannelRPC()
-MasarService::destroy()
-PVServiceProvider::unregister
-PVServiceProvider::~PVServiceProvider
-PVServiceProvider::destroy
-void PVTop::destroy()
-PVTop::~PVTop()
-MasarService::~MasarService()
-close SQLite3 connection.
-ChannelBaseProvider::~ChannelBaseProvider
-timerNode:  totalConstruct 1 totalDestruct 1
-blockingUDPTransport:  totalConstruct 1 totalDestruct 1
-timer:  totalConstruct 1 totalDestruct 1
-LinkedList:  totalConstruct 4 totalDestruct 4
-LinkedListNode:  totalConstruct 6 totalDestruct 6
-event:  totalConstruct 5 totalDestruct 5</pre>
+<pre>Type exit to stop: <br>exit<br>ServiceChannelRPC::~ServiceChannelRPC()<br>MasarService::destroy()<br>PVServiceProvider::unregister<br>PVServiceProvider::~PVServiceProvider<br>PVServiceProvider::destroy<br>void PVTop::destroy()<br>PVTop::~PVTop()<br>MasarService::~MasarService()<br>close SQLite3 connection.<br>ChannelBaseProvider::~ChannelBaseProvider<br>timerNode:  totalConstruct 1 totalDestruct 1<br>blockingUDPTransport:  totalConstruct 1 totalDestruct 1<br>timer:  totalConstruct 1 totalDestruct 1<br>LinkedList:  totalConstruct 4 totalDestruct 4<br>LinkedListNode:  totalConstruct 6 totalDestruct 6<br>event:  totalConstruct 5 totalDestruct 5</pre>
 
 <h2 id="masarclient">MASAR Client </h2>
 There are 2 ways to use MASAR client, using either the Python API or the
@@ -812,32 +650,12 @@ The client API is defined in masarClient.py.
 <p>
 Retrieve all system and return as a list, or False if failed. 
 An example:
-<p>
+</p><p>
 Example:
-<pre>
-import sys
+</p><pre>import sys<br><br>from masarclient import masarClient<br>from masarclient.channelRPC import epicsExit<br><br># Assume the service name is masarService<br># Consulate server manager to confirm it.<br>channel='masarService'<br><br># initialize a masar client<br>mc = masarClient.client( channelname = channel)<br><br># retrieve all system defined in masar configuration<br>print '==== retrieve system list ===='<br>result = mc.retrieveSystemList()<br>print result<br><br># Call this function before exit.<br>sys.exit(epicsExit())<br></pre>
 
-from masarclient import masarClient
-from masarclient.channelRPC import epicsExit
 
-# Assume the service name is masarService
-# Consulate server manager to confirm it.
-channel='masarService'
 
-# initialize a masar client
-mc = masarClient.client( channelname = channel)
-
-# retrieve all system defined in masar configuration
-print '==== retrieve system list ===='
-result = mc.retrieveSystemList()
-print result
-
-# Call this function before exit.
-sys.exit(epicsExit())
-</pre>
-</p>
-
-</p>
 <li>
 client.<b>retrieveServiceConfigs</b>(params)
 </li>
@@ -849,37 +667,12 @@ key names: </p>
 It returns all configurations that satisfies the search constrains, or False if
 failed:<br>
 
-<pre>
-config id []
-config name []
-config description []
-version []
-</pre>
+<pre>config id []<br>config name []<br>config description []<br>version []<br></pre>
 The version is a reserved function for future. 
 <p>
 Example:
-<pre>
-import sys
+</p><pre>import sys<br><br>from masarclient import masarClient<br>from masarclient.channelRPC import epicsExit<br><br># Assume the service name is masarService<br># Consulate server manager to confirm it.<br>channel='masarService'<br><br># retrieve all configuration with given constrains<br># In this example, all configurations belonging to system "LTD2" <br># are retrieved from RDB.<br>print '==== retrieve service config ===='<br>params = {'system': 'LTD2'}<br>result = mc.retrieveServiceConfigs(params)<br>print result<br><br># Call this function before exit.<br>sys.exit(epicsExit())<br></pre>
 
-from masarclient import masarClient
-from masarclient.channelRPC import epicsExit
-
-# Assume the service name is masarService
-# Consulate server manager to confirm it.
-channel='masarService'
-
-# retrieve all configuration with given constrains
-# In this example, all configurations belonging to system "LTD2" 
-# are retrieved from RDB.
-print '==== retrieve service config ===='
-params = {'system': 'LTD2'}
-result = mc.retrieveServiceConfigs(params)
-print result
-
-# Call this function before exit.
-sys.exit(epicsExit())
-</pre>
-</p>
 <li>client.<b>retrieveServiceEvents</b>(params)</li>
 <p>
 Retrieve all events including event id, user comment, user name, and UTC
@@ -893,34 +686,11 @@ range in UTC format.<br>
 It returns all event list that satisfies the search constrains, or False if
 failed:<br>
 
-<pre>event id []
-event description []
-UTC date time  []
-author/user []</pre>
+<pre>event id []<br>event description []<br>UTC date time  []<br>author/user []</pre>
 <p>
 Example:
-<pre>
-import sys
+</p><pre>import sys<br><br>from masarclient import masarClient<br>from masarclient.channelRPC import epicsExit<br><br># Assume the service name is masarService<br># Consulate server manager to confirm it.<br>channel='masarService'<br><br># retrieve all events list with given constrains<br># In this example, all events belonging to configuration which has configid ("1")<br># are returned.<br>print '==== retrieve service config ===='<br>params = {'configid': '1'}<br>result = mc.retrieveServiceEvents(params)<br>print result<br><br># Call this function before exit.<br>sys.exit(epicsExit())<br></pre>
 
-from masarclient import masarClient
-from masarclient.channelRPC import epicsExit
-
-# Assume the service name is masarService
-# Consulate server manager to confirm it.
-channel='masarService'
-
-# retrieve all events list with given constrains
-# In this example, all events belonging to configuration which has configid ("1")
-# are returned.
-print '==== retrieve service config ===='
-params = {'configid': '1'}
-result = mc.retrieveServiceEvents(params)
-print result
-
-# Call this function before exit.
-sys.exit(epicsExit())
-</pre>
-</p>
 <li>client.<b>retrieveSnapshot</b>(params)</li>
 <p>Retrieve a particular snapshot, which is flagged to be an approved snapshot,
 with all pv data.<br>
@@ -931,62 +701,17 @@ key names: </p>
 The value of each key needs to be a string. The "start" and "end" is for time
 range in UTC format.<br>
 It returns snapshot that satisfies the search constrains, or False if failed: 
-<pre>pv name []
-string value []
-double value []
-long value []
-dbr_type []
-isConnected []
-secondsPastEpoch []
-nanoSeconds []
-alarmSeverity []
-alarmStatus []
-is_array []
-array_value [[]]</pre>
+<pre>pv name []<br>string value []<br>double value []<br>long value []<br>dbr_type []<br>isConnected []<br>secondsPastEpoch []<br>nanoSeconds []<br>alarmSeverity []<br>alarmStatus []<br>is_array []<br>array_value [[]]</pre>
 For a scalar pv, its value is carried in string, double and long. For a
 waveform/array, its value is carried in array_value. Client needs to check the
 pv is an array by checking is_array, and check its data type by checking
 dbr_type. 
-<pre>        # DBR_TYPE definition defined in db_access.h
-        #define DBF_STRING      0
-        #define DBF_INT         1
-        #define DBF_SHORT       1
-        #define DBF_FLOAT       2
-        #define DBF_ENUM        3
-        #define DBF_CHAR        4
-        #define DBF_LONG        5
-        #define DBF_DOUBLE      6
-        #define DBF_NO_ACCESS   7
-
-        # type mapping in python
-        epicsLong   =   [1, 4, 5]
-        epicsString =   [0, 3]
-        epicsDouble =   [2, 6]
-        epicsNoAccess = [7]</pre>
+<pre>        # DBR_TYPE definition defined in db_access.h<br>        #define DBF_STRING      0<br>        #define DBF_INT         1<br>        #define DBF_SHORT       1<br>        #define DBF_FLOAT       2<br>        #define DBF_ENUM        3<br>        #define DBF_CHAR        4<br>        #define DBF_LONG        5<br>        #define DBF_DOUBLE      6<br>        #define DBF_NO_ACCESS   7<br><br>        # type mapping in python<br>        epicsLong   =   [1, 4, 5]<br>        epicsString =   [0, 3]<br>        epicsDouble =   [2, 6]<br>        epicsNoAccess = [7]</pre>
 
 <p>
 Example:
-<pre>
-import sys
+</p><pre>import sys<br><br>from masarclient import masarClient<br>from masarclient.channelRPC import epicsExit<br><br># Assume the service name is masarService<br># Consulate server manager to confirm it.<br>channel='masarService'<br><br># retrieve snapshot data which event id = "1"<br># It return false if there isn't such snapshot.<br>print '==== retrieve snapshot ===='<br>params = {'eventid': '1'}<br>result = mc.retrieveSnapshot(params)<br>print result<br><br># Call this function before exit.<br>sys.exit(epicsExit())<br></pre>
 
-from masarclient import masarClient
-from masarclient.channelRPC import epicsExit
-
-# Assume the service name is masarService
-# Consulate server manager to confirm it.
-channel='masarService'
-
-# retrieve snapshot data which event id = "1"
-# It return false if there isn't such snapshot.
-print '==== retrieve snapshot ===='
-params = {'eventid': '1'}
-result = mc.retrieveSnapshot(params)
-print result
-
-# Call this function before exit.
-sys.exit(epicsExit())
-</pre>
-</p>
 
 <li>client.<b>saveSnapshot</b>(params)</li>
 <p>
@@ -1002,28 +727,8 @@ and returns the same data back to the client, which means the return data is
 same the retrieveSnapshot function. 
 <p>
 Example:
-<pre>
-import sys
+</p><pre>import sys<br><br>from masarclient import masarClient<br>from masarclient.channelRPC import epicsExit<br><br># Assume the service name is masarService<br># Consulate server manager to confirm it.<br>channel='masarService'<br><br># get a machine preview and save it into database<br># for configuration with name = 'LTD2_SC_Daily_All'<br>print '==== machine preview snapshot ===='<br>params = {'configname': 'LTD2_SC_Daily_All',<br>          'servicename': 'masar'}<br>result = mc.saveSnapshot(params)<br>print result<br><br># Call this function before exit.<br>sys.exit(epicsExit())<br></pre>
 
-from masarclient import masarClient
-from masarclient.channelRPC import epicsExit
-
-# Assume the service name is masarService
-# Consulate server manager to confirm it.
-channel='masarService'
-
-# get a machine preview and save it into database
-# for configuration with name = 'LTD2_SC_Daily_All'
-print '==== machine preview snapshot ===='
-params = {'configname': 'LTD2_SC_Daily_All',
-          'servicename': 'masar'}
-result = mc.saveSnapshot(params)
-print result
-
-# Call this function before exit.
-sys.exit(epicsExit())
-</pre>
-</p>
 <li>client.<b>updateSnapshotEvent</b>(params)</li>
 <p>Flag a particular snapshot to be approved..<br>
 The params is as a dictionary which can have any combination of the following
@@ -1034,84 +739,21 @@ The value of each key needs to be a string. It returns True if succeeded,
 otherwise, false. 
 <p>
 Example:
-<pre>
-import sys
+</p><pre>import sys<br><br>from masarclient import masarClient<br>from masarclient.channelRPC import epicsExit<br><br># Assume the service name is masarService<br># Consulate server manager to confirm it.<br>channel='masarService'<br><br># approve a machine preview which event id = '1'<br># it returns false if there is no event found with id='1'<br>print '==== approve machine preview snapshot ===='<br>params = {'eventid':    '1',<br>          'user':       'test',<br>          'desc':       'this is a good snapshot, and I approved it.'}<br>result = mc.updateSnapshotEvent(params)<br>print result<br><br># Call this function before exit.<br>sys.exit(epicsExit())<br></pre>
 
-from masarclient import masarClient
-from masarclient.channelRPC import epicsExit
-
-# Assume the service name is masarService
-# Consulate server manager to confirm it.
-channel='masarService'
-
-# approve a machine preview which event id = '1'
-# it returns false if there is no event found with id='1'
-print '==== approve machine preview snapshot ===='
-params = {'eventid':    '1',
-          'user':       'test',
-          'desc':       'this is a good snapshot, and I approved it.'}
-result = mc.updateSnapshotEvent(params)
-print result
-
-# Call this function before exit.
-sys.exit(epicsExit())
-</pre>
-</p>
 <li>client.<b>getLiveMachine</b>(params)</li>
 <p>
 Get live data with given pv list. Following the same params format, it uses pv
 name as both key and value. It returns </p>
-<pre>pv name []
-string value []
-double value []
-long value []
-dbr_type []
-isConnected []
-is_array []
-array_value [[]]</pre>
+<pre>pv name []<br>string value []<br>double value []<br>long value []<br>dbr_type []<br>isConnected []<br>is_array []<br>array_value [[]]</pre>
 Same as retrieveSnapshot function, for a scalar pv, its value is carried in
 string, double and long. For a waveform/array, its value is carried in
 array_value. Client needs to check the pv is an array by checking is_array, and
 check its data type by checking dbr_type. 
 <p>
 Example:
-<pre>
-import sys
+</p><pre>import sys<br><br>from masarclient import masarClient<br>from masarclient.channelRPC import epicsExit<br><br># Assume the service name is masarService<br># Consulate server manager to confirm it.<br>channel='masarService'<br><br># get a live machine with given pv list<br>print '==== get live machine ===='<br>pvlist = ['LTB-BI{BPM:1}LTB:MbAvgX-I',<br>          'LTB-BI{BPM:1}LTB:MbStdX-I',<br>          'LTB-BI{BPM:1}LTB:MbAvgY-I',<br>          'LTB-BI{BPM:1}LTB:MbStdY-I',<br>          'LTB-BI{BPM:1}LTB:Iavg-Calc',<br>          'LTB-BI{BPM:1}LTB:Istd-Calc',<br>          'LTB-BI{BPM:1}Rate:Update-SP',<br>          'LTB-BI{BPM:2}LTB:MbAvgX-I',<br>          'LTB-BI{BPM:2}LTB:MbStdX-I',<br>          'LTB-BI{BPM:2}LTB:MbAvgY-I',<br>          'LTB-BI{BPM:2}LTB:MbStdY-I',<br>          'LTB-BI{BPM:2}LTB:Iavg-Calc',<br>          'LTB-BI{BPM:2}LTB:Istd-Calc',<br>          'LTB-BI{BPM:2}Rate:Update-SP']<br><br># formalize the params<br>for pv in pvlist:<br>    params[pv] = pv<br>result = mc.getLiveMachine(params)<br>print result<br><br># Call this function before exit.<br>sys.exit(epicsExit())<br></pre>
 
-from masarclient import masarClient
-from masarclient.channelRPC import epicsExit
-
-# Assume the service name is masarService
-# Consulate server manager to confirm it.
-channel='masarService'
-
-# get a live machine with given pv list
-print '==== get live machine ===='
-pvlist = ['LTB-BI{BPM:1}LTB:MbAvgX-I',
-          'LTB-BI{BPM:1}LTB:MbStdX-I',
-          'LTB-BI{BPM:1}LTB:MbAvgY-I',
-          'LTB-BI{BPM:1}LTB:MbStdY-I',
-          'LTB-BI{BPM:1}LTB:Iavg-Calc',
-          'LTB-BI{BPM:1}LTB:Istd-Calc',
-          'LTB-BI{BPM:1}Rate:Update-SP',
-          'LTB-BI{BPM:2}LTB:MbAvgX-I',
-          'LTB-BI{BPM:2}LTB:MbStdX-I',
-          'LTB-BI{BPM:2}LTB:MbAvgY-I',
-          'LTB-BI{BPM:2}LTB:MbStdY-I',
-          'LTB-BI{BPM:2}LTB:Iavg-Calc',
-          'LTB-BI{BPM:2}LTB:Istd-Calc',
-          'LTB-BI{BPM:2}Rate:Update-SP']
-
-# formalize the params
-for pv in pvlist:
-    params[pv] = pv
-result = mc.getLiveMachine(params)
-print result
-
-# Call this function before exit.
-sys.exit(epicsExit())
-</pre>
-</p>
 </ol>
 <h3 id="clientgui">Default GUI </h3>
 A default GUI is developed using PyQt4. A start script can be found under
@@ -1123,10 +765,10 @@ A GUI will be launched as:
 <table>
   <tbody>
     <tr>
-      <td><img src="masar/MasarViewer.png" width="480" height="380"></td>
+      <td><img src="masar/MasarViewer.png" height="380" width="480"></td>
     </tr>
     <tr>
-      <td style="text-align:center">MASAR Main Page</td>
+      <td style="text-align: center;">MASAR Main Page</td>
     </tr>
   </tbody>
 </table>
@@ -1135,10 +777,10 @@ If it can not connect to the MASAR server, a warning dialog will pop up as:
 <table>
   <tbody>
     <tr>
-      <td><img src="masar/MasarNoService.png" width="420" height="166"></td>
+      <td><img src="masar/MasarNoService.png" height="166" width="420"></td>
     </tr>
     <tr>
-      <td style="text-align:center">MASAR No Service Dialog</td>
+      <td style="text-align: center;">MASAR No Service Dialog</td>
     </tr>
   </tbody>
 </table>
@@ -1147,10 +789,10 @@ If server is connected successfully, all systems are available as:
 <table>
   <tbody>
     <tr>
-      <td><img src="masar/MASARSystem.png" width="480" height="375"></td>
+      <td><img src="masar/MASARSystem.png" height="375" width="480"></td>
     </tr>
     <tr>
-      <td style="text-align:center">System selection</td>
+      <td style="text-align: center;">System selection</td>
     </tr>
   </tbody>
 </table>
@@ -1161,10 +803,10 @@ configure table as:
 <table>
   <tbody>
     <tr>
-      <td><img src="masar/MASARConfig.png" width="480" height="375"></td>
+      <td><img src="masar/MASARConfig.png" height="375" width="480"></td>
     </tr>
     <tr>
-      <td style="text-align:center">MASAR Configuration List</td>
+      <td style="text-align: center;">MASAR Configuration List</td>
     </tr>
   </tbody>
 </table>
@@ -1178,10 +820,10 @@ list.
 <table>
   <tbody>
     <tr>
-      <td><img src="masar/MASAREvent.png" width="480" height="375"></td>
+      <td><img src="masar/MASAREvent.png" height="375" width="480"></td>
     </tr>
     <tr>
-      <td style="text-align:center">MASAR Event List</td>
+      <td style="text-align: center;">MASAR Event List</td>
     </tr>
   </tbody>
 </table>
@@ -1194,10 +836,10 @@ Button". A machine preview will be taken, and get a result like:
 <table>
   <tbody>
     <tr>
-      <td><img src="masar/MASARPreview.png" width="480" height="375"></td>
+      <td><img src="masar/MASARPreview.png" height="375" width="480"></td>
     </tr>
     <tr>
-      <td style="text-align:center">MASAR Snapshot Preview</td>
+      <td style="text-align: center;">MASAR Snapshot Preview</td>
     </tr>
   </tbody>
 </table>
@@ -1208,11 +850,10 @@ preview approved. A dialog will pop up to confirm as below:
 <table>
   <tbody>
     <tr>
-      <td><img src="masar/MASARSavePreviewDlg.png" width="500"
-      height="243"></td>
+      <td><img src="masar/MASARSavePreviewDlg.png" height="243" width="500"></td>
     </tr>
     <tr>
-      <td style="text-align:center">MASAR Approval Dialog</td>
+      <td style="text-align: center;">MASAR Approval Dialog</td>
     </tr>
   </tbody>
 </table>
@@ -1222,11 +863,10 @@ this, and comment as:
 <table>
   <tbody>
     <tr>
-      <td><img src="masar/MASARPreviewComment.png" width="496"
-      height="316"></td>
+      <td><img src="masar/MASARPreviewComment.png" height="316" width="496"></td>
     </tr>
     <tr>
-      <td style="text-align:center">MASAR Snapshot Comment</td>
+      <td style="text-align: center;">MASAR Snapshot Comment</td>
     </tr>
   </tbody>
 </table>
@@ -1235,10 +875,10 @@ Click "OK" after done. A success message dialog will show up as:
 <table>
   <tbody>
     <tr>
-      <td><img src="masar/MASARPreviewDone.png" width="382" height="243"></td>
+      <td><img src="masar/MASARPreviewDone.png" height="243" width="382"></td>
     </tr>
     <tr>
-      <td style="text-align:center">MASAR Snapshot Approved</td>
+      <td style="text-align: center;">MASAR Snapshot Approved</td>
     </tr>
   </tbody>
 </table>
@@ -1248,10 +888,10 @@ Snapshot(s)" and make sure correct time range if "Use time range" is checked.
 <table>
   <tbody>
     <tr>
-      <td><img src="masar/MASARSnapshot.png" width="480" height="387"></td>
+      <td><img src="masar/MASARSnapshot.png" height="387" width="480"></td>
     </tr>
     <tr>
-      <td style="text-align:center">MASAR Snapshot</td>
+      <td style="text-align: center;">MASAR Snapshot</td>
     </tr>
   </tbody>
 </table>
@@ -1265,10 +905,10 @@ data as below:
 <table>
   <tbody>
     <tr>
-      <td><img src="masar/MASARCompare.png" width="480" height="387"></td>
+      <td><img src="masar/MASARCompare.png" height="387" width="480"></td>
     </tr>
     <tr>
-      <td style="text-align:center">MASAR Compare a Snapshot With Live
+      <td style="text-align: center;">MASAR Compare a Snapshot With Live
       Machine</td>
     </tr>
   </tbody>
@@ -1280,26 +920,36 @@ clicking on either "Saved Value" cell or "Live value" cell as:
 <table>
   <tbody>
     <tr>
-      <td><img src="masar/MASARArrayCompare.png" width="188" height="302"></td>
+      <td><img src="masar/MASARArrayCompare.png" height="302" width="188"></td>
     </tr>
     <tr>
-      <td style="text-align:center">MASAR Compare Array PV</td>
+      <td style="text-align: center;">MASAR Compare Array PV</td>
     </tr>
   </tbody>
 </table>
 It will display how many points in saved data, and how many in live data, and
 detailed data value.<br>
 To restore the machine, select one snapshot, and click "Restore Machine"
-button. A dialog will pop up to show either succeed to restore machine or fail
+button. <br>
+If for any reasons, an operator does not want to restore all pvs, the
+operation can be done by checking some pv as below (the masarExample001
+will not be restored.):<br>
+<div style="text-align: center;"><img style="width: 600px; height: 432px;" alt="" src="masar/NoRestoreSelectedPv.png"><br>
+</div>
+A dialog will be poped up as below to confirm this operation since it might be dangerous.<br>
+<div style="text-align: center;"><img style="width: 500px; height: 243px;" alt="" src="masar/NoRestoreAll.png"><br>
+</div>
+<br>
+After finished restoring, a dialog will pop up to show either succeed to restore machine or fail
 as: 
 
 <table>
   <tbody>
     <tr>
-      <td><img src="masar/MASARRestore.png" width="500" height="243"></td>
+      <td><img src="masar/MASARRestore.png" height="243" width="500"></td>
     </tr>
     <tr>
-      <td style="text-align:center">MASAR Restore Confirmation</td>
+      <td style="text-align: center;">MASAR Restore Confirmation</td>
     </tr>
   </tbody>
 </table>
@@ -1308,20 +958,22 @@ The restore result can be confirmed by comparing the live machine again as:
 <table>
   <tbody>
     <tr>
-      <td><img src="masar/MASARCompareAfterRestore.png" width="714"
-        height="529"></td>
+      <td><img src="masar/MASARCompareAfterRestore.png" height="529" width="714"></td>
     </tr>
     <tr>
-      <td style="text-align:center">MASAR Compare Restore Result</td>
+      <td style="text-align: center;">MASAR Compare Restore Result</td>
     </tr>
   </tbody>
-</table>
+</table>The data can be saved into a local file by clicking "Save to File" button as below:<br>
+<div style="text-align: center;"><img style="width: 714px; height: 566px;" alt="" src="masar/SaveFile.png"><br>
+</div>
+A dialog window will pop up to ask where which file the data should be saved into.<br>
+
 <hr>
 <address>
   Guobao Shen, BNL 
 </address>
 <!-- hhmts start -->
-Last modified: Mon, 26 Mar 2012 09:21:13 -0400<!-- hhmts end -->
+Last modified: Mon, 26 Mar 2012 15:38:50 -0400<!-- hhmts end -->
 <hr>
-</body>
-</html>
+</body></html>

@@ -13,7 +13,7 @@ import sys
 import time
 import datetime
 
-from PyQt4.QtGui import (QApplication, QMainWindow, QMessageBox, QTableWidgetItem, QTableWidget)
+from PyQt4.QtGui import (QApplication, QMainWindow, QMessageBox, QTableWidgetItem, QTableWidget, QFileDialog)
 from PyQt4.QtCore import (QDateTime, Qt, QString, QObject, SIGNAL)
 
 try:
@@ -248,6 +248,16 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         if eid == 'comment' or eid == 'preview':
             QMessageBox.warning(self, 'Warning', 'No restore, preview is selected.')
             return
+        selectedNoRestorePv = {}
+        # get table rows
+        rowCount = curWidget.rowCount()
+        #Qt.Unchecked           0    The item is unchecked.
+        #Qt.PartiallyChecked    1    The item is partially checked. 
+        #                            Items in hierarchical models may be partially checked if some, 
+        #                            but not all, of their children are checked.
+        #Qt.Checked             2    The item is checked.
+        for row in range(rowCount):
+            selectedNoRestorePv[str(curWidget.item(row, 0).text())] = bool(curWidget.item(row, 8).checkState())
         pvlist = list(self.pv4cDict[str(eid)])
         data = self.data4eid[str(eid)]
         s_val = data['S_value']
@@ -255,25 +265,46 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         i_val = data['I_value']
         dbrtype = data['DBR']
         is_array = data['isArray']
+        # is_connected = data['isConnected']
+        # data['PV Name']
         array_value = data['arrayValue']
         
-        r_data = []
+        r_pvlist = [] # restore all pv value in this list
+        r_data = []   # value to be restored.
         for index in range(len(pvlist)):
-            if is_array[index]:
-                r_data.append(array_value[index])
-            elif dbrtype[index] in self.epicsDouble:
-                r_data.append(d_val[index])
-            elif dbrtype[index] in self.epicsLong:
-                r_data.append(i_val[index])
-            elif dbrtype[index] in self.epicsString:
-                r_data.append(s_val[index])
-            elif dbrtype[index] in self.epicsNoAccess:
-                QMessageBox.warning(self, 'Warning', 'Cannot restore machine.Value unknown for pv: %s'%(pvlist[index]))
+            try:
+                # pv is unchecked, which means restore this pv
+                if not selectedNoRestorePv[pvlist[index]]:
+                    r_pvlist.append(pvlist[index])
+                    if is_array[index]:
+                        r_data.append(array_value[index])
+                    elif dbrtype[index] in self.epicsDouble:
+                        r_data.append(d_val[index])
+                    elif dbrtype[index] in self.epicsLong:
+                        r_data.append(i_val[index])
+                    elif dbrtype[index] in self.epicsString:
+                        r_data.append(s_val[index])
+                    elif dbrtype[index] in self.epicsNoAccess:
+                        QMessageBox.warning(self, 'Warning', 'Cannot restore machine. Value unknown for pv: %s'%(pvlist[index]))
+                        return
+            except:
+                print (type(pvlist[index]), pvlist[index])
+                QMessageBox.warning(self, 'Warning', 'PV (%s) not in the table.'%(pvlist[index]))
                 return
     
+        if len(selectedNoRestorePv) >0:
+            reply = QMessageBox.question(self, 'Message',
+                                 "Partial pv will not be restored. Do you want to continue?",                                          
+                                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if reply == QMessageBox.No:
+                return
+        if len(selectedNoRestorePv) == rowCount:
+            QMessageBox.warning(self, 'Warning', 'All pvs are checked, and not restoring.')
+            return
+        
         bad_pvs = []
         try:
-            results = cav3.caput(list(pvlist), r_data, wait=True, throw=False)
+            results = cav3.caput(r_pvlist, r_data, wait=True, throw=False)
             for res in results:
                 if not res.ok:
                     bad_pvs.append(res)
@@ -525,8 +556,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             #     'ioc time stamp label', 'ioc time stamp nano label', 'is_array', 'array_value'),
             # => (pv_name, status, severity, ioc_timestamp, saved value)
             # ncols = len(data) - 6
-            # ncols = ncols + 2  # 2 columns for live data and (live data - saved data)
-            ncols = len(data) - 4
+            # ncols = ncols + 3  # 2 columns for live data and (live data - saved data), selected restore pv
+            ncols = len(data) - 3
             table.setRowCount(nrows)
             table.setColumnCount(ncols)
             
@@ -543,10 +574,19 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             is_array = data['isArray'] 
             array_value = data['arrayValue']
             
-            keys = ['PV Name', 'Status', 'Severity', 'Time stamp', 'Connection', 'Saved value', 'Live value', 'Delta']
+            keys = ['PV Name', 'Status', 'Severity', 'Time stamp', 'Connection', 'Saved value', 'Live value', 'Delta', 'No restore PV']
             table.setHorizontalHeaderLabels(keys)
             
             for i in range(nrows):
+                item = table.item(i, 8)
+                if item:
+                    item.setCheckState(False)
+                else:
+                    newitem = QTableWidgetItem()
+                    newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsUserCheckable)
+                    table.setItem(i, 8, newitem)
+                    newitem.setCheckState(False)
+
                 if pvnames[i]:
                     self.__setTableItem(table, i, 0, pvnames[i])
                 if status[i]:
@@ -913,6 +953,67 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 array_value.append(raw_array_value[i][1])
         
         return (channelName,stringValue,doubleValue,longValue,dbrtype,isConnected,is_array, array_value)
+
+    def saveDataFileAction(self):
+        """
+        Save data into a CSV file.
+        """
+        curWidget = self.snapshotTabWidget.currentWidget()
+        if not isinstance(curWidget, QTableWidget):
+            QMessageBox.warning(self, 'Warning', 'No snapshot is selected yet.')
+            return
+        eid = self.__find_key(self.tabWindowDict, curWidget)
+#        if eid == 'comment' or eid == 'preview':
+#            QMessageBox.warning(self, 'Warning', 'No restore, preview is selected.')
+#            return
+        data = self.data4eid[str(eid)]
+        
+        pvnames = data['PV Name']
+        status = data['Status']
+        severity = data['Severity']
+        ts = data['Time stamp']
+        ts_nano = data['Time stamp (nano)']
+        dbrtype = data['DBR']
+        s_value = data['S_value']
+        i_value = data['I_value']
+        d_value = data['D_value']
+        isConnected = data['isConnected']
+        is_array = data['isArray'] 
+        array_value = data['arrayValue']
+        
+        head = '# pv name, status, severity, time stamp, epics dbr, is connected, is array, value'
+
+        filename = QFileDialog.getSaveFileName(self, 'Save File', '.')
+        if not filename:
+            return
+        try:
+            fname = open(filename, 'w')
+            fname.write(head+'\n')
+            for i in range(len(pvnames)):
+                line = pvnames[i]
+                line += ','+str(status[i])
+                line += ','+str(severity[i])
+                line += ','+str(datetime.datetime.fromtimestamp(ts[i]+ts_nano[i]*1.0e-9))
+                line += ','+str(dbrtype[i])
+                line += ','+str(bool(isConnected[i]))
+                line += ','+str(bool(is_array[i]))
+                if is_array[i]:
+                    line += ','+str(array_value[i])
+                else:
+                    if dbrtype[i] in self.epicsDouble:
+                        line += ','+str(d_value[i])
+                    elif dbrtype[i] in self.epicsLong:
+                        line += ','+str(i_value[i])
+                    elif dbrtype[i] in self.epicsString:
+                        line += ','+str(s_value[i])
+                    else:
+                        line += ''
+                fname.write(line+'\n')
+            fname.close()
+        except:
+            QMessageBox.warning(self,
+                                "Warning",
+                                "Cannot write to the file. Please check the writing permission.")
 
 def main(channelname = None):
     app = QApplication(sys.argv)
