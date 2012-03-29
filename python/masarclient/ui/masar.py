@@ -271,6 +271,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         
         r_pvlist = [] # restore all pv value in this list
         r_data = []   # value to be restored.
+        no_restorepvs = []  # no restore from those pvs
         for index in range(len(pvlist)):
             try:
                 # pv is unchecked, which means restore this pv
@@ -287,18 +288,23 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                     elif dbrtype[index] in self.epicsNoAccess:
                         QMessageBox.warning(self, 'Warning', 'Cannot restore machine. Value unknown for pv: %s'%(pvlist[index]))
                         return
+                else:
+                    no_restorepvs.append(pvlist[index])
             except:
                 print (type(pvlist[index]), pvlist[index])
                 QMessageBox.warning(self, 'Warning', 'PV (%s) not in the table.'%(pvlist[index]))
                 return
     
-        if len(selectedNoRestorePv) >0:
+        if len(no_restorepvs) > 0:
+            str_no_restore = "\n"
+            for no_restorepv in no_restorepvs:
+                str_no_restore += ' - %s' %no_restorepv + '\n'
             reply = QMessageBox.question(self, 'Message',
-                                 "Partial pv will not be restored. Do you want to continue?",                                          
+                                 "Partial pv will not be restored. Do you want to continue? %s" %str_no_restore,                                          
                                  QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if reply == QMessageBox.No:
                 return
-        if len(selectedNoRestorePv) == rowCount:
+        if len(no_restorepvs) == rowCount:
             QMessageBox.warning(self, 'Warning', 'All pvs are checked, and not restoring.')
             return
         
