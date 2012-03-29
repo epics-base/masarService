@@ -62,18 +62,22 @@ class ConfigMasarDb():
             __file = "/".join((self.__filepath, v[0]))
             if os.path.exists(__file): 
                 if os.path.isfile(__file):
-                    pvlist = None
+#                    pvlist = None
                     try:
-                        f = open(__file, 'r')
-                        pvlist = f.read()
-                        pvlist = pvlist.split('\n')
-                        if len(pvlist[len(pvlist)-1]) == 0:
-                            pvlist = pvlist[:-1]
-                        savePvGroup(self.conn, k, func=v[1])
-                        saveGroupPvs(self.conn, k, pvlist)
+                        # remove all empty lines
+                        with open(__file) as f_in:
+                            lines = filter(None, (line.strip() for line in f_in))
+#                        f = open(__file, 'r')
+#                        pvlist = f.read()
+#                        pvlist = pvlist.split('\n')
+#                        if len(pvlist[len(pvlist)-1]) == 0:
+#                            pvlist = pvlist[:-1]
+                        if len(lines) > 0:
+                            savePvGroup(self.conn, k, func=v[1])
+                            saveGroupPvs(self.conn, k, lines)
                     finally:
-                        if f:
-                            f.close()
+                        if f_in:
+                            f_in.close()
                     print ('Finished saving pvs in {0}'.format(v[0]))
                 else:
                     raise Exception ("""PV list ({0}) is not a file.""".format(v[0]))
