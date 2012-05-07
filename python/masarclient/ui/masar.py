@@ -300,8 +300,11 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             for no_restorepv in no_restorepvs:
                 str_no_restore += ' - %s' %no_restorepv + '\n'
             reply = QMessageBox.question(self, 'Message',
-                                 "Partial pv will not be restored. Do you want to continue? %s" %str_no_restore,                                          
+                                 "Partial pv will not be restored. Do you want to continue?",                                          
                                  QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+#            reply = QMessageBox.question(self, 'Message',
+#                                 "Partial pv will not be restored. Do you want to continue? %s" %str_no_restore,                                          
+#                                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if reply == QMessageBox.No:
                 return
         if len(no_restorepvs) == rowCount:
