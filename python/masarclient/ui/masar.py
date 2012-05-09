@@ -295,37 +295,49 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 QMessageBox.warning(self, 'Warning', 'PV (%s) not in the table.'%(pvlist[index]))
                 return
     
+        if len(no_restorepvs) == rowCount:
+            QMessageBox.warning(self, 'Warning', 'All pvs are checked, and not restoring.')
+            return
         if len(no_restorepvs) > 0:
             str_no_restore = "\n"
             for no_restorepv in no_restorepvs:
                 str_no_restore += ' - %s' %no_restorepv + '\n'
             reply = QMessageBox.question(self, 'Message',
-                                 "Partial pv will not be restored. Do you want to continue?",                                          
+                                 "Partial pv will not be restored. Do you want to continue?\n(Please check terminal for a full list.)",                                          
                                  QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 #            reply = QMessageBox.question(self, 'Message',
 #                                 "Partial pv will not be restored. Do you want to continue? %s" %str_no_restore,                                          
 #                                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if reply == QMessageBox.No:
                 return
-        if len(no_restorepvs) == rowCount:
-            QMessageBox.warning(self, 'Warning', 'All pvs are checked, and not restoring.')
-            return
+            print("No restore for the following pvs:\n"+str_no_restore+"\n========list end (not to restore pv)========")
         
         bad_pvs = []
         try:
             results = cav3.caput(r_pvlist, r_data, wait=True, throw=False)
-            for res in results:
+            for i in range(len(results)):
+                res = results[i]
                 if not res.ok:
-                    bad_pvs.append(res)
+                    # try 3 times again to set value to each pv
+                    # first try wait 1 second, second try wait 2 seconds, and last try wait 3 seconds.
+                    for j in range(3):
+                        res = cav3.caput(r_pvlist[i], r_data[i], wait=True, throw=False, timeout=j)
+                        if res.ok:
+                            break
+                    if not res.ok:
+                        # record as a bad pv if it still fails
+                        bad_pvs.append(res)
         except:
             QMessageBox.warning(self, 'Warning', 'Error during restoring snapshot to live machine.')
             return
         
         if len(bad_pvs) > 0:
-            message = "Restore failed for the following pvs:\n"
-            for bad_pv in bad_pvs:
-                message += " -- "+bad_pv.name + ": "+cav3.cadef.ca_message(bad_pv.errorcode) + "\n"
+            message = "Failed to restore some pvs. PLease check the terminal for a full list."
             QMessageBox.warning(self, 'Warning', message)
+            output = ""
+            for bad_pv in bad_pvs:
+                output += "\n  "+bad_pv.name + ": "+cav3.cadef.ca_message(bad_pv.errorcode)
+            print ("Failed to restore the following pvs which is caused by:"+output+"\n========list end (failed to restore pv)========")
         else:
             QMessageBox.information(self, "Success", "Successfully restore machine with selected snapshot.")
         
