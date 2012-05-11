@@ -11,12 +11,22 @@ and load service info, pv_group, and event configuration.
 
 # pv group name: [pv list file, description]
 pvgroups= {
-           # LN-LTB-PhaseI-SBM-All_20120507 includes all pv groups in LN-LTB-PhaseI-SBM-All_20120426
-           # with 2 new pv groups
-           'LN_Time_PV_Set':       ['LN_LTB_ConfigureMBM_20120507/LN_Time_PV_Set.txt',    "LN timing setpoint"],
-           'LTB_Time_PV_Set':      ['LN_LTB_ConfigureMBM_20120507/LTB_Time_PV_Set.txt',   "LTB timing setpoint"],
-           # extra pv group for LN_LTB_ConfigureMBM_20120507
-           'LN_LLRF_MBM_Set':      ['LN_LTB_ConfigureMBM_20120507/LN_LLRF_MBM_PV_Set.txt', "linac LLRF amplitude, phase, waveform, feedforward setting, tigger event, mode, delay, width including subharmonic buncher, pre-buncher, klystron 1, 2, and 3."]
+           # new pv groups for LN-LTB 20120511
+           'LN_Sol_Set_20120511':          ['LN_LTB_Configure_20120511/LN_Sol_PV_Set.txt',           'linac solenoid current setpoint and on command'],
+           'LN_Cor_Set_20120511':          ['LN_LTB_Configure_20120511/LN_Cor_PV_Set.txt',           'linac corrector x and y plane current setpoint and on command'],
+           'LN_Quad_Set_20120511':         ['LN_LTB_Configure_20120511/LN_Quad_PV_Set.txt',          'linac Quads current setpoint and on command'],
+           'LN_Gun_Set_20120511':          ['LN_LTB_Configure_20120511/LN_Gun_PV_Set.txt',           'linac gun operation Mode, grid voltage, SBM voltage, MBM voltage, and pulse voltage, and trigger event, delay, width setpoint'],
+           'LN_LLRF_Set_20120511':         ['LN_LTB_Configure_20120511/LN_LLRF_PV_Set.txt',          'linac LLRF amplitude, phase, waveform, feedforward setting, tigger event, mode, delay, width including subharmonic buncher, pre-buncher, klystron 1, 2, and 3.'], 
+           'LN_HLRF_Set_20120511':         ['LN_LTB_Configure_20120511/LN_HLRF_PV_Set.txt',          'linac HLRF modulator high voltage, pulse width, rep rate, tigger event, mode, delay, width of modulator 1, 2, and 3. '],
+           'LN_LTB_Diag_Time_Set_20120511':['LN_LTB_Configure_20120511/LN_LTB_Diag_Time_PV_Set.txt', 'linac and LTB digitizer timing setpoint'],
+           'LN_LTB_Dig_Time_Set_20120511': ['LN_LTB_Configure_20120511/LN_LTB_Diag_Scale_PV_Set.txt','linac and LTB digitizer scale setpoint'],
+           'LN_LTB_CamGN_Set_20120511':    ['LN_LTB_Configure_20120511/LN_LTB_CamGN_PV_Set.txt',     'linac and LTB camera exposure time setpoint'],
+           'LN_LTB_CamET_Set_20120511':    ['LN_LTB_Configure_20120511/LN_LTB_CamET_PV_Set.txt',     'linac and LTB camera gain setpoint'],
+           'LN_LTB_CamTrig_Set_20120511':  ['LN_LTB_Configure_20120511/LN_LTB_CamTrig_PV_Set.txt',   'linac and LTB camera trigger setpoint and on command'],
+           'LTB_MG_Set_20120511':          ['LN_LTB_Configure_20120511/LTB_MG_PV_Set.txt',           'LTB magnet setpoint and on command'],
+           'LTB_CamFilt_Set_20120511':     ['LN_LTB_Configure_20120511/LTB_CamFilt_PV_Set.txt',      'LTB camera filter setpoint'],
+           'LTB_ES_Set_20120511':          ['LN_LTB_Configure_20120511/LTB_ES_PV_Set.txt',           'LTB energy slit motor setpoint'],
+           'LN_Time_PV_Set_20120511':      ['LN_LTB_Configure_20120511/LN_Time_PV_Set.txt',          'LN timing setpoint']
 #           #LN-LTB-PhaseI-SBM-All_20120426
 #           'LN_Sol_Set':           ['LN_Sol_PV_Set.txt',            "linac solenoid current setpoint"],
 #           'LN_Cor_Set':           ['LN_Cor_PV_Set.txt',            "linac corrector x and y plane current setpoint"],
@@ -89,8 +99,7 @@ pvgroups= {
 
 # config name: [config desc, system]
 configs= {
-          'LN-LTB-PhaseI-SBM-All_20120507': ['Linac and LTB daily SCR setpoint', 'Linac, LTB'],
-          'LN-LTB-PhaseI-MBM-All_20120507': ['Linac and LTB daily SCR setpoint', 'Linac, LTB']
+          'LN-LTB-PhaseI-All_20120511': ['Linac and LTB daily SCR setpoint', 'Linac, LTB']
 #          'LN-LTB-PhaseI-SBM-All_20120426': ['Linac and LTB daily SCR setpoint', 'Linac, LTB']
 #          'VA_SR_MAG_SET':   ['virtual storage magnet setpoint on Apr 05, 2012','virtac']
 #          'LN_PhaseI_SCR_All_20120402':   ['Linac daily SCR setpoint on Apr 02, 2012','Linac']
@@ -104,13 +113,22 @@ configs= {
 
 # config name: [pvgroup,]
 pvg2config= {
-             'LN-LTB-PhaseI-SBM-All_20120507': ['LN_Sol_Set','LN_Cor_Set','LN_Quad_Set','LN_Gun_SBM_Set','LN_LLRF_SBM_Set','LN_HLRF_SBM_Set',
-                                                'LN_LTB_Diag_Time_Set','LN_LTB_Dig_Time_Set','LN_LTB_CamGN_Set','LN_LTB_CamET_Set','LN_LTB_CamTrig_Set',
-                                                'LTB_MG_Set','LTB_CamFilt_Set','LTB_ES_Set','LN_Dev_OnOff_Set','LTB_Dev_OnOff_Set','LN_Time_PV_Set','LTB_Time_PV_Set'],
-             # reuse 2 groups, LN_Gun_SBM_Set and LN_HLRF_SBM_Set, which has same pv list
-             'LN-LTB-PhaseI-MBM-All_20120507': ['LN_Sol_Set','LN_Cor_Set','LN_Quad_Set','LN_Gun_SBM_Set','LN_LLRF_MBM_Set','LN_HLRF_SBM_Set',
-                                                'LN_LTB_Diag_Time_Set','LN_LTB_Dig_Time_Set','LN_LTB_CamGN_Set','LN_LTB_CamET_Set','LN_LTB_CamTrig_Set',
-                                                'LTB_MG_Set','LTB_CamFilt_Set','LTB_ES_Set','LN_Dev_OnOff_Set','LTB_Dev_OnOff_Set','LN_Time_PV_Set','LTB_Time_PV_Set']
+             'LN-LTB-PhaseI-All_20120511': ['LN_Sol_Set_20120511',
+                                            'LN_Cor_Set_20120511',
+                                            'LN_Quad_Set_20120511',
+                                            'LN_Gun_Set_20120511',
+                                            'LN_LLRF_Set_20120511',
+                                            'LN_HLRF_Set_20120511',
+                                            'LN_LTB_Diag_Time_Set_20120511',
+                                            'LN_LTB_Dig_Time_Set_20120511',
+                                            'LN_LTB_CamGN_Set_20120511',
+                                            'LN_LTB_CamET_Set_20120511',
+                                            'LN_LTB_CamTrig_Set_20120511',
+                                            'LTB_MG_Set_20120511',
+                                            'LTB_CamFilt_Set_20120511',
+                                            'LTB_ES_Set_20120511',
+                                            'LN_Time_PV_Set_20120511'
+                                            ]
 #             'LN-LTB-PhaseI-SBM-All_20120426': ['LN_Sol_Set','LN_Cor_Set','LN_Quad_Set','LN_Gun_SBM_Set','LN_LLRF_SBM_Set','LN_HLRF_SBM_Set',
 #                                                'LN_LTB_Diag_Time_Set','LN_LTB_Dig_Time_Set','LN_LTB_CamGN_Set','LN_LTB_CamET_Set','LN_LTB_CamTrig_Set',
 #                                                'LTB_MG_Set','LTB_CamFilt_Set','LTB_ES_Set','LN_Dev_OnOff_Set','LTB_Dev_OnOff_Set']
