@@ -107,78 +107,78 @@ public:
      * @returns The data array.
      * If the data type is not int an empty array is returned.
      */
-    epics::pvData::PVLongArray *getLongValue();
+    epics::pvData::PVLongArrayPtr getLongValue();
     /**
      * Get the array of values for each V3 channel.
      * @returns The data array.
      * If the data type is not double an empty array is returned.
      */
-    epics::pvData::PVDoubleArray *getDoubleValue();
+    epics::pvData::PVDoubleArrayPtr getDoubleValue();
     /**
      * Get the array of values for each V3 channel.
      * @returns The array.
      * If the data type is not string an empty array is returned.
      */
-    epics::pvData::PVStringArray *getStringValue();
+    epics::pvData::PVStringArrayPtr getStringValue();
     /**
      * Get the array of values for each V3 channel.
      * @returns The array.
      * This is an array of PVStructure that holds data for
      * V3 array channels.
      */
-    epics::pvData::PVStructureArray *getArrayValue();
+    epics::pvData::PVStructureArrayPtr getArrayValue();
     /**
      * Get the array of secondsPastEpoch for each V3 channel.
      * The epoch is midnight 1970 UTC time.
      * @returns The array of seconds.
      */
-    epics::pvData::PVLongArray *getSecondsPastEpoch();
+    epics::pvData::PVLongArrayPtr getSecondsPastEpoch();
     /**
      * Get the array of nanoSeconds since the seconds.
      * @returns The array of nanoSeconds after the secsPastEpoch.
      */
-    epics::pvData::PVIntArray *getNanoSeconds();
+    epics::pvData::PVIntArrayPtr getNanoSeconds();
     /**
      * Get the array of timeStamp tag for each V3 channel.
      * @returns The array.
      */
-    epics::pvData::PVIntArray *getTimeStampTag();
+    epics::pvData::PVIntArrayPtr getTimeStampTag();
     /**
      * Get the array of alarm severity value for each V3 channel.
      * @returns The array.
      */
-    epics::pvData::PVIntArray *getAlarmSeverity();
+    epics::pvData::PVIntArrayPtr getAlarmSeverity();
     /**
      * Get the array of alarm status value for each V3 channel.
      * @returns The array.
      */
-    epics::pvData::PVIntArray *getAlarmStatus();
+    epics::pvData::PVIntArrayPtr getAlarmStatus();
     /**
      * Get the array of alarm messages for each V3 channel.
      * This is just the string value of the status.
      * @returns The array.
      */
-    epics::pvData::PVStringArray *getAlarmMessage();
+    epics::pvData::PVStringArrayPtr getAlarmMessage();
     /**
      * Get the array of native DBR type for each V3 channel.
      * @returns The array.
      */
-    epics::pvData::PVIntArray *getDBRType();
+    epics::pvData::PVIntArrayPtr getDBRType();
     /**
      * Get the array which indicates if V3 channel is an array
      * @returns The array.
      */
-    epics::pvData::PVBooleanArray *getIsArray();
+    epics::pvData::PVBooleanArrayPtr getIsArray();
     /**
      * Get the array of connection state for each V3 channel.
      * @returns The array.
      */
-    epics::pvData::PVBooleanArray *getIsConnected();
+    epics::pvData::PVBooleanArrayPtr getIsConnected();
     /**
      * Get the array of channel names for each V3 channel.
      * @returns The array.
      */
-    epics::pvData::PVStringArray  *getChannelName();
+    epics::pvData::PVStringArrayPtr getChannelName();
     /**
       * Get connected channel number
       * @return channel number

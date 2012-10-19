@@ -62,22 +62,23 @@ void MasarService::request(
     builder += "pvArgument ";
 //pvArgument->toString(&builder);
 //printf("%s\n",builder.c_str());
-    if(!NTNameValue::isNTNameValue(pvArgument.get())) {
-        FieldConstPtr fields[0];
-        PVStructure::shared_pointer pvStructure = NTTable::create(
-            false,true,true,0,fields);
-        NTTable ntTable(pvStructure);
+    if(!NTNameValue::isNTNameValue(pvArgument)) {
+        StringArray names;
+        FieldConstPtrArray fields;
+        NTTablePtr ntTable(NTTable::create(
+            false,true,true,names,fields));
+        PVStructurePtr pvStructure = ntTable->getPVStructure();
         Alarm alarm;
         PVAlarm pvAlarm;
-        pvAlarm.attach(ntTable.getTimeStamp());
+        pvAlarm.attach(ntTable->getTimeStamp());
         alarm.setMessage("pvArgument is not an NTNameValue");
         alarm.setSeverity(majorAlarm);
         pvAlarm.set(alarm);
-        channelRPCRequester->requestDone(Status::OK,pvStructure);
+        channelRPCRequester->requestDone(Status::Ok,pvStructure);
         return;
     }
-    NTNameValue ntNameValue(pvArgument);
-    PVString *function = ntNameValue.getFunction();
+    NTNameValuePtr ntNameValue(NTNameValue::create(true,true,true));
+    PVStringPtr &function = ntNameValue->getFunction();
     String functionName;
     for(int i=0; i<numberFunctions; i++) {
         if(function->get().compare(functionNames[i])==0) {
@@ -86,17 +87,18 @@ void MasarService::request(
         }
     }
     if(functionName.c_str()==0) {
-        FieldConstPtr fields[0];
-        PVStructure::shared_pointer pvStructure = NTTable::create(
-            false,true,true,0,fields);
-        NTTable ntTable(pvStructure);
+        StringArray names;
+        FieldConstPtrArray fields;
+        NTTablePtr ntTable(NTTable::create(
+            false,true,true,names,fields));
+        PVStructurePtr pvStructure = ntTable->getPVStructure();
         Alarm alarm;
         PVAlarm pvAlarm;
-        pvAlarm.attach(ntTable.getTimeStamp());
+        pvAlarm.attach(ntTable->getTimeStamp());
         alarm.setMessage("pvArgument has an unsupported function");
         alarm.setSeverity(majorAlarm);
         pvAlarm.set(alarm);
-        channelRPCRequester->requestDone(Status::OK,pvStructure);
+        channelRPCRequester->requestDone(Status::Ok,pvStructure);
         return;
     }
     PVStringArray * pvNames = ntNameValue.getNames();

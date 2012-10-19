@@ -19,9 +19,9 @@ SRC_DIRS += $(CLIENT)gatherV3Data
 INC += gatherV3Data.h
 LIBSRCS += gatherV3Data.cpp
 
-SRC_DIRS += $(CLIENT)ezchannelRPC
-INC += ezchannelRPC.h
-LIBSRCS += ezchannelRPC.cpp
+#SRC_DIRS += $(CLIENT)ezchannelRPC
+#INC += ezchannelRPC.h
+#LIBSRCS += ezchannelRPC.cpp
 
 LIBRARY = masar
 
