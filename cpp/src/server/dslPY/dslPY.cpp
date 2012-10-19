@@ -25,6 +25,7 @@ namespace epics { namespace masar {
 
 using namespace epics::pvData;
 using namespace epics::pvAccess;
+using std::tr1::static_pointer_cast;
 
 class DSL_RDB :
     public DSL,
@@ -132,13 +133,25 @@ bool DSL_RDB::init()
 void DSL_RDB::destroy() {}
 
 static PVStructure::shared_pointer noDataEnetry(std::string message) {
-    FieldCreate *fieldCreate = getFieldCreate();
+    FieldCreatePtr fieldCreate = getFieldCreate();
+    size_t  n = 1;
+    StringArray names;
+    FieldConstPtrArray fields;
+    names.reserve(n);
+    fields.reserve(n);
+    names.push_back("status");
+    fields.push_back(fieldCreate->createScalarArray(pvBoolean));
+    NTTablePtr ntTable(NTTable::create(
+        false,true,true,names,fields));
+    PVStructurePtr pvStructure = ntTable->getPVStructure();
 
+/* old
     FieldConstPtr fields = fieldCreate->createScalarArray("status",pvBoolean);
     PVStructure::shared_pointer pvStructure = NTTable::create(
         false,true,true,1, &fields);
 
     NTTable ntTable(pvStructure);
+*/
 
     PVBooleanArray * pvBoolVal = static_cast<PVBooleanArray *>(ntTable.getPVField(0));
     bool temp [] = {false};
