@@ -97,3 +97,13 @@ caput(uintarraypv, uarray)
 stringpv = 'masarExampleStringArray'
 strpvval = ['aaaaa','bbbbb','ccccc','ddddd','eeeee','fffff','ggggg','hhhhh','iiiii','jjjjj']
 caput(stringpv, strpvval)
+
+pvscalar = [
+    'masarExample0000',
+    'masarExample0001',
+    'masarExample0002',
+    'masarExample0003',
+    'masarExample0004',
+    'masarExample0005']
+pvscalarval = [12, 'another value', 'one', 'zero', 3.8, 0.5]
+caput(pvscalar, pvscalarval)

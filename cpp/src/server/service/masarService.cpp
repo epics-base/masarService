@@ -101,17 +101,17 @@ void MasarService::request(
         channelRPCRequester->requestDone(Status::Ok,pvStructure);
         return;
     }
-    PVStringArray * pvNames = ntNameValue.getNames();
-    PVStringArray * pvValues = ntNameValue.getValues();
+    PVStringArrayPtr & pvNames = ntNameValue->getNames();
+    PVStringArrayPtr & pvValues = ntNameValue->getValues();
     StringArrayData data;
     int num = pvNames->getLength();
-    pvNames->get(0,num,&data);
-    String *names = data.data;
-    pvValues->get(0,num,&data);
-    String *values = data.data;
+    pvNames->get(0,num,data);
+    String *names = get(data.data);
+    pvValues->get(0,num,data);
+    String *values = get(data.data);
     PVStructure::shared_pointer result = dslRdb->request(
         functionName,num,names,values);
-    channelRPCRequester->requestDone(Status::OK,result);
+    channelRPCRequester->requestDone(Status::Ok,result);
 }
 
 }}
