@@ -101,7 +101,12 @@ public:
      * The data is saved as an NTTable with alarm and timeStamp. Get it.
      * @returns the NTTable.
      */
-    epics::pvData::PVStructure::shared_pointer getNTTable();
+    epics::pvData::NTTablePtr getNTTable();
+    /**
+     * The data is saved as an NTTable with alarm and timeStamp. Get it.
+     * @returns the NTTable.
+     */
+    epics::pvData::PVStructure::shared_pointer getNTTableStructure();
     /**
      * Get the array of values for each V3 channel.
      * @returns The data array.

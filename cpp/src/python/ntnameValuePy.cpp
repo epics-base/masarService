@@ -15,6 +15,7 @@
 #include <stdexcept>
 
 using namespace epics::pvData;
+using std::tr1::static_pointer_cast;
 
 namespace epics { namespace pvAccess {
 
@@ -65,8 +66,10 @@ static PyObject * _init1(PyObject *willbenull, PyObject *args)
     void *pvoid = PyCapsule_GetPointer(capsule,"pvStructure");
     PVStructure::shared_pointer *pv = 
         static_cast<PVStructure::shared_pointer *>(pvoid);
-    NTNameValue::shared_pointer ntnamevalue = NTNameValue::shared_pointer(
-        new NTNameValue(*pv));
+    NTNameValuePtr ntnamevalue = NTNameValue::create(true,true,true);
+
+//    NTNameValue::shared_pointer ntnamevalue = NTNameValue::shared_pointer(
+//        new NTNameValue(*pv));
     NTNameValuePvt *pvt = new NTNameValuePvt(ntnamevalue,*pv);
     return PyCapsule_New(pvt,"ntnameValuePvt",0);
 }
@@ -95,17 +98,18 @@ static PyObject * _init2(PyObject *willbenull, PyObject *args)
         names[i] = String(key);
         values[i] = String(val);
     }
-    PVStructure::shared_pointer pv
-        = NTNameValue::create(true,false,false);
-    NTNameValue::shared_pointer ntnamevalue = NTNameValue::shared_pointer(
-        new NTNameValue(pv));
-    PVString * pvfunction = ntnamevalue->getFunction();
-    PVStringArray *pvnames = ntnamevalue->getNames();
-    PVStringArray *pvvalues = ntnamevalue->getValues();
-    pvnames->put(0,n,names,0);
-    pvvalues->put(0,n,values,0);
+//    PVStructure::shared_pointer pv
+//        = NTNameValue::create(true,false,false);
+//    NTNameValue::shared_pointer ntnamevalue = NTNameValue::shared_pointer(
+//        new NTNameValue(pv));
+    NTNameValuePtr ntnamevalue = NTNameValue::create(true,false,false);
+    PVStringPtr pvfunction = ntnamevalue->getFunction();
+    PVStringArrayPtr pvnames = ntnamevalue->getNames();
+    PVStringArrayPtr pvvalues = ntnamevalue->getValues();
+    pvnames->put(0,n,names, 0);
+    pvvalues->put(0,n,values, 0);
     pvfunction->put(function);
-    NTNameValuePvt *pvt = new NTNameValuePvt(ntnamevalue,pv);
+    NTNameValuePvt *pvt = new NTNameValuePvt(ntnamevalue,ntnamevalue->getPVStructure());
     return PyCapsule_New(pvt,"ntnameValuePvt",0);
 }
 
@@ -255,10 +259,10 @@ static PyObject * _getNames(PyObject *willBeNull, PyObject *args)
         return NULL;
     }
     NTNameValuePvt *pvt = static_cast<NTNameValuePvt *>(pvoid);
-    PVStringArray *pvNames = pvt->ntnameValue->getNames();
+    PVStringArrayPtr pvNames = pvt->ntnameValue->getNames();
     StringArrayData stringArrayData;
-    int num = pvNames->get(0,pvNames->getLength(),&stringArrayData);
-    String *data = stringArrayData.data;
+    int num = pvNames->get(0,pvNames->getLength(), stringArrayData);
+    StringArray & data = stringArrayData.data;
     PyObject *result = PyTuple_New(num);
     for(int i=0; i<num; i++) {
         PyObject *elem = Py_BuildValue("s",data[i].c_str());
@@ -284,10 +288,10 @@ static PyObject * _getValues(PyObject *willBeNull, PyObject *args)
         return NULL;
     }
     NTNameValuePvt *pvt = static_cast<NTNameValuePvt *>(pvoid);
-    PVStringArray *pvValues = pvt->ntnameValue->getValues();
+    PVStringArrayPtr pvValues = pvt->ntnameValue->getValues();
     StringArrayData stringArrayData;
-    int num = pvValues->get(0,pvValues->getLength(),&stringArrayData);
-    String *data = stringArrayData.data;
+    int num = pvValues->get(0,pvValues->getLength(), stringArrayData);
+    StringArray & data = stringArrayData.data;
     PyObject *result = PyTuple_New(num);
     for(int i=0; i<num; i++) {
         PyObject *elem = Py_BuildValue("s",data[i].c_str());

@@ -872,9 +872,13 @@ String GatherV3Data::getMessage()
     return pvt->message;
 }
 
-PVStructurePtr GatherV3Data::getNTTable()
+PVStructurePtr GatherV3Data::getNTTableStructure()
 {
     return pvt->pvStructure;
+}
+
+NTTablePtr  GatherV3Data::getNTTable(){
+    return pvt->nttable;
 }
 
 PVDoubleArrayPtr GatherV3Data::getDoubleValue()

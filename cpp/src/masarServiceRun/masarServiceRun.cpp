@@ -21,7 +21,6 @@
 
 #include <pv/pvIntrospect.h>
 #include <pv/pvData.h>
-#include <pv/CDRMonitor.h>
 //#include <pv/pvAccess.h>
 //#include <pv/serverContext.h>
 //#include <pv/pvDatabase.h>
@@ -52,7 +51,7 @@ void sighandler(int sig)
 
 void masarService(const char * name)
 {
-    PVServiceChannelCTX::shared_pointer myCTX(new PVServiceChannelCTX());
+    PVServiceChannelCTX::shared_pointer myCTX = PVServiceChannelCTX::getPVServiceChannelCTX();
     MasarService::shared_pointer service(MasarService::shared_pointer(new MasarService()));
     ServiceChannelRPC::shared_pointer serviceChannelRPC(new ServiceChannelRPC(name,service));
 
@@ -79,6 +78,5 @@ int main(int argc,char *argv[])
 
     epicsExitCallAtExits();
     epicsThreadSleep(1.0);
-    CDRMonitor::get().show(stdout,true);
     return (0);
 }

@@ -15,6 +15,7 @@
 #include <stdexcept>
 
 using namespace epics::pvData;
+using std::tr1::static_pointer_cast;
 
 namespace epics { namespace pvAccess {
 
@@ -74,7 +75,16 @@ static PyObject * _init(PyObject *willbenull, PyObject *args)
         static_cast<PVStructure::shared_pointer *>(pvoid);
     NTTable::shared_pointer nttable = NTTable::shared_pointer(
         new NTTable(*pv));
-    NTTablePvt *pvt = new NTTablePvt(nttable,*pv);
+
+    // to be solved later
+//    size_t  n = ;
+//    StringArray names;
+//    FieldConstPtrArray fields;
+//    names.reserve(n);
+//    fields.reserve(n);
+
+//    NTTablePtr nttable (NTTable::create(false,true,true,names,fields));
+    NTTablePvt *pvt = new NTTablePvt(nttable, *pv);
     return PyCapsule_New(pvt,"nttablePvt",0);
 }
 
@@ -253,10 +263,10 @@ static PyObject * _getLabel(PyObject *willBeNull, PyObject *args)
         return NULL;
     }
     NTTablePvt *pvt = static_cast<NTTablePvt *>(pvoid);
-    PVStringArray *pvLabel = pvt->nttable->getLabel();
+    PVStringArrayPtr pvLabel = pvt->nttable->getLabel();
     StringArrayData stringArrayData;
-    int num = pvLabel->get(0,pvLabel->getLength(),&stringArrayData);
-    String *data = stringArrayData.data;
+    int num = pvLabel->get(0,pvLabel->getLength(), stringArrayData);
+    StringArray & data = stringArrayData.data;
     PyObject *result = PyTuple_New(num);
     for(int i=0; i<num; i++) {
         PyObject *elem = Py_BuildValue("s",data[i].c_str());
@@ -265,13 +275,13 @@ static PyObject * _getLabel(PyObject *willBeNull, PyObject *args)
     return result;
 }
 
-static PyObject *getScalarValue(PVScalar *pvScalar)
+static PyObject *getScalarValue(PVScalarPtr pvScalar)
 {
-    Convert *convert = getConvert();
+    ConvertPtr convert = getConvert();
     ScalarType scalarType = pvScalar->getScalar()->getScalarType();
     switch(scalarType) {
         case pvBoolean: {
-            PVBoolean *pv =  static_cast<PVBoolean*>(pvScalar);
+            PVBooleanPtr pv =  static_pointer_cast<PVBoolean>(pvScalar);
             bool value = pv->get();
             int ivalue = (value ? 1 : 0);
             return Py_BuildValue("i",ivalue);
@@ -283,8 +293,19 @@ static PyObject *getScalarValue(PVScalar *pvScalar)
             int32 value = convert->toInt(pvScalar);
             return Py_BuildValue("i",value);
         }
+        case pvUByte:
+        case pvUShort:
+        case pvUInt:
+        {
+            uint32 value = convert->toUInt(pvScalar);
+            return Py_BuildValue("i",value);
+        }
         case pvLong: {
             int64 value = convert->toLong(pvScalar);
+            return Py_BuildValue("k",value);
+        }
+        case pvULong: {
+            uint64 value = convert->toULong(pvScalar);
             return Py_BuildValue("k",value);
         }
         case pvFloat: {
@@ -304,15 +325,15 @@ static PyObject *getScalarValue(PVScalar *pvScalar)
     return Py_None;
 }
 
-static PyObject *getScalarArrayValue(PVScalarArray *pvScalarArray)
+static PyObject *getScalarArrayValue(PVScalarArrayPtr pvScalarArray)
 {
     ScalarType scalarType = pvScalarArray->getScalarArray()->getElementType();
     switch(scalarType) {
         case pvBoolean: {
-            PVBooleanArray *pvArray = static_cast<PVBooleanArray *>(pvScalarArray);
+            PVBooleanArrayPtr pvArray = static_pointer_cast<PVBooleanArray>(pvScalarArray);
             BooleanArrayData arrayData;
-            int num = pvArray->get(0,pvArray->getLength(),&arrayData);
-            BooleanArray data = arrayData.data;
+            int num = pvArray->get(0,pvArray->getLength(), arrayData);
+            BooleanArray & data = arrayData.data;
             PyObject *result = PyTuple_New(num);
             for(int i=0; i<num; i++) {
                 int value = (data[i] ? 1 : 0);
@@ -322,10 +343,23 @@ static PyObject *getScalarArrayValue(PVScalarArray *pvScalarArray)
             return result;
         }
         case pvByte: {
-            PVByteArray *pvArray = static_cast<PVByteArray *>(pvScalarArray);
+            PVByteArrayPtr pvArray = static_pointer_cast<PVByteArray>(pvScalarArray);
             ByteArrayData arrayData;
-            int8 num = pvArray->get(0,pvArray->getLength(),&arrayData);
-            ByteArray data = arrayData.data;
+            int8 num = pvArray->get(0,pvArray->getLength(),arrayData);
+            ByteArray & data = arrayData.data;
+            PyObject *result = PyTuple_New(num);
+            for(int i=0; i<num; i++) {
+                int value = data[i];
+                PyObject *elem = Py_BuildValue("i",value);
+                PyTuple_SetItem(result, i, elem);
+            }
+            return result;
+        }
+        case pvUByte: {
+            PVUByteArrayPtr pvArray = static_pointer_cast<PVUByteArray>(pvScalarArray);
+            UByteArrayData arrayData;
+            uint8 num = pvArray->get(0,pvArray->getLength(),arrayData);
+            UByteArray & data = arrayData.data;
             PyObject *result = PyTuple_New(num);
             for(int i=0; i<num; i++) {
                 int value = data[i];
@@ -335,10 +369,23 @@ static PyObject *getScalarArrayValue(PVScalarArray *pvScalarArray)
             return result;
         }
         case pvShort: {
-            PVShortArray *pvArray = static_cast<PVShortArray *>(pvScalarArray);
+            PVShortArrayPtr pvArray = static_pointer_cast<PVShortArray>(pvScalarArray);
             ShortArrayData arrayData;
-            int num = pvArray->get(0,pvArray->getLength(),&arrayData);
-            ShortArray data = arrayData.data;
+            int num = pvArray->get(0,pvArray->getLength(),arrayData);
+            ShortArray & data = arrayData.data;
+            PyObject *result = PyTuple_New(num);
+            for(int i=0; i<num; i++) {
+                int value = data[i];
+                PyObject *elem = Py_BuildValue("i",value);
+                PyTuple_SetItem(result, i, elem);
+            }
+            return result;
+        }
+        case pvUShort: {
+            PVUShortArrayPtr pvArray = static_pointer_cast<PVUShortArray>(pvScalarArray);
+            UShortArrayData arrayData;
+            int num = pvArray->get(0,pvArray->getLength(),arrayData);
+            UShortArray & data = arrayData.data;
             PyObject *result = PyTuple_New(num);
             for(int i=0; i<num; i++) {
                 int value = data[i];
@@ -348,10 +395,22 @@ static PyObject *getScalarArrayValue(PVScalarArray *pvScalarArray)
             return result;
         }
         case pvInt: {
-            PVIntArray *pvArray = static_cast<PVIntArray *>(pvScalarArray);
+            PVIntArrayPtr pvArray = static_pointer_cast<PVIntArray>(pvScalarArray);
             IntArrayData arrayData;
-            int num = pvArray->get(0,pvArray->getLength(),&arrayData);
-            IntArray data = arrayData.data;
+            int num = pvArray->get(0,pvArray->getLength(),arrayData);
+            IntArray & data = arrayData.data;
+            PyObject *result = PyTuple_New(num);
+            for(int i=0; i<num; i++) {
+                PyObject *elem = Py_BuildValue("i",data[i]);
+                PyTuple_SetItem(result, i, elem);
+            }
+            return result;
+        }
+        case pvUInt: {
+            PVUIntArrayPtr pvArray = static_pointer_cast<PVUIntArray>(pvScalarArray);
+            UIntArrayData arrayData;
+            int num = pvArray->get(0,pvArray->getLength(),arrayData);
+            UIntArray & data = arrayData.data;
             PyObject *result = PyTuple_New(num);
             for(int i=0; i<num; i++) {
                 PyObject *elem = Py_BuildValue("i",data[i]);
@@ -360,10 +419,22 @@ static PyObject *getScalarArrayValue(PVScalarArray *pvScalarArray)
             return result;
         }
         case pvLong: {
-            PVLongArray *pvArray = static_cast<PVLongArray *>(pvScalarArray);
+            PVLongArrayPtr pvArray = static_pointer_cast<PVLongArray>(pvScalarArray);
             LongArrayData arrayData;
-            int num = pvArray->get(0,pvArray->getLength(),&arrayData);
-            LongArray data = arrayData.data;
+            int num = pvArray->get(0,pvArray->getLength(),arrayData);
+            LongArray & data = arrayData.data;
+            PyObject *result = PyTuple_New(num);
+            for(int i=0; i<num; i++) {
+                PyObject *elem = Py_BuildValue("k",data[i]);
+                PyTuple_SetItem(result, i, elem);
+            }
+            return result;
+        }
+        case pvULong: {
+            PVULongArrayPtr pvArray = static_pointer_cast<PVULongArray>(pvScalarArray);
+            ULongArrayData arrayData;
+            int num = pvArray->get(0,pvArray->getLength(),arrayData);
+            ULongArray & data = arrayData.data;
             PyObject *result = PyTuple_New(num);
             for(int i=0; i<num; i++) {
                 PyObject *elem = Py_BuildValue("k",data[i]);
@@ -372,10 +443,10 @@ static PyObject *getScalarArrayValue(PVScalarArray *pvScalarArray)
             return result;
         }
         case pvFloat: {
-            PVFloatArray *pvArray = static_cast<PVFloatArray *>(pvScalarArray);
+            PVFloatArrayPtr pvArray = static_pointer_cast<PVFloatArray>(pvScalarArray);
             FloatArrayData arrayData;
-            int num = pvArray->get(0,pvArray->getLength(),&arrayData);
-            FloatArray data = arrayData.data;
+            int num = pvArray->get(0,pvArray->getLength(),arrayData);
+            FloatArray & data = arrayData.data;
             PyObject *result = PyTuple_New(num);
             for(int i=0; i<num; i++) {
                 PyObject *elem = Py_BuildValue("f",data[i]);
@@ -384,10 +455,10 @@ static PyObject *getScalarArrayValue(PVScalarArray *pvScalarArray)
             return result;
         }
         case pvDouble: {
-            PVDoubleArray *pvArray = static_cast<PVDoubleArray *>(pvScalarArray);
+            PVDoubleArrayPtr pvArray = static_pointer_cast<PVDoubleArray>(pvScalarArray);
             DoubleArrayData arrayData;
-            int num = pvArray->get(0,pvArray->getLength(),&arrayData);
-            DoubleArray data = arrayData.data;
+            int num = pvArray->get(0,pvArray->getLength(),arrayData);
+            DoubleArray & data = arrayData.data;
             PyObject *result = PyTuple_New(num);
             for(int i=0; i<num; i++) {
                 PyObject *elem = Py_BuildValue("d",data[i]);
@@ -396,10 +467,10 @@ static PyObject *getScalarArrayValue(PVScalarArray *pvScalarArray)
             return result;
         }
         case pvString: {
-            PVStringArray *pvArray = static_cast<PVStringArray *>(pvScalarArray);
+            PVStringArrayPtr pvArray = static_pointer_cast<PVStringArray>(pvScalarArray);
             StringArrayData arrayData;
-            int num = pvArray->get(0,pvArray->getLength(),&arrayData);
-            String *data = arrayData.data;
+            int num = pvArray->get(0,pvArray->getLength(),arrayData);
+            StringArray & data = arrayData.data;
             PyObject *result = PyTuple_New(num);
             for(int i=0; i<num; i++) {
                 PyObject *elem = Py_BuildValue("s",data[i].c_str());
@@ -412,15 +483,15 @@ static PyObject *getScalarArrayValue(PVScalarArray *pvScalarArray)
     return Py_None;
 }
 
-static PyObject *getStructureValue(PVStructure *pvStructure);
-static PyObject *getStructureArrayValue(PVStructureArray *pvStructureArray)
+static PyObject *getStructureValue(PVStructurePtr pvStructure);
+static PyObject *getStructureArrayValue(PVStructureArrayPtr pvStructureArray)
 {
     int num = pvStructureArray->getLength();
     PyObject *result = PyTuple_New(num);
     StructureArrayData structureArrayData = StructureArrayData();
-    pvStructureArray->get(0, num,&structureArrayData);
+    pvStructureArray->get(0, num, structureArrayData);
     for(int i=0; i<num; i++) {
-        PVStructure *pvStructure = structureArrayData.data[i];
+        PVStructurePtr pvStructure = structureArrayData.data[i];
         PVFieldPtrArray pvFields = pvStructure->getPVFields();
         StructureConstPtr structure = pvStructure->getStructure();
         int n = structure->getNumberFields();
@@ -429,29 +500,29 @@ static PyObject *getStructureArrayValue(PVStructureArray *pvStructureArray)
             FieldConstPtr field = pvFields[j]->getField();
             switch(field->getType()) {
                 case scalar: {
-                    PVScalar *xxx =
-                         static_cast<PVScalar *>(pvFields[j]);
+                    PVScalarPtr xxx =
+                         static_pointer_cast<PVScalar>(pvFields[j]);
                     PyObject *yyy = getScalarValue(xxx);
                     PyTuple_SetItem(fieldObj,j,yyy);
                     break;
                 }
                 case scalarArray: {
-                    PVScalarArray *xxx =
-                         static_cast<PVScalarArray *>(pvFields[j]);
+                    PVScalarArrayPtr xxx =
+                         static_pointer_cast<PVScalarArray>(pvFields[j]);
                     PyObject *yyy = getScalarArrayValue(xxx);
                     PyTuple_SetItem(fieldObj,j,yyy);
                     break;
                 }
                 case epics::pvData::structure: {
-                    PVStructure *xxx =
-                         static_cast<PVStructure *>(pvFields[j]);
+                    PVStructurePtr xxx =
+                         static_pointer_cast<PVStructure>(pvFields[j]);
                     PyObject *yyy = getStructureValue(xxx);
                     PyTuple_SetItem(fieldObj,j,yyy);
                     break;
                 }
                 case structureArray: {
-                    PVStructureArray *xxx =
-                         static_cast<PVStructureArray *>(pvFields[j]);
+                    PVStructureArrayPtr xxx =
+                         static_pointer_cast<PVStructureArray>(pvFields[j]);
                     PyObject *yyy = getStructureArrayValue(xxx);
                     PyTuple_SetItem(fieldObj,j,yyy);
                     break;
@@ -465,7 +536,7 @@ static PyObject *getStructureArrayValue(PVStructureArray *pvStructureArray)
     return result;
 }
 
-static PyObject *getStructureValue(PVStructure *pvStructure)
+static PyObject *getStructureValue(PVStructurePtr pvStructure)
 {
     PVFieldPtrArray pvFields = pvStructure->getPVFields();
     StructureConstPtr structure = pvStructure->getStructure();
@@ -475,14 +546,14 @@ static PyObject *getStructureValue(PVStructure *pvStructure)
         FieldConstPtr field = pvFields[j]->getField();
         switch(field->getType()) {
             case scalar: {
-                PVScalar *xxx =
-                     static_cast<PVScalar *>(pvFields[j]);
+                PVScalarPtr xxx =
+                     static_pointer_cast<PVScalar>(pvFields[j]);
                 PyObject *yyy = getScalarValue(xxx);
                 PyTuple_SetItem(fieldObj,j,yyy);
             }
             case scalarArray: {
-                PVScalarArray *xxx =
-                     static_cast<PVScalarArray *>(pvFields[j]);
+                PVScalarArrayPtr xxx =
+                     static_pointer_cast<PVScalarArray>(pvFields[j]);
                 PyObject *yyy = getScalarArrayValue(xxx);
                 PyTuple_SetItem(fieldObj,j,yyy);
             }
@@ -490,8 +561,8 @@ static PyObject *getStructureValue(PVStructure *pvStructure)
                 break;
             }
             case structureArray: {
-                PVStructureArray *xxx =
-                     static_cast<PVStructureArray *>(pvFields[j]);
+                PVStructureArrayPtr xxx =
+                     static_pointer_cast<PVStructureArray>(pvFields[j]);
                 PyObject *yyy = getStructureArrayValue(xxx);
                 PyTuple_SetItem(fieldObj,j,yyy);
             }
@@ -522,11 +593,11 @@ static PyObject * _getValue(PyObject *willbenull, PyObject *args)
     PVFieldPtr pvField =  pvt->nttable->getPVField(index);
     Type type = pvField->getField()->getType();
     if(type==scalarArray) {
-        PVScalarArray *pvScalarArray = static_cast<PVScalarArray *>(pvField);
+        PVScalarArrayPtr pvScalarArray = static_pointer_cast<PVScalarArray>(pvField);
         return getScalarArrayValue(pvScalarArray);
     }
     if(type==structureArray) {
-        PVStructureArray *pvStructureArray = static_cast<PVStructureArray *>(pvField);
+        PVStructureArrayPtr pvStructureArray = static_pointer_cast<PVStructureArray>(pvField);
         return getStructureArrayValue(pvStructureArray);
     }
     Py_INCREF(Py_None);

@@ -8,6 +8,7 @@
 
 #undef _POSIX_C_SOURCE
 #undef _XOPEN_SOURCE
+#include <iostream>
 #include <Python.h>
 
 #include <pv/ezchannelRPC.h>
@@ -57,6 +58,22 @@ void ChannelRPCPyPvt::destroy()
    channelRPC.reset();
 }
 
+class RequesterImpl : public Requester,
+     public std::tr1::enable_shared_from_this<RequesterImpl>
+{
+public:
+
+    virtual String getRequesterName()
+    {
+        return "RequesterImpl";
+    };
+
+    virtual void message(String const & message,MessageType messageType)
+    {
+        std::cout << "[" << getRequesterName() << "] message(" << message << ", " << getMessageTypeName(messageType) << ")" << std::endl;
+    }
+};
+
 static PyObject * _init1(PyObject *willBeNull, PyObject *args)
 {
     const char *serverName = 0;
@@ -84,9 +101,10 @@ static PyObject * _init2(PyObject *willBeNull, PyObject *args)
            "Bad argument. Expected (serverName,request)");
         return NULL;
     }
-    CreateRequest::shared_pointer createRequest = getCreateRequest();
+    Requester::shared_pointer requester(new RequesterImpl());
+//    CreateRequest::shared_pointer createRequest = getCreateRequest();
     PVStructure::shared_pointer pvRequest =
-         createRequest->createRequest(request);
+         getCreateRequest()->createRequest(request, requester);
 
     ChannelRPCPyPvt *pvt = new ChannelRPCPyPvt(serverName,pvRequest);
     PyObject *pyObject = PyCapsule_New(pvt,"channelRPCPyPvt",0);

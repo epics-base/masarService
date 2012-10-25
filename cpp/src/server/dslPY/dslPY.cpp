@@ -132,7 +132,7 @@ bool DSL_RDB::init()
 
 void DSL_RDB::destroy() {}
 
-static PVStructure::shared_pointer noDataEnetry(std::string message) {
+static NTTablePtr noDataEnetry(std::string message) {
     FieldCreatePtr fieldCreate = getFieldCreate();
     size_t  n = 1;
     StringArray names;
@@ -153,19 +153,20 @@ static PVStructure::shared_pointer noDataEnetry(std::string message) {
     NTTable ntTable(pvStructure);
 */
 
-    PVBooleanArray * pvBoolVal = static_cast<PVBooleanArray *>(ntTable.getPVField(0));
-    bool temp [] = {false};
+    PVBooleanArrayPtr pvBoolVal = static_pointer_cast<PVBooleanArray> (ntTable->getPVField(0));
+    BooleanArray temp(1);
+    temp[0]=false;
     pvBoolVal -> put (0, 1, temp, 0);
 
     // set label strings
-    String labelVals  = fields->getFieldName();
-    PVStringArray *label = ntTable.getLabel();
+    String labelVals  = pvStructure->getFieldName();
+    PVStringArrayPtr label = ntTable->getLabel();
     label->put(0,1,&labelVals,0);
 
     // Set alarm and severity
     PVAlarm pvAlarm;
     Alarm alarm;
-    ntTable.attachAlarm(pvAlarm);
+    ntTable->attachAlarm(pvAlarm);
 
     alarm.setMessage(message);
     alarm.setSeverity(majorAlarm);
@@ -174,17 +175,16 @@ static PVStructure::shared_pointer noDataEnetry(std::string message) {
 
     // set time stamp
     PVTimeStamp pvTimeStamp;
-    ntTable.attachTimeStamp(pvTimeStamp);
+    ntTable->attachTimeStamp(pvTimeStamp);
     TimeStamp timeStamp;
     timeStamp.getCurrent();
     timeStamp.setUserTag(0);
-    // bool result = pvTimeStamp.set(timeStamp);
     pvTimeStamp.set(timeStamp);
 
-    return pvStructure;
+    return ntTable;
 }
 
-static PVStructure::shared_pointer retrieveSnapshot(PyObject * list)
+static NTTablePtr retrieveSnapshot(PyObject * list)
 {
     Py_ssize_t top_len = PyList_Size(list);
     if (top_len != 2) {
@@ -203,52 +203,59 @@ static PVStructure::shared_pointer retrieveSnapshot(PyObject * list)
 
     size_t strFieldLen = 3; // pv name, s_value, and alarm message are stored as string.
 
-    FieldCreate *fieldCreate = getFieldCreate();
+    FieldCreatePtr fieldCreate = getFieldCreate();
+
+    StringArray names;
+    names.reserve(tuple_size);
 
     // create fields
     // set label for each field
     // ('pv name', 'string value', 'double value', 'long value', 'dbr type', 'isConnected',
     //  'secondsPastEpoch', 'nanoSeconds', 'timeStampTag', 'alarmSeverity', 'alarmStatus', 'alarmMessage'
     //  'is_array', 'array_value')
-    FieldConstPtr fields[tuple_size];
+    FieldConstPtrArray fields;
+    fields.reserve(tuple_size);
     for (ssize_t i = 0; i < tuple_size; i ++){
         if (i == 0 || i == 1 || i == 11) { // pv_name: 0, string value: 1, alarm message: 11
-            fields[i] = fieldCreate->createScalarArray(PyString_AsString(PyTuple_GetItem(head, i)), pvString);
+            fields.push_back(fieldCreate->createScalarArray(pvString));
         } else if (i == 2) { // double value: 2
-            fields[i] = fieldCreate->createScalarArray(PyString_AsString(PyTuple_GetItem(head, i)), pvDouble);
+            fields.push_back(fieldCreate->createScalarArray(pvDouble));
         } else if(i!=13) {
             // long value: 3, dbr type: 4, secondsPastEpoch: 6, nanoSeconds: 7, timeStampTag: 8,
             // alarmSeverity: 9, alarmStatus: 10, is_array: 12
-            fields[i] = fieldCreate->createScalarArray(PyString_AsString(PyTuple_GetItem(head, i)), pvLong);
+            fields.push_back(fieldCreate->createScalarArray(pvLong));
         } else {
             // for array value operation
             int naf = 3;
-            FieldConstPtrArray arrfields = new FieldConstPtr[naf];
-            arrfields[0] = fieldCreate->createScalarArray("stringValue",pvString);
-            arrfields[1] = fieldCreate->createScalarArray("doubleValue",pvDouble);
-            arrfields[2] = fieldCreate->createScalarArray("intValue",pvInt);
-            StructureConstPtr arrStructure = fieldCreate->createStructure(
-                 "arrayValue",naf,arrfields);
-            fields[i] = fieldCreate->createStructureArray(PyString_AsString(PyTuple_GetItem(head, i)), arrStructure);
+            FieldConstPtrArray arrfields(naf);
+            arrfields[0] = fieldCreate->createScalarArray(pvString);
+            arrfields[1] = fieldCreate->createScalarArray(pvDouble);
+            arrfields[2] = fieldCreate->createScalarArray(pvInt);
+            StringArray arrayVal(1);
+            arrayVal[0] = "arrayValue";
+            StructureConstPtr arrStructure = fieldCreate->createStructure(arrayVal,arrfields);
+            fields.push_back(fieldCreate->createStructureArray(arrStructure));
         }
+        names.push_back(PyString_AsString(PyTuple_GetItem(head, i)));
     }
 
+
     // create NTTable
-    PVStructure::shared_pointer pvStructure = NTTable::create(
-        false,true,true,tuple_size,fields);
-    NTTable ntTable(pvStructure);
+    NTTablePtr ntTable(NTTable::create(
+        false,true,true,names,fields));
+    PVStructurePtr pvStructure = ntTable->getPVStructure();
 
     // initilize PVStructureArray for waveform/array record
-    PVStructureArray *pvarrayValue = static_cast<PVStructureArray *>(ntTable.getPVField(13));
+    PVStructureArrayPtr pvarrayValue = static_pointer_cast<PVStructureArray>(ntTable->getPVField(13));
     pvarrayValue->setCapacity(numberChannels);
     pvarrayValue->setCapacityMutable(false);
     StructureArrayData structdata;
-    pvarrayValue->get(0,numberChannels,&structdata);
-    PVStructure ** ppPVStructure = structdata.data;
+    pvarrayValue->get(0,numberChannels,structdata);
     StructureConstPtr pstructure = pvarrayValue->getStructureArray()->getStructure();
-    PVDataCreate *pvDataCreate = getPVDataCreate();
+    PVDataCreatePtr pvDataCreate = getPVDataCreate();
     for (int i=0; i<numberChannels; i++) {
-        ppPVStructure[i] = pvDataCreate->createPVStructure(0,pstructure);
+        PVStructurePtr ppPVStructure = structdata.data[i];
+        ppPVStructure = pvDataCreate->createPVStructure(pstructure);
     }
     pvarrayValue->setLength(numberChannels);
 
@@ -266,7 +273,7 @@ static PVStructure::shared_pointer retrieveSnapshot(PyObject * list)
         // Get values for each fields from list
         PyObject * sublist;
 
-        pvarrayValue->get(0,numberChannels,&structdata);
+        pvarrayValue->get(0,numberChannels,structdata);
 
         for (int index = 0; index < numberChannels; index++ ){
             sublist = PyList_GetItem(data_array, index+1);
@@ -311,7 +318,7 @@ static PVStructure::shared_pointer retrieveSnapshot(PyObject * list)
                 }
             }
 
-            PVStructure * pvStructure = structdata.data[index];
+            PVStructurePtr pvStructure = structdata.data[index];
             // retrieve array value
             if (lVals[8][index] == 1) {
                 // EPICS DBR type
@@ -330,20 +337,20 @@ static PVStructure::shared_pointer retrieveSnapshot(PyObject * list)
                 if (lVals[1][index] == 1 || lVals[1][index] == 4 || lVals[1][index] == 5){
                     // integer type
                     IntArrayData intdata;
-                    PVIntArray *pvintarray = static_cast<PVIntArray *>(pvfields[2]);
+                    PVIntArrayPtr pvintarray = static_pointer_cast<PVIntArray>(pvfields[2]);
                     if (PyList_Check(arrayValueList)) {
                         size_t array_len = (size_t)PyList_Size(arrayValueList);
                         pvintarray->setLength(array_len);
-                        pvintarray->get(0,array_len,&intdata);
-                        int32 * pvalue = intdata.data;
+                        pvintarray->get(0,array_len,intdata);
+                        IntArray & pvalue = intdata.data;
                         for (size_t array_index = 0; array_index < array_len; array_index++){
                             pvalue[array_index] = PyLong_AsLong(PyList_GetItem(arrayValueList, array_index));
                         }
                     } else if (PyTuple_Check(arrayValueList)) {
                         size_t array_len = (size_t)PyTuple_Size(arrayValueList);
                         pvintarray->setLength(array_len);
-                        pvintarray->get(0,array_len,&intdata);
-                        int32 * pvalue = intdata.data;
+                        pvintarray->get(0,array_len,intdata);
+                        IntArray & pvalue = intdata.data;
                         for (size_t array_index = 0; array_index < array_len; array_index++){
                             pvalue[array_index] = PyLong_AsLong(PyTuple_GetItem(arrayValueList, array_index));
                         }
@@ -351,20 +358,20 @@ static PVStructure::shared_pointer retrieveSnapshot(PyObject * list)
                 } else if (lVals[1][index] == 0) {
                     // string
                     StringArrayData stringdata;
-                    PVStringArray *pvstringarray = static_cast<PVStringArray *>(pvfields[0]);
+                    PVStringArrayPtr pvstringarray = static_pointer_cast<PVStringArray>(pvfields[0]);
                     if (PyList_Check(arrayValueList)) {
                         size_t array_len = (size_t )PyList_Size(arrayValueList);
                         pvstringarray->setLength(array_len);
-                        pvstringarray->get(0,array_len,&stringdata);
-                        String * pvalue = stringdata.data;
+                        pvstringarray->get(0,array_len,stringdata);
+                        StringArray & pvalue = stringdata.data;
                         for (size_t array_index = 0; array_index < array_len; array_index++){
                             pvalue[array_index] = PyString_AsString(PyList_GetItem(arrayValueList, array_index));
                         }
                     } else if (PyTuple_Check(arrayValueList)) {
                         size_t array_len = (size_t )PyTuple_Size(arrayValueList);
                         pvstringarray->setLength(array_len);
-                        pvstringarray->get(0,array_len,&stringdata);
-                        String * pvalue = stringdata.data;
+                        pvstringarray->get(0,array_len,stringdata);
+                        StringArray & pvalue = stringdata.data;
                         for (size_t array_index = 0; array_index < array_len; array_index++){
                             pvalue[array_index] = PyString_AsString(PyTuple_GetItem(arrayValueList, array_index));
                         }
@@ -372,20 +379,20 @@ static PVStructure::shared_pointer retrieveSnapshot(PyObject * list)
                 } else if (lVals[1][index] == 2 || lVals[1][index] == 6) {
                     // float or double
                     DoubleArrayData doubledata;
-                    PVDoubleArray *pvdoublearray = static_cast<PVDoubleArray *>(pvfields[1]);
+                    PVDoubleArrayPtr pvdoublearray = static_pointer_cast<PVDoubleArray>(pvfields[1]);
                     if (PyList_Check(arrayValueList)) {
                         size_t array_len = (size_t )PyList_Size(arrayValueList);
                         pvdoublearray->setLength(array_len);
-                        pvdoublearray->get(0,array_len,&doubledata);
-                        double * pvalue = doubledata.data;
+                        pvdoublearray->get(0,array_len,doubledata);
+                        DoubleArray & pvalue = doubledata.data;
                         for (size_t array_index = 0; array_index < array_len; array_index++){
                             pvalue[array_index] = PyFloat_AsDouble(PyList_GetItem(arrayValueList, array_index));
                         }
                     } else if (PyTuple_Check(arrayValueList)) {
                         size_t array_len = (size_t )PyTuple_Size(arrayValueList);
                         pvdoublearray->setLength(array_len);
-                        pvdoublearray->get(0,array_len,&doubledata);
-                        double * pvalue = doubledata.data;
+                        pvdoublearray->get(0,array_len,doubledata);
+                        DoubleArray & pvalue = doubledata.data;
                         for (size_t array_index = 0; array_index < array_len; array_index++){
                             pvalue[array_index] = PyFloat_AsDouble(PyTuple_GetItem(arrayValueList, array_index));
                         }
@@ -395,58 +402,52 @@ static PVStructure::shared_pointer retrieveSnapshot(PyObject * list)
         }
 
         // set value to each field
-        PVStringArray *pvStr;
-        PVDoubleArray * pvDVal;
-        PVLongArray * pvLVal;
+        PVStringArrayPtr pvStr;
+        PVDoubleArrayPtr pvDVal;
+        PVLongArrayPtr pvLVal;
         for (int i = 0; i < tuple_size; i ++) {
             if (i == 0 ) { // pv_name: 0
-                pvStr = static_cast<PVStringArray *>(ntTable.getPVField(i));
-                pvStr -> put (0, numberChannels, &(pvNames[0])[0], 0);
+                pvStr = static_pointer_cast<PVStringArray>(ntTable->getPVField(i));
+                pvStr -> put (0, numberChannels, pvNames[0], 0);
             } else if (i == 1) { // string value: 1
-                pvStr = static_cast<PVStringArray *>(ntTable.getPVField(i));
-                pvStr -> put (0, numberChannels, &(pvNames[1])[0], 0);
+                pvStr = static_pointer_cast<PVStringArray>(ntTable->getPVField(i));
+                pvStr -> put (0, numberChannels, pvNames[1], 0);
             } else if (i == 11 ) { // alarm message: 11
-                pvStr = static_cast<PVStringArray *>(ntTable.getPVField(11));
-                pvStr -> put (0, numberChannels, &(pvNames[2])[0], 0);
+                pvStr = static_pointer_cast<PVStringArray>(ntTable->getPVField(11));
+                pvStr -> put (0, numberChannels, pvNames[2], 0);
             }else if (i == 2) { // double value: 2
-                pvDVal = static_cast<PVDoubleArray *>(ntTable.getPVField(i));
-                pvDVal -> put (0, numberChannels, &dVals[0], 0);
+                pvDVal = static_pointer_cast<PVDoubleArray>(ntTable->getPVField(i));
+                pvDVal -> put (0, numberChannels, dVals, 0);
             } else if (i!=13){
                 // long value: 3, dbr type: 4, isConnected: 5, secondsPastEpoch: 6, nanoSeconds: 7,
                 // timeStampTag: 8, alarmSeverity: 9, alarmStatus: 10, is_array: 12
-                pvLVal = static_cast<PVLongArray *>(ntTable.getPVField(i));
+                pvLVal = static_pointer_cast<PVLongArray>(ntTable->getPVField(i));
                 if (i == 12)
-                    pvLVal -> put (0, numberChannels, &(lVals[i-4])[0], 0);
+                    pvLVal -> put (0, numberChannels, lVals[i-4], 0);
                 else
-                    pvLVal -> put (0, numberChannels, &(lVals[i-3])[0], 0);
+                    pvLVal -> put (0, numberChannels, lVals[i-3], 0);
             } else {
             }
         }
     }
 
     // set label strings
-    std::vector<String> labelVals (tuple_size);
-    for (int i = 0; i < tuple_size; i ++) {
-        labelVals[i] = fields[i]->getFieldName();
-    }
-    PVStringArray *label = ntTable.getLabel();
-    label->put(0,tuple_size,&(labelVals)[0],0);
+    String labelVals  = pvStructure->getFieldName();
+    PVStringArrayPtr label = ntTable->getLabel();
+    label->put(0,1,&labelVals,0);
 
     // set time stamp
     PVTimeStamp pvTimeStamp;
-    ntTable.attachTimeStamp(pvTimeStamp);
+    ntTable->attachTimeStamp(pvTimeStamp);
     TimeStamp timeStamp;
     timeStamp.getCurrent();
     timeStamp.setUserTag(0);
     pvTimeStamp.set(timeStamp);
 
-//    String buf;
-//    pvStructure->toString(&buf);
-//    printf("%s\n", buf.c_str());
-    return pvStructure;
+    return ntTable;
 }
 
-static PVStructure::shared_pointer retrieveServiceConfigEvents(PyObject * list, long numeric)
+static NTTablePtr retrieveServiceConfigEvents(PyObject * list, long numeric)
 {
     Py_ssize_t list_len = PyList_Size(list);
     // data order in the tuple
@@ -460,22 +461,29 @@ static PVStructure::shared_pointer retrieveServiceConfigEvents(PyObject * list, 
     }
     int fieldLen = list_len - 1; // length - label header
 
-    FieldCreate *fieldCreate = getFieldCreate();
+    FieldCreatePtr fieldCreate = getFieldCreate();
 
     // create fields
     // set label for each field
-    FieldConstPtr fields[tuple_size];
+    FieldConstPtrArray fields;
+    fields.reserve(tuple_size);
+
+    StringArray names;
+    names.reserve(tuple_size);
+
     for (int i = 0; i < numeric; i ++){
-        fields[i] = fieldCreate->createScalarArray(PyString_AsString(PyTuple_GetItem(labelList, i)), pvLong);
+        fields[i] = fieldCreate->createScalarArray(pvLong);
+        names.push_back(PyString_AsString(PyTuple_GetItem(labelList, i)));
     }
     for (int i = numeric; i < tuple_size; i ++){
-        fields[i] = fieldCreate->createScalarArray(PyString_AsString(PyTuple_GetItem(labelList, i)), pvString);
+        fields[i] = fieldCreate->createScalarArray(pvString);
+        names.push_back(PyString_AsString(PyTuple_GetItem(labelList, i)));
     }
 
     // create NTTable
-    PVStructure::shared_pointer pvStructure = NTTable::create(
-        false,true,true,tuple_size,fields);
-    NTTable ntTable(pvStructure);
+    NTTablePtr ntTable(NTTable::create(
+        false,true,true,names,fields));
+    PVStructurePtr pvStructure = ntTable->getPVStructure();
 
     std::vector<std::vector<int64> > scIdVals(numeric);
     for(size_t i=0; i<scIdVals.size(); i++) {
@@ -508,37 +516,34 @@ static PVStructure::shared_pointer retrieveServiceConfigEvents(PyObject * list, 
     }
 
     // set value to each numeric field
-    PVLongArray *pvSCIds;
+    PVLongArrayPtr pvSCIds;
     for (int i = 0; i < numeric; i ++) {
-        pvSCIds = static_cast<PVLongArray *>(ntTable.getPVField(i));
-        pvSCIds -> put (0, fieldLen, &(scIdVals[i])[0], 0);
+        pvSCIds = static_pointer_cast<PVLongArray>(ntTable->getPVField(i));
+        pvSCIds -> put (0, fieldLen, scIdVals[i], 0);
     }
     // set value to each string field
-    PVStringArray * pvStrVal;
+    PVStringArrayPtr pvStrVal;
     for (int i = numeric; i < tuple_size; i ++) {
-        pvStrVal = static_cast<PVStringArray *>(ntTable.getPVField(i));
-        pvStrVal -> put (0, fieldLen, &(vals[i-numeric])[0], 0);
+        pvStrVal = static_pointer_cast<PVStringArray>(ntTable->getPVField(i));
+        pvStrVal -> put (0, fieldLen, vals[i-numeric], 0);
     }
 
     // set label strings
-    std::vector<String> labelVals(tuple_size);
-    for (int i = 0; i < tuple_size; i ++) {
-        labelVals[i] = fields[i]->getFieldName();
-    }
-    PVStringArray *label = ntTable.getLabel();
-    label->put(0,tuple_size, &(labelVals)[0],0);
+    String labelVals  = pvStructure->getFieldName();
+    PVStringArrayPtr label = ntTable->getLabel();
+    label->put(0,1,&labelVals,0);
 
     PVTimeStamp pvTimeStamp;
-    ntTable.attachTimeStamp(pvTimeStamp);
+    ntTable->attachTimeStamp(pvTimeStamp);
     TimeStamp timeStamp;
     timeStamp.getCurrent();
     timeStamp.setUserTag(0);
     pvTimeStamp.set(timeStamp);
 
-    return pvStructure;
+    return ntTable;
 }
 
-static PVStructure::shared_pointer saveSnapshot(PyObject * list, PVStructure::shared_pointer data, String message)
+static NTTablePtr saveSnapshot(PyObject * list, NTTablePtr data, String message)
 {
     // Get save masar event id
     // -1 means saveSnapshot failure
@@ -558,12 +563,10 @@ static PVStructure::shared_pointer saveSnapshot(PyObject * list, PVStructure::sh
     if (eid == -1) {
         return noDataEnetry("Machine preview failed. "+ message);
     } else {
-        NTTable ntTable(data);
-
         // Set alarm and severity
         PVAlarm pvAlarm;
         Alarm alarm;
-        ntTable.attachAlarm(pvAlarm);
+        data->attachAlarm(pvAlarm);
 
         alarm.setMessage("Machine preview Successed. " + message);
         alarm.setSeverity(majorAlarm);
@@ -572,18 +575,17 @@ static PVStructure::shared_pointer saveSnapshot(PyObject * list, PVStructure::sh
 
         // set time stamp
         PVTimeStamp pvTimeStamp;
-        ntTable.attachTimeStamp(pvTimeStamp);
+        data->attachTimeStamp(pvTimeStamp);
         TimeStamp timeStamp;
         timeStamp.getCurrent();
         timeStamp.setUserTag(eid);
-        // bool result = pvTimeStamp.set(timeStamp);
         pvTimeStamp.set(timeStamp);
 
         return data;
     }
 }
 
-static PVStructure::shared_pointer updateSnapshotEvent(PyObject * list)
+static NTTablePtr updateSnapshotEvent(PyObject * list)
 {
     // Get save masar event id
     // -1 means updateSnapshotEvent failure
@@ -600,32 +602,38 @@ static PVStructure::shared_pointer updateSnapshotEvent(PyObject * list)
         return noDataEnetry("Wrong format for returned data from dslPY.");
     }
 
-    FieldCreate *fieldCreate = getFieldCreate();
+    FieldCreatePtr fieldCreate = getFieldCreate();
+    size_t  n = 1;
+    StringArray names;
+    FieldConstPtrArray fields;
+    names.reserve(n);
+    fields.reserve(n);
+    names.push_back("status");
+    fields.push_back(fieldCreate->createScalarArray(pvBoolean));
+    NTTablePtr ntTable(NTTable::create(
+        false,true,true,names,fields));
+    PVStructurePtr pvStructure = ntTable->getPVStructure();
 
-    FieldConstPtr fields = fieldCreate->createScalarArray("status",pvBoolean);
-    PVStructure::shared_pointer pvStructure = NTTable::create(
-            false,true,true,1, &fields);
 
-    NTTable ntTable(pvStructure);
-
-    PVBooleanArray * pvBoolVal = static_cast<PVBooleanArray *>(ntTable.getPVField(0));
-    bool temp = false;
+    PVBooleanArrayPtr pvBoolVal = static_pointer_cast<PVBooleanArray>(ntTable->getPVField(0));
+    BooleanArray temp(1);
     if (eid >= 0) {
-        temp = true;
-        pvBoolVal -> put (0, 1, &temp, 0);
+        temp.push_back(true);
+        pvBoolVal -> put (0, 1, temp, 0);
     } else {
-        pvBoolVal -> put (0, 1, &temp, 0);
+        temp.push_back(false);
+        pvBoolVal -> put (0, 1, temp, 0);
     }
 
     // set label strings
-    String labelVals  = fields->getFieldName();
-    PVStringArray *label = ntTable.getLabel();
+    String labelVals  = pvStructure->getFieldName();
+    PVStringArrayPtr label = ntTable->getLabel();
     label->put(0,1,&labelVals,0);
 
     // Set alarm and severity
     PVAlarm pvAlarm;
     Alarm alarm;
-    ntTable.attachAlarm(pvAlarm);
+    ntTable->attachAlarm(pvAlarm);
 
     if (eid >= 0) {
         alarm.setMessage("Falied to save snapshot preview.");
@@ -638,21 +646,21 @@ static PVStructure::shared_pointer updateSnapshotEvent(PyObject * list)
 
     // set time stamp
     PVTimeStamp pvTimeStamp;
-    ntTable.attachTimeStamp(pvTimeStamp);
+    ntTable->attachTimeStamp(pvTimeStamp);
     TimeStamp timeStamp;
     timeStamp.getCurrent();
     timeStamp.setUserTag(0);
-    // bool result = pvTimeStamp.set(timeStamp);
     pvTimeStamp.set(timeStamp);
 
-    return pvStructure;
+    return ntTable;
 }
 
-static PVStructure::shared_pointer createResult(
+static NTTablePtr createResult(
     PyObject *result, String functionName)
 {
-    PVStructure::shared_pointer pvStructure;
-    pvStructure.reset();
+//    PVStructure::shared_pointer pvStructure;
+//    pvStructure.reset();
+    NTTablePtr pvStructure;
     {
         PyObject *list = 0;
         if(!PyArg_ParseTuple(result,"O!:dslPY", &PyList_Type,&list))
@@ -677,8 +685,8 @@ static PVStructure::shared_pointer createResult(
     return pvStructure;
 }
 
-static PVStructure::shared_pointer getLiveMachine(
-        String channelName [], int numberChannels, String * message)
+static NTTablePtr getLiveMachine(String channelName [],
+                                 int numberChannels, String * message)
 {
     GatherV3Data::shared_pointer gather = GatherV3Data::shared_pointer(
         new GatherV3Data(channelName,numberChannels));
@@ -697,9 +705,9 @@ static PVStructure::shared_pointer getLiveMachine(
     }
     result = gather->get();
 
-    PVStructure::shared_pointer nttable = gather->getNTTable();
+    NTTablePtr livedata = gather->getNTTable();
 
-    return nttable;
+    return livedata;
 }
 
 PVStructure::shared_pointer DSL_RDB::request(
@@ -707,15 +715,24 @@ PVStructure::shared_pointer DSL_RDB::request(
 {
     if (functionName.compare("getLiveMachine")==0) {
         String message;
-        PVStructure::shared_pointer data = getLiveMachine(values, num, &message);
+        NTTablePtr ntTable = getLiveMachine(values, num, &message);
 
-        NTTable ntTable(data);
+//        PVStructurePtr pvStructure = ntTable->getPVStructure();
+//        // Set alarm and severity
+//        Alarm alarm = ntTable->getNTTableAlarm();
+//        alarm.setMessage("Live machine: " + message);
+//        alarm.setSeverity(majorAlarm);
+//        alarm.setStatus(clientStatus);
+
+//        // set time stamp
+//        TimeStamp timeStamp = ntTable->getNTTableTimeStamp();
+//        timeStamp.getCurrent();
+//        timeStamp.setUserTag(0);
 
         // Set alarm and severity
         PVAlarm pvAlarm;
         Alarm alarm;
-        ntTable.attachAlarm(pvAlarm);
-
+        ntTable->attachAlarm(pvAlarm);
         alarm.setMessage("Live machine: " + message);
         alarm.setSeverity(majorAlarm);
         alarm.setStatus(clientStatus);
@@ -723,14 +740,13 @@ PVStructure::shared_pointer DSL_RDB::request(
 
         // set time stamp
         PVTimeStamp pvTimeStamp;
-        ntTable.attachTimeStamp(pvTimeStamp);
+        ntTable->attachTimeStamp(pvTimeStamp);
         TimeStamp timeStamp;
         timeStamp.getCurrent();
         timeStamp.setUserTag(0);
-        // bool result = pvTimeStamp.set(timeStamp);
         pvTimeStamp.set(timeStamp);
 
-        return data;
+        return ntTable->getPVStructure();
     }
 
     PyGILState_STATE gstate = PyGILState_Ensure();
@@ -741,7 +757,7 @@ PVStructure::shared_pointer DSL_RDB::request(
     }
     PyObject *pyValue = Py_BuildValue("s",functionName.c_str());
     PyDict_SetItemString(pyDict,"function",pyValue);
-    PVStructure::shared_pointer pvReturn;
+    NTTablePtr pvReturn;
     if (functionName.compare("saveSnapshot")==0) {
         // A tuple is needed to pass to Python as parameter.
         PyObject * pyTuple = PyTuple_New(1);
@@ -761,7 +777,7 @@ PVStructure::shared_pointer DSL_RDB::request(
             }
             Py_DECREF(pchannelnames);
             String message;
-            PVStructure::shared_pointer data = getLiveMachine(channames, list_len, &message);
+            NTTablePtr data = getLiveMachine(channames, list_len, &message);
 
             // create a tuple is needed to pass to Python as parameter.
             PyObject * pdata = PyCapsule_New(&data,"pvStructure",0);
@@ -797,7 +813,7 @@ PVStructure::shared_pointer DSL_RDB::request(
         }
     }
     PyGILState_Release(gstate);
-    return pvReturn;
+    return pvReturn->getPVStructure();
 }
 
 DSL::shared_pointer createDSL_RDB()

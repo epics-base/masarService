@@ -248,7 +248,7 @@ static PyObject * _getNTtable(PyObject *willBeNull, PyObject *args)
         return NULL;
     }
     GatherV3DataPyPvt *pvt = static_cast<GatherV3DataPyPvt *>(pvoid);
-    pvt->pnttable = pvt->gatherV3Data->getNTTable();
+    pvt->pnttable = pvt->gatherV3Data->getNTTableStructure();
     return PyCapsule_New(&pvt->pnttable,"pvStructure",0);
 }
 
