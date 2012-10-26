@@ -150,11 +150,11 @@ static void connectionCallback(struct connection_handler_args args)
         }
         IntArrayData data;
         pvt->pvDBRType->get(0,pvt->numberChannels,data);
-        int32 * pvalue = get(data.data);
+        IntArray & pvalue = data.data;
         pvalue[offset] = dbrType;
         BooleanArrayData booldata;
         pvt->pvisArray->get(0,pvt->numberChannels,booldata);
-        boolean *isArray = get(booldata.data);
+        BooleanArray & isArray = booldata.data;
         if(numberElements==1) {
             isArray[offset] = false;
         } else {

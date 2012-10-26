@@ -206,9 +206,9 @@ static PyObject * _setSeverity(PyObject *willBeNull, PyObject *args)
            "first arg must be return from _init");
         return NULL;
     }
-    int nchoices = severityCount;
+    size_t nchoices = severityCount;
     AlarmPvt *pvt = static_cast<AlarmPvt *>(pvoid);
-    for(int i=0;i<nchoices; i++) {
+    for(size_t i=0;i<nchoices; i++) {
         String choice = AlarmSeverityFunc::getSeverityNames()[i];
         if(choice.compare(buffer)==0) {
             pvt->alarm.setSeverity(AlarmSeverityFunc::getSeverity(i));
@@ -259,9 +259,9 @@ static PyObject * _setStatus(PyObject *willBeNull, PyObject *args)
            "first arg must be return from _init");
         return NULL;
     }
-    int nchoices = statusCount;
+    size_t nchoices = statusCount;
     AlarmPvt *pvt = static_cast<AlarmPvt *>(pvoid);
-    for(int i=0;i<nchoices; i++) {
+    for(size_t i=0;i<nchoices; i++) {
         String choice = AlarmStatusFunc::getStatusNames()[i];
         if(choice.compare(buffer)==0) {
             pvt->alarm.setStatus(AlarmStatusFunc::getStatus(i));

@@ -71,19 +71,22 @@ static PyObject * _init(PyObject *willbenull, PyObject *args)
            "Bad argument. Must be pvStructure PyCapsule");
         return NULL;
     }
-    PVStructure::shared_pointer *pv = 
+    PVStructure::shared_pointer *pv =
         static_cast<PVStructure::shared_pointer *>(pvoid);
-    NTTable::shared_pointer nttable = NTTable::shared_pointer(
-        new NTTable(*pv));
 
-    // to be solved later
-//    size_t  n = ;
-//    StringArray names;
-//    FieldConstPtrArray fields;
-//    names.reserve(n);
-//    fields.reserve(n);
+    PVStringArrayPtr pvstringarray = static_pointer_cast<PVStringArray>
+            ((*pv)->getScalarArrayField("label",pvString));
+    size_t nfields = pvstringarray->getLength();
+    StringArrayData stringdata;
+    pvstringarray->get(0, nfields, stringdata);
+    StringArray & pvalue = stringdata.data;
 
-//    NTTablePtr nttable (NTTable::create(false,true,true,names,fields));
+//    const PVFieldPtrArray & pvFields = pv->get()->getPVFields();
+//    FieldConstPtrArray const &fields = (FieldConstPtrArray const &) pvFields;
+    const FieldConstPtrArray& fields = pv->get()->getStructure()->getFields();
+
+    NTTablePtr nttable (NTTable::create(false,true,true, pvalue, fields));
+
     NTTablePvt *pvt = new NTTablePvt(nttable, *pv);
     return PyCapsule_New(pvt,"nttablePvt",0);
 }
