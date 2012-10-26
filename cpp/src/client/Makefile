@@ -23,9 +23,9 @@ LIBSRCS += gatherV3Data.cpp
 #INC += ezchannelRPC.h
 #LIBSRCS += ezchannelRPC.cpp
 
-LIBRARY = masar
+LIBRARY = gather
 
-masar_LIBS += pvAccess pvData ca Com
+gather_LIBS += pvAccess pvData ca Com
 #masar_LIBS += $(EPICS_BASE_HOST_LIBS)
 
 include $(TOP)/configure/RULES
