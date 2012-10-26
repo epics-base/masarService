@@ -2,7 +2,6 @@
 
 /* Author: Marty Kraimer */
 
-#include <pv/CDRMonitor.h>
 #include <epicsExit.h>
 
 #include <pv/gatherV3Data.h>
@@ -14,18 +13,18 @@ using namespace epics::pvAccess;
 void testGet(bool debug,GatherV3Data::shared_pointer gather)
 {
     String builder;
-    PVStructure::shared_pointer nttable = gather->getNTTable();
+    NTTablePtr nttable = gather->getNTTable();
     bool result = gather->get();
     if(!result) printf("get failed\n%s\n",gather->getMessage().c_str());
     if(debug) {
         builder.clear();
-        nttable->toString(&builder);
+        nttable->getPVStructure()->toString(&builder);
         printf("nttable\n%s\n",builder.c_str());
     }
-    PVDoubleArray *values = gather->getDoubleValue();
-    PVIntArray    *severitys = gather->getAlarmSeverity();
-    PVBooleanArray *isConnecteds = gather->getIsConnected();
-    PVStringArray  *channelNames = gather->getChannelName();
+    PVDoubleArrayPtr values = gather->getDoubleValue();
+    PVIntArrayPtr severitys = gather->getAlarmSeverity();
+    PVBooleanArrayPtr isConnecteds = gather->getIsConnected();
+    PVStringArrayPtr channelNames = gather->getChannelName();
     if(debug) {
         builder.clear();
         values->toString(&builder);
@@ -70,10 +69,10 @@ void test(bool debug)
     }
     GatherV3Data::shared_pointer gather = GatherV3Data::shared_pointer(
         new GatherV3Data(channelName,n));
-    PVStructure::shared_pointer nttable = gather->getNTTable();
+    NTTablePtr nttable = gather->getNTTable();
     if(debug) {
         builder.clear();
-        nttable->toString(&builder);
+        nttable->getPVStructure()->toString(&builder);
         printf("nttable initial\n%s\n",builder.c_str());
     }
     testConnect(debug,gather);
@@ -93,7 +92,6 @@ int main(int argc,char *argv[])
     test(debug);
     epicsExitCallAtExits();
     epicsThreadSleep(1.0);
-    CDRMonitor::get().show(stdout,true);
     return(0);
 }
 

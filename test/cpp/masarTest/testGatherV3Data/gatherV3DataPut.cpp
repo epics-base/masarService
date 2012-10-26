@@ -2,7 +2,6 @@
 
 /* Author: Marty Kraimer */
 
-#include <pv/CDRMonitor.h>
 #include <epicsExit.h>
 
 #include <pv/gatherV3Data.h>
@@ -10,6 +9,7 @@
 using namespace std;
 using namespace epics::pvData;
 using namespace epics::pvAccess;
+using std::tr1::static_pointer_cast;
 
 void test()
 {
@@ -34,32 +34,33 @@ void test()
         printf("It must be started before running this test\n");
         exit(1);
     }
-    PVStructure::shared_pointer nttable = gather->getNTTable();
+    NTTablePtr nttable = gather->getNTTable();
     BooleanArrayData booldata;
-    PVBooleanArray *pvIsArray = static_cast<PVBooleanArray *>(nttable->getScalarArrayField("isArray",pvBoolean));
-    pvIsArray->get(0,n,&booldata);
-    bool *isArray = booldata.data;
+    PVBooleanArrayPtr pvIsArray = static_pointer_cast<PVBooleanArray>
+            (nttable->getPVStructure()->getScalarArrayField("isArray",pvBoolean));
+    pvIsArray->get(0,n,booldata);
+    BooleanArray & isArray = booldata.data;
     DoubleArrayData ddata;
-    gather->getDoubleValue()->get(0,n,&ddata);
-    double *dvalue = ddata.data;
+    gather->getDoubleValue()->get(0,n,ddata);
+    DoubleArray & dvalue = ddata.data;
     StringArrayData sdata;
-    gather->getStringValue()->get(0,n,&sdata);
-    String *svalue = sdata.data;
+    gather->getStringValue()->get(0,n,sdata);
+    StringArray & svalue = sdata.data;
     LongArrayData ldata;
-    gather->getLongValue()->get(0,n,&ldata);
-    int64 *lvalue = ldata.data;
+    gather->getLongValue()->get(0,n,ldata);
+    LongArray & lvalue = ldata.data;
     IntArrayData idata;
     StructureArrayData structdata;
-    gather->getArrayValue()->get(0,n,&structdata);
-    PVStructurePtr *structvalue = structdata.data;
-    gather->getDBRType()->get(0,n,&idata);
-    int32 *dbrType = idata.data;
+    gather->getArrayValue()->get(0,n,structdata);
+    PVStructurePtrArray & structvalue = structdata.data;
+    gather->getDBRType()->get(0,n,idata);
+    IntArray & dbrType = idata.data;
     for(int i=0; i<n; i++) {
         if(isArray[i]) {
             PVStructurePtr pvStructure = structvalue[i];
             switch(dbrType[i]) {
             case DBF_STRING: {
-                PVStringArray * pvValue = static_cast<PVStringArray *>(
+                PVStringArrayPtr pvValue = static_pointer_cast<PVStringArray>(
                     pvStructure->getScalarArrayField("stringValue",pvString));
                 int num = 4;
                 String value[4];
@@ -73,7 +74,7 @@ void test()
             case DBF_CHAR:
             case DBF_INT:
             case DBF_LONG: {
-                PVIntArray * pvValue = static_cast<PVIntArray *>(
+                PVIntArrayPtr pvValue = static_pointer_cast<PVIntArray>(
                     pvStructure->getScalarArrayField("intValue",pvInt));
                 int num = 4;
                 int32 value[4] = {1,2,3,4};
@@ -82,7 +83,7 @@ void test()
             }
             case DBF_FLOAT:
             case DBF_DOUBLE: {
-                PVDoubleArray * pvValue = static_cast<PVDoubleArray *>(
+                PVDoubleArrayPtr pvValue = static_pointer_cast<PVDoubleArray>(
                     pvStructure->getScalarArrayField("doubleValue",pvDouble));
                 int num = 4;
                 double value[4] = {1e1,1e2,1e3,1e4};
@@ -117,7 +118,7 @@ void test()
     result = gather->get();
     if(!result) {printf("get failed\n%s\n",gather->getMessage().c_str()); exit(1);}
     builder.clear();
-    nttable->toString(&builder);
+    nttable->getPVStructure()->toString(&builder);
     printf("nttable\n%s\n",builder.c_str());
 }
 
@@ -127,7 +128,6 @@ int main(int argc,char *argv[])
     epicsThreadSleep(.5);
     epicsExitCallAtExits();
     epicsThreadSleep(1.0);
-    CDRMonitor::get().show(stdout,true);
     return 0;
 }
 

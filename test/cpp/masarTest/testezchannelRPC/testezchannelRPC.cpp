@@ -2,7 +2,6 @@
 
 /* Author: Marty Kraimer */
 
-#include <pv/CDRMonitor.h>
 #include <pv/ezchannelRPC.h>
 
 #include <pv/nttable.h>
@@ -25,12 +24,11 @@ void test()
         EZChannelRPC::shared_pointer(new EZChannelRPC(channelName));
     bool result = channelRPC->connect(1.0);
     if(!result) {dump(channelRPC); return;}
-    PVStructure::shared_pointer pvNameValue
+    NTNameValuePtr ntNameValue
         = NTNameValue::create(true,false,false);
-    NTNameValue ntNameValue(pvNameValue);
-    PVString * pvFunction = ntNameValue.getFunction();
-    PVStringArray *pvNames = ntNameValue.getNames();
-    PVStringArray *pvValues = ntNameValue.getValues();
+    PVStringPtr & pvFunction = ntNameValue->getFunction();
+    PVStringArrayPtr & pvNames = ntNameValue->getNames();
+    PVStringArrayPtr & pvValues = ntNameValue->getValues();
     int n = 1;
 //    String name[] = {String("system")};
 //    String value[] = {String("sr")};
@@ -44,7 +42,7 @@ void test()
 //    pvFunction->put("retrieveServiceConfigs");
 //    pvFunction->put("saveMasar");
     pvFunction->put("retrieveSnapshot");
-    PVStructure::shared_pointer pvResponse = channelRPC->request(pvNameValue,false);
+    PVStructure::shared_pointer pvResponse = channelRPC->request(ntNameValue->getPVStructure(),false);
     if(pvResponse.get()==0) {dump(channelRPC); return;}
     String builder;
     pvResponse->toString(&builder);
@@ -58,5 +56,4 @@ int main(int argc,char *argv[])
     epicsThreadSleep(1.0);
     epicsExitCallAtExits();
     epicsThreadSleep(1.0);
-    CDRMonitor::get().show(stdout,true);
 }

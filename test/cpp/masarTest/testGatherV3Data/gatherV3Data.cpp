@@ -2,7 +2,6 @@
 
 /* Author: Marty Kraimer */
 
-#include <pv/CDRMonitor.h>
 #include <epicsExit.h>
 
 #include <pv/gatherV3Data.h>
@@ -36,9 +35,9 @@ void test()
         printf("calling get ntimes %d\n",ntimes++);
         result = gather->get();
         if(!result) printf("get failed\n%s\n",gather->getMessage().c_str());
-        PVBooleanArray *isConnected = gather->getIsConnected();
+        PVBooleanArrayPtr isConnected = gather->getIsConnected();
         BooleanArrayData data;
-        isConnected->get(0,n,&data);
+        isConnected->get(0,n,data);
         for(int i=0; i<n; i++) {
             if(!data.data[i]) {
                 printf("channel %d not connected\n",i);
@@ -54,7 +53,6 @@ int main(int argc,char *argv[])
     epicsThreadSleep(.5);
     epicsExitCallAtExits();
     epicsThreadSleep(1.0);
-    CDRMonitor::get().show(stdout,true);
     return 0;
 }
 
