@@ -20,10 +20,10 @@
 </h1>
 <!-- Maturity: Working Draft or Request for Comments, or Recommendation, and date. -->
  display how many points in saved data
-<h2 class="nocount">MASAR User Manual, Editors Draft, 26-Mar-2012</h2>
+<h2 class="nocount">MASAR User Manual, Editors Draft, 26-Oct-2012</h2>
 <dl>
   <dt>This version:</dt>
-    <dd><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/userManual.html">userManual_20120326.html</a></dd>
+    <dd><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/userManual.html">userManual_20121026.html</a></dd>
   <dt>Latest version:</dt>
     <dd><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/userManual.html">userManual.html</a></dd>
   <dt>Editors:</dt>
@@ -522,7 +522,16 @@ check your system architecture using for example on linux:
 <h3 id="prepareinstall">Preparation</h3>
 Here we assume you want to install all modules under ~/V4<br>
 
-<pre>$ cd<br>$ mkdir V4<br>$ cd V4<br>$ hg clone http://epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/pvDataCPP<br>$ hg clone http://epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/pvAccessCPP<br>$ hg clone http://epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/pvIOCCPP<br>$ hg clone http://epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/alphaCPP<br><br>$ hg clone http://epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/masarService<br></pre>
+<pre>
+$ cd
+$ mkdir V4
+$ cd V4
+$ hg clone http://epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/pvDataCPP
+$ hg clone http://epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/pvAccessCPP
+$ hg clone http://epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/pvIOCCPP
+$ hg clone http://epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/normativeTypesCPP
+$ hg clone http://epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/masarService
+</pre>
 
 <p>If you are inside an internal network, and have some proxy setting, you might hit a
 connection error during cloning a module like:
@@ -557,7 +566,7 @@ Then
 <pre>$ make</pre>
 
 <h3 id="ntinstall">Install normativeTypes</h3>
-<pre>$ cd ../alphaCPP/normativeTypes/</pre>
+<pre>$ cd ../normativeTypesCPP/</pre>
 Add the following to configure/RELEASE.local 
 <pre>PVDATA=~/V4/pvDataCPP<br>PVACCESS=~/V4/pvAccessCPP<br>EPICS_BASE=/usr/lib/epics</pre>
 Then 
@@ -570,6 +579,15 @@ Add the following to configure/RELEASE.local
 Then 
 <pre>$ make</pre>
 The installation procedure is complete if the above is successful. 
+<br><br>
+If it hits a problem like
+<pre>
+ fatal error: Python.h: No such file or directory
+</pre>
+it means the python devel library is not installed. Please check your system, and install missing library. For example, on a debian dist:
+<pre>
+sudo apt-get install python2.7-dev
+</pre>
 
 <h2 id="runserver">Run MASAR Server </h2>
 

@@ -10,6 +10,8 @@
 #include <memory>
 #include <iostream>
 
+#include <signal.h>
+
 #include <cantProceed.h>
 #include <epicsStdio.h>
 #include <epicsMutex.h>
