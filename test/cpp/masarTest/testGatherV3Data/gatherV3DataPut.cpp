@@ -15,7 +15,7 @@ void test()
 {
     String builder;
     int n = 9;
-    String channelName[n];
+    StringArray channelName(n);
     channelName[0] = "masarExample0000";
     channelName[1] = "masarExample0001";
     channelName[2] = "masarExample0002";
@@ -25,8 +25,7 @@ void test()
     channelName[6] = "masarExampleStringArray";
     channelName[7] = "masarExampleLongArray";
     channelName[8] = "masarExampleDoubleArray";
-    GatherV3Data::shared_pointer gather = GatherV3Data::shared_pointer(
-        new GatherV3Data(channelName,n));
+    GatherV3DataPtr gather(new GatherV3Data(channelName,n));
     bool result = gather->connect(5.0);
     if(!result) {
         printf("connect failed\n%s\n",gather->getMessage().c_str());

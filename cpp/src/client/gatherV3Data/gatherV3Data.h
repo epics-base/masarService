@@ -34,6 +34,8 @@
 
 namespace epics { namespace pvAccess { 
 
+class GatherV3Data;
+typedef std::tr1::shared_ptr<GatherV3Data> GatherV3DataPtr;
 /**
  * Gather an array of V3 scalar double values.
  * The complete set of data is presented as an NTTable.
@@ -53,7 +55,7 @@ public:
      * @param type           The data type. Must be int, double, or string
      */
     GatherV3Data(
-        epics::pvData::String channelNames[],
+        epics::pvData::StringArray const & channelNames,
         int numberChannels);
     /**
      * Destructor
@@ -106,7 +108,7 @@ public:
      * The data is saved as an NTTable with alarm and timeStamp. Get it.
      * @returns the NTTable.
      */
-    epics::pvData::PVStructure::shared_pointer getNTTableStructure();
+    epics::pvData::PVStructurePtr getNTTableStructure();
     /**
      * Get the array of values for each V3 channel.
      * @returns The data array.

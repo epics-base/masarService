@@ -14,14 +14,13 @@ void test()
 {
     String builder;
     int n = 1000;
-    String channelName[n];
+    StringArray channelName(n);
     char name[40];
     for(int i=0; i<n; i++) {
         sprintf(name,"masarExample%4.4d",i);
         channelName[i] = String(name);
     }
-    GatherV3Data::shared_pointer gather = GatherV3Data::shared_pointer(
-        new GatherV3Data(channelName,n));
+    GatherV3DataPtr gather(new GatherV3Data(channelName,n));
     bool result = gather->connect(1.0);
     if(!result) {
         printf("connect failed\n%s\n",gather->getMessage().c_str());

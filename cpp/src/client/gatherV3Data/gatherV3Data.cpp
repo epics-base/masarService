@@ -57,12 +57,7 @@ struct GatherV3DataPvt
     GatherV3DataPvt(
         bool hasFunction,bool hasTimeStamp, bool hasAlarm,
         StringArray const & valueNames,
-        FieldConstPtrArray const &valueFields)
-    : nttable(NTTable::create(
-          hasFunction,hasTimeStamp,hasAlarm,
-          valueNames,valueFields)),
-      pvStructure(nttable->getPVStructure())
-    {}
+        FieldConstPtrArray const &valueFields);
     ~GatherV3DataPvt(){}
     Mutex mutex;
     Event event;
@@ -96,13 +91,22 @@ struct GatherV3DataPvt
     epicsThreadId threadId;
 };
 
+GatherV3DataPvt::GatherV3DataPvt(
+    bool hasFunction,bool hasTimeStamp, bool hasAlarm,
+    StringArray const & valueNames,
+    FieldConstPtrArray const &valueFields)
+: nttable(NTTable::create(
+       hasFunction,hasTimeStamp,hasAlarm,
+       valueNames,valueFields))
+{
+   pvStructure = nttable->getPVStructure();
+}
+
 // concatenate a new message onto message
 static void messageCat(
     GatherV3DataPvt *pvt,const char *cafunc,int castatus,int channel)
 {
-    StringArrayData data;
-    pvt->pvchannelName->get(0,pvt->numberChannels,data);
-    String name = data.data[channel];
+    String name = pvt->pvchannelName->get()[channel];
     String buf = String(cafunc);
     buf += " ";
     buf += String(ca_message(castatus));
@@ -119,15 +123,15 @@ static void connectionCallback(struct connection_handler_args args)
     if(pvt->state==destroying) return;
     int offset = id->offset;
 
-    BooleanArrayData data;
-    pvt->pvisConnected->get(0,pvt->numberChannels,data);
-    bool isConnected = data.data[offset];
+    boolean *data = pvt->pvisConnected->get();
+    bool isConnected = data[offset];
     bool newState = ((ca_state(chid)==cs_conn) ? true : false);
     if(isConnected==newState) {
         printf("gatherV3Data connectionCallback."
                " Why extra connection callback?\n");
         return;
     }
+    data[offset] = newState;
     Lock xx(pvt->mutex);
     if(newState) {
         int dbrType = ca_field_type(chid);
@@ -148,13 +152,9 @@ static void connectionCallback(struct connection_handler_args args)
                 ca_name(chid),dbrType);
             id->requestType = requestString; break;
         }
-        IntArrayData data;
-        pvt->pvDBRType->get(0,pvt->numberChannels,data);
-        IntArray & pvalue = data.data;
+        int32 *pvalue = pvt->pvDBRType->get();
         pvalue[offset] = dbrType;
-        BooleanArrayData booldata;
-        pvt->pvisArray->get(0,pvt->numberChannels,booldata);
-        BooleanArray & isArray = booldata.data;
+        boolean *isArray =  pvt->pvisArray->get();
         if(numberElements==1) {
             isArray[offset] = false;
         } else {
@@ -193,63 +193,48 @@ static void getCallback ( struct event_handler_args args )
     id->severity = pTime->severity;
     id->status = pTime->status;
     id->stamp = pTime->stamp;
-    DoubleArrayData doubledata;
-    StringArrayData stringdata;
-    LongArrayData longdata;
-    IntArrayData intdata;
-    BooleanArrayData booldata;
-    StructureArrayData structdata;
-    pvt->pvisArray->get(0,pvt->numberChannels,booldata);
-    boolean isArray = booldata.data[offset];
+    boolean isArray = pvt->pvisArray->get()[offset];
     if(!isArray) {
         if(id->requestType==requestDouble) {
             const struct dbr_time_double * pTD =
                  ( const struct dbr_time_double * ) args.dbr;
             // set double value
-            pvt->pvdoubleValue->get(0,pvt->numberChannels,doubledata);
-            double * pvalue = get(doubledata.data);
+            double * pvalue = pvt->pvdoubleValue->get();
             pvalue[offset] = pTD->value;
     
             // convert double value to string
-            pvt->pvstringValue->get(0,pvt->numberChannels,stringdata);
+            String * pstring = pvt->pvstringValue->get();
             char buffer[20];
             sprintf(buffer,"%e",pTD->value);
-            stringdata.data[offset] = String(buffer);
+            pstring[offset] = String(buffer);
     
             // put the integer part to keep at least some information.
-            pvt->pvlongValue->get(0,pvt->numberChannels,longdata);
-            int64 * plvalue = get(longdata.data);
+            int64 * plvalue = pvt->pvlongValue->get();
             plvalue[offset] = pTD->value;
         } else if(id->requestType==requestLong) {
             const struct dbr_time_long * pTL =
                  ( const struct dbr_time_long * ) args.dbr;
             // set long value as 64-bit
-            pvt->pvlongValue->get(0,pvt->numberChannels,longdata);
-            int64 * pvalue = get(longdata.data);
+            int64 * pvalue = pvt->pvlongValue->get();
             pvalue[offset] = pTL->value;
     
             // put 64-bit long to a double array
-            pvt->pvdoubleValue->get(0,pvt->numberChannels,doubledata);
-            doubledata.data[offset] = pTL->value;
+            pvt->pvdoubleValue->get()[offset] = pTL->value;
     
             // convert long value to a string
-            pvt->pvstringValue->get(0,pvt->numberChannels,stringdata);
             char buffer[20];
             sprintf(buffer,"%d",pTL->value);
-            stringdata.data[offset] = String(buffer);
+            pvt->pvstringValue->get()[offset] = String(buffer);
         } else if(id->requestType==requestString) {
             const struct dbr_time_string * pTS =
                  ( const struct dbr_time_string * ) args.dbr;
             // set to string array only
-            pvt->pvstringValue->get(0,pvt->numberChannels,stringdata);
-            String * pvalue = get(stringdata.data);
-            pvalue[offset] = String(pTS->value);
+            pvt->pvstringValue->get()[offset] = String(pTS->value);
         } else {
             throw std::logic_error("unknown DBR_TYPE");
         }
     } else {
-        pvt->pvarrayValue->get(0,pvt->numberChannels,structdata);
-        PVStructurePtr pvStructure = structdata.data[offset];
+        PVStructurePtr pvStructure = pvt->pvarrayValue->get()[offset];
         PVFieldPtrArray pvfields = pvStructure->getPVFields();
         PVStringArrayPtr pvstringarray = static_pointer_cast<PVStringArray>(pvfields[0]);
         PVDoubleArrayPtr pvdoublearray = static_pointer_cast<PVDoubleArray>(pvfields[1]);
@@ -259,24 +244,21 @@ static void getCallback ( struct event_handler_args args )
                  ( const struct dbr_time_double * ) args.dbr;
             // set double value
             pvdoublearray->setLength(numberElements);
-            pvdoublearray->get(0,numberElements,doubledata);
-            double * pvalue = get(doubledata.data);
+            double * pvalue = pvdoublearray->get();
             memcpy(pvalue,&pTD->value,numberElements*sizeof(double));
         } else if(id->requestType==requestLong) {
             const struct dbr_time_long * pTL =
                  ( const struct dbr_time_long * ) args.dbr;
             // set long value as 32-bit
             pvintarray->setLength(numberElements);
-            pvintarray->get(0,numberElements,intdata);
-            int32 * pvalue = get(intdata.data);
+            int32 * pvalue = pvintarray->get();
             memcpy(pvalue,&pTL->value,numberElements*sizeof(int32));
         } else if(id->requestType==requestString) {
             const struct dbr_time_string * pTS =
                  ( const struct dbr_time_string * ) args.dbr;
             // set to string array only
             pvstringarray->setLength(numberElements);
-            pvstringarray->get(0,numberElements,stringdata);
-            String * pvalue = get(stringdata.data);
+            String * pvalue = pvstringarray->get();
             const char *pfrom = pTS->value;
             for(unsigned long i=0; i<numberElements; i++) {
                 pvalue[i] = String(pfrom);
@@ -314,28 +296,21 @@ static void putCallback ( struct event_handler_args args )
 }
 
 GatherV3Data::GatherV3Data(
-    String channelNames[],
+    StringArray const & channelNames,
     int numberChannels)
 : pvt(0)
 {
-    IntArrayData intdata;
-    StringArrayData strdata;
-    LongArrayData longdata;
-    DoubleArrayData doubledata;
-    BooleanArrayData booldata;
-    StructureArrayData structdata;
-
     FieldCreatePtr fieldCreate = getFieldCreate();
-    int naf = 3;
+    size_t naf = 3;
     StringArray names;
     names.reserve(naf);
     FieldConstPtrArray arrfields;
     arrfields.reserve(naf);
-    names.push_back("doubleValue");
-    arrfields.push_back(fieldCreate->createScalarArray(pvString));
-    names.push_back("intValue");
-    arrfields.push_back(fieldCreate->createScalarArray(pvDouble));
     names.push_back("stringValue");
+    names.push_back("doubleValue");
+    names.push_back("intValue");
+    arrfields.push_back(fieldCreate->createScalarArray(pvString));
+    arrfields.push_back(fieldCreate->createScalarArray(pvDouble));
     arrfields.push_back(fieldCreate->createScalarArray(pvInt));
     StructureConstPtr arrStructure = fieldCreate->createStructure(
          names,arrfields);
@@ -381,6 +356,7 @@ GatherV3Data::GatherV3Data(
     fields.push_back(fieldCreate->createScalarArray(pvInt));
     fields.push_back(fieldCreate->createScalarArray(pvInt));
     fields.push_back(fieldCreate->createScalarArray(pvString));
+    fields.push_back(fieldCreate->createScalarArray(pvBoolean));
     fields.push_back(fieldCreate->createStructureArray(arrStructure));
     
 
@@ -417,123 +393,112 @@ GatherV3Data::GatherV3Data(
         pvt->nttable->getPVField(1));
     pvt->pvstringValue->setCapacity(numberChannels);
     pvt->pvstringValue->setCapacityMutable(false);
-    pvt->pvstringValue->get(0,numberChannels,strdata);
-    StringArray & pstrings = strdata.data;
-    for (int i=0; i<numberChannels; i++) pstrings[i] = String("0.0");
     pvt->pvstringValue->setLength(numberChannels);
+    String *pstrings = pvt->pvstringValue->get();
+    for (int i=0; i<numberChannels; i++) {
+         pstrings[i] = String("0.0");
+    }
 
     pvt->pvdoubleValue = static_pointer_cast<PVDoubleArray>(
         pvt->nttable->getPVField(2));
     pvt->pvdoubleValue->setCapacity(numberChannels);
     pvt->pvdoubleValue->setCapacityMutable(false);
-    pvt->pvdoubleValue->get(0,numberChannels,doubledata);
-    DoubleArray &pdouble = doubledata.data;
-    for (int i=0; i<numberChannels; i++) pdouble[i] = 0.0;
     pvt->pvdoubleValue->setLength(numberChannels);
+    double *pdouble = pvt->pvdoubleValue->get();
+    for (int i=0; i<numberChannels; i++) pdouble[i] = 0.0;
 
     pvt->pvlongValue = static_pointer_cast<PVLongArray>(
         pvt->nttable->getPVField(3));
     pvt->pvlongValue->setCapacity(numberChannels);
     pvt->pvlongValue->setCapacityMutable(false);
-    pvt->pvlongValue->get(0,numberChannels,longdata);
-    LongArray &plong = longdata.data;
-    for (int i=0; i<numberChannels; i++) plong[i] = 0.0;
     pvt->pvlongValue->setLength(numberChannels);
+    int64 * plong = pvt->pvlongValue->get();
+    for (int i=0; i<numberChannels; i++) plong[i] = 0.0;
 
     pvt->pvDBRType = static_pointer_cast<PVIntArray>(
         pvt->nttable->getPVField(4));
     pvt->pvDBRType->setCapacity(numberChannels);
     pvt->pvDBRType->setCapacityMutable(false);
-    pvt->pvDBRType->get(0,numberChannels,intdata);
-    IntArray &pDBRType  = intdata.data;
-    for (int i=0; i<numberChannels; i++) pDBRType[i] = DBF_NO_ACCESS;
     pvt->pvDBRType->setLength(numberChannels);
+    int32 *pDBRType = pvt->pvDBRType->get();
+    for (int i=0; i<numberChannels; i++) pDBRType[i] = DBF_NO_ACCESS;
 
     pvt->pvisConnected = static_pointer_cast<PVBooleanArray>(
         pvt->nttable->getPVField(5));
     pvt->pvisConnected->setCapacity(numberChannels);
     pvt->pvisConnected->setCapacityMutable(false);
-    pvt->pvisConnected->get(0,numberChannels,booldata);
-    BooleanArray &pbool = booldata.data;
-    for (int i=0; i<numberChannels; i++) pbool[i] = false;
     pvt->pvisConnected->setLength(numberChannels);
+    boolean *pbool = pvt->pvisConnected->get();
+    for (int i=0; i<numberChannels; i++) pbool[i] = false;
 
     pvt->pvsecondsPastEpoch = static_pointer_cast<PVLongArray>(
         pvt->nttable->getPVField(6));
     pvt->pvsecondsPastEpoch->setCapacity(numberChannels);
     pvt->pvsecondsPastEpoch->setCapacityMutable(false);
-    pvt->pvsecondsPastEpoch->get(0,numberChannels,longdata);
-    LongArray & psecondsPastEpoch = longdata.data;
-    for (int i=0; i<numberChannels; i++) psecondsPastEpoch[i] = 0;
     pvt->pvsecondsPastEpoch->setLength(numberChannels);
+    int64 * psecondsPastEpoch = pvt->pvsecondsPastEpoch->get();
+    for (int i=0; i<numberChannels; i++) psecondsPastEpoch[i] = 0;
 
     pvt->pvnanoSeconds = static_pointer_cast<PVIntArray>(
         pvt->nttable->getPVField(7));
     pvt->pvnanoSeconds->setCapacity(numberChannels);
     pvt->pvnanoSeconds->setCapacityMutable(false);
-    pvt->pvnanoSeconds->get(0,numberChannels,intdata);
-    IntArray & pnanoSeconds = intdata.data;
-    for (int i=0; i<numberChannels; i++) pnanoSeconds[i] = 0;
     pvt->pvnanoSeconds->setLength(numberChannels);
+    int32* pnanoSeconds = pvt->pvnanoSeconds->get();
+    for (int i=0; i<numberChannels; i++) pnanoSeconds[i] = 0;
 
     pvt->pvtimeStampTag = static_pointer_cast<PVIntArray>(
         pvt->nttable->getPVField(8));
     pvt->pvtimeStampTag->setCapacity(numberChannels);
     pvt->pvtimeStampTag->setCapacityMutable(false);
-    pvt->pvtimeStampTag->get(0,numberChannels,intdata);
-    IntArray & ptimeStampTag = intdata.data;
-    for (int i=0; i<numberChannels; i++) ptimeStampTag[i] = 0;
     pvt->pvtimeStampTag->setLength(numberChannels);
+    int32 *ptimeStampTag = pvt->pvtimeStampTag->get();
+    for (int i=0; i<numberChannels; i++) ptimeStampTag[i] = 0;
 
     pvt->pvalarmSeverity = static_pointer_cast<PVIntArray>(
         pvt->nttable->getPVField(9));
     pvt->pvalarmSeverity->setCapacity(numberChannels);
     pvt->pvalarmSeverity->setCapacityMutable(false);
-    pvt->pvalarmSeverity->get(0,numberChannels,intdata);
-    IntArray & palarmSeverity = intdata.data;
-    for (int i=0; i<numberChannels; i++) palarmSeverity[i] = INVALID_ALARM;
     pvt->pvalarmSeverity->setLength(numberChannels);
+    int32 *palarmSeverity = pvt->pvalarmSeverity->get();
+    for (int i=0; i<numberChannels; i++) palarmSeverity[i] = INVALID_ALARM;
 
     pvt->pvalarmStatus = static_pointer_cast<PVIntArray>(
         pvt->nttable->getPVField(10));
     pvt->pvalarmStatus->setCapacity(numberChannels);
     pvt->pvalarmStatus->setCapacityMutable(false);
-    pvt->pvalarmStatus->get(0,numberChannels,intdata);
-    IntArray & palarmStatus = intdata.data;
-    for (int i=0; i<numberChannels; i++) palarmStatus[i] = epicsAlarmComm;
     pvt->pvalarmStatus->setLength(numberChannels);
+    int32 * palarmStatus = pvt->pvalarmStatus->get();
+    for (int i=0; i<numberChannels; i++) palarmStatus[i] = epicsAlarmComm;
 
     pvt->pvalarmMessage = static_pointer_cast<PVStringArray>(
         pvt->nttable->getPVField(11));
     pvt->pvalarmMessage->setCapacity(numberChannels);
     pvt->pvalarmMessage->setCapacityMutable(false);
-    pvt->pvalarmMessage->get(0,numberChannels,strdata);
-    StringArray & palarmMessage = strdata.data;
-    for (int i=0; i<numberChannels; i++) palarmMessage[i] = String();
     pvt->pvalarmMessage->setLength(numberChannels);
+    String * palarmMessage = pvt->pvalarmMessage->get();
+    for (int i=0; i<numberChannels; i++) palarmMessage[i] = String();
 
     pvt->pvisArray = static_pointer_cast<PVBooleanArray>(
         pvt->nttable->getPVField(12));
     pvt->pvisArray->setCapacity(numberChannels);
     pvt->pvisArray->setCapacityMutable(false);
-    pvt->pvisArray->get(0,numberChannels,booldata);
-    pbool = booldata.data;
-    for (int i=0; i<numberChannels; i++) pbool[i] = false;
     pvt->pvisArray->setLength(numberChannels);
+    pbool = pvt->pvisArray->get();
+    for (int i=0; i<numberChannels; i++) pbool[i] = false;
 
     pvt->pvarrayValue = static_pointer_cast<PVStructureArray>(
         pvt->nttable->getPVField(13));
     pvt->pvarrayValue->setCapacity(numberChannels);
     pvt->pvarrayValue->setCapacityMutable(false);
-    pvt->pvarrayValue->get(0,numberChannels,structdata);
-    PVStructurePtrArray & ppPVStructure = structdata.data;
+    pvt->pvarrayValue->setLength(numberChannels);
+    PVStructurePtr *ppPVStructure = pvt->pvarrayValue->get();
     StructureConstPtr pstructure
         = pvt->pvarrayValue->getStructureArray()->getStructure();
     PVDataCreatePtr pvDataCreate = getPVDataCreate();
     for (int i=0; i<numberChannels; i++) {
         ppPVStructure[i] = pvDataCreate->createPVStructure(pstructure);
     }
-    pvt->pvarrayValue->setLength(numberChannels);
 
     pvt->state = idle;
     pvt->numberConnected = 0;
@@ -566,12 +531,8 @@ bool GatherV3Data::connect(double timeOut)
     pvt->requestOK = true;
     pvt->event.tryWait();
     int numberChannels = pvt->numberChannels;
-    BooleanArrayData bdata;
-    pvt->pvisConnected->get(0,numberChannels,bdata);
-    BooleanArray &isConnected = bdata.data;
-    StringArrayData sdata;
-    pvt->pvchannelName->get(0,numberChannels,sdata);
-    StringArray &channelNames = sdata.data;
+    boolean* isConnected = pvt->pvisConnected->get();
+    String *channelNames = pvt->pvchannelName->get();
     for(int i=0; i< numberChannels; i++) {
         isConnected[i] = false;
         const char * channelName = channelNames[i].c_str();
@@ -696,22 +657,12 @@ bool GatherV3Data::get()
         pvt->alarm.setStatus(clientStatus);
     }
     int numberChannels = pvt->numberChannels;
-    BooleanArrayData bdata;
-    pvt->pvisConnected->get(0,numberChannels,bdata);
-    BooleanArray &isConnected = bdata.data;
-    LongArrayData ldata;
-    pvt->pvsecondsPastEpoch->get(0,numberChannels,ldata);
-    LongArray &secondsPastEpoch = ldata.data;
-    IntArrayData idata;
-    pvt->pvnanoSeconds->get(0,numberChannels,idata);
-    IntArray &nanoSeconds = idata.data;
-    pvt->pvalarmSeverity->get(0,numberChannels,idata);
-    IntArray &alarmSeverity = idata.data;
-    pvt->pvalarmStatus->get(0,numberChannels,idata);
-    IntArray &alarmStatus = idata.data;
-    StringArrayData sdata;
-    pvt->pvalarmMessage->get(0,pvt->numberChannels,sdata);
-    StringArray &alarmMessage = sdata.data;
+    boolean * isConnected = pvt->pvisConnected->get();
+    int64 * secondsPastEpoch = pvt->pvsecondsPastEpoch->get();
+    int32 * nanoSeconds = pvt->pvnanoSeconds->get();
+    int32 * alarmSeverity = pvt->pvalarmSeverity->get();
+    int32 * alarmStatus = pvt->pvalarmStatus->get();
+    String * alarmMessage = pvt->pvalarmMessage->get();
     for(int i=0; i<numberChannels; i++) {
         ChannelID *pID = pvt->apchannelID[i];
         isConnected[i] = pID->getIsConnected;
@@ -752,21 +703,11 @@ bool GatherV3Data::put()
     pvt->alarm.setMessage("");
     pvt->alarm.setSeverity(noAlarm);
     pvt->alarm.setStatus(noStatus);
-    LongArrayData ldata;
-    pvt->pvlongValue->get(0,pvt->numberChannels,ldata);
-    LongArray & plvalue = ldata.data;
-    DoubleArrayData ddata;
-    pvt->pvdoubleValue->get(0,pvt->numberChannels,ddata);
-    DoubleArray & pdvalue = ddata.data;
-    StringArrayData sdata;
-    pvt->pvstringValue->get(0,pvt->numberChannels,sdata);
-    StringArray & psvalue = sdata.data;
-    StructureArrayData structdata;
-    pvt->pvarrayValue->get(0,pvt->numberChannels,structdata);
-    PVStructurePtrArray &parrayvalue = structdata.data;
-    BooleanArrayData booldata;
-    pvt->pvisArray->get(0,pvt->numberChannels,booldata);
-    BooleanArray &isArray = booldata.data;
+    int64 * plvalue = pvt->pvlongValue->get();
+    double * pdvalue = pvt->pvdoubleValue->get();
+    String * psvalue = pvt->pvstringValue->get();
+    PVStructurePtr * parrayvalue = pvt->pvarrayValue->get();
+    boolean * isArray = pvt->pvisArray->get();
     for(int i=0; i< pvt->numberChannels; i++) {
         ChannelID *channelId = pvt->apchannelID[i];
         chid theChid = channelId->theChid;
@@ -783,9 +724,7 @@ bool GatherV3Data::put()
                     PVIntArrayPtr pvvalue = static_pointer_cast<PVIntArray>(
                          parrayvalue[i]->getScalarArrayField("intValue",pvInt));
                     count = pvvalue->getLength();
-                    IntArrayData idata;
-                    pvvalue->get(0,count,idata);
-                    pdata = &idata.data[0];
+                    pdata = pvvalue->get();
                 }
                 break;
                 case requestDouble: {
@@ -793,8 +732,7 @@ bool GatherV3Data::put()
                     PVDoubleArrayPtr pvvalue = static_pointer_cast<PVDoubleArray>(
                          parrayvalue[i]->getScalarArrayField("doubleValue",pvDouble));
                     count = pvvalue->getLength();
-                    pvvalue->get(0,count,ddata);
-                    pdata = &ddata.data[0];
+                    pdata = pvvalue->get();
                 }
                 break;
                 case requestString: {
@@ -802,7 +740,7 @@ bool GatherV3Data::put()
                     PVStringArrayPtr pvvalue = static_pointer_cast<PVStringArray>(
                          parrayvalue[i]->getScalarArrayField("stringValue",pvString));
                     int length = pvvalue->getLength();
-                    pvvalue->get(0,length,sdata);
+                    String * values = pvvalue->get();
                     sizebuf = length*MAX_STRING_SIZE;
                     count = length;
                     buffer = new char[sizebuf];
@@ -810,7 +748,7 @@ bool GatherV3Data::put()
                     pdata = buffer;
                     char *p = buffer;
                     for(int j=0; j< length; j++) {
-                        String value = sdata.data[j];
+                        String value = values[j];
                         const char *pfrom = value.c_str();
                         int num = value.length();
                         if(num>=MAX_STRING_SIZE) num = MAX_STRING_SIZE-1;

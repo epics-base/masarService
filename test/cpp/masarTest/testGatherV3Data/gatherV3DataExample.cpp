@@ -11,11 +11,10 @@ using namespace epics::pvData;
 using namespace epics::pvAccess;
 using std::tr1::static_pointer_cast;
 
-NTTable::shared_pointer getLiveMachine(
-        String channelName [], int numberChannels)
+NTTablePtr getLiveMachine(
+        StringArray const & channelName,int numberChannels )
 {
-    GatherV3Data::shared_pointer gather = GatherV3Data::shared_pointer(
-        new GatherV3Data(channelName,numberChannels));
+    GatherV3DataPtr gather(new GatherV3Data(channelName,numberChannels));
 
     // wait one second, which is a magic number for now.
     // The waiting time might be removed later after stability test.
@@ -48,7 +47,7 @@ void test()
 {
     String builder;
     int n = 9;
-    String channelName[n];
+    StringArray channelName(n);
     channelName[0] = "masarExample0000";
     channelName[1] = "masarExample0001";
     channelName[2] = "masarExample0002";
@@ -59,7 +58,7 @@ void test()
     channelName[7] = "masarExampleLongArray";
     channelName[8] = "masarExampleDoubleArray";
 
-    NTTable::shared_pointer pvt = getLiveMachine(channelName,n);
+    NTTablePtr pvt = getLiveMachine(channelName,n);
     PVBooleanArrayPtr isConnected = static_pointer_cast<PVBooleanArray>(pvt->getPVField(5));
     builder.clear();
     isConnected->toString(&builder);
