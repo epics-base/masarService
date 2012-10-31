@@ -206,10 +206,11 @@ static PyObject * _setSeverity(PyObject *willBeNull, PyObject *args)
            "first arg must be return from _init");
         return NULL;
     }
-    size_t nchoices = severityCount;
+    StringArrayPtr choiceArrayPtr = AlarmSeverityFunc::getSeverityNames();
+    size_t nchoices = choiceArrayPtr.get()->size();
     AlarmPvt *pvt = static_cast<AlarmPvt *>(pvoid);
     for(size_t i=0;i<nchoices; i++) {
-        String choice = (*AlarmSeverityFunc::getSeverityNames())[i];
+        String choice = (*choiceArrayPtr)[i];
         if(choice.compare(buffer)==0) {
             pvt->alarm.setSeverity(AlarmSeverityFunc::getSeverity(i));
             Py_INCREF(Py_None);
@@ -259,10 +260,11 @@ static PyObject * _setStatus(PyObject *willBeNull, PyObject *args)
            "first arg must be return from _init");
         return NULL;
     }
-    size_t nchoices = statusCount;
+    StringArrayPtr choiceArrayPtr = AlarmStatusFunc::getStatusNames();
+    size_t nchoices = choiceArrayPtr.get()->size();
     AlarmPvt *pvt = static_cast<AlarmPvt *>(pvoid);
     for(size_t i=0;i<nchoices; i++) {
-        String choice = (*AlarmStatusFunc::getStatusNames())[i];
+        String choice = (*choiceArrayPtr)[i];
         if(choice.compare(buffer)==0) {
             pvt->alarm.setStatus(AlarmStatusFunc::getStatus(i));
             Py_INCREF(Py_None);
@@ -290,7 +292,7 @@ static PyObject * _getSeverityChoices(PyObject *willBeNull, PyObject *args)
         return NULL;
     }
     StringArrayPtr choices = AlarmSeverityFunc::getSeverityNames();
-    if(severityCount!=5) {
+    if(choices.get()->size()!=5) {
         throw std::logic_error("number severity choices not 5");
     }
     return Py_BuildValue(
@@ -319,7 +321,7 @@ static PyObject * _getStatusChoices(PyObject *willBeNull, PyObject *args)
         return NULL;
     }
     StringArrayPtr choices = AlarmStatusFunc::getStatusNames();
-    if(statusCount!=8) {
+    if(choices.get()->size()!=8) {
         throw std::logic_error("number status choices not 8");
     }
     return Py_BuildValue(

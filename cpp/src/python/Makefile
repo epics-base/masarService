@@ -12,7 +12,7 @@ LIBSRCS += gatherV3DataPy.cpp
 
 LIBRARY = masarPy
 
-masarPy_LIBS += gather nt pvAccess pvData Com
+masarPy_LIBS += gather nt pvIOC pvAccess pvData Com
 
 include $(TOP)/configure/RULES
 
