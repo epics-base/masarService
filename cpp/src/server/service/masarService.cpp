@@ -103,12 +103,9 @@ void MasarService::request(
     }
     PVStringArrayPtr & pvNames = ntNameValue->getNames();
     PVStringArrayPtr & pvValues = ntNameValue->getValues();
-    StringArrayData data;
+    StringArray const &names = pvNames->getVector();
+    StringArray const &values = pvValues->getVector();
     int num = pvNames->getLength();
-    pvNames->get(0,num,data);
-    String *names = get(data.data);
-    pvValues->get(0,num,data);
-    String *values = get(data.data);
     PVStructure::shared_pointer result = dslRdb->request(
         functionName,num,names,values);
     channelRPCRequester->requestDone(Status::Ok,result);

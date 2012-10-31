@@ -1,4 +1,4 @@
-/* dsl.cpp */
+/* dslPY.cpp */
 /**
  * Copyright - See the COPYRIGHT that is included with this distribution.
  * This code is distributed subject to a Software License Agreement found
@@ -27,6 +27,9 @@ using namespace epics::pvData;
 using namespace epics::pvAccess;
 using std::tr1::static_pointer_cast;
 
+class DSL_RDB;
+typedef std::tr1::shared_ptr<DSL_RDB> DSL_RDBPtr;
+
 class DSL_RDB :
     public DSL,
     public std::tr1::enable_shared_from_this<DSL_RDB>
@@ -36,11 +39,11 @@ public:
     DSL_RDB();
     virtual ~DSL_RDB();
     virtual void destroy();
-    virtual PVStructure::shared_pointer request(
-        String functionName,int num,String *names,String *values);
+    virtual PVStructurePtr request(
+        String functionName,int num,StringArray const &names,StringArray const &values);
     bool init();
 private:
-    DSL_RDB::shared_pointer getPtrSelf()
+    DSL_RDBPtr getPtrSelf()
     {
         return shared_from_this();
     }
@@ -147,7 +150,7 @@ static NTTablePtr noDataEnetry(std::string message) {
 
 /* old
     FieldConstPtr fields = fieldCreate->createScalarArray("status",pvBoolean);
-    PVStructure::shared_pointer pvStructure = NTTable::create(
+    PVStructurePtr pvStructure = NTTable::create(
         false,true,true,1, &fields);
 
     NTTable ntTable(pvStructure);
@@ -685,10 +688,10 @@ static NTTablePtr createResult(
     return pvStructure;
 }
 
-static NTTablePtr getLiveMachine(String channelName [],
+static NTTablePtr getLiveMachine(StringArray const & channelName,
                                  int numberChannels, String * message)
 {
-    GatherV3Data::shared_pointer gather = GatherV3Data::shared_pointer(
+    GatherV3DataPtr gather = GatherV3DataPtr(
         new GatherV3Data(channelName,numberChannels));
 
     // wait one second, which is a magic number for now.
@@ -710,8 +713,8 @@ static NTTablePtr getLiveMachine(String channelName [],
     return livedata;
 }
 
-PVStructure::shared_pointer DSL_RDB::request(
-    String functionName,int num,String *names,String *values)
+PVStructurePtr DSL_RDB::request(
+    String functionName,int num,StringArray const & names,StringArray const &values)
 {
     if (functionName.compare("getLiveMachine")==0) {
         String message;
@@ -769,7 +772,7 @@ PVStructure::shared_pointer DSL_RDB::request(
         } else {
             Py_ssize_t list_len = PyList_Size(pchannelnames);
 
-            String channames[list_len];
+            StringArray channames(list_len);
             PyObject * name;
             for (ssize_t i = 0; i < list_len; i ++) {
                 name = PyList_GetItem(pchannelnames, i);
@@ -816,15 +819,11 @@ PVStructure::shared_pointer DSL_RDB::request(
     return pvReturn->getPVStructure();
 }
 
-DSL::shared_pointer createDSL_RDB()
+DSLPtr createDSL_RDB()
 {
-   DSL_RDB *dsl = new DSL_RDB();
-   if(!dsl->init()) {
-        delete dsl;
-        return DSL_RDB::shared_pointer();
-        
-   }
-   return DSL_RDB::shared_pointer(dsl);
+   DSL_RDBPtr dsl = DSL_RDBPtr(new DSL_RDB());
+   if(!dsl->init()) return DSL_RDBPtr();
+   return DSL_RDBPtr(dsl);
 }
 
 }}

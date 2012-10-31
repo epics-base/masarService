@@ -95,8 +95,8 @@ static PyObject * _str(PyObject *willBeNull, PyObject *args)
     AlarmPvt *pvt = static_cast<AlarmPvt *>(pvoid);
     char buffer[256];
     String message = pvt->alarm.getMessage();
-    String severity = AlarmSeverityFunc::getSeverityNames()[pvt->alarm.getSeverity()];
-    String status = AlarmStatusFunc::getStatusNames()[pvt->alarm.getStatus()];
+    String severity = (*AlarmSeverityFunc::getSeverityNames())[pvt->alarm.getSeverity()];
+    String status = (*AlarmStatusFunc::getStatusNames())[pvt->alarm.getStatus()];
 
     sprintf(buffer,"message %s severity %s status %s",
         message.c_str(),severity.c_str(),status.c_str());
@@ -184,7 +184,7 @@ static PyObject * _getSeverity(PyObject *willBeNull, PyObject *args)
         return NULL;
     }
     AlarmPvt *pvt = static_cast<AlarmPvt *>(pvoid);
-    String severity = AlarmSeverityFunc::getSeverityNames()[pvt->alarm.getSeverity()];
+    String severity = (*AlarmSeverityFunc::getSeverityNames())[pvt->alarm.getSeverity()];
     return Py_BuildValue("s",severity.c_str());
 }
 
@@ -209,7 +209,7 @@ static PyObject * _setSeverity(PyObject *willBeNull, PyObject *args)
     size_t nchoices = severityCount;
     AlarmPvt *pvt = static_cast<AlarmPvt *>(pvoid);
     for(size_t i=0;i<nchoices; i++) {
-        String choice = AlarmSeverityFunc::getSeverityNames()[i];
+        String choice = (*AlarmSeverityFunc::getSeverityNames())[i];
         if(choice.compare(buffer)==0) {
             pvt->alarm.setSeverity(AlarmSeverityFunc::getSeverity(i));
             Py_INCREF(Py_None);
@@ -237,7 +237,7 @@ static PyObject * _getStatus(PyObject *willBeNull, PyObject *args)
         return NULL;
     }
     AlarmPvt *pvt = static_cast<AlarmPvt *>(pvoid);
-    String severity = AlarmStatusFunc::getStatusNames()[pvt->alarm.getStatus()];
+    String severity = (*AlarmStatusFunc::getStatusNames())[pvt->alarm.getStatus()];
     return Py_BuildValue("s",severity.c_str());
 }
 
@@ -262,7 +262,7 @@ static PyObject * _setStatus(PyObject *willBeNull, PyObject *args)
     size_t nchoices = statusCount;
     AlarmPvt *pvt = static_cast<AlarmPvt *>(pvoid);
     for(size_t i=0;i<nchoices; i++) {
-        String choice = AlarmStatusFunc::getStatusNames()[i];
+        String choice = (*AlarmStatusFunc::getStatusNames())[i];
         if(choice.compare(buffer)==0) {
             pvt->alarm.setStatus(AlarmStatusFunc::getStatus(i));
             Py_INCREF(Py_None);
@@ -289,19 +289,17 @@ static PyObject * _getSeverityChoices(PyObject *willBeNull, PyObject *args)
            "first arg must be return from _init");
         return NULL;
     }
-    AlarmPvt *pvt = static_cast<AlarmPvt *>(pvoid);
-    StringArray choices = AlarmSeverityFunc::getSeverityNames();
+    StringArrayPtr choices = AlarmSeverityFunc::getSeverityNames();
     if(severityCount!=5) {
         throw std::logic_error("number severity choices not 5");
     }
-    String severity = AlarmSeverityFunc::getSeverityNames()[pvt->alarm.getSeverity()];
     return Py_BuildValue(
         "(s,s,s,s,s)",
-        choices[0].c_str(),
-        choices[1].c_str(),
-        choices[2].c_str(),
-        choices[3].c_str(),
-        choices[4].c_str());
+        (*choices)[0].c_str(),
+        (*choices)[1].c_str(),
+        (*choices)[2].c_str(),
+        (*choices)[3].c_str(),
+        (*choices)[4].c_str());
 }
 
 static PyObject * _getStatusChoices(PyObject *willBeNull, PyObject *args)
@@ -320,22 +318,20 @@ static PyObject * _getStatusChoices(PyObject *willBeNull, PyObject *args)
            "first arg must be return from _init");
         return NULL;
     }
-    AlarmPvt *pvt = static_cast<AlarmPvt *>(pvoid);
-    StringArray choices = AlarmStatusFunc::getStatusNames();
+    StringArrayPtr choices = AlarmStatusFunc::getStatusNames();
     if(statusCount!=8) {
         throw std::logic_error("number status choices not 8");
     }
-    String severity = AlarmStatusFunc::getStatusNames()[pvt->alarm.getStatus()];
     return Py_BuildValue(
         "(s,s,s,s,s,s,s,s)",
-        choices[0].c_str(),
-        choices[1].c_str(),
-        choices[2].c_str(),
-        choices[3].c_str(),
-        choices[4].c_str(),
-        choices[5].c_str(),
-        choices[6].c_str(),
-        choices[7].c_str());
+        (*choices)[0].c_str(),
+        (*choices)[1].c_str(),
+        (*choices)[2].c_str(),
+        (*choices)[3].c_str(),
+        (*choices)[4].c_str(),
+        (*choices)[5].c_str(),
+        (*choices)[6].c_str(),
+        (*choices)[7].c_str());
 }
 
 static char _initDoc[] = "_init alarmPy.";

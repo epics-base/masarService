@@ -21,6 +21,8 @@
 
 namespace epics { namespace masar{
 
+class DSL;
+typedef std::tr1::shared_ptr<DSL> DSLPtr;
 /**
  * DSL - Data Source Layer
  * This is the interface that the Data Source Layer must implement
@@ -41,8 +43,8 @@ public:
     virtual epics::pvData::PVStructure::shared_pointer request(
         epics::pvData::String function,
         int num,
-        epics::pvData::String *names,
-        epics::pvData::String *values) = 0;
+        epics::pvData::StringArray const &names,
+        epics::pvData::StringArray const &values) = 0;
 };
 
 }}

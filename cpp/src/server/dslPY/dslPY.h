@@ -26,7 +26,7 @@ namespace epics { namespace masar{
  * Note that an application can only use a single implementation
  * of DSL. Thus each implementation must have a separate shared library
  */
-extern DSL::shared_pointer createDSL_RDB();
+extern DSLPtr createDSL_RDB();
 
 }}
 #endif  /* DSLPY_H */

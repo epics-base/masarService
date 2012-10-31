@@ -20,7 +20,7 @@ namespace epics { namespace pvAccess {
 class GatherV3DataPyPvt {
 public:
     GatherV3DataPyPvt(
-        String channelNames[],int numberChannels);
+        StringArray const & channelNames,int numberChannels);
     ~GatherV3DataPyPvt();
 public:
     GatherV3Data::shared_pointer gatherV3Data;
@@ -28,7 +28,7 @@ public:
 };
 
 GatherV3DataPyPvt::GatherV3DataPyPvt(
-    String channelNames[], int numberChannels)
+    StringArray const & channelNames, int numberChannels)
 
 : gatherV3Data(new GatherV3Data(channelNames,numberChannels))
 {
@@ -55,7 +55,7 @@ static PyObject * _init(PyObject *willBeNull, PyObject *args)
         return NULL;
     }
     Py_ssize_t num = PyTuple_GET_SIZE(pytuple);
-    String names[num];
+    StringArray names(num);
     for(Py_ssize_t i=0; i<num; i++) {
         PyObject *pyobject = PyTuple_GetItem(pytuple,i);
         if(pyobject==NULL) {

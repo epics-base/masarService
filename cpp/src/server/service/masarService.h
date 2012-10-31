@@ -17,6 +17,7 @@
 namespace epics { namespace masar { 
 
 class MasarService;
+typedef std::tr1::shared_ptr<MasarService> MasarServicePtr;
 
 class MasarService :
   public virtual epics::pvIOC::ServiceRPC,
@@ -35,7 +36,7 @@ private:
     {
         return shared_from_this();
     }
-    DSL::shared_pointer dslRdb;
+    DSLPtr dslRdb;
 };
 
 }}
