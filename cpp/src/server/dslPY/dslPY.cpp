@@ -663,11 +663,13 @@ static NTTablePtr createResult(
 {
 //    PVStructure::shared_pointer pvStructure;
 //    pvStructure.reset();
+printf("createResult functionName %s\n",functionName.c_str());
     NTTablePtr pvStructure;
     {
         PyObject *list = 0;
         if(!PyArg_ParseTuple(result,"O!:dslPY", &PyList_Type,&list))
         {
+printf("here 1\n");
             printf("Wrong format for returned data from dslPY.\n");
             //THROW_BASE_EXCEPTION("Wrong format for returned data from dslPY.");
             return pvStructure;
@@ -716,6 +718,7 @@ static NTTablePtr getLiveMachine(StringArray const & channelName,
 PVStructurePtr DSL_RDB::request(
     String functionName,int num,StringArray const & names,StringArray const &values)
 {
+printf("DSL_RDB::request functionName %s\n",functionName.c_str());
     if (functionName.compare("getLiveMachine")==0) {
         String message;
         NTTablePtr ntTable = getLiveMachine(values, num, &message);
@@ -811,6 +814,7 @@ PVStructurePtr DSL_RDB::request(
         if(result == NULL) {
             pvReturn = noDataEnetry("No data entry found in database.");
         } else {
+printf("calling createResult functionName %s\n",functionName.c_str());
             pvReturn = createResult(result,functionName);
             Py_DECREF(result);
         }

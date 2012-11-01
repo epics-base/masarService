@@ -60,8 +60,8 @@ void MasarService::request(
     };
     String builder;
     builder += "pvArgument ";
-//pvArgument->toString(&builder);
-//printf("%s\n",builder.c_str());
+pvArgument->toString(&builder);
+printf("%s\n",builder.c_str());
     if(!NTNameValue::isNTNameValue(pvArgument)) {
         StringArray names;
         FieldConstPtrArray fields;
@@ -77,9 +77,10 @@ void MasarService::request(
         channelRPCRequester->requestDone(Status::Ok,pvStructure);
         return;
     }
-    NTNameValuePtr ntNameValue(NTNameValue::create(true,true,true));
+    NTNameValuePtr ntNameValue(NTNameValue::create(pvArgument));
     PVStringPtr &function = ntNameValue->getFunction();
     String functionName;
+printf("function %s\n",function->get().c_str());
     for(int i=0; i<numberFunctions; i++) {
         if(function->get().compare(functionNames[i])==0) {
              functionName = functionNames[i];
