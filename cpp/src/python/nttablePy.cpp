@@ -79,15 +79,31 @@ static PyObject * _init(PyObject *willbenull, PyObject *args)
     size_t nfields = pvstringarray->getLength();
     StringArrayData stringdata;
     pvstringarray->get(0, nfields, stringdata);
-    StringArray & pvalue = stringdata.data;
-
-//    const PVFieldPtrArray & pvFields = pv->get()->getPVFields();
-//    FieldConstPtrArray const &fields = (FieldConstPtrArray const &) pvFields;
+    StringArray & names = stringdata.data;
     const FieldConstPtrArray& fields = pv->get()->getStructure()->getFields();
-
-    NTTablePtr nttable (NTTable::create(false,true,true, pvalue, fields));
-
+    NTTablePtr nttable (NTTable::create(false,true,true, names, fields));
     NTTablePvt *pvt = new NTTablePvt(nttable, *pv);
+    return PyCapsule_New(pvt,"nttablePvt",0);
+}
+
+static PyObject * _init1(PyObject *willbenull, PyObject *args)
+{
+    PyObject *capsule = 0;
+    if(!PyArg_ParseTuple(args,"O:nttablepy",
+        &capsule))
+    {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvStructure)");
+        return NULL;
+    }
+    void *pvoid = PyCapsule_GetPointer(capsule,"pvStructure");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Must be pvStructure PyCapsule");
+        return NULL;
+    }
+    NTTablePtr *nttable = static_cast<NTTablePtr *>(pvoid);
+    NTTablePvt *pvt = new NTTablePvt(*nttable,(*nttable)->getPVStructure());
     return PyCapsule_New(pvt,"nttablePvt",0);
 }
 
@@ -609,6 +625,7 @@ static PyObject * _getValue(PyObject *willbenull, PyObject *args)
 
 
 static char _initDoc[] = "_init nttablePy.";
+static char _init1Doc[] = "_init1 nttablePy.";
 static char _destroyDoc[] = "_destroy nttablePy.";
 static char _strDoc[] = "_str  nttablePy.";
 static char _getNTTablePyDoc[] = "_getNTTablePy nttablePy.";
@@ -620,6 +637,7 @@ static char _getValueDoc[] = "_getValue nttablePy.";
 
 static PyMethodDef methods[] = {
     {"_init",_init,METH_VARARGS,_initDoc},
+    {"_init1",_init1,METH_VARARGS,_init1Doc},
     {"_destroy",_destroy,METH_VARARGS,_destroyDoc},
     {"_str",_str,METH_VARARGS,_strDoc},
     {"_getNTTablePy",_getNTTablePy,METH_VARARGS,_getNTTablePyDoc},

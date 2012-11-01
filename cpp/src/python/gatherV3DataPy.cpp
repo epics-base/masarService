@@ -23,8 +23,9 @@ public:
         StringArray const & channelNames,int numberChannels);
     ~GatherV3DataPyPvt();
 public:
-    GatherV3Data::shared_pointer gatherV3Data;
-    PVStructure::shared_pointer pnttable;
+    GatherV3DataPtr gatherV3Data;
+    NTTablePtr nttable;
+    PVStructurePtr nttableStructure;
 };
 
 GatherV3DataPyPvt::GatherV3DataPyPvt(
@@ -118,7 +119,7 @@ static PyObject * _connect(PyObject *willBeNull, PyObject *args)
         return NULL;
     }
     GatherV3DataPyPvt *pvt = static_cast<GatherV3DataPyPvt *>(pvoid);
-    GatherV3Data::shared_pointer const & gatherV3Data = pvt->gatherV3Data;
+    GatherV3DataPtr const & gatherV3Data = pvt->gatherV3Data;
     bool result = false;
     Py_BEGIN_ALLOW_THREADS
         result = gatherV3Data->connect(timeout);
@@ -146,7 +147,7 @@ static PyObject * _disconnect(PyObject *willBeNull, PyObject *args)
         return NULL;
     }
     GatherV3DataPyPvt *pvt = static_cast<GatherV3DataPyPvt *>(pvoid);
-    GatherV3Data::shared_pointer const & gatherV3Data = pvt->gatherV3Data;
+    GatherV3DataPtr const & gatherV3Data = pvt->gatherV3Data;
     Py_BEGIN_ALLOW_THREADS
         gatherV3Data->disconnect();
     Py_END_ALLOW_THREADS
@@ -172,7 +173,7 @@ static PyObject * _get(PyObject *willBeNull, PyObject *args)
         return NULL;
     }
     GatherV3DataPyPvt *pvt = static_cast<GatherV3DataPyPvt *>(pvoid);
-    GatherV3Data::shared_pointer const & gatherV3Data = pvt->gatherV3Data;
+    GatherV3DataPtr const & gatherV3Data = pvt->gatherV3Data;
     bool result = true;
     Py_BEGIN_ALLOW_THREADS
         result = gatherV3Data->get();
@@ -200,7 +201,7 @@ static PyObject * _put(PyObject *willBeNull, PyObject *args)
         return NULL;
     }
     GatherV3DataPyPvt *pvt = static_cast<GatherV3DataPyPvt *>(pvoid);
-    GatherV3Data::shared_pointer const & gatherV3Data = pvt->gatherV3Data;
+    GatherV3DataPtr const & gatherV3Data = pvt->gatherV3Data;
     bool result = true;
     Py_BEGIN_ALLOW_THREADS
         result = gatherV3Data->put();
@@ -248,8 +249,8 @@ static PyObject * _getNTtable(PyObject *willBeNull, PyObject *args)
         return NULL;
     }
     GatherV3DataPyPvt *pvt = static_cast<GatherV3DataPyPvt *>(pvoid);
-    pvt->pnttable = pvt->gatherV3Data->getNTTableStructure();
-    return PyCapsule_New(&pvt->pnttable,"pvStructure",0);
+    pvt->nttable = pvt->gatherV3Data->getNTTable();
+    return PyCapsule_New(&pvt->nttable,"pvStructure",0);
 }
 
 static char _initDoc[] = "_init gatherV3DataPy.";

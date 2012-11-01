@@ -76,6 +76,6 @@ class GatherV3Data(object) :
         returns the NTTable"""
         if self.ntTable != None :
             return self.ntTable
-        self.xxx = gatherV3DataPy._getNTTable(self.cppPvt);
-        self.ntTable = NTTable(self.xxx);
+        self.xxx = gatherV3DataPy._getNTTable(self.cppPvt)
+        self.ntTable = NTTable(self.xxx,True)
         return self.ntTable

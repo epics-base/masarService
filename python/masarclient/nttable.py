@@ -16,14 +16,17 @@ class NTTable(object) :
     NOTE: THIS CLASS NEEDS MORE METHODS.
 
     """
-    def __init__(self,capsule) :
+    def __init__(self,capsule,isNTTable = None) :
         """Constructor
 
         capsule Must be a pvStructure capsule
         This is created by other code that wraps a C++ method the
         returns a capsule.
         """
-        self.cppPvt = nttablePy._init(capsule)
+        if (isNTTable is None) :
+            self.cppPvt = nttablePy._init(capsule)
+        else :
+            self.cppPvt = nttablePy._init1(capsule)
     def __del__(self) :
         """Destructor destroy the connection to the C++ data."""
         nttablePy._destroy(self.cppPvt)
