@@ -34,12 +34,10 @@ MasarService::MasarService()
 
 MasarService::~MasarService()
 {
-printf("MasarService::~MasarService()\n");
 }
 
 void MasarService::destroy()
 {
-printf("MasarService::destroy()\n");
 }
 
 void MasarService::request(
@@ -60,8 +58,6 @@ void MasarService::request(
     };
     String builder;
     builder += "pvArgument ";
-pvArgument->toString(&builder);
-printf("%s\n",builder.c_str());
     if(!NTNameValue::isNTNameValue(pvArgument)) {
         StringArray names;
         FieldConstPtrArray fields;
@@ -80,7 +76,6 @@ printf("%s\n",builder.c_str());
     NTNameValuePtr ntNameValue(NTNameValue::create(pvArgument));
     PVStringPtr &function = ntNameValue->getFunction();
     String functionName;
-printf("function %s\n",function->get().c_str());
     for(int i=0; i<numberFunctions; i++) {
         if(function->get().compare(functionNames[i])==0) {
              functionName = functionNames[i];

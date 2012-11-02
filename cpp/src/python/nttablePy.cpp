@@ -23,19 +23,19 @@ class NTTablePvt {
 public:
     NTTablePvt(
         NTTable::shared_pointer nttable,
-        PVStructure::shared_pointer const & pvStructure);
+        PVStructurePtr const & pvStructure);
     ~NTTablePvt();
     void destroy();
     PyObject *get(){return pyObject;}
 public:
     NTTable::shared_pointer nttable;
-    PVStructure::shared_pointer pvStructure;
+    PVStructurePtr pvStructure;
     PyObject *pyObject;
 };
 
 NTTablePvt::NTTablePvt(
     NTTable::shared_pointer arg,
-    PVStructure::shared_pointer const & pv)
+    PVStructurePtr const & pv)
 : nttable(arg),
   pvStructure(pv),
   pyObject(0)
@@ -71,17 +71,9 @@ static PyObject * _init(PyObject *willbenull, PyObject *args)
            "Bad argument. Must be pvStructure PyCapsule");
         return NULL;
     }
-    PVStructure::shared_pointer *pv =
-        static_cast<PVStructure::shared_pointer *>(pvoid);
-
-    PVStringArrayPtr pvstringarray = static_pointer_cast<PVStringArray>
-            ((*pv)->getScalarArrayField("label",pvString));
-    size_t nfields = pvstringarray->getLength();
-    StringArrayData stringdata;
-    pvstringarray->get(0, nfields, stringdata);
-    StringArray & names = stringdata.data;
-    const FieldConstPtrArray& fields = pv->get()->getStructure()->getFields();
-    NTTablePtr nttable (NTTable::create(false,true,true, names, fields));
+    PVStructurePtr *pv =
+        static_cast<PVStructurePtr *>(pvoid);
+    NTTablePtr nttable (NTTable::clone(*pv));
     NTTablePvt *pvt = new NTTablePvt(nttable, *pv);
     return PyCapsule_New(pvt,"nttablePvt",0);
 }

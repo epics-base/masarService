@@ -13,7 +13,6 @@ def __clientRPC(function, params):
     timeStamp = TimeStamp()
 
     ntnv = NTNameValue(function,params)
-    print ntnv
     
     # now do issue + wait
     channelRPC = ChannelRPC("masarService","record[process=true]field()")
@@ -27,7 +26,7 @@ def __clientRPC(function, params):
         print channelRPC.getMessage()
         exit(1)
     nttable = NTTable(result)
-#    print nttable
+    print nttable
     
     nttable.getAlarm(alarm.getAlarmPy())
 #    print alarm;

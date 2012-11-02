@@ -161,11 +161,6 @@ static NTTablePtr noDataEnetry(std::string message) {
     temp[0]=false;
     pvBoolVal -> put (0, 1, temp, 0);
 
-    // set label strings
-    String labelVals  = pvStructure->getFieldName();
-    PVStringArrayPtr label = ntTable->getLabel();
-    label->put(0,1,&labelVals,0);
-
     // Set alarm and severity
     PVAlarm pvAlarm;
     Alarm alarm;
@@ -434,11 +429,6 @@ static NTTablePtr retrieveSnapshot(PyObject * list)
         }
     }
 
-    // set label strings
-    String labelVals  = pvStructure->getFieldName();
-    PVStringArrayPtr label = ntTable->getLabel();
-    label->put(0,1,&labelVals,0);
-
     // set time stamp
     PVTimeStamp pvTimeStamp;
     ntTable->attachTimeStamp(pvTimeStamp);
@@ -468,19 +458,15 @@ static NTTablePtr retrieveServiceConfigEvents(PyObject * list, long numeric)
 
     // create fields
     // set label for each field
-    FieldConstPtrArray fields;
-    fields.reserve(tuple_size);
-
-    StringArray names;
-    names.reserve(tuple_size);
-
+    FieldConstPtrArray fields(tuple_size);
+    StringArray names(tuple_size);
     for (int i = 0; i < numeric; i ++){
         fields[i] = fieldCreate->createScalarArray(pvLong);
-        names.push_back(PyString_AsString(PyTuple_GetItem(labelList, i)));
+        names[i] = String(PyString_AsString(PyTuple_GetItem(labelList, i)));
     }
     for (int i = numeric; i < tuple_size; i ++){
         fields[i] = fieldCreate->createScalarArray(pvString);
-        names.push_back(PyString_AsString(PyTuple_GetItem(labelList, i)));
+        names[i] = String(PyString_AsString(PyTuple_GetItem(labelList, i)));
     }
 
     // create NTTable
@@ -530,11 +516,6 @@ static NTTablePtr retrieveServiceConfigEvents(PyObject * list, long numeric)
         pvStrVal = static_pointer_cast<PVStringArray>(ntTable->getPVField(i));
         pvStrVal -> put (0, fieldLen, vals[i-numeric], 0);
     }
-
-    // set label strings
-    String labelVals  = pvStructure->getFieldName();
-    PVStringArrayPtr label = ntTable->getLabel();
-    label->put(0,1,&labelVals,0);
 
     PVTimeStamp pvTimeStamp;
     ntTable->attachTimeStamp(pvTimeStamp);
@@ -628,11 +609,6 @@ static NTTablePtr updateSnapshotEvent(PyObject * list)
         pvBoolVal -> put (0, 1, temp, 0);
     }
 
-    // set label strings
-    String labelVals  = pvStructure->getFieldName();
-    PVStringArrayPtr label = ntTable->getLabel();
-    label->put(0,1,&labelVals,0);
-
     // Set alarm and severity
     PVAlarm pvAlarm;
     Alarm alarm;
@@ -661,15 +637,11 @@ static NTTablePtr updateSnapshotEvent(PyObject * list)
 static NTTablePtr createResult(
     PyObject *result, String functionName)
 {
-//    PVStructure::shared_pointer pvStructure;
-//    pvStructure.reset();
-printf("createResult functionName %s\n",functionName.c_str());
     NTTablePtr pvStructure;
     {
         PyObject *list = 0;
         if(!PyArg_ParseTuple(result,"O!:dslPY", &PyList_Type,&list))
         {
-printf("here 1\n");
             printf("Wrong format for returned data from dslPY.\n");
             //THROW_BASE_EXCEPTION("Wrong format for returned data from dslPY.");
             return pvStructure;
@@ -718,7 +690,6 @@ static NTTablePtr getLiveMachine(StringArray const & channelName,
 PVStructurePtr DSL_RDB::request(
     String functionName,int num,StringArray const & names,StringArray const &values)
 {
-printf("DSL_RDB::request functionName %s\n",functionName.c_str());
     if (functionName.compare("getLiveMachine")==0) {
         String message;
         NTTablePtr ntTable = getLiveMachine(values, num, &message);
@@ -751,7 +722,6 @@ printf("DSL_RDB::request functionName %s\n",functionName.c_str());
         timeStamp.getCurrent();
         timeStamp.setUserTag(0);
         pvTimeStamp.set(timeStamp);
-
         return ntTable->getPVStructure();
     }
 
@@ -814,7 +784,6 @@ printf("DSL_RDB::request functionName %s\n",functionName.c_str());
         if(result == NULL) {
             pvReturn = noDataEnetry("No data entry found in database.");
         } else {
-printf("calling createResult functionName %s\n",functionName.c_str());
             pvReturn = createResult(result,functionName);
             Py_DECREF(result);
         }
