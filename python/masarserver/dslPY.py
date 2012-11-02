@@ -115,7 +115,7 @@ class DSL(object) :
             service = self.__servicename
         
         rawdata = params[0]
-        nttable = NTTable(rawdata)
+        nttable = NTTable(rawdata,True)
         numberValueCount = nttable.getNumberValues()
         if numberValueCount == 1 and 'status' == nttable.getLabel()[0] and not nttable.getValue(0)[0]:
             raise

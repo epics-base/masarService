@@ -133,7 +133,7 @@ def saveSnapshot():
     print ("=== test %s ===" %function)
 #    params = {'configname': 'sr_bpm',
 #              'servicename': 'masar'}
-    params = {'configname': 'sr_test',
+    params = {'configname': 'wf_test',
               'servicename': 'masar'}
     nttable = __clientRPC(function, params)
     print(nttable)
