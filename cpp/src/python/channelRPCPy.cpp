@@ -53,7 +53,6 @@ ChannelRPCPyPvt::~ChannelRPCPyPvt()
 
 void ChannelRPCPyPvt::destroy()
 {
-//printf("ChannelRPCPyPvt::destroy\n");
    channelRPC->destroy();
    channelRPC.reset();
 }
@@ -295,7 +294,6 @@ static PyObject * _issueRequest(PyObject *willBeNull, PyObject *args)
 
 static PyObject * _waitRequest(PyObject *willBeNull, PyObject *args)
 {
-printf("_waitRequest\n");
     PyObject *pcapsule = 0;
     if(!PyArg_ParseTuple(args,"O:channelRPCPy",
         &pcapsule))
@@ -319,9 +317,7 @@ printf("_waitRequest\n");
         Py_INCREF(Py_None);
         return Py_None;
     }
-String buffer;
-pvt->pvResponse->toString(&buffer);
-printf("pvResponse\n%s\n",buffer.c_str());
+
     PyObject *pyObject = PyCapsule_New(&pvt->pvResponse,"pvStructure",0);
     return pyObject;
 }
