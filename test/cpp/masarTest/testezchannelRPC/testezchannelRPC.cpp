@@ -26,9 +26,9 @@ void test()
     if(!result) {dump(channelRPC); return;}
     NTNameValuePtr ntNameValue
         = NTNameValue::create(true,false,false);
-    PVStringPtr & pvFunction = ntNameValue->getFunction();
-    PVStringArrayPtr & pvNames = ntNameValue->getNames();
-    PVStringArrayPtr & pvValues = ntNameValue->getValues();
+    PVStringPtr pvFunction = ntNameValue->getFunction();
+    PVStringArrayPtr pvNames = ntNameValue->getNames();
+    PVStringArrayPtr pvValues = ntNameValue->getValues();
     int n = 1;
 //    String name[] = {String("system")};
 //    String value[] = {String("sr")};

@@ -56,17 +56,18 @@ void testConnect(bool debug,GatherV3DataPtr gather)
     gather->disconnect();
 }
 
-void test(bool debug)
+void test(bool debug, size_t count)
 {
     String builder;
     int n = 1000;
-    if(debug) n = 6;
+    if(debug) n = count;
     StringArray channelName(n);
     char name[40];
     for(int i=0; i<n; i++) {
         sprintf(name,"masarExample%4.4d",i);
         channelName[i] = String(name);
     }
+
     GatherV3DataPtr gather(new GatherV3Data(channelName,n));
     NTTablePtr nttable = gather->getNTTable();
     if(debug) {
@@ -88,7 +89,11 @@ int main(int argc,char *argv[])
            debug = true;
         }
     }
-    test(debug);
+    size_t n = 10;
+    if(argc>2){
+        n = atoi(argv[2]);
+    }
+    test(debug, n);
     epicsExitCallAtExits();
     epicsThreadSleep(1.0);
     return(0);

@@ -367,7 +367,7 @@ GatherV3Data::GatherV3Data(
     pvt->pvalarm.attach(pvt->pvStructure->getSubField("alarm"));
     pvt->numberChannels = numberChannels;
 //    ChannelID **apchannelID = new ChannelID*[numberChannels];
-    std::vector<ChannelID *> apchannelID(numberChannels);
+    pvt->apchannelID.resize(numberChannels);
     for(int i=0; i<numberChannels; i++) {
         ChannelID *pChannelID = new ChannelID();
         pChannelID->pvt = pvt;
@@ -380,9 +380,9 @@ GatherV3Data::GatherV3Data(
         pChannelID->severity = epicsSevInvalid;
         pChannelID->stamp.secPastEpoch = 0;
         pChannelID->stamp.nsec = 0;
-        apchannelID[i] = pChannelID;
+        pvt->apchannelID[i] = pChannelID;
     }
-    pvt->apchannelID = apchannelID;
+
     pvt->pvchannelName = static_pointer_cast<PVStringArray>(
         pvt->nttable->getPVField(0));
     pvt->pvchannelName->setCapacity(numberChannels);

@@ -74,7 +74,7 @@ void MasarService::request(
         return;
     }
     NTNameValuePtr ntNameValue(NTNameValue::create(pvArgument));
-    PVStringPtr &function = ntNameValue->getFunction();
+    PVStringPtr function = ntNameValue->getFunction();
     String functionName;
     for(int i=0; i<numberFunctions; i++) {
         if(function->get().compare(functionNames[i])==0) {
@@ -97,8 +97,8 @@ void MasarService::request(
         channelRPCRequester->requestDone(Status::Ok,pvStructure);
         return;
     }
-    PVStringArrayPtr & pvNames = ntNameValue->getNames();
-    PVStringArrayPtr & pvValues = ntNameValue->getValues();
+    PVStringArrayPtr pvNames = ntNameValue->getNames();
+    PVStringArrayPtr pvValues = ntNameValue->getValues();
     StringArray const &names = pvNames->getVector();
     StringArray const &values = pvValues->getVector();
     int num = pvNames->getLength();
