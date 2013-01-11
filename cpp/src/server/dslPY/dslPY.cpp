@@ -148,14 +148,6 @@ static NTTablePtr noDataEnetry(std::string message) {
         false,true,true,names,fields));
     PVStructurePtr pvStructure = ntTable->getPVStructure();
 
-/* old
-    FieldConstPtr fields = fieldCreate->createScalarArray("status",pvBoolean);
-    PVStructurePtr pvStructure = NTTable::create(
-        false,true,true,1, &fields);
-
-    NTTable ntTable(pvStructure);
-*/
-
     PVBooleanArrayPtr pvBoolVal = static_pointer_cast<PVBooleanArray> (ntTable->getPVField(0));
     BooleanArray temp(1);
     temp[0]=false;
@@ -225,37 +217,45 @@ static NTTablePtr retrieveSnapshot(PyObject * list)
         } else {
             // for array value operation
             int naf = 3;
-            FieldConstPtrArray arrfields(naf);
-            arrfields[0] = fieldCreate->createScalarArray(pvString);
-            arrfields[1] = fieldCreate->createScalarArray(pvDouble);
-            arrfields[2] = fieldCreate->createScalarArray(pvInt);
-            StringArray arrayVal(1);
-            arrayVal[0] = "arrayValue";
+            FieldConstPtrArray arrfields;
+            arrfields.reserve(naf);
+            arrfields.push_back(fieldCreate->createScalarArray(pvString));
+            arrfields.push_back(fieldCreate->createScalarArray(pvDouble));
+            arrfields.push_back(fieldCreate->createScalarArray(pvInt));
+            StringArray arrayVal;
+            arrayVal.reserve(naf);
+            arrayVal.push_back("stringVal");
+            arrayVal.push_back("doubleVal");
+            arrayVal.push_back("intVal");
             StructureConstPtr arrStructure = fieldCreate->createStructure(arrayVal,arrfields);
             fields.push_back(fieldCreate->createStructureArray(arrStructure));
         }
         names.push_back(PyString_AsString(PyTuple_GetItem(head, i)));
     }
 
-
     // create NTTable
     NTTablePtr ntTable(NTTable::create(
         false,true,true,names,fields));
     PVStructurePtr pvStructure = ntTable->getPVStructure();
+    String builder;
+    pvStructure->toString(&builder);
 
     // initilize PVStructureArray for waveform/array record
     PVStructureArrayPtr pvarrayValue = static_pointer_cast<PVStructureArray>(ntTable->getPVField(13));
+
     pvarrayValue->setCapacity(numberChannels);
     pvarrayValue->setCapacityMutable(false);
-    StructureArrayData structdata;
-    pvarrayValue->get(0,numberChannels,structdata);
-    StructureConstPtr pstructure = pvarrayValue->getStructureArray()->getStructure();
+    pvarrayValue->setLength(numberChannels);
+
+    StructureArrayData structdata = StructureArrayData();
+
+    PVStructurePtr *ppPVStructure = pvarrayValue->get();
+    StructureConstPtr pstructure
+        = pvarrayValue->getStructureArray()->getStructure();
     PVDataCreatePtr pvDataCreate = getPVDataCreate();
     for (int i=0; i<numberChannels; i++) {
-        PVStructurePtr ppPVStructure = structdata.data[i];
-        ppPVStructure = pvDataCreate->createPVStructure(pstructure);
+        ppPVStructure[i] = pvDataCreate->createPVStructure(pstructure);
     }
-    pvarrayValue->setLength(numberChannels);
 
     if (numberChannels > 0) {
         std::vector<std::vector<String> > pvNames (strFieldLen);
@@ -598,15 +598,16 @@ static NTTablePtr updateSnapshotEvent(PyObject * list)
         false,true,true,names,fields));
     PVStructurePtr pvStructure = ntTable->getPVStructure();
 
-
     PVBooleanArrayPtr pvBoolVal = static_pointer_cast<PVBooleanArray>(ntTable->getPVField(0));
-    BooleanArray temp(1);
+    BooleanArray dataflag;
+    dataflag.reserve(n);
+
     if (eid >= 0) {
-        temp.push_back(true);
-        pvBoolVal -> put (0, 1, temp, 0);
+        dataflag.push_back(true);
+        pvBoolVal -> put (0, n, dataflag, 0);
     } else {
-        temp.push_back(false);
-        pvBoolVal -> put (0, 1, temp, 0);
+        dataflag.push_back(false);
+        pvBoolVal -> put (0, n, dataflag, 0);
     }
 
     // Set alarm and severity
@@ -615,9 +616,9 @@ static NTTablePtr updateSnapshotEvent(PyObject * list)
     ntTable->attachAlarm(pvAlarm);
 
     if (eid >= 0) {
-        alarm.setMessage("Falied to save snapshot preview.");
-    } else {
         alarm.setMessage("Success to save snapshot preview.");
+    } else {
+        alarm.setMessage("Falied to save snapshot preview.");
     }
     alarm.setSeverity(majorAlarm);
     alarm.setStatus(clientStatus);
@@ -693,18 +694,6 @@ PVStructurePtr DSL_RDB::request(
     if (functionName.compare("getLiveMachine")==0) {
         String message;
         NTTablePtr ntTable = getLiveMachine(values, num, &message);
-
-//        PVStructurePtr pvStructure = ntTable->getPVStructure();
-//        // Set alarm and severity
-//        Alarm alarm = ntTable->getNTTableAlarm();
-//        alarm.setMessage("Live machine: " + message);
-//        alarm.setSeverity(majorAlarm);
-//        alarm.setStatus(clientStatus);
-
-//        // set time stamp
-//        TimeStamp timeStamp = ntTable->getNTTableTimeStamp();
-//        timeStamp.getCurrent();
-//        timeStamp.setUserTag(0);
 
         // Set alarm and severity
         PVAlarm pvAlarm;
