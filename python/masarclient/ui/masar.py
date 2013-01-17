@@ -35,7 +35,7 @@ from showarrayvaluedlg import ShowArrayValueDlg
 import masarclient.masarClient as masarClient
 from masarclient.channelRPC import epicsExit 
 
-__version__ = "0.0.1"
+__version__ = "1.0.1"
 
 def usage():
     print("""usage: masar.py [option]
@@ -47,7 +47,7 @@ masar.py v {0}. Copyright (c) 2011 Brookhaven National Laboratory. All rights re
 """.format(__version__))
     sys.exit()
 
-# have to put this as last import, otherwise, import error. 
+# import this last to avoid import error on some platform and with different versions. 
 import cothread.catools as cav3
 
 class masarUI(QMainWindow, ui_masar.Ui_masar):
