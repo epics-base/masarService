@@ -3,7 +3,8 @@
 # Copyright - See the COPYRIGHT that is included with this distribution.
 # EPICS pvService is distributed subject to a Software License Agreement
 #    found in file LICENSE that is included with this distribution.
-# Author Marty Kraimer 2011.07
+# Author : Guobao Shen   2012.01
+#          Marty Kraimer 2011.07
 
 import nttablePy
 

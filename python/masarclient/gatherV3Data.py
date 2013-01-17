@@ -3,7 +3,8 @@
 # Copyright - See the COPYRIGHT that is included with this distribution.
 # EPICS pvService is distributed subject to a Software License Agreement
 #    found in file LICENSE that is included with this distribution.
-# Author Marty Kraimer 2011.07
+# Author : Guobao Shen   2012.01
+#          Marty Kraimer 2011.07
 
 import gatherV3DataPy
 from nttable import NTTable as NTTable
@@ -45,11 +46,12 @@ class GatherV3Data(object) :
         """
         result = gatherV3DataPy._connect(self.cppPvt,timeout);
         if result==None :
-             return True
+            return True
         return False
     def disconnect(self) :
         """Disconnect from the V3 channels"""
         result = gatherV3DataPy._disconnect(self.cppPvt);
+        return result
     def get(self) :
         """get the current values of the V3 channels.
 

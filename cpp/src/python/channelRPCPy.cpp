@@ -351,6 +351,8 @@ static PyObject * _getMessage(PyObject *willBeNull, PyObject *args)
 static PyObject * _epicsExitCallAtExits(PyObject *willBeNull, PyObject *args)
 {
     Py_BEGIN_ALLOW_THREADS
+        //Would it be better to call epicsExit() since epicsExitCallAtExits()
+        // is called inside epicsExit()
         epicsExitCallAtExits();
     Py_END_ALLOW_THREADS
     Py_INCREF(Py_None);

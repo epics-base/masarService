@@ -1047,7 +1047,23 @@ def main(channelname = None):
         form = masarUI()
     form.show()
     app.exec_()
-    sys.exit(epicsExit())
+    
+    import atexit
+    # clean Python local objects first, especially the cothread stuff.
+    # Cothread adds a new function in catools._catools_atexit(), ca_flush_io(), since version 2.8
+    # to flush all io and do a clean up. This function registered at Python exit, and will be called 
+    # by Python exit handler.
+    # This forces the clean up has be done before calling epicsExit(). 
+    atexit._run_exitfuncs()
+
+    # it is safe to clean epics objects now.
+    epicsExit()
+    
+    # call os.exit() instead of sys.exit()
+    # os._exit(0)
+    # however, os._exit() does nothing when exiting.
+    # It would be better to call sys.exit
+    sys.exit()
 
 if __name__ == '__main__':
     args = sys.argv[1:]

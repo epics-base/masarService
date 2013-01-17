@@ -3,7 +3,8 @@
 # Copyright - See the COPYRIGHT that is included with this distribution.
 # EPICS pvService is distributed subject to a Software License Agreement
 #    found in file LICENSE that is included with this distribution.
-# Author Marty Kraimer 2011.07
+# Author : Guobao Shen   2012.01
+#          Marty Kraimer 2011.07
 
 import channelRPCPy
 
@@ -12,6 +13,14 @@ def epicsExit() :
     This function should only be called right before Python exit.
     It will make sure epicsExitCallAtExits() be called if there is any registered.
     Python will crash without this call but there is any registered.
+    
+    epicsExit() will completely shut down the EPICS library silently. It should be called after Python
+    exit handler if there is any epics related stuff reqistered as Python atexit function to make
+    sure the right clean up order, for example is cothread. 
+    Otherwise, it could cause an exception if allowing normal Python exist processing after calling 
+    epicsExit().
+    
+    Planning: it would be better to call epicsExit() function instead of epicsExitCallAtExits(). 
     """
     channelRPCPy._epicsExitCallAtExits()
 
