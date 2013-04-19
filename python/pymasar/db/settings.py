@@ -11,8 +11,10 @@ and load service info, pv_group, and event configuration.
 
 # pv group name: [pv list file, description]
 pvgroups= {
+           # Booster magnet power supply set points
+           'BR_MG_Set_20130419': ['pvs/BR_MG_PV_Set.txt', 'Booster magnet power supply set points']
            # test example
-           'test example': ['pvs/example.txt', 'example pv list for meeting at DLS']
+           #'test example': ['pvs/example.txt', 'example pv list for meeting at DLS']
            # Linac & LTB bpm group 20120621
 #           'LN_LTB_BPM_20120621':           ['BPM/LN_LTB_BPM_20120621.txt', 'expert bpm pvs for linac and ltb']
 #           # new pv groups for LN-LTB 20120511
@@ -103,7 +105,8 @@ pvgroups= {
 
 # config name: [config desc, system]
 configs= {
-          'example config for DLS meeting': ['demo config for 20120711 DLS meeting', 'test']
+          'BR_MG_SCR_20130419': ['BR ramping PS daily SCR setpoint', 'BR']
+#          'example config for DLS meeting': ['demo config for 20120711 DLS meeting', 'test']
 #          'LN_LTB_BPM_Expert_20120621':  ['Expert control pvs for Linac and LTB bpms', 'BPM']
 #          'LN-LTB-PhaseI-All_20120511': ['Linac and LTB daily SCR setpoint', 'Linac, LTB']
 #          'LN-LTB-PhaseI-SBM-All_20120426': ['Linac and LTB daily SCR setpoint', 'Linac, LTB']
@@ -119,7 +122,8 @@ configs= {
 
 # config name: [pvgroup,]
 pvg2config= {
-             'example config for DLS meeting': ['test example']
+             'BR_MG_SCR_20130419': ['BR_MG_Set_20130419']
+#             'example config for DLS meeting': ['test example']
 #             'LN_LTB_BPM_Expert_20120621': ['LN_LTB_BPM_20120621']
 #             'LN-LTB-PhaseI-All_20120511': ['LN_Sol_Set_20120511',
 #                                            'LN_Cor_Set_20120511',
