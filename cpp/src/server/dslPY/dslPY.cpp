@@ -234,11 +234,7 @@ static NTTablePtr retrieveSnapshot(PyObject * list)
     }
 
     // create NTTable
-    NTTablePtr ntTable(NTTable::create(
-        false,true,true,names,fields));
-    PVStructurePtr pvStructure = ntTable->getPVStructure();
-    String builder;
-    pvStructure->toString(&builder);
+    NTTablePtr ntTable(NTTable::create(false,true,true,names,fields));
 
     // initilize PVStructureArray for waveform/array record
     PVStructureArrayPtr pvarrayValue = static_pointer_cast<PVStructureArray>(ntTable->getPVField(13));
@@ -319,6 +315,7 @@ static NTTablePtr retrieveSnapshot(PyObject * list)
             PVStructurePtr pvStructure = structdata.data[index];
             // retrieve array value
             if (lVals[8][index] == 1) {
+                // lVals[8] stores whether value is array
                 // EPICS DBR type
                 //#define    DBF_STRING  0
                 //#define    DBF_INT     1
@@ -334,66 +331,63 @@ static NTTablePtr retrieveSnapshot(PyObject * list)
 
                 if (lVals[1][index] == 1 || lVals[1][index] == 4 || lVals[1][index] == 5){
                     // integer type
-                    IntArrayData intdata;
                     PVIntArrayPtr pvintarray = static_pointer_cast<PVIntArray>(pvfields[2]);
                     if (PyList_Check(arrayValueList)) {
                         size_t array_len = (size_t)PyList_Size(arrayValueList);
                         pvintarray->setLength(array_len);
-                        pvintarray->get(0,array_len,intdata);
-                        IntArray & pvalue = intdata.data;
+                        std::vector<int> pvalue (array_len);
                         for (size_t array_index = 0; array_index < array_len; array_index++){
                             pvalue[array_index] = PyLong_AsLong(PyList_GetItem(arrayValueList, array_index));
                         }
+                        pvintarray->put(0, array_len, pvalue, 0);
                     } else if (PyTuple_Check(arrayValueList)) {
                         size_t array_len = (size_t)PyTuple_Size(arrayValueList);
                         pvintarray->setLength(array_len);
-                        pvintarray->get(0,array_len,intdata);
-                        IntArray & pvalue = intdata.data;
+                        std::vector<int> pvalue (array_len);
                         for (size_t array_index = 0; array_index < array_len; array_index++){
                             pvalue[array_index] = PyLong_AsLong(PyTuple_GetItem(arrayValueList, array_index));
                         }
+                        pvintarray->put(0, array_len, pvalue, 0);
                     }
                 } else if (lVals[1][index] == 0) {
                     // string
-                    StringArrayData stringdata;
                     PVStringArrayPtr pvstringarray = static_pointer_cast<PVStringArray>(pvfields[0]);
                     if (PyList_Check(arrayValueList)) {
                         size_t array_len = (size_t )PyList_Size(arrayValueList);
                         pvstringarray->setLength(array_len);
-                        pvstringarray->get(0,array_len,stringdata);
-                        StringArray & pvalue = stringdata.data;
+                        std::vector<String> pvalue (array_len);
                         for (size_t array_index = 0; array_index < array_len; array_index++){
                             pvalue[array_index] = PyString_AsString(PyList_GetItem(arrayValueList, array_index));
                         }
+                        pvstringarray->put(0, array_len, pvalue, 0);
                     } else if (PyTuple_Check(arrayValueList)) {
                         size_t array_len = (size_t )PyTuple_Size(arrayValueList);
                         pvstringarray->setLength(array_len);
-                        pvstringarray->get(0,array_len,stringdata);
-                        StringArray & pvalue = stringdata.data;
+                        std::vector<String> pvalue (array_len);
                         for (size_t array_index = 0; array_index < array_len; array_index++){
                             pvalue[array_index] = PyString_AsString(PyTuple_GetItem(arrayValueList, array_index));
                         }
+                        pvstringarray->put(0, array_len, pvalue, 0);
                     }
                 } else if (lVals[1][index] == 2 || lVals[1][index] == 6) {
                     // float or double
-                    DoubleArrayData doubledata;
                     PVDoubleArrayPtr pvdoublearray = static_pointer_cast<PVDoubleArray>(pvfields[1]);
                     if (PyList_Check(arrayValueList)) {
                         size_t array_len = (size_t )PyList_Size(arrayValueList);
                         pvdoublearray->setLength(array_len);
-                        pvdoublearray->get(0,array_len,doubledata);
-                        DoubleArray & pvalue = doubledata.data;
+                        std::vector<double> pvalue (array_len);
                         for (size_t array_index = 0; array_index < array_len; array_index++){
                             pvalue[array_index] = PyFloat_AsDouble(PyList_GetItem(arrayValueList, array_index));
                         }
+                        pvdoublearray->put(0, array_len, pvalue, 0);
                     } else if (PyTuple_Check(arrayValueList)) {
                         size_t array_len = (size_t )PyTuple_Size(arrayValueList);
                         pvdoublearray->setLength(array_len);
-                        pvdoublearray->get(0,array_len,doubledata);
-                        DoubleArray & pvalue = doubledata.data;
+                        std::vector<double> pvalue (array_len);
                         for (size_t array_index = 0; array_index < array_len; array_index++){
                             pvalue[array_index] = PyFloat_AsDouble(PyTuple_GetItem(arrayValueList, array_index));
                         }
+                        pvdoublearray->put(0, array_len, pvalue, 0);
                     }
                 }
             }
