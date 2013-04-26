@@ -603,10 +603,10 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 if item:
                     item.setCheckState(False)
                 else:
-                    newitem = QTableWidgetItem()
-                    newitem.setFlags(Qt.ItemIsEnabled|Qt.ItemIsUserCheckable)
-                    table.setItem(i, 8, newitem)
-                    newitem.setCheckState(False)
+                    item = QTableWidgetItem()
+                    item.setFlags(Qt.ItemIsEnabled|Qt.ItemIsUserCheckable)
+                    table.setItem(i, 8, item)
+                    item.setCheckState(False)
 
                 if pvnames[i]:
                     self.__setTableItem(table, i, 0, pvnames[i])
@@ -619,6 +619,10 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                     self.__setTableItem(table, i, 3, dt)
                 if isConnected[i]:
                     self.__setTableItem(table, i, 4, str(bool(isConnected[i])))
+                else:
+                    self.__setTableItem(table, i, 4, 'False')
+                    item.setCheckState(True)
+                    item.setSelected(True)
                 if is_array[i]:
                     self.__setTableItem(table, i, 5, self.__arrayTextFormat(array_value[i]))
                     self.arrayData[pvnames[i]+'_'+str(eventid)] = array_value[i]
