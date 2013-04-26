@@ -595,7 +595,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             is_array = data['isArray'] 
             array_value = data['arrayValue']
             
-            keys = ['PV Name', 'Status', 'Severity', 'Time stamp', 'Connection', 'Saved value', 'Live value', 'Delta', 'No restore PV']
+            keys = ['Name', 'Status', 'Severity', 'Time Stamp', 'Connection', 'Saved Value', 'Live Value', 'Delta', 'Not Restore']
             table.setHorizontalHeaderLabels(keys)
             
             for i in range(nrows):
