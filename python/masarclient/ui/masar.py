@@ -13,7 +13,7 @@ import sys
 import time
 import datetime
 
-from PyQt4.QtGui import (QApplication, QMainWindow, QMessageBox, QTableWidgetItem, QTableWidget, QFileDialog)
+from PyQt4.QtGui import (QApplication, QMainWindow, QMessageBox, QTableWidgetItem, QTableWidget, QFileDialog, QColor, QBrush)
 from PyQt4.QtCore import (QDateTime, Qt, QString, QObject, SIGNAL)
 
 try:
@@ -107,6 +107,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.previewConfName = None
         self.isPreviewSaved = True
 
+        self.brushbadpv = QBrush(QColor(0, 128, 255))
+        self.brushbadpv.setStyle(Qt.SolidPattern)
         # DBR_TYPE definition
         #define DBF_STRING  0
         #define DBF_INT     1
@@ -671,12 +673,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 if ts[i]:
                     dt = str(datetime.datetime.fromtimestamp(ts[i]+ts_nano[i]*1.0e-9))
                     self.__setTableItem(table, i, 3, dt)
-                if isConnected[i]:
-                    self.__setTableItem(table, i, 4, str(bool(isConnected[i])))
-                else:
-                    self.__setTableItem(table, i, 4, 'False')
-                    item.setCheckState(True)
-                    item.setSelected(True)
+                        
                 if is_array[i]:
                     self.__setTableItem(table, i, 5, self.__arrayTextFormat(array_value[i]))
                     self.arrayData[pvnames[i]+'_'+str(eventid)] = array_value[i]
@@ -692,6 +689,20 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                         pass
                     else:
                         print('invalid dbr type (code = %s)'%(dbrtype[i]))
+                
+                if isConnected[i]:
+                    self.__setTableItem(table, i, 4, str(bool(isConnected[i])))
+                else:
+                    self.__setTableItem(table, i, 4, 'False')
+                    item.setCheckState(True)
+                    item.setSelected(True)
+                    for item_idx in range(9):
+                        itemtmp = table.item(i, item_idx)
+                        if not itemtmp:
+                            itemtmp = QTableWidgetItem()
+                            table.setItem(i, item_idx, itemtmp)
+                        itemtmp.setBackground(self.brushbadpv)
+
             table.setSortingEnabled(True)
         else:
             raise "Either given data is not an instance of OrderedDict or table is not an instance of QtGui.QTableWidget"
