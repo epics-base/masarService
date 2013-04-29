@@ -309,6 +309,40 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         if len(no_restorepvs) == rowCount:
             QMessageBox.warning(self, 'Warning', 'All pvs are checked, and not restoring.')
             return
+        
+        #cagetres = cav3.caget(r_pvlist, throw=False)
+        #problempvlist=[]
+        #for rtmp in cagetres:
+        #    if not rtmp.ok:
+        #        problempvlist.append(rtmp)
+        #ignoreallconnection = False
+        #forceall = False
+        #if len(problempvlist) > 0:
+        #    for problempv in problempvlist:
+        #        if not ignoreall and not forceall:
+        #            reply = QMessageBox.warning(self, 'Warning', 'There are a problem to connect pv %s. \nDo you want to ignore it and continue?'%(problempv),
+        #                                        QMessageBox.Yes | QMessageBox.YesToAll | QMessageBox.No | QMessageBox.NoToAll | QMessageBox.Cancel, QMessageBox.Cancel)
+        #            if reply == QMessageBox.Yes:
+        #                # ignore this pv only
+        #                no_restorepvs.append(problempv.name)
+        #            elif reply == QMessageBox.No:
+        #                # not ignore this pv
+        #                pass
+        #            elif reply == QMessageBox.YesToAll:
+        #                # ignore all pvs that there might have potential connection problem
+        #                # this does not overwrite all previous decisions
+        #                no_restorepvs.append(problempv.name)
+        #                ignoreallconnection = True
+        #            elif reply == QMessageBox.NoToAll:
+        #                # force restore pvs althouth there might have potential connection problem
+        #                # this does not overwrites all previous decisions
+        #                forceall = True
+        #            elif reply == QMessageBox.Cancel:
+        #                # cancel this operation
+        #                return
+        #        elif ignoreallconnection:
+        #            no_restorepvs.append(problempv.name)
+        #if ignoreall or ignoreallconnection:
         if ignoreall:
             str_no_restore = "\n"
             for no_restorepv in no_restorepvs:
@@ -327,19 +361,26 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         
         bad_pvs = []
         try:
-            results = cav3.caput(r_pvlist, r_data, wait=True, throw=False)
-            for i in range(len(results)):
-                res = results[i]
-                if not res.ok:
-                    # try 3 times again to set value to each pv
-                    # first try wait 1 second, second try wait 2 seconds, and last try wait 3 seconds.
-                    for j in range(3):
-                        res = cav3.caput(r_pvlist[i], r_data[i], wait=True, throw=False, timeout=j)
-                        if res.ok:
-                            break
+            final_restorepv = []
+            final_restorepvval = []
+            for i in range(len(r_pvlist)):
+                if r_pvlist[i] not in no_restorepvs:
+                     final_restorepv.append(r_pvlist[i])
+                     final_restorepvval.append(r_data[i])
+            if len(final_restorepv) > 0:
+                results = cav3.caput(final_restorepv, final_restorepvval, wait=True, throw=False)
+                for i in range(len(results)):
+                    res = results[i]
                     if not res.ok:
-                        # record as a bad pv if it still fails
-                        bad_pvs.append(res)
+                        # try 3 times again to set value to each pv
+                        # first try wait 1 second, second try wait 2 seconds, and last try wait 3 seconds.
+                        for j in range(1, 4):
+                            ressub = cav3.caput(final_restorepv[i], final_restorepvval[i], wait=True, throw=False, timeout=j)
+                            if ressub.ok:
+                                break
+                        if not ressub.ok:
+                            # record as a bad pv if it still fails
+                            bad_pvs.append(res)
         except:
             QMessageBox.warning(self, 'Warning', 'Error during restoring snapshot to live machine.')
             return
