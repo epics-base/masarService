@@ -365,8 +365,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             final_restorepvval = []
             for i in range(len(r_pvlist)):
                 if r_pvlist[i] not in no_restorepvs:
-                     final_restorepv.append(r_pvlist[i])
-                     final_restorepvval.append(r_data[i])
+                    final_restorepv.append(r_pvlist[i])
+                    final_restorepvval.append(r_data[i])
             if len(final_restorepv) > 0:
                 results = cav3.caput(final_restorepv, final_restorepvval, wait=True, throw=False)
                 for i in range(len(results)):
