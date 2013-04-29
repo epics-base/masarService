@@ -272,6 +272,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         r_pvlist = [] # restore all pv value in this list
         r_data = []   # value to be restored.
         no_restorepvs = []  # no restore from those pvs
+        ignoreall = False # Ignore all pv those do not have any value.
         for index in range(len(pvlist)):
             try:
                 # pv is unchecked, which means restore this pv
@@ -286,28 +287,40 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                     elif dbrtype[index] in self.epicsString:
                         r_data.append(s_val[index])
                     elif dbrtype[index] in self.epicsNoAccess:
-                        QMessageBox.warning(self, 'Warning', 'Cannot restore machine. Value unknown for pv: %s'%(pvlist[index]))
-                        return
+                        if not ignoreall:
+                            reply = QMessageBox.warning(self, 'Warning', 'Cannot restore pv: %s\nValue is invalid. \nDo you want to ignore it and continue?'%(pvlist[index]),
+                                                        QMessageBox.Yes | QMessageBox.YesToAll | QMessageBox.Cancel, QMessageBox.Cancel)
+                            if reply == QMessageBox.Yes:
+                                no_restorepvs.append(pvlist[index])
+                            elif reply == QMessageBox.YesToAll:
+                                no_restorepvs.append(pvlist[index])
+                                ignoreall = True
+                            elif reply == QMessageBox.Cancel:
+                                return
+                        else:
+                            no_restorepvs.append(pvlist[index])
                 else:
                     no_restorepvs.append(pvlist[index])
             except:
                 print (type(pvlist[index]), pvlist[index])
-                QMessageBox.warning(self, 'Warning', 'PV (%s) not in the table.'%(pvlist[index]))
+                QMessageBox.warning(self, 'Warning', 'PV name (%s) is invalid.'%(pvlist[index]))
                 return
     
         if len(no_restorepvs) == rowCount:
             QMessageBox.warning(self, 'Warning', 'All pvs are checked, and not restoring.')
             return
-        if len(no_restorepvs) > 0:
+        if ignoreall:
+            str_no_restore = "\n"
+            for no_restorepv in no_restorepvs:
+                str_no_restore += ' - %s' %no_restorepv + '\n'
+            print("No restore for the following pvs:\n"+str_no_restore+"\n========list end (not to restore pv)========")
+        elif len(no_restorepvs) > 0:
             str_no_restore = "\n"
             for no_restorepv in no_restorepvs:
                 str_no_restore += ' - %s' %no_restorepv + '\n'
             reply = QMessageBox.question(self, 'Message',
                                  "Partial pv will not be restored. Do you want to continue?\n(Please check terminal for a full list.)",                                          
                                  QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-#            reply = QMessageBox.question(self, 'Message',
-#                                 "Partial pv will not be restored. Do you want to continue? %s" %str_no_restore,                                          
-#                                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if reply == QMessageBox.No:
                 return
             print("No restore for the following pvs:\n"+str_no_restore+"\n========list end (not to restore pv)========")
