@@ -107,7 +107,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.previewConfName = None
         self.isPreviewSaved = True
 
-        self.brushbadpv = QBrush(QColor(0, 128, 255))
+        # set bad pv row to grey
+        self.brushbadpv = QBrush(QColor(128, 128, 128))
         self.brushbadpv.setStyle(Qt.SolidPattern)
         # DBR_TYPE definition
         #define DBF_STRING  0
@@ -692,10 +693,13 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 
                 if isConnected[i]:
                     self.__setTableItem(table, i, 4, str(bool(isConnected[i])))
+                    item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
                 else:
                     self.__setTableItem(table, i, 4, 'False')
                     item.setCheckState(True)
                     item.setSelected(True)
+                    # disable user checkable function
+                    item.setFlags(item.flags() ^ Qt.ItemIsUserCheckable)
                     for item_idx in range(9):
                         itemtmp = table.item(i, item_idx)
                         if not itemtmp:
