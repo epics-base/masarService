@@ -311,6 +311,11 @@ class client():
                     double value []      value list in double format
                     long value []        value list in long format
                     dbr_type []:         EPICS DBR types
+                    isConnected []:      connection status, either True or False
+                    secondsPastEpoch []: seconds after EPOCH time
+                    nanoSeconds []:      nano-seconds
+                    alarmSeverity []:    EPICS IOC severity
+                    alarmStatus []:      EPICS IOC status
                     is_array []:         whether value is array, either True or False
                     array_value [[]]:    if it is array, the value is stored here.
                             
@@ -329,5 +334,9 @@ class client():
                 nttable.getValue(3),
                 nttable.getValue(4),
                 nttable.getValue(5),
+                nttable.getValue(6),
+                nttable.getValue(7),
+                nttable.getValue(9),
+                nttable.getValue(10),
                 nttable.getValue(12),
                 nttable.getValue(13))

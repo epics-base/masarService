@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="icons">
+    <file>nsls2-logo.png</file>
+  </qresource>
+</RCC>
