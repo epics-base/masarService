@@ -8,5 +8,8 @@ masarServiceRun_SRCS += masarServiceRun.cpp
 masarServiceRun_LIBS += masarServer gather nt pvIOC pvAccess pvData Com
 masarServiceRun_LIBS += $(PYTHON)
 
+# Needed on RHEL/CentOS
+USR_SYS_LIBS += util
+
 include $(TOP)/configure/RULES
 
