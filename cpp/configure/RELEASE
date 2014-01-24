@@ -46,3 +46,4 @@ TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
 #EPICS_BASE=/home/install/epics/base
 
 -include $(TOP)/configure/RELEASE.local
+-include $(TOP)/../../RELEASE.local
