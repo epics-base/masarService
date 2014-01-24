@@ -714,7 +714,11 @@ NTTYPE=~/V4/alphaCPP/normativeTypes
 
 EPICS_BASE=/usr/lib/epics
 </pre>
-Then 
+<p><b>Caveat:</b> On multi-arch systems, the <tt>/lib/</tt> directory part might have to be replaced
+with a different string, including the architecture name triplet.
+E.g., <tt>/lib/x86-linux-gnu/</tt>.</p>
+
+<p>Then</p>
 <pre>
 $ make
 </pre>
