@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'python/masarclient/ui/ui_masar.ui'
 #
-# Created: Fri Sep 27 16:07:03 2013
+# Created: Wed Mar 19 11:53:58 2014
 #      by: PyQt4 UI code generator 4.9.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -18,7 +18,7 @@ class Ui_masar(object):
     def setupUi(self, masar):
         masar.setObjectName(_fromUtf8("masar"))
         masar.setWindowModality(QtCore.Qt.WindowModal)
-        masar.resize(1167, 979)
+        masar.resize(1197, 971)
         palette = QtGui.QPalette()
         brush = QtGui.QBrush(QtGui.QColor(255, 255, 255))
         brush.setStyle(QtCore.Qt.SolidPattern)
@@ -226,32 +226,48 @@ class Ui_masar(object):
         self.commentTabWindowLayout.addWidget(self.currentCommentText)
         self.snapshotTabWidget.addTab(self.commentTab, _fromUtf8(""))
         self.verticalLayout.addWidget(self.snapshotTabWidget)
-        self.horizontalLayout = QtGui.QHBoxLayout()
-        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
-        self.restoreMachineButton = QtGui.QPushButton(self.layoutWidget2)
-        self.restoreMachineButton.setToolTip(_fromUtf8(""))
-        self.restoreMachineButton.setObjectName(_fromUtf8("restoreMachineButton"))
-        self.horizontalLayout.addWidget(self.restoreMachineButton)
+        self.gridLayout = QtGui.QGridLayout()
+        self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
+        self.compareSnapshotsButton = QtGui.QPushButton(self.layoutWidget2)
+        self.compareSnapshotsButton.setObjectName(_fromUtf8("compareSnapshotsButton"))
+        self.gridLayout.addWidget(self.compareSnapshotsButton, 0, 3, 2, 1)
+        self.pvFilterLineEdit = QtGui.QLineEdit(self.layoutWidget2)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.pvFilterLineEdit.sizePolicy().hasHeightForWidth())
+        self.pvFilterLineEdit.setSizePolicy(sizePolicy)
+        self.pvFilterLineEdit.setLayoutDirection(QtCore.Qt.RightToLeft)
+        self.pvFilterLineEdit.setText(_fromUtf8(""))
+        self.pvFilterLineEdit.setObjectName(_fromUtf8("pvFilterLineEdit"))
+        self.gridLayout.addWidget(self.pvFilterLineEdit, 2, 3, 1, 1)
         self.getLiveMachineButton = QtGui.QPushButton(self.layoutWidget2)
         self.getLiveMachineButton.setToolTip(_fromUtf8(""))
         self.getLiveMachineButton.setObjectName(_fromUtf8("getLiveMachineButton"))
-        self.horizontalLayout.addWidget(self.getLiveMachineButton)
+        self.gridLayout.addWidget(self.getLiveMachineButton, 0, 1, 2, 1)
         self.saveMachineSnapshotButton = QtGui.QPushButton(self.layoutWidget2)
         self.saveMachineSnapshotButton.setObjectName(_fromUtf8("saveMachineSnapshotButton"))
-        self.horizontalLayout.addWidget(self.saveMachineSnapshotButton)
-        spacerItem = QtGui.QSpacerItem(20, 20, QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Minimum)
-        self.horizontalLayout.addItem(spacerItem)
-        self.compareSnapshotsButton = QtGui.QPushButton(self.layoutWidget2)
-        self.compareSnapshotsButton.setObjectName(_fromUtf8("compareSnapshotsButton"))
-        self.horizontalLayout.addWidget(self.compareSnapshotsButton)
+        self.gridLayout.addWidget(self.saveMachineSnapshotButton, 0, 2, 2, 1)
+        self.restoreMachineButton = QtGui.QPushButton(self.layoutWidget2)
+        self.restoreMachineButton.setToolTip(_fromUtf8(""))
+        self.restoreMachineButton.setObjectName(_fromUtf8("restoreMachineButton"))
+        self.gridLayout.addWidget(self.restoreMachineButton, 0, 0, 2, 1)
         self.saveDataFileButton = QtGui.QPushButton(self.layoutWidget2)
         self.saveDataFileButton.setObjectName(_fromUtf8("saveDataFileButton"))
-        self.horizontalLayout.addWidget(self.saveDataFileButton)
-        self.verticalLayout.addLayout(self.horizontalLayout)
+        self.gridLayout.addWidget(self.saveDataFileButton, 0, 4, 2, 1)
+        self.pvSearchButton = QtGui.QPushButton(self.layoutWidget2)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.pvSearchButton.sizePolicy().hasHeightForWidth())
+        self.pvSearchButton.setSizePolicy(sizePolicy)
+        self.pvSearchButton.setObjectName(_fromUtf8("pvSearchButton"))
+        self.gridLayout.addWidget(self.pvSearchButton, 2, 4, 1, 1)
+        self.verticalLayout.addLayout(self.gridLayout)
         self.verticalLayout_2.addWidget(self.splitter)
         masar.setCentralWidget(self.mainwidget)
         self.menubar = QtGui.QMenuBar(masar)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1167, 19))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1197, 19))
         self.menubar.setObjectName(_fromUtf8("menubar"))
         masar.setMenuBar(self.menubar)
         self.statusbar = QtGui.QStatusBar(masar)
@@ -276,6 +292,8 @@ class Ui_masar(object):
         QtCore.QObject.connect(self.snapshotTabWidget, QtCore.SIGNAL(_fromUtf8("currentChanged(int)")), masar.configTab)
         QtCore.QObject.connect(self.compareSnapshotsButton, QtCore.SIGNAL(_fromUtf8("clicked()")), masar.openMsgBox)
         QtCore.QObject.connect(self.saveMachineSnapshotButton, QtCore.SIGNAL(_fromUtf8("clicked()")), masar.saveMachineSnapshot)
+        QtCore.QObject.connect(self.pvFilterLineEdit, QtCore.SIGNAL(_fromUtf8("textChanged(QString)")), masar.pvFilterChanged)
+        QtCore.QObject.connect(self.pvSearchButton, QtCore.SIGNAL(_fromUtf8("clicked()")), masar.searchPV)
         QtCore.QMetaObject.connectSlotsByName(masar)
         masar.setTabOrder(self.systemCombox, self.configFilterLineEdit)
         masar.setTabOrder(self.configFilterLineEdit, self.fetchConfigButton)
@@ -315,7 +333,7 @@ class Ui_masar(object):
         self.authorTextEdit.setText(QtGui.QApplication.translate("masar", "*", None, QtGui.QApplication.UnicodeUTF8))
         self.eventFilterLabel.setText(QtGui.QApplication.translate("masar", "Snapshot Desc", None, QtGui.QApplication.UnicodeUTF8))
         self.ByWho.setText(QtGui.QApplication.translate("masar", "Author", None, QtGui.QApplication.UnicodeUTF8))
-        self.eventTableWidget.setToolTip(QtGui.QApplication.translate("masar", "<html><head/><body><p>snapshotTable: a list of saved snapshot(s) for the selected config(s)</p><p><span style=\" color:#00ff00;\">CLICK</span> on one row to display <span style=\" color:#00ff00;\">ONE</span> snapshot data </p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
+        self.eventTableWidget.setToolTip(QtGui.QApplication.translate("masar", "<html><head/><body><p>snapshotTable: a list of saved snapshot(s) for the selected config(s)</p><p><span style=\" color:#00ff00;\">Double CLICK</span> on one row to display <span style=\" color:#00ff00;\">ONE</span> snapshot data </p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.eventTableWidget.setSortingEnabled(True)
         self.fetchSnapshotButton.setToolTip(QtGui.QApplication.translate("masar", "get PVs data", None, QtGui.QApplication.UnicodeUTF8))
         self.fetchSnapshotButton.setText(QtGui.QApplication.translate("masar", "Display Snapshot(s)", None, QtGui.QApplication.UnicodeUTF8))
@@ -325,11 +343,15 @@ class Ui_masar(object):
 "\n"
 "Quick Start ...\n"
 "\n"
-"    1. To restore the machine to a particular state/snapshot: click (either single or double) on one row in the left-top Config table --> click on one row in the left-bottom Snapshot table --> click the button \"Restore Machine\";\n"
+"    1. To restore the machine to a particular state/snapshot: click (either single or double) on one row in the left-top Config table --> double click on one row in the left-bottom Snapshot table --> click the button \"Restore Machine\";\n"
 "    \n"
 "    2. To save a machine snapshot: click on one row in the left-top Config table  --> click \"Save Machine Snapshot ...\" --> put a concise description (<80 characters) such as: \"SBM EmitX and Y 69 nm. This is golden\";\n"
 "\n"
-"  3. To compare multiple saved snapshots: click on one row in the left-top Config table --> Ctrl + mouse click to select multiple rows in the left-bottom Snapshot table --> click \"Compare Snapshots...\"\n"
+"    3. To compare multiple saved snapshots: click on one row in the left-top Config table --> Ctrl + mouse click to select multiple rows in the left-bottom Snapshot table --> click \"Compare Snapshots...\";\n"
+"\n"
+"    4. To search / filter PVs: the searching supports wildcard pattern matching -- use * to match multiple characters, use ? to match single character, and use [m-n] to match the range from m to n; *BPM:[1-3]* means searching any PV name which contains BPM:1, BPM:2 and BPM:3; the searching can be nested -- you may search the filtered snapshot again and again using different search pattern to refine your search result \n"
+"\n"
+"    5. To partially restore snapshot (don\'t restore some PVs): click \'Not Restore\' in the snapshot Tab for the PV you don\'t want to restore; better way: firstly filter PVs as #4 instruction, then only restore the filtered PVs by clicking \"Restore Machine\".\n"
 "\n"
 "\n"
 "Tips ...\n"
@@ -362,10 +384,13 @@ class Ui_masar(object):
 "    [2] http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/userManual.html", None, QtGui.QApplication.UnicodeUTF8))
         self.snapshotTabWidget.setTabText(self.snapshotTabWidget.indexOf(self.commentTab), QtGui.QApplication.translate("masar", "Welcome to MASAR", None, QtGui.QApplication.UnicodeUTF8))
         self.snapshotTabWidget.setTabToolTip(self.snapshotTabWidget.indexOf(self.commentTab), QtGui.QApplication.translate("masar", "How to use MASAR", None, QtGui.QApplication.UnicodeUTF8))
-        self.restoreMachineButton.setText(QtGui.QApplication.translate("masar", "Restore Machine", None, QtGui.QApplication.UnicodeUTF8))
+        self.compareSnapshotsButton.setText(QtGui.QApplication.translate("masar", "Compare Snapshots...", None, QtGui.QApplication.UnicodeUTF8))
+        self.pvFilterLineEdit.setToolTip(QtGui.QApplication.translate("masar", "<html><head/><body><p>*BPM:[1-3]* to search any pv containing BPM:1, BPM:2, and BPM:3</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.getLiveMachineButton.setText(QtGui.QApplication.translate("masar", "Compare Live Machine", None, QtGui.QApplication.UnicodeUTF8))
         self.saveMachineSnapshotButton.setText(QtGui.QApplication.translate("masar", "Save Machine Snapshot ...", None, QtGui.QApplication.UnicodeUTF8))
-        self.compareSnapshotsButton.setText(QtGui.QApplication.translate("masar", "Compare Snapshots...", None, QtGui.QApplication.UnicodeUTF8))
+        self.restoreMachineButton.setText(QtGui.QApplication.translate("masar", "Restore Machine", None, QtGui.QApplication.UnicodeUTF8))
         self.saveDataFileButton.setText(QtGui.QApplication.translate("masar", "Export Snapshot to File ...", None, QtGui.QApplication.UnicodeUTF8))
+        self.pvSearchButton.setToolTip(QtGui.QApplication.translate("masar", "<html><head/><body><p>search/filter pvs in the active snapshot Tab (the one you are watching) </p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
+        self.pvSearchButton.setText(QtGui.QApplication.translate("masar", "PV Search", None, QtGui.QApplication.UnicodeUTF8))
 
 import masarRC_rc

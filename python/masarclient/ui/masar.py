@@ -13,6 +13,8 @@ import os
 import sys
 import time
 import datetime
+import re
+import fnmatch
 
 from PyQt4.QtGui import (QApplication, QMainWindow, QMessageBox, QTableWidgetItem, QTableWidget,
                           QFileDialog, QColor, QBrush, QTabWidget)
@@ -97,13 +99,15 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.__service = 'masar'
         self.mc = masarClient.client(channelname) 
         self.currentConfigFilter = str(self.configFilterLineEdit.text())  
+        #self.currentRestoreFilter = str(self.restoreFilterLineEdit.text()) 
+        self.currentPvFilter = str(self.pvFilterLineEdit.text()) 
         self.__initSystemCombox()   
         
         self.eventConfigFilter = str(self.eventFilterLineEdit.text())
         self.authorText = str(self.authorTextEdit.text())  
         self.UTC_OFFSET_TIMEDELTA = datetime.datetime.utcnow() - datetime.datetime.now()
         self.time_format = "%Y-%m-%d %H:%M:%S"
-        self.tabWindowDict = {'comment': self.commentTab}# comment, preview, compare
+        self.tabWindowDict = {'comment': self.commentTab}# comment, preview, compare, filter
         self.e2cDict = {} # event to config dictionary
         self.pv4cDict = {} # pv name list for each selected configuration
         self.data4eid = {} # snapshot data for eventId
@@ -114,6 +118,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.compareLiveWithMultiSnapshots = False
         self.compareSnapshotsTableKeys = []
         self.eventIds = []
+        self.origID = ""
         # set bad pv row to grey: bad pvs means that they were bad when the snapshot was taken
         self.brushbadpv = QBrush(QColor(128, 128, 128))
         self.brushbadpv.setStyle(Qt.SolidPattern)
@@ -308,6 +313,24 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             self.splitter.setSizes([500,600])
 #********* End of Config Table ********************************************************************
 
+    def createNewTableWidget(self, eventID, label):
+        """
+        types of tables in snapshotTab: comment(Welcome page), ordinary(double-click on event table), 
+        preview, compare, filter
+        """
+        if self.tabWindowDict.has_key(str(eventID)):
+            tableWidget = self.tabWindowDict[str(eventID)]
+        else:
+            tableWidget = QTableWidget()
+            self.tabWindowDict[str(eventID)] = tableWidget
+            QObject.connect(tableWidget, SIGNAL(_fromUtf8("cellDoubleClicked (int,int)")),  
+                            self.__showArrayData)
+        
+        self.snapshotTabWidget.addTab(tableWidget, label)
+        self.snapshotTabWidget.setTabText(self.snapshotTabWidget.count(), label)  
+        self.snapshotTabWidget.setCurrentWidget(tableWidget)    
+        return tableWidget 
+    
 #********* Start of Save machine snapshot ********************************************************* 
     def saveMachineSnapshot(self):
         """
@@ -445,27 +468,13 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 data = result[1]
                 self.pv4cDict[str(eid)] = data['PV Name']
                 self.data4eid[str(eid)] = data
-            
-                try:
-                    tabWidget = self.tabWindowDict['preview']
-                    index = self.snapshotTabWidget.indexOf(tabWidget)
-                except:
-                    tabWidget = QTableWidget()
-                    index = self.snapshotTabWidget.count()
-                    self.tabWindowDict['preview'] = tabWidget
-                    QObject.connect(tabWidget, SIGNAL(_fromUtf8("cellDoubleClicked (int,int)")), 
-                                    self.__showArrayData)
+                
+                label = QString.fromUtf8((cname+': Preview'))
+                tabWidget = self.createNewTableWidget('preview', label)
             
                 self.setSnapshotTable(data, tabWidget, eid)
-                tabWidget.resizeColumnsToContents()
                 #sort the table by "Connection"
                 tabWidget.sortByColumn(1,1)
-                label = QString.fromUtf8((cname+': Preview'))
-                self.snapshotTabWidget.addTab(tabWidget, label)
-                self.snapshotTabWidget.setTabText(index, label)  
-                #seems to need setCurrentWidget to make preview tab as the current tab    
-                self.snapshotTabWidget.setCurrentIndex(index)
-                self.snapshotTabWidget.setCurrentWidget(tabWidget) 
                 #set self.previewId in saveMachinePreviewAction instead of here
                 self.previewId = eid
                 self.previewConfName = cname
@@ -831,43 +840,23 @@ You may re-select the Config (click 'Select Snapshots(s)') to verify this new sa
         
         #print(eventIds)
         for i in range(len(eventIds)):
-            if self.tabWindowDict.has_key(eventIds[i]):
-                tableWidget = self.tabWindowDict[eventIds[i]]
-            else:
-                tableWidget = QTableWidget()
-                self.tabWindowDict[eventIds[i]] = tableWidget
-                QObject.connect(tableWidget, SIGNAL(_fromUtf8("cellDoubleClicked (int,int)")),
-                                 self.__showArrayData)
-            
             data = self.retrieveMasarData(eventid=eventIds[i])
-            if data:
-                #if isNew:
-                    #for j in range(self.snapshotTabWidget.count(), 0, -1):
-                        #self.snapshotTabWidget.removeTab(j)
-                    #self.pv4cDict.clear()
-                    #self.data4eid.clear()
-                    #self.arrayData.clear()
-                    #isNew = False
-
-                tableWidget.clear()
-                self.setSnapshotTable(data, tableWidget, eventIds[i])
-                tableWidget.resizeColumnsToContents()
-                
-                ts = eventTs[i].split('.')[0] 
-                label = QString.fromUtf8((eventNames[i]+': ' +eventIds[i]+": "+ ts))
-                self.snapshotTabWidget.addTab(tableWidget, label)
-                #self.snapshotTabWidget.setTabText(i+1, label)
-                #print("it has %d tabs now"%self.snapshotTabWidget.count())
-                self.snapshotTabWidget.setTabText(self.snapshotTabWidget.count(), label)
-                self.pv4cDict[str(eventIds[i])] = data['PV Name']
-                self.data4eid[str(eventIds[i])] = data         
-                tableWidget.setStatusTip("Snapshot data of " + eventNames[i] + " saved at " + ts)
-                tableWidget.setToolTip("Sort the table by column \n Ctrl + C to copy \n \
-Double click to view waveform data")
-                self.resizeSplitter(1)
-            else:
+            if None == data:
                 QMessageBox.warning(self, "Warning", 
                                     "Can't get snapshot data for eventId:%s"%eventIds[i])
+                return
+            
+            ts = eventTs[i].split('.')[0] 
+            label = QString.fromUtf8((eventNames[i]+': ' +eventIds[i]+": "+ ts))            
+            tableWidget = self.createNewTableWidget(eventIds[i], label)        
+            self.setSnapshotTable(data, tableWidget, eventIds[i])
+            
+            self.pv4cDict[str(eventIds[i])] = data['PV Name']
+            self.data4eid[str(eventIds[i])] = data         
+            tableWidget.setStatusTip("Snapshot data of " + eventNames[i] + " saved at " + ts)
+            tableWidget.setToolTip("Sort the table by column \n Ctrl + C to copy \n \
+Double click to view waveform data")
+            self.resizeSplitter(1)
                           
         #self.snapshotTabWidget.setCurrentIndex(1)
         #print("total tabs:%d"%self.snapshotTabWidget.count())
@@ -1000,7 +989,7 @@ Double click to view waveform data")
                 
     def setSnapshotTable(self, data, table, eventid):
         """
-        called by setSnapshotTabWindow() and saveMachineSnapshot()(preview table) 
+        called by setSnapshotTabWindow(), saveMachineSnapshot()(preview table), and searchPV() 
         This table is different from compareSnapshotsTable, see setCompareSnapshotsTable()
         """
         if data:
@@ -1021,9 +1010,12 @@ Double click to view waveform data")
             table.clear()
         
             nrows = len(data.values()[0])
-            keys = ['PV Name', 'Saved Connection', 'Not Restore', 'Saved Value', 'Live Value', 
-                    'Diff', 'Saved Timestamp', 'Saved Status','Saved Severity','Live Connection', 
-                    'Live Timestamp', 'Live Status', 'Live Severity']
+            keys = ['PV Name', 'Saved Connection', 'Not Restore','Saved Value','Live Value','Diff', 
+                    'Saved Timestamp', 'Saved Status','Saved Severity',
+                    'Live Connection', 'Live Timestamp', 'Live Status', 'Live Severity']
+            #keys = ['PV Name', 'Description', 'Not Restore', 'Saved Value', 'Live Value', 'Diff', 
+                    #'Saved Connection', 'Saved Timestamp', 'Saved Status','Saved Severity',
+                    #'Live Connection', 'Live Timestamp', 'Live Status', 'Live Severity']
             #ncols = len(data) - 3
             ncols = len(keys)
             table.setRowCount(nrows)
@@ -1042,6 +1034,11 @@ Double click to view waveform data")
             isConnected = data['isConnected']
             is_array = data['isArray'] 
             array_value = data['arrayValue']
+            
+            #pvs = [pvnames[m]+'.DESC' for m in range(len(pvnames))]
+            #v3Results = cav3.caget(pvs, timeout=2, throw=False)
+            #for n in range(len(pvs)):
+                #print("%s    %s"%(pvs[n], v3Results[n]))
             
             for i in range(nrows):
                 #item = table.item(i, 8)
@@ -1106,11 +1103,15 @@ Double click to view waveform data")
                             itemtmp = QTableWidgetItem()
                             table.setItem(i, item_idx, itemtmp)
                         itemtmp.setBackground(self.brushbadpv)
+                
+                #if v3Results[i]:
+                    #self.__setTableItem(table, i, 1, str(v3Results[i]))
 
             table.setSortingEnabled(True)
             #be careful of this sorting action 
             #sort by "Connection"  
             table.sortItems(1,1)
+            table.resizeColumnsToContents()
         else:
             raise "Error occurred in setSnapshotTable(self, data, table, eventid)"
 
@@ -1378,6 +1379,8 @@ Click Show Details... to see the failure details"
             QMessageBox.information(self, "Congratulation", 
                             "Cheers: successfully restore machine with selected snapshot.")
 
+#************************** End of restoreSnapshotAction(self) ********************************************* 
+ 
     def getLiveMachineAction(self):
         """
         See ui_masar.py (.ui):
@@ -1574,7 +1577,7 @@ Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
             QMessageBox.warning(self, "Warning", 
                                 "No snapshot is displayed. Please refer Welcome to MASAR for help")
             return
-
+#************************** End of getLiveMachineAction(self) ********************************************* 
         
     def getLiveMachineData(self, pvlist):
         """
@@ -2086,6 +2089,109 @@ delta01: live value - value in 1st snapshot")
             table.sortItems(nEvents+2, 0)
 #************************** End of comparing multiple snapshots *********************************** 
 
+    #def restoreFilterChanged(self):
+        #self.currentRestoreFilter = str(self.restoreFilterLineEdit.text())
+        
+    #def partialRestoreMachine(self):
+        #print("restore filter: %s"%(self.currentRestoreFilter))
+
+    def pvFilterChanged(self):
+        self.currentPvFilter = str(self.pvFilterLineEdit.text())
+ 
+    def getInfoFromTableWidget(self):
+        curWidget = self.snapshotTabWidget.currentWidget()
+        if not isinstance(curWidget, QTableWidget):
+            QMessageBox.warning(self, "Warning", 
+                                "No snapshot is displayed. Please refer Welcome to MASAR for help")
+            return None
+        
+        eid = self.__find_key(self.tabWindowDict, curWidget)
+        if eid == 'comment':
+            return
+        if eid == 'preview':
+            eid = self.previewId 
+            
+        data_ = self.data4eid[str(eid)]
+        pvlist_ = self.pv4cDict[str(eid)]  
+        eventIds_ = self.eventIds 
+        return(data_, pvlist_, eid, eventIds_)        
+               
+    def searchPV(self):
+        data = odict()
+        #print("pv filter: %s"%(self.currentPvFilter))
+        pattern_ = self.currentPvFilter
+        pattern = fnmatch.translate(pattern_)
+        #pattern = 'r'+`pattern_` 
+        #print("pattern: %s"%(pattern))
+        #if pattern == '*':
+            #pattern = ""   
+             
+        info = self.getInfoFromTableWidget()
+        if info == None:
+            return 
+        if str(info[2]) == 'compare':
+            QMessageBox.warning(self, "Warning", 
+                                "pv searching on compareSnapshotTab is not supported yet")    
+            return
+        if str(info[2]).isdigit():
+            self.origID = str(info[2])
+                
+        pvList = info[1]
+        #print(pvList) 
+        #print("info[0]")
+        #print(info[0]['PV Name'])
+        #print("%d PVs in the orignal tab \n"%(len(pvList)))
+        regex = re.compile(pattern, re.IGNORECASE)
+        filteredPVs = [pv for pv in pvList for m in [regex.search(pv)] if m]
+        #print(filteredPVs) 
+        if 0 == len(filteredPVs):
+            QMessageBox.warning(self, "Warning", 
+                                "No matching pv, please re-enter your search pattern")
+            return          
+        
+        #print(str(info[2])) 
+        if str(info[2]) == 'filter':   
+            label = "filtered snapshot(ID_" + self.origID + "_filter)" 
+        else:
+            label = "filtered snapshot(ID_" + str(info[2]) + ")" 
+            
+        tableWidget = self.createNewTableWidget("filter", label)
+        
+        status,severity,ts,ts_nano,dbr,sval,ival,dval,isCon,isArr,arr = [],[],[],[],[],[],[],[],[],[],[]
+        for i in range(len(filteredPVs)):
+            index = info[0]['PV Name'].index(filteredPVs[i])
+            status.append(info[0]['Status'][index])
+            severity.append(info[0]['Severity'][index])
+            ts.append(info[0]['Time stamp'][index])
+            ts_nano.append(info[0]['Time stamp (nano)'][index])
+            dbr.append(info[0]['DBR'][index])
+            sval.append(info[0]['S_value'][index])
+            ival.append(info[0]['I_value'][index])
+            dval.append(info[0]['D_value'][index])
+            isCon.append(info[0]['isConnected'][index])
+            isArr.append(info[0]['isArray'][index])
+            arr.append(info[0]['arrayValue'][index])
+            
+        data['PV Name'] = filteredPVs
+        data['Status'] = status
+        data['Severity'] = severity
+        data['Time stamp'] = ts
+        data['Time stamp (nano)'] = ts_nano
+        data['DBR'] = dbr
+        data['S_value'] = sval
+        data['I_value'] = ival
+        data['D_value'] = dval
+        data['isConnected'] = isCon
+        data['isArray'] = isArr
+        data['arrayValue'] = arr 
+        
+        self.pv4cDict['filter'] = data['PV Name']    
+        self.data4eid['filter'] = data     
+        
+        tableWidget.clear()
+        self.setSnapshotTable(data, tableWidget, 'filter')
+        #tableWidget.resizeColumnsToContents()
+        
         
 def main(channelname = None):
     app = QApplication(sys.argv)
