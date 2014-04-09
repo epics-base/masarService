@@ -1,6 +1,6 @@
 TOP = ..
 include $(TOP)/configure/CONFIG
 DIRS += testGatherV3Data
-DIRS += testezchannelRPC
+DIRS += testclientRPC
 include $(TOP)/configure/RULES_DIRS
 

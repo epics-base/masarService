@@ -99,18 +99,18 @@ then python will crash when python terminates.</p>
   <li><a href="#L157">Building</a></li>
   <li><a href="#L191">Testing</a>
     <ul>
-      <li><a href="#L207">gatherV3ScalarDataPut</a></li>
-      <li><a href="#L213">gatherV3ScalarDataExample</a></li>
-      <li><a href="#L219">gatherV3ScalarDataTest</a></li>
+      <li><a href="#L207">gatherV3DataPut</a></li>
+      <li><a href="#L213">gatherV3DataExample</a></li>
+      <li><a href="#L219">gatherV3DataTest</a></li>
       <li><a href="#L229">masarServiceRun</a></li>
-      <li><a href="#L241">testezchannelRPC</a></li>
+      <li><a href="#L241">testclientRPC</a></li>
       <li><a href="#L249">testchannelRPC.py</a></li>
     </ul>
   </li>
   <li><a href="#L261">C++ Client</a>
     <ul>
       <li><a href="#L267">ezchannelRPC</a></li>
-      <li><a href="#L323">gatherV3ScalarData</a></li>
+      <li><a href="#L323">gatherV3Data</a></li>
     </ul>
   </li>
   <li><a href="#L458">Python Client</a>
@@ -219,7 +219,7 @@ export PYTHONPATH=$PYTHONPATH:/home/mrk/hg/masarService/python</pre>
 <p>masarService/python/test has some python tests. This section describes C++
 tests.</p>
 
-<p>The gatherV3ScalarData test require the the V3 IOC provided with this
+<p>The gatherV3Data test require the the V3 IOC provided with this
 project is running. It is stated via:</p>
 <pre>
 $cd masarService/test/v3IOC
@@ -237,48 +237,148 @@ mbbo. The other records are all ao records.</p>
 <p>Each of the C++ example and test programs can be executed from the installed
 bin directory. For example on my linux machine:</p>
 <pre>cd masarService/cpp/bin/linux-x86
- ./gatherV3ScalarDataPut</pre>
+ ./gatherV3DataPut</pre>
 
-<h3 id="L207">gatherV3ScalarDataPut</h3>
+<h3 id="L207">gatherV3DataPut</h3>
 
 <p>This writes values into the first ten records of the test V3 IOC. A sample
 run is:</p>
 <pre>mrk&gt; pwd
-/home/mrk/hg/masarService/cpp/bin/linux-x86
-mrk&gt; ./gatherV3ScalarDataPut
+/home/mrk/hg/masarService/test/cpp/bin/linux-x86
+mrk&gt; ./gatherV3DataPut
+
 nttable
-structure NTTable
-    structure timeStamp
+structure 
+    time_t timeStamp
         long secondsPastEpoch 0
         int nanoSeconds 0
         int userTag 0
-    structure alarm
+    alarm_t alarm
         int severity 0
         int status 0
         string message 
-    string[] label [doubleValue,intValue,stringValue,secondsPastEpoch,nanoSeconds,timeStampTag,alarmSeverity,alarmStatus,alarmMessage,dbrType,isConnected,channelName]
-    double[] doubleValue [10,0,0,0,1.9,1,1,1,1,1]
-    int[] intValue [10,0,0,0,0,0,0,0,0,0]
-    string[] stringValue [10,string value,zero,one,1.900000e+00,1.000000e+00,1.000000e+00,1.000000e+00,1.000000e+00,1.000000e+00]
-    long[] secondsPastEpoch [-631152000,-631152000,-631152000,-631152000,-631152000,-631152000,-631152000,-631152000,-631152000,-631152000]
-    int[] nanoSeconds [0,0,0,0,0,0,0,0,0,0]
-    int[] timeStampTag [0,0,0,0,0,0,0,0,0,0]
-    int[] alarmSeverity [3,3,3,3,3,3,3,3,3,3]
-    int[] alarmStatus [17,17,17,17,17,17,17,17,17,17]
-    string[] alarmMessage [UDF,UDF,UDF,UDF,UDF,UDF,UDF,UDF,UDF,UDF]
-    int[] dbrType [5,0,3,3,6,6,6,6,6,6]
-    boolean[] isConnected [true,true,true,true,true,true,true,true,true,true]
-    string[] channelName [masarExample0000,masarExample0001,masarExample0002,masarExample0003,masarExample0004,masarExample0005,masarExample0006,masarExample0007,masarExample0008,masarExample0009]</pre>
-
-<h3 id="L213">gatherV3ScalarDataExample</h3>
+    string[] label []
+    string[] channelName [masarExample0000,masarExample0001,masarExample0002,masarExample0003,masarExample0004,masarExampleCharArray,masarExampleStringArray,masarExampleLongArray,masarExampleDoubleArray]
+    string[] stringValue [0,0.0,0,0,0.000000e+00,0.0,0.0,0.0,0.0]
+    double[] doubleValue [0,0,0,0,0,0,0,0,0]
+    long[] longValue [0,0,0,0,0,0,0,0,0]
+    int[] dbrType [5,0,3,3,6,4,0,5,6]
+    boolean[] isConnected [true,true,true,true,true,true,true,true,true]
+    long[] secondsPastEpoch [1396551394,1396551394,1396551394,1396551394,1396551394,1396551394,1396551394,1396551394,1396551394]
+    int[] nanoSeconds [865030255,865040126,865042488,865044853,865047477,865049596,865053119,865054685,865056080]
+    int[] timeStampTag [0,0,0,0,0,0,0,0,0]
+    int[] alarmSeverity [0,0,0,0,0,0,0,0,0]
+    int[] alarmStatus [0,0,0,0,0,0,0,0,0]
+    string[] alarmMessage [NO_ALARM,NO_ALARM,NO_ALARM,NO_ALARM,NO_ALARM,NO_ALARM,NO_ALARM,NO_ALARM,NO_ALARM]
+    boolean[] isArray [false,false,false,false,false,true,true,true,true]
+    structure[] arrayValue 
+        structure 
+            string[] stringValue []
+            double[] doubleValue []
+            int[] intValue []
+        structure 
+            string[] stringValue []
+            double[] doubleValue []
+            int[] intValue []
+        structure 
+            string[] stringValue []
+            double[] doubleValue []
+            int[] intValue []
+        structure 
+            string[] stringValue []
+            double[] doubleValue []
+            int[] intValue []
+        structure 
+            string[] stringValue []
+            double[] doubleValue []
+            int[] intValue []
+        structure 
+            string[] stringValue []
+            double[] doubleValue []
+            int[] intValue [1,2,3,4]
+        structure 
+            string[] stringValue [aaa,bbb,ccc,ddd]
+            double[] doubleValue []
+            int[] intValue []
+        structure 
+            string[] stringValue []
+            double[] doubleValue []
+            int[] intValue [1,2,3,4]
+        structure 
+            string[] stringValue []
+            double[] doubleValue [10,100,1000,10000]
+            int[] intValue []
+</pre>
+<h3 id="L213">gatherV3DataExample</h3>
 
 <p>This tests gets a set of V3 channels. It produces:</p>
-<pre>mrk&gt; ./gatherV3ScalarDataExample
-values: double[] doubleValue [10,0,0,0,1.9,1,1,1,1,1]
-values: double[] doubleValue [10,0,0,0,1.9,1,1,1,1,1]
-GatherV3ScalarData::~GatherV3ScalarData()</pre>
+<pre>
+mrk&gt; ./gatherV3DataExample
 
-<h3 id="L219">gatherV3ScalarDataTest</h3>
+structure 
+    time_t timeStamp
+        long secondsPastEpoch 0
+        int nanoSeconds 0
+        int userTag 0
+    alarm_t alarm
+        int severity 0
+        int status 0
+        string message 
+    string[] label []
+    string[] channelName [masarExample0000,masarExample0001,masarExample0002,masarExample0003,masarExample0004,masarExampleCharArray,masarExampleStringArray,masarExampleLongArray,masarExampleDoubleArray]
+    string[] stringValue [0,0.0,0,0,0.000000e+00,0.0,0.0,0.0,0.0]
+    double[] doubleValue [0,0,0,0,0,0,0,0,0]
+    long[] longValue [0,0,0,0,0,0,0,0,0]
+    int[] dbrType [5,0,3,3,6,4,0,5,6]
+    boolean[] isConnected [true,true,true,true,true,true,true,true,true]
+    long[] secondsPastEpoch [1396551394,1396551394,1396551394,1396551394,1396551394,1396551394,1396551394,1396551394,1396551394]
+    int[] nanoSeconds [865030255,865040126,865042488,865044853,865047477,865049596,865053119,865054685,865056080]
+    int[] timeStampTag [0,0,0,0,0,0,0,0,0]
+    int[] alarmSeverity [0,0,0,0,0,0,0,0,0]
+    int[] alarmStatus [0,0,0,0,0,0,0,0,0]
+    string[] alarmMessage [NO_ALARM,NO_ALARM,NO_ALARM,NO_ALARM,NO_ALARM,NO_ALARM,NO_ALARM,NO_ALARM,NO_ALARM]
+    boolean[] isArray [false,false,false,false,false,true,true,true,true]
+    structure[] arrayValue 
+        structure 
+            string[] stringValue []
+            double[] doubleValue []
+            int[] intValue []
+        structure 
+            string[] stringValue []
+            double[] doubleValue []
+            int[] intValue []
+        structure 
+            string[] stringValue []
+            double[] doubleValue []
+            int[] intValue []
+        structure 
+            string[] stringValue []
+            double[] doubleValue []
+            int[] intValue []
+        structure 
+            string[] stringValue []
+            double[] doubleValue []
+            int[] intValue []
+        structure 
+            string[] stringValue []
+            double[] doubleValue []
+            int[] intValue [1,2,3,4]
+        structure 
+            string[] stringValue [aaa,bbb,ccc,ddd]
+            double[] doubleValue []
+            int[] intValue []
+        structure 
+            string[] stringValue []
+            double[] doubleValue []
+            int[] intValue [1,2,3,4]
+        structure 
+            string[] stringValue []
+            double[] doubleValue [10,100,1000,10000]
+            int[] intValue []
+boolean[] isConnected [true,true,true,true,true,true,true,true,true]
+boolean[] isConnected [true,true,true,true,true,true,true,true,true]
+</pre>
+<h3 id="L219">gatherV3DataTest</h3>
 
 <p>This tests gets a large set of V3 channels. This test also requires the test
 V3 database of the gather service. It must be started before running this
@@ -287,7 +387,7 @@ test.</p>
 <p>This test prints nothing if it is successfull. To run just execute:</p>
 <pre>mrk&gt; pwd
 /home/mrk/hg/masarService/cpp
-mrk&gt; bin/linux-x86/gatherV3ScalarDataExample </pre>
+mrk&gt; bin/linux-x86/gatherV3DataExample </pre>
 
 <p>Thus test can also be run with a debug option. In this case it only gets
 data from the first 6 channels but displays lots of output.</p>
@@ -305,13 +405,13 @@ returns a PVStructure that is an NTTable.</p>
 
 <p>The server must be run in order to run the next two tests.</p>
 
-<h3 id="L241">testezchannelRPC</h3>
+<h3 id="L241">testclientRPC</h3>
 
 <p>This is a C++ client that makes a channelRPC request to the dummy server.</p>
 
 <p>To run this test:</p>
 <pre>cd masarService/cpp/bin/&lt;arch&gt;
- ./testezchannelRPC</pre>
+ ./testclientRPC</pre>
 
 <h3 id="L249">testchannelRPC.py</h3>
 
@@ -390,17 +490,17 @@ public:
     <dd>Get the reason why a connect or request failed.</dd>
 </dl>
 
-<p>masarService/cpp/test/testezchannelRPC/testezchannelRPC.cpp provides an
+<p>masarService/cpp/test/testclientRPC/testclientRPC.cpp provides an
 example of how to use this class.</p>
 
-<h3 id="L323">gatherV3ScalarData</h3>
+<h3 id="L323">gatherV3Data</h3>
 
 <p>Gather an array of V3 scalar double values. The complete set of data is
 presented as an NTTable. The NTTable has the optional fields alarm and
 timeStamp. The class definition is:</p>
-<pre>class GatherV3ScalarData {
+<pre>class GatherV3Data {
 public:
-    GatherV3ScalarData(String channelNames[],int numberChannels);
+    GatherV3Data(String channelNames[],int numberChannels);
     bool connect(double timeOut);
     void disconnect();
     bool get();
@@ -423,7 +523,7 @@ public:
 
 <p>where</p>
 <dl>
-  <dt>GatherV3ScalarData</dt>
+  <dt>GatherV3Data</dt>
     <dd>The constructor. channelNames is the array of channelNames to gather.
       numberChannels is the number of channels to gather. </dd>
   <dt>connect</dt>
@@ -493,7 +593,7 @@ public:
     <dd>Get the array of channel names for each V3 channel. </dd>
 </dl>
 
-<p>masarService/cpp/test/testGatherV3ScalarData/gatherV3ScalarDataExample.cpp
+<p>masarService/cpp/test/testGatherV3Data/gatherV3DataExample.cpp
 provides an example of how to use this class.</p>
 <hr />
 

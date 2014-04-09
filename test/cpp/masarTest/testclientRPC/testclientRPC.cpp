@@ -1,8 +1,12 @@
-/*testezchannelRPC.cpp */
+/*testChannelRPCC.cpp */
 
 /* Author: Marty Kraimer */
 
-#include <pv/ezchannelRPC.h>
+#include <epicsExit.h>
+#include <pv/thread.h>
+#include <pv/event.h>
+#include <pv/rpcClient.h>
+#include <pv/clientFactory.h>
 
 #include <pv/nttable.h>
 #include <pv/ntnameValue.h>
@@ -13,15 +17,15 @@ using namespace epics::pvAccess;
 
 static String channelName("masarService");
 
-static void dump(EZChannelRPC::shared_pointer const & channelRPC)
+static void dump(RPCClientPtr const & channelRPC)
 {
-    printf("%s\n",channelRPC->getMessage().c_str());
+    cout << channelRPC->getMessage() << endl;
 }
 
 void test()
 {
-    EZChannelRPC::shared_pointer channelRPC = 
-        EZChannelRPC::shared_pointer(new EZChannelRPC(channelName));
+    RPCClientPtr channelRPC = 
+        RPCClientPtr(RPCClient::create(channelName,PVStructurePtr()));
     bool result = channelRPC->connect(1.0);
     if(!result) {dump(channelRPC); return;}
     NTNameValuePtr ntNameValue
@@ -42,18 +46,15 @@ void test()
 //    pvFunction->put("retrieveServiceConfigs");
 //    pvFunction->put("saveMasar");
     pvFunction->put("retrieveSnapshot");
-    PVStructure::shared_pointer pvResponse = channelRPC->request(ntNameValue->getPVStructure(),false);
-    if(pvResponse.get()==0) {dump(channelRPC); return;}
-    String builder;
-    pvResponse->toString(&builder);
-    printf("response\n%s\n",builder.c_str());
+    PVStructurePtr pvResponse = channelRPC->request(ntNameValue->getPVStructure(),false);
+    if(pvResponse==NULL) {dump(channelRPC); return;}
+    cout << "response\n" << pvResponse->dumpValue(cout) << endl;
     channelRPC->destroy();
 }
 
 int main(int argc,char *argv[])
 {
+    ClientFactory::start();
     test();
-    epicsThreadSleep(1.0);
-    epicsExitCallAtExits();
-    epicsThreadSleep(1.0);
+    ClientFactory::stop();
 }

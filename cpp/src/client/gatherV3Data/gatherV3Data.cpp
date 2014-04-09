@@ -21,6 +21,8 @@ namespace epics { namespace pvAccess {
 
 using namespace epics::pvData;
 using std::tr1::static_pointer_cast;
+using std::cout;
+using std::endl;
 
 struct GatherV3DataPvt;
 
@@ -59,6 +61,7 @@ struct GatherV3DataPvt
         StringArray const & valueNames,
         FieldConstPtrArray const &valueFields);
     ~GatherV3DataPvt(){}
+    void getOne(int index);
     Mutex mutex;
     Event event;
     PVTimeStamp pvtimeStamp;
@@ -230,6 +233,15 @@ static void getCallback ( struct event_handler_args args )
                  ( const struct dbr_time_string * ) args.dbr;
             // set to string array only
             pvt->pvstringValue->get()[offset] = String(pTS->value);
+            if(pTS->value[0]==0) {
+                pvt->numberCallbacks-- ;
+                int32 *pvalue = pvt->pvDBRType->get();
+                pvalue[offset] = DBF_LONG;
+                id->requestType = requestLong;
+                id->getIsConnected = false;
+                pvt->getOne(id->offset);
+                ca_flush_io();
+            }
         } else {
             throw std::logic_error("unknown DBR_TYPE");
         }
@@ -271,6 +283,33 @@ static void getCallback ( struct event_handler_args args )
 
     if(pvt->numberCallbacks==pvt->numberConnected) {
         pvt->event.signal();
+    }
+}
+
+void GatherV3DataPvt::getOne(int i)
+{
+    ChannelID *channelId = apchannelID[i];
+    chid theChid = channelId->theChid;
+    V3RequestType requestType = channelId->requestType;
+    int req = DBR_TIME_DOUBLE;
+    if(requestType==requestLong) req = DBR_TIME_LONG;
+    if(requestType==requestString) req = DBR_TIME_STRING;
+    int result = ca_array_get_callback(
+        req,
+        0,
+        theChid,
+        getCallback,
+        channelId);
+    if(result==ECA_NORMAL) return;
+    if(result==ECA_DISCONN) {
+        messageCat(this,"ca_get_callback",ECA_DISCONN,i);
+        channelId->getIsConnected = false;
+        this->requestOK = false;
+        return;
+    }
+    if(result!=ECA_NORMAL) {
+        messageCat(this,"ca_get_callback",result,i);
+        this->requestOK = false;
     }
 }
 
@@ -598,6 +637,7 @@ void GatherV3Data::disconnect()
     pvt->state = idle;
 }
 
+
 bool GatherV3Data::get()
 {
     if(pvt->state!=connected) {
@@ -617,29 +657,7 @@ bool GatherV3Data::get()
     pvt->alarm.setSeverity(noAlarm);
     pvt->alarm.setStatus(noStatus);
     for(int i=0; i< pvt->numberChannels; i++) {
-        ChannelID *channelId = pvt->apchannelID[i];
-        chid theChid = channelId->theChid;
-        V3RequestType requestType = channelId->requestType;
-        int req = DBR_TIME_DOUBLE;
-        if(requestType==requestLong) req = DBR_TIME_LONG;
-        if(requestType==requestString) req = DBR_TIME_STRING;
-        int result = ca_array_get_callback(
-            req,
-            0,
-            theChid,
-            getCallback,
-            pvt->apchannelID[i]);
-        if(result==ECA_NORMAL) continue;
-        if(result==ECA_DISCONN) {
-            messageCat(pvt,"ca_get_callback",ECA_DISCONN,i);
-            channelId->getIsConnected = false;
-            pvt->requestOK = false;
-            continue;
-        }
-        if(result!=ECA_NORMAL) {
-            messageCat(pvt,"ca_get_callback",result,i);
-            pvt->requestOK = false;
-        }
+        pvt->getOne(i);
     }
     ca_flush_io();
     bool result = false;
@@ -770,7 +788,8 @@ bool GatherV3Data::put()
             case requestDouble:
                 req = DBR_DOUBLE; pdata = &pdvalue[i]; break;
             case requestString:
-                req = DBR_STRING; pdata = psvalue[i].c_str(); break;
+                req = DBR_STRING; pdata = psvalue[i].c_str();
+                break;
             }
         }
         int result = ca_array_put_callback(

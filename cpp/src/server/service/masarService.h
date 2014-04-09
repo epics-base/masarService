@@ -11,7 +11,7 @@
 #include <stdexcept>
 #include <memory>
 
-#include <pv/service.h>
+#include <pv/rpcService.h>
 #include <pv/dslPY.h>
 
 namespace epics { namespace masar { 
@@ -20,7 +20,7 @@ class MasarService;
 typedef std::tr1::shared_ptr<MasarService> MasarServicePtr;
 
 class MasarService :
-  public virtual epics::pvIOC::ServiceRPC,
+  public virtual epics::pvAccess::RPCService,
   public std::tr1::enable_shared_from_this<MasarService>
 {
 public:
@@ -28,9 +28,8 @@ public:
     MasarService();
     virtual ~MasarService();
     virtual void destroy();
-    virtual void request(
-        epics::pvAccess::ChannelRPCRequester::shared_pointer const & channelRPCRequester,
-        epics::pvData::PVStructure::shared_pointer const & pvArgument);
+    virtual  epics::pvData::PVStructure::shared_pointer request(
+        epics::pvData::PVStructurePtr const & pvArgument) throw (epics::pvAccess::RPCRequestException);
 private:
     MasarService::shared_pointer getPtrSelf()
     {

@@ -26,7 +26,6 @@ namespace epics { namespace masar {
 
 using namespace epics::pvData;
 using namespace epics::pvAccess;
-using namespace epics::pvIOC;
 
 MasarService::MasarService()
 : dslRdb(createDSL_RDB())
@@ -40,9 +39,8 @@ void MasarService::destroy()
 {
 }
 
-void MasarService::request(
-    ChannelRPCRequester::shared_pointer const & channelRPCRequester,
-    epics::pvData::PVStructure::shared_pointer const & pvArgument)
+PVStructurePtr MasarService::request(
+    PVStructurePtr const & pvArgument) throw (epics::pvAccess::RPCRequestException)
 {
     static const int numberFunctions = 9;
     static const String functionNames[numberFunctions] = {
@@ -59,19 +57,7 @@ void MasarService::request(
     String builder;
     builder += "pvArgument ";
     if(!NTNameValue::isNTNameValue(pvArgument)) {
-        StringArray names;
-        FieldConstPtrArray fields;
-        NTTablePtr ntTable(NTTable::create(
-            false,true,true,names,fields));
-        PVStructurePtr pvStructure = ntTable->getPVStructure();
-        Alarm alarm;
-        PVAlarm pvAlarm;
-        pvAlarm.attach(ntTable->getTimeStamp());
-        alarm.setMessage("pvArgument is not an NTNameValue");
-        alarm.setSeverity(majorAlarm);
-        pvAlarm.set(alarm);
-        channelRPCRequester->requestDone(Status::Ok,pvStructure);
-        return;
+        throw epics::pvAccess::RPCRequestException(Status::STATUSTYPE_ERROR,"pvArgument is not an NTNameValue");
     }
     NTNameValuePtr ntNameValue(NTNameValue::create(pvArgument));
     PVStringPtr function = ntNameValue->getFunction();
@@ -83,28 +69,14 @@ void MasarService::request(
         }
     }
     if(functionName.c_str()==0) {
-        StringArray names;
-        FieldConstPtrArray fields;
-        NTTablePtr ntTable(NTTable::create(
-            false,true,true,names,fields));
-        PVStructurePtr pvStructure = ntTable->getPVStructure();
-        Alarm alarm;
-        PVAlarm pvAlarm;
-        pvAlarm.attach(ntTable->getTimeStamp());
-        alarm.setMessage("pvArgument has an unsupported function");
-        alarm.setSeverity(majorAlarm);
-        pvAlarm.set(alarm);
-        channelRPCRequester->requestDone(Status::Ok,pvStructure);
-        return;
+        throw epics::pvAccess::RPCRequestException(Status::STATUSTYPE_ERROR,"pvArgument has an unsupported function");
     }
     PVStringArrayPtr pvNames = ntNameValue->getNames();
     PVStringArrayPtr pvValues = ntNameValue->getValues();
     StringArray const &names = pvNames->getVector();
     StringArray const &values = pvValues->getVector();
     int num = pvNames->getLength();
-    PVStructure::shared_pointer result = dslRdb->request(
-        functionName,num,names,values);
-    channelRPCRequester->requestDone(Status::Ok,result);
+    return dslRdb->request(functionName,num,names,values);
 }
 
 }}

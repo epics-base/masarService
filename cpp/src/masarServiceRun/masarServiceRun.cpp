@@ -10,8 +10,6 @@
 #include <memory>
 #include <iostream>
 
-#include <signal.h>
-
 #include <cantProceed.h>
 #include <epicsStdio.h>
 #include <epicsMutex.h>
@@ -19,66 +17,40 @@
 #include <epicsThread.h>
 #include <epicsExit.h>
 #include <epicsExport.h>
-#include <iocsh.h>
 
+#include <pv/clientFactory.h>
 #include <pv/pvIntrospect.h>
 #include <pv/pvData.h>
-//#include <pv/pvAccess.h>
-//#include <pv/serverContext.h>
-//#include <pv/pvDatabase.h>
-#include <pv/pvServiceProvider.h>
+#include <pv/rpcServer.h>
 #include <pv/masarService.h>
 
 using namespace std;
 using namespace epics::pvData;
 using namespace epics::pvAccess;
-using namespace epics::pvIOC;
 using namespace epics::masar;
 
-void sighandler(int sig)
-{
-    /*
-    Some of the more commonly used signals:
-    1       HUP (hang up)
-    2       INT (interrupt)
-    3       QUIT (quit)
-    6       ABRT (abort)
-    9       KILL (non-catchable, non-ignorable kill)
-    14      ALRM (alarm clock)
-    15      TERM (software termination signal)
-    */
-    cout << endl <<"===Signal " << sig << " Caught..." << endl;
-    cout << "===Use CTRl-D or exit() command to stop server." << endl;
-}
 
 void masarService(const char * name)
 {
-    PVServiceChannelCTX::shared_pointer myCTX = PVServiceChannelCTX::getPVServiceChannelCTX();
+    RPCServer::shared_pointer rpcServer(new RPCServer());
     MasarService::shared_pointer service(MasarService::shared_pointer(new MasarService()));
-    ServiceChannelRPC::shared_pointer serviceChannelRPC(new ServiceChannelRPC(name,service));
-
+    rpcServer->registerService(name,service);
     cout << "===Starting channel RPC server: " << name << endl;
-    cout << "===Use CTRl-D or exit() command to stop " << name << " server." << endl;
-
-    iocsh(NULL);
+    cout << "===Use CTRl-Z to stop " << name << " server." << endl;
+    rpcServer->run();
 }
 
 int main(int argc,char *argv[])
 {
+    ClientFactory::start();
+    ServerContext::shared_pointer pvaServer =
+        startPVAServer(PVACCESS_ALL_PROVIDERS,0,true,true);
     const char *name = "masarService";
     if(argc>1) name = argv[1];
-
-    // register SIGNAL ABORT, TERM, and INT
-    signal(SIGABRT, &sighandler);
-    signal(SIGTERM, &sighandler);
-    signal(SIGINT, &sighandler);
-
-    // set the prompt to the service name
-    setenv("IOCSH_PS1", "masarService> ", 1);
-
+    std::cout << name << endl;
     masarService(name);
-
-    epicsExitCallAtExits();
+    pvaServer->shutdown();
     epicsThreadSleep(1.0);
+    pvaServer->destroy();
     return (0);
 }
