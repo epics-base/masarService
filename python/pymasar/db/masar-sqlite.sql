@@ -1,4 +1,11 @@
 PRAGMA foreign_keys=OFF;
+PRAGMA main.page_size = 4096;
+PRAGMA main.cache_size= 10000;
+PRAGMA main.locking_mode=EXCLUSIVE;
+PRAGMA main.synchronous=NORMAL;
+PRAGMA main.journal_mode=WAL;
+PRAGMA main.temp_store = MEMORY;
+
 BEGIN TRANSACTION;
 DROP TABLE IF EXISTS "masar_data";
 CREATE TABLE "masar_data" (
@@ -114,3 +121,5 @@ CREATE INDEX "service_config_prop_Ref_12" ON "service_config_prop" ("service_con
 CREATE INDEX "pv_idx_pv_name" ON "pv" ("pv_name");
 CREATE INDEX "service_event_prop_Ref_11" ON "service_event_prop" ("service_event_id");
 COMMIT;
+
+PRAGMA foreign_keys=ON;

@@ -517,9 +517,9 @@ public:
     <dd>This gets the array of native field types for each V3 channel. 
       <dl>
         <dt>DBF_STRING</dt>
+          <dd>Get and put will use DBR_STRING as the request type.</dd>
         <dt>DBF_ENUM</dt>
-          <dd>For both of these get and put will use DBR_STRING as the request
-            type.</dd>
+          <dd>By default, get and put will use DBR_STRING as the request type. But if a V3 record is not configured properbly, and string value is empty, use the numeric value then.</dd>
         <dt>DBF_CHAR</dt>
         <dt>DBF_INT</dt>
         <dt>DBF_LONG</dt>
