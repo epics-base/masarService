@@ -101,7 +101,6 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.currentConfigFilter = str(self.configFilterLineEdit.text())  
         #self.currentRestoreFilter = str(self.restoreFilterLineEdit.text()) 
         self.currentPvFilter = str(self.pvFilterLineEdit.text()) 
-        self.__initSystemCombox()   
         
         self.eventConfigFilter = str(self.eventFilterLineEdit.text())
         self.authorText = str(self.authorTextEdit.text())  
@@ -140,7 +139,9 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.epicsNoAccess = [7]
         
         #automatically fetch all configs at startup. This action should be quick
+        self.__initSystemCombox()   
         self.fetchConfigAction()
+        time.sleep(1.0)
 
     def __setDateTime(self):
         self.eventStartDateTime.setDateTime(QDateTime.currentDateTime())
