@@ -44,9 +44,6 @@ void MasarService::destroy()
 PVStructurePtr MasarService::request(
     PVStructurePtr const & pvArgument) throw (epics::pvAccess::RPCRequestException)
 {
-    String tmpbuilder; 
-    pvArgument->toString(&tmpbuilder);
-    printf("pvArguments got:\n %s\n", tmpbuilder.c_str());
     static const int numberFunctions = 9;
     static const String functionNames[numberFunctions] = {
         String("saveSnapshot"),
