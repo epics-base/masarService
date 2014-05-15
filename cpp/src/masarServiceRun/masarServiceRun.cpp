@@ -62,6 +62,7 @@ static void threadRunner(void* usr)
 
 int main(int argc,char *argv[])
 {
+    //SET_LOG_LEVEL(logLevelDebug);
     const char *name = "masarService";
     if(argc>1) name = argv[1];
 
