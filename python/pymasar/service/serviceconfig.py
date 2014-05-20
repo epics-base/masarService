@@ -220,8 +220,13 @@ def retrieveServiceConfigs(conn, servicename=None, configname=None, configversio
         results = cur.fetchall()
         for i in range(len(results)):
             cur.execute('select service_name from service where service_id = ?',(results[i][5],))
-            
-            results[i] = results[i][:-1] + (cur.fetchone()[0],) # replace service_config_id with service_config_name
+            # replace service_config_id with service_config_name
+            # and set status to be active when version == 1 or inactive when version == 0
+            if results[i][4] == 1:
+                results[i] = results[i][:4] + ('Active', ) + (cur.fetchone()[0],) 
+            elif results[i][4] == 0:
+                results[i] = results[i][:4] + ('Inactive', ) + (cur.fetchone()[0],) 
+            #results[i] = results[i][:-1] + (cur.fetchone()[0],) # replace service_config_id with service_config_name
     except:
         raise
 #        sys.exit()

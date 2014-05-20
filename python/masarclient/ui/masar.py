@@ -38,10 +38,12 @@ import commentdlg
 from showarrayvaluedlg import ShowArrayValueDlg
 from selectrefsnapshotdlg import ShowSelectRefDlg
 
-import masarclient.masarClient as masarClient
-from masarclient.channelRPC import epicsExit 
+#import masarclient.masarClient as masarClient
+#from masarclient.channelRPC import epicsExit 
 
-__version__ = "1.0.1"
+import masarclient.masarClient2 as masarClient
+
+__version__ = "1.1.0"
 
 def usage():
     print("""usage: masar.py [option]
@@ -141,7 +143,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         #automatically fetch all configs at startup. This action should be quick
         self.__initSystemCombox()   
         self.fetchConfigAction()
-        time.sleep(1.0)
+        #time.sleep(1.0)
 
     def __setDateTime(self):
         self.eventStartDateTime.setDateTime(QDateTime.currentDateTime())
@@ -950,7 +952,6 @@ Double click to view waveform data")
         status = list(rpcResult[9])
         is_array = rpcResult[10]
         raw_array_value  = rpcResult[11]
-        
         array_value = []
         for i in range(len(severity)):
             try:
@@ -963,15 +964,27 @@ Double click to view waveform data")
                 status[i] = 'N/A'
 
             if dbrtype[i] in self.epicsLong:
-                array_value.append(raw_array_value[i][2])
+                if isinstance(raw_array_value[i], dict):
+                    array_value.append(raw_array_value[i]['intVal'])
+                else:
+                    array_value.append(raw_array_value[i][2])
             elif dbrtype[i] in self.epicsDouble:
-                array_value.append(raw_array_value[i][1])
+                if isinstance(raw_array_value[i], dict):
+                    array_value.append(raw_array_value[i]['doubleVal'])
+                else:
+                    array_value.append(raw_array_value[i][1])
             elif dbrtype[i] in self.epicsString:
+                if isinstance(raw_array_value[i], dict):
+                    array_value.append(raw_array_value[i]['stringVal'])
+                else:
+                    array_value.append(raw_array_value[i][0])
                 # string value
-                array_value.append(raw_array_value[i][0])
             elif dbrtype[i] in self.epicsNoAccess:
                 # when the value is no_access, use the double value no matter what it is
-                array_value.append(raw_array_value[i][1])
+                if isinstance(raw_array_value[i], dict):
+                    array_value.append(raw_array_value[i]['doubleVal'])
+                else:
+                    array_value.append(raw_array_value[i][1])
 
         data['PV Name'] = pvnames
         data['Status'] = status
@@ -2216,7 +2229,7 @@ def main(channelname = None):
     atexit._run_exitfuncs()
 
     # it is safe to clean epics objects now.
-    epicsExit()
+    #epicsExit()
     
     # call os.exit() instead of sys.exit()
     # os._exit(0)
