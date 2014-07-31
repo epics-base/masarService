@@ -10,9 +10,9 @@ from __future__ import unicode_literals
 import sys
 import sqlite3
 
-from pymasar.utils import checkConnection
-from pymasar.service.service import (retrieveServices)
-from pymasar.pvgroup.pvgroup import (retrievePvGroups)
+from pymasarsqlite.utils import checkConnection
+from pymasarsqlite.service.service import (retrieveServices)
+from pymasarsqlite.pvgroup.pvgroup import (retrievePvGroups)
 
 def saveServiceConfig(conn, servicename, configname, configdesc=None, configversion=None, system=None):
     """
@@ -20,8 +20,8 @@ def saveServiceConfig(conn, servicename, configname, configdesc=None, configvers
     The service config name for each different service has to be unique.
     
     >>> import sqlite3
-    >>> from pymasar.service.service import (saveService, retrieveServices)
-    >>> from pymasar.db.masarsqlite import (SQL)
+    >>> from pymasarsqlite.service.service import (saveService, retrieveServices)
+    >>> from pymasarsqlite.db.masarsqlite import (SQL)
     >>> conn = sqlite3.connect(":memory:")
     >>> cur = conn.cursor()
     >>> result = cur.executescript(SQL)
@@ -110,8 +110,8 @@ def retrieveServiceConfigs(conn, servicename=None, configname=None, configversio
     service_config_version, and service_name)].
     
     >>> import sqlite3
-    >>> from pymasar.service.service import (saveService, retrieveServices)
-    >>> from pymasar.db.masarsqlite import (SQL)
+    >>> from pymasarsqlite.service.service import (saveService, retrieveServices)
+    >>> from pymasarsqlite.db.masarsqlite import (SQL)
     >>> conn = sqlite3.connect(":memory:")
     >>> cur = conn.cursor()
     >>> result = cur.executescript(SQL)
@@ -234,10 +234,10 @@ def saveServicePvGroup(conn, configname, pvgroups):
     
     >>> import sqlite3
     >>> conn = sqlite3.connect(':memory:')
-    >>> from pymasar.service.service import (saveService, retrieveServices)
-    >>> from pymasar.service.serviceconfig import(saveServicePvGroup, retrieveServicePvGroups)
-    >>> from pymasar.pvgroup.pvgroup import (savePvGroup, retrievePvGroups)
-    >>> from pymasar.db.masarsqlite import (SQL)
+    >>> from pymasarsqlite.service.service import (saveService, retrieveServices)
+    >>> from pymasarsqlite.service.serviceconfig import(saveServicePvGroup, retrieveServicePvGroups)
+    >>> from pymasarsqlite.pvgroup.pvgroup import (savePvGroup, retrievePvGroups)
+    >>> from pymasarsqlite.db.masarsqlite import (SQL)
     >>> cur = conn.cursor()
     >>> result = cur.executescript(SQL)
     >>> serviceName1 = 'masar'
@@ -331,10 +331,10 @@ def retrieveServicePvGroups(conn, configname, servicename=None):
     
     >>> import sqlite3
     >>> conn = sqlite3.connect(':memory:')
-    >>> from pymasar.service.service import (saveService, retrieveServices)
-    >>> from pymasar.service.serviceconfig import (saveServicePvGroup, retrieveServicePvGroups)
-    >>> from pymasar.pvgroup.pvgroup import (savePvGroup, retrievePvGroups)
-    >>> from pymasar.db.masarsqlite import SQL
+    >>> from pymasarsqlite.service.service import (saveService, retrieveServices)
+    >>> from pymasarsqlite.service.serviceconfig import (saveServicePvGroup, retrieveServicePvGroups)
+    >>> from pymasarsqlite.pvgroup.pvgroup import (savePvGroup, retrievePvGroups)
+    >>> from pymasarsqlite.db.masarsqlite import SQL
     >>> cur = conn.cursor()
     >>> result = cur.executescript(SQL)
     >>> serviceName1 = 'masar'
@@ -459,11 +459,11 @@ def retrieveServiceConfigPVs(conn, configname, servicename=None):
     
     >>> import sqlite3
     >>> conn = sqlite3.connect(':memory:')
-    >>> from pymasar.service.service import (saveService, retrieveServices)
-    >>> from pymasar.service.serviceconfig import(saveServicePvGroup, retrieveServicePvGroups)
-    >>> from pymasar.pvgroup.pvgroup import (savePvGroup, retrievePvGroups)
-    >>> from pymasar.pvgroup.pv import (saveGroupPvs, retrieveGroupPvs)
-    >>> from pymasar.db.masarsqlite import (SQL)
+    >>> from pymasarsqlite.service.service import (saveService, retrieveServices)
+    >>> from pymasarsqlite.service.serviceconfig import(saveServicePvGroup, retrieveServicePvGroups)
+    >>> from pymasarsqlite.pvgroup.pvgroup import (savePvGroup, retrievePvGroups)
+    >>> from pymasarsqlite.pvgroup.pv import (saveGroupPvs, retrieveGroupPvs)
+    >>> from pymasarsqlite.db.masarsqlite import (SQL)
     >>> cur = conn.cursor()
     >>> result = cur.executescript(SQL)
     >>> c01pvs = ['SR:C01-BI:G02A<BPM:L1>Pos-X', 'SR:C01-BI:G02A<BPM:L2>Pos-X',

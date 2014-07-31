@@ -10,17 +10,17 @@ from __future__ import unicode_literals
 
 import sqlite3
 
-from pymasar.utils import checkConnection
-from pymasar.service.serviceconfig import (retrieveServiceConfigs)
+from pymasarsqlite.utils import checkConnection
+from pymasarsqlite.service.serviceconfig import (retrieveServiceConfigs)
 
 def saveServiceConfigProp(conn, propname=None, propvalue=None, servicename=None, configname=None):
     """
     save a service config property, for example, which system this config belongs to.
     
     >>> import sqlite3
-    >>> from pymasar.service.service import (saveService, retrieveServices)
-    >>> from pymasar.service.serviceconfig import (saveServiceConfig, retrieveServiceConfigs)
-    >>> from pymasar.db.masarsqlite import (SQL)
+    >>> from pymasarsqlite.service.service import (saveService, retrieveServices)
+    >>> from pymasarsqlite.service.serviceconfig import (saveServiceConfig, retrieveServiceConfigs)
+    >>> from pymasarsqlite.db.masarsqlite import (SQL)
     >>> conn = sqlite3.connect(":memory:")
     >>> cur = conn.cursor()
     >>> result = cur.executescript(SQL)
@@ -77,9 +77,9 @@ def retrieveServiceConfigProps(conn, propname=None, servicename=None, configname
     retrieve a service config property, for example, which system this config belongs to.
     
     >>> import sqlite3
-    >>> from pymasar.service.service import (saveService, retrieveServices)
-    >>> from pymasar.service.serviceconfig import (saveServiceConfig, retrieveServiceConfigs)
-    >>> from pymasar.db.masarsqlite import (SQL)
+    >>> from pymasarsqlite.service.service import (saveService, retrieveServices)
+    >>> from pymasarsqlite.service.serviceconfig import (saveServiceConfig, retrieveServiceConfigs)
+    >>> from pymasarsqlite.db.masarsqlite import (SQL)
     >>> conn = sqlite3.connect(":memory:")
     >>> cur = conn.cursor()
     >>> result = cur.executescript(SQL)

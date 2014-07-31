@@ -9,7 +9,7 @@
 import re
 
 from masarclient.nttable import NTTable
-import pymasar
+import pymasarsqlite as pymasar
 
 __all__=['DSL']
 

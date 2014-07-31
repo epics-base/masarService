@@ -8,10 +8,10 @@ import os
 import sys
 
 import sqlite3
-from pymasar.pvgroup.pvgroup import (savePvGroup)
-from pymasar.pvgroup.pv import (saveGroupPvs)
-from pymasar.service.service import (saveService)
-from pymasar.service.serviceconfig import (saveServiceConfig, saveServicePvGroup)
+from pymasarsqlite.pvgroup.pvgroup import (savePvGroup)
+from pymasarsqlite.pvgroup.pv import (saveGroupPvs)
+from pymasarsqlite.service.service import (saveService)
+from pymasarsqlite.service.serviceconfig import (saveServiceConfig, saveServicePvGroup)
 
 try:
     __db=os.environ['MASAR_SQLITE_DB']

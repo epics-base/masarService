@@ -54,7 +54,7 @@ def createMasarDb():
     sqlfile = None
     try:
         if __sql__ is None:
-            from pymasar.db.masarsqlite import SQL
+            from pymasarsqlite.db.masarsqlite import SQL
         else:
             sqlfile = open(__sql__)
             SQL = sqlfile.read()

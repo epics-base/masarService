@@ -9,7 +9,7 @@ from __future__ import unicode_literals
 
 import sys
 
-from pymasar.utils import checkConnection
+from pymasarsqlite.utils import checkConnection
 
 def savePvs(conn, pvlist, pvdesc=None, update = False):
     """
@@ -17,8 +17,8 @@ def savePvs(conn, pvlist, pvdesc=None, update = False):
     If one pv already exists, it retrieves its primary key, and update its description if update is true. 
     
     >>> import sqlite3
-    >>> from pymasar.pvgroup.pv import (savePvs, retrieveGroupPvs)
-    >>> from pymasar.db.masarsqlite import (SQL)
+    >>> from pymasarsqlite.pvgroup.pv import (savePvs, retrieveGroupPvs)
+    >>> from pymasarsqlite.db.masarsqlite import (SQL)
     >>> conn = sqlite3.connect(":memory:")
     >>> cur = conn.cursor()
     >>> result = cur.executescript(SQL)
@@ -130,9 +130,9 @@ def saveGroupPvs(conn, pvgroupname, pvlist, pvdesc = None, update = False):
     
     >>> import sqlite3
     >>> from __future__ import print_function
-    >>> from pymasar.pvgroup.pv import (savePvs, retrieveGroupPvs)
-    >>> from pymasar.pvgroup.pvgroup import(savePvGroup, retrievePvGroups)
-    >>> from pymasar.db.masarsqlite import (SQL)
+    >>> from pymasarsqlite.pvgroup.pv import (savePvs, retrieveGroupPvs)
+    >>> from pymasarsqlite.pvgroup.pvgroup import(savePvGroup, retrievePvGroups)
+    >>> from pymasarsqlite.db.masarsqlite import (SQL)
     >>> conn = sqlite3.connect(":memory:")
     >>> cur = conn.cursor()
     >>> result = cur.executescript(SQL)
@@ -207,9 +207,9 @@ def retrieveGroupPvs(conn, pvgroupid):
     
     >>> import sqlite3
     >>> from __future__ import print_function
-    >>> from pymasar.pvgroup.pv import (savePvs, retrieveGroupPvs)
-    >>> from pymasar.pvgroup.pvgroup import(savePvGroup, retrievePvGroups)
-    >>> from pymasar.db.masarsqlite import (SQL)
+    >>> from pymasarsqlite.pvgroup.pv import (savePvs, retrieveGroupPvs)
+    >>> from pymasarsqlite.pvgroup.pvgroup import(savePvGroup, retrievePvGroups)
+    >>> from pymasarsqlite.db.masarsqlite import (SQL)
     >>> conn = sqlite3.connect(":memory:")
     >>> cur = conn.cursor()
     >>> result = cur.executescript(SQL)

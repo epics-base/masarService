@@ -10,8 +10,8 @@ from __future__ import unicode_literals
 import cPickle as pickle
 import sqlite3
 
-from pymasar.utils import checkConnection
-from pymasar.service.serviceevent import (saveServiceEvent, retrieveServiceEvents)
+from pymasarsqlite.utils import checkConnection
+from pymasarsqlite.service.serviceevent import (saveServiceEvent, retrieveServiceEvents)
 
 def saveSnapshot(conn, data, servicename=None, configname=None, comment=None,approval=False):
     """
@@ -23,9 +23,9 @@ def saveSnapshot(conn, data, servicename=None, configname=None, comment=None,app
     Return service_event_id, masar_data_id[].
     
     >>> import sqlite3
-    >>> from pymasar.service.service import (saveService, retrieveServices)
-    >>> from pymasar.service.serviceconfig import (saveServiceConfig, retrieveServiceConfigs)
-    >>> from pymasar.db.masarsqlite import (SQL)
+    >>> from pymasarsqlite.service.service import (saveService, retrieveServices)
+    >>> from pymasarsqlite.service.serviceconfig import (saveServiceConfig, retrieveServiceConfigs)
+    >>> from pymasarsqlite.db.masarsqlite import (SQL)
     >>> conn = sqlite3.connect(":memory:")
     >>> cur = conn.cursor()
     >>> result = cur.executescript(SQL)
@@ -125,10 +125,10 @@ def retrieveSnapshot(conn, eventid=None,start=None, end=None, comment=None,appro
     ]
     
     >>> import sqlite3
-    >>> from pymasar.service.service import (saveService, retrieveServices)
-    >>> from pymasar.service.serviceconfig import (saveServiceConfig, retrieveServiceConfigs)
-    >>> from pymasar.service.serviceevent import (updateServiceEvent)
-    >>> from pymasar.db.masarsqlite import (SQL)
+    >>> from pymasarsqlite.service.service import (saveService, retrieveServices)
+    >>> from pymasarsqlite.service.serviceconfig import (saveServiceConfig, retrieveServiceConfigs)
+    >>> from pymasarsqlite.service.serviceevent import (updateServiceEvent)
+    >>> from pymasarsqlite.db.masarsqlite import (SQL)
     >>> conn = sqlite3.connect(":memory:")
     >>> cur = conn.cursor()
     >>> result = cur.executescript(SQL)

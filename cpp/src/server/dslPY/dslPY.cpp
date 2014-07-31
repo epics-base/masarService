@@ -662,10 +662,17 @@ static NTTablePtr getLiveMachine(StringArray const & channelName,
 {
     GatherV3DataPtr gather = GatherV3DataPtr(
         new GatherV3Data(channelName,numberChannels));
-
-    // wait one second, which is a magic number for now.
-    // The waiting time might be removed later after stability test.
-    bool result = gather->connect(1.0);
+	
+	// wait for at least 1.0 seconds before timeout.
+	// or wait for channel numbers/1000 seconds 
+    double timeout = numberChannels * 1.0e-3;
+    if (timeout < 1.0) timeout = 1.0;
+    // maximun waiting time: 10.0 seconds.
+    // it does not solve the fundamental problem. 
+    if (timeout > 10.0) timeout = 10.0;
+    
+    bool result = gather->connect(timeout);
+    
     * message = gather->getMessage();
     if(!result) {
         printf("connect failed\n%s\n",gather->getMessage().c_str());

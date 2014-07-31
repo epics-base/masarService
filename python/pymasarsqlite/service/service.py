@@ -10,7 +10,7 @@ from __future__ import unicode_literals
 import sys
 import sqlite3
 
-from pymasar.utils import checkConnection
+from pymasarsqlite.utils import checkConnection
 
 def retrieveServices(conn, servicename=None):
     """
@@ -18,8 +18,8 @@ def retrieveServices(conn, servicename=None):
     for example:
     
     >>> import sqlite3
-    >>> from pymasar.service.service import (saveService, retrieveServices)
-    >>> from pymasar.db.masarsqlite import (SQL)
+    >>> from pymasarsqlite.service.service import (saveService, retrieveServices)
+    >>> from pymasarsqlite.db.masarsqlite import (SQL)
     >>> conn = sqlite3.connect(':memory:')
     >>> cur = conn.cursor()
     >>> result = cur.executescript(SQL)
@@ -63,8 +63,8 @@ def saveService(conn, name, desc=''):
     for example:
     
     >>> import sqlite3
-    >>> from pymasar.service.service import (saveService, retrieveServices)
-    >>> from pymasar.db.masarsqlite import (SQL)
+    >>> from pymasarsqlite.service.service import (saveService, retrieveServices)
+    >>> from pymasarsqlite.db.masarsqlite import (SQL)
     >>> conn = sqlite3.connect(':memory:')
     >>> cur = conn.cursor()
     >>> result = cur.executescript(SQL)

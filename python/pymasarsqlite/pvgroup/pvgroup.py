@@ -3,7 +3,7 @@ Created on Dec 7, 2011
 
 @author: shengb
 '''
-from pymasar.utils import checkConnection
+from pymasarsqlite.utils import checkConnection
 
 def savePvGroup(conn, name, **kws):
     """
@@ -15,8 +15,8 @@ def savePvGroup(conn, name, **kws):
     [func='function description for this pv group'] [, update=False] [, version = '0.0.1']
     
     >>> import sqlite3
-    >>> from pymasar.pvgroup.pvgroup import (savePvGroup, retrievePvGroups)
-    >>> from pymasar.db.masarsqlite import (SQL)
+    >>> from pymasarsqlite.pvgroup.pvgroup import (savePvGroup, retrievePvGroups)
+    >>> from pymasarsqlite.db.masarsqlite import (SQL)
     >>> conn = sqlite3.connect(':memory:')
     >>> cur = conn.cursor()
     >>> result = cur.executescript(SQL)
@@ -83,8 +83,8 @@ def retrievePvGroups(conn, pvgroupname=None):
     It returns a tuple with format (pv_group_id, pv_group_name, pv_group_func, pvg_creation_date, version)
      
     >>> import sqlite3
-    >>> from pymasar.pvgroup.pvgroup import (savePvGroup, retrievePvGroups)
-    >>> from pymasar.db.masarsqlite import (SQL)
+    >>> from pymasarsqlite.pvgroup.pvgroup import (savePvGroup, retrievePvGroups)
+    >>> from pymasarsqlite.db.masarsqlite import (SQL)
     >>> conn = sqlite3.connect(':memory:')
     >>> cur = conn.cursor()
     >>> result = cur.executescript(SQL)

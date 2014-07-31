@@ -10,17 +10,17 @@ from __future__ import unicode_literals
 import sqlite3
 import datetime as dt
 
-from pymasar.utils import checkConnection
-from pymasar.service.serviceconfig import (retrieveServiceConfigs)
+from pymasarsqlite.utils import checkConnection
+from pymasarsqlite.service.serviceconfig import (retrieveServiceConfigs)
 
 def saveServiceEvent(conn, servicename, configname, comment=None, approval=False, username=None):
     """
     save an event config, and associate this event with given service and service config.
     
     >>> import sqlite3
-    >>> from pymasar.service.service import (saveService, retrieveServices)
-    >>> from pymasar.service.serviceconfig import (saveServiceConfig)
-    >>> from pymasar.db.masarsqlite import (SQL)
+    >>> from pymasarsqlite.service.service import (saveService, retrieveServices)
+    >>> from pymasarsqlite.service.serviceconfig import (saveServiceConfig)
+    >>> from pymasarsqlite.db.masarsqlite import (SQL)
     >>> conn = sqlite3.connect(":memory:")
     >>> cur = conn.cursor()
     >>> result = cur.executescript(SQL)
@@ -72,9 +72,9 @@ def updateServiceEvent(conn, eventid, comment=None, approval=False, username=Non
     update the comment, approval status, and add user name for an existing event.
     
     >>> import sqlite3
-    >>> from pymasar.service.service import (saveService, retrieveServices)
-    >>> from pymasar.service.serviceconfig import (saveServiceConfig)
-    >>> from pymasar.db.masarsqlite import (SQL)
+    >>> from pymasarsqlite.service.service import (saveService, retrieveServices)
+    >>> from pymasarsqlite.service.serviceconfig import (saveServiceConfig)
+    >>> from pymasarsqlite.db.masarsqlite import (SQL)
     >>> conn = sqlite3.connect(":memory:")
     >>> cur = conn.cursor()
     >>> result = cur.executescript(SQL)
@@ -144,9 +144,9 @@ def retrieveServiceEvents(conn, configid=None,start=None, end=None, comment=None
     [(service_event_id, service_config_id, service_event_user_tag, service_event_UTC_time, service_event_serial_tag)]
     
     >>> import sqlite3
-    >>> from pymasar.service.service import (saveService, retrieveServices)
-    >>> from pymasar.service.serviceconfig import (saveServiceConfig)
-    >>> from pymasar.db.masarsqlite import (SQL)
+    >>> from pymasarsqlite.service.service import (saveService, retrieveServices)
+    >>> from pymasarsqlite.service.serviceconfig import (saveServiceConfig)
+    >>> from pymasarsqlite.db.masarsqlite import (SQL)
     >>> conn = sqlite3.connect(":memory:")
     >>> cur = conn.cursor()
     >>> result = cur.executescript(SQL)
