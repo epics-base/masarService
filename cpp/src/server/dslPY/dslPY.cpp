@@ -637,9 +637,9 @@ static NTTablePtr createResult(
         PyObject *list = 0;
         if(!PyArg_ParseTuple(result,"O!:dslPY", &PyList_Type,&list))
         {
-            printf("Wrong format for returned data from dslPY.\n");
             //THROW_BASE_EXCEPTION("Wrong format for returned data from dslPY.");
-            return pvStructure;
+            //return pvStructure;
+            return noDataEnetry("Wrong format for returned data from dslPY.");
         }
 
         if (functionName.compare("retrieveSnapshot")==0) {
@@ -652,6 +652,8 @@ static NTTablePtr createResult(
             pvStructure = retrieveServiceConfigEvents(list, 2);
         } else if (functionName.compare("updateSnapshotEvent")==0) {
             pvStructure = updateSnapshotEvent(list);
+        } else {
+            pvStructure = noDataEnetry("Did not find data");
         }
     }
     return pvStructure;

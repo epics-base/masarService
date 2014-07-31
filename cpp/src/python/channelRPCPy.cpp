@@ -56,7 +56,7 @@ ChannelRPCPyPvt::ChannelRPCPyPvt(
 
 ChannelRPCPyPvt::~ChannelRPCPyPvt()
 {
-     ClientFactory::stop();
+     //ClientFactory::stop();
 }
 
 void ChannelRPCPyPvt::destroy()
@@ -322,6 +322,8 @@ static PyObject * _waitRequest(PyObject *willBeNull, PyObject *args)
         pvt->pvResponse = channelRPC->waitRequest();
     Py_END_ALLOW_THREADS
     if(pvt->pvResponse.get()==0) {
+        //ExceptionMixin ss(__FILE__, __LINE__);
+        //ss.print(stdout);
         Py_INCREF(Py_None);
         return Py_None;
     }
