@@ -6,6 +6,10 @@ Created on Jul 28, 2014
 import time
 import logging
 
+import pymongo
+if pymongo.version_tuple < (2.5):
+    raise RuntimeError("Need pymongo version larger than 2.5")
+
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 
