@@ -14,7 +14,7 @@ from pymasarsqlite.utils import checkConnection
 from pymasarsqlite.service.service import (retrieveServices)
 from pymasarsqlite.pvgroup.pvgroup import (retrievePvGroups)
 
-def saveServiceConfig(conn, servicename, configname, configdesc=None, configversion=None, system=None):
+def saveServiceConfig(conn, servicename, configname, configdesc=None, configversion=None, system=None, status="active"):
     """
     Link config attributes like name, description, ... with a given service name.
     The service config name for each different service has to be unique.
@@ -42,7 +42,8 @@ def saveServiceConfig(conn, servicename, configname, configdesc=None, configvers
     if configname is None:
         raise Exception('Service config name is not given')
         sys.exit()
-    
+    if status not in ["active", "inactive"]:
+        raise ValueError("Service status has to be either active, or inactive")
     checkConnection(conn)
     serviceid = retrieveServices(conn, servicename)
     
@@ -59,16 +60,16 @@ def saveServiceConfig(conn, servicename, configname, configdesc=None, configvers
         cur.execute('select service_config_id from service_config where service_config_name = ? and service_id = ?', (configname, serviceid,))
         result = cur.fetchone()
         if result is None:            
-            sql = 'insert into service_config (service_config_id, service_id, service_config_name, service_config_create_date, service_config_version '
+            sql = 'insert into service_config (service_config_id, service_id, service_config_name, service_config_create_date, service_config_status '
             if configdesc is None and configversion is None:
-                sql = sql + ') values(?,?,?,datetime("now"), 1)'
-                cur.execute(sql, (None,serviceid,configname,))
+                sql = sql + ') values(?,?,?,datetime("now"), ?)'
+                cur.execute(sql, (None, serviceid, configname, status))
             elif configversion is None:
-                sql = sql + ' , service_config_desc ) values(?,?,?,datetime("now"),1,?)'
-                cur.execute(sql, (None,serviceid,configname,configdesc,))
+                sql = sql + ' , service_config_desc ) values(?,?,?,datetime("now"),?,?)'
+                cur.execute(sql, (None,serviceid,configname, status,configdesc,))
             else:
-                sql = sql + ' , service_config_desc, service_config_version ) values(?,?,?,datetime("now"),1,?, ?)'
-                cur.execute(sql, (None,serviceid,configname,configdesc,configversion,))
+                sql = sql + ' , service_config_desc, service_config_version ) values(?,?,?,datetime("now"),?, ?,?)'
+                cur.execute(sql, (None,serviceid,configname,status,configdesc,configversion,))
             serviceconfigid = cur.lastrowid
             __saveConfigProp(cur, serviceconfigid, system)
         else:
@@ -102,13 +103,30 @@ def __saveConfigProp (cur, serviceconfigid, system):
             print ('Error %s' %e.args[0])
             raise
 
+def updateServiceConfigStatus(conn, configid, status="active"):
+    """Update status of given configuration
+    """
+    sql = '''
+    UPDATE service_config
+    SET service_config_status = ?
+    WHERE service_config_id = ?
+    '''
+    if status not in ["active", "inactive"]:
+        raise ValueError("Service status has to be either active, or inactive")
+    try:
+        cur = conn.cursor()
+        cur.execute(sql, (status, configid,))
+    except sqlite3.Error, e:
+        print ("Error %s:" % e.args[0])
+        raise
+
 def retrieveServiceConfigs(conn, servicename=None, configname=None, configversion=None, system=None):
     """
     Retrieve service config attributes like name, description, ... with given service name.    
     If service config name is none, retrieve all configs belong to a service with a given service name.
     If service name is none, retrieve all configs in service_config table.
     It returns tuple list with [(service_config_id, service_config_name, service_config_desc, service_config_create_date, 
-    service_config_version, and service_name)].
+    service_config_version, and service_config_status)].
     
     >>> import sqlite3
     >>> from pymasarsqlite.service.service import (saveService, retrieveServices)
@@ -174,7 +192,8 @@ def retrieveServiceConfigs(conn, servicename=None, configname=None, configversio
     checkConnection(conn)
     
     sql = '''
-    select service_config.service_config_id, service_config_name, service_config_desc, service_config_create_date, service_config_version, service_config.service_id
+    select service_config.service_config_id, service_config_name, service_config_desc, service_config_create_date,
+    service_config_version, service_config_status
     from service_config '''
     results = None
     if configname != None:
@@ -219,19 +238,19 @@ def retrieveServiceConfigs(conn, servicename=None, configname=None, configversio
                 sql = sql + ', service where service_config.service_id = service.service_id and service_config_name like ? and service.service_name = ?'
                 cur.execute(sql, (configname, servicename, ))
         results = cur.fetchall()
-        for i in range(len(results)):
-            cur.execute('select service_name from service where service_id = ?',(results[i][5],))
-            # replace service_config_id with service_config_name
-            # and set status to be active when version == 1 or inactive when version == 0
-            if results[i][4] == 1:
-                results[i] = results[i][:4] + ('Active', ) + (cur.fetchone()[0],) 
-            elif results[i][4] == 0:
-                results[i] = results[i][:4] + ('Inactive', ) + (cur.fetchone()[0],) 
-            #results[i] = results[i][:-1] + (cur.fetchone()[0],) # replace service_config_id with service_config_name
+        # for i in range(len(results)):
+        #     cur.execute('select service_name from service where service_id = ?',(results[i][5],))
+        #     # replace service_config_id with service_config_name
+        #     # and set status to be active when version == 1 or inactive when version == 0
+        #     if results[i][4] == 1:
+        #         results[i] = results[i][:4] + ('active', ) + (cur.fetchone()[0],)
+        #     elif results[i][4] == 0:
+        #         results[i] = results[i][:4] + ('inactive', ) + (cur.fetchone()[0],)
+        #     #results[i] = results[i][:-1] + (cur.fetchone()[0],) # replace service_config_id with service_config_name
     except:
         raise
 #        sys.exit()
-    results = [('service_config_id', 'service_config_name', 'service_config_desc', 'service_config_create_date', 'service_config_version', 'service_name'),] + results[:]
+    results = [('config_idx', 'config_name', 'config_desc', 'config_create_date', 'config_version', 'status'), ] + results[:]
     return results
 
 def saveServicePvGroup(conn, configname, pvgroups):

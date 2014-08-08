@@ -76,6 +76,7 @@ CREATE TABLE "service_config" (
   "service_config_name" VARCHAR(50) DEFAULT NULL,
   "service_config_desc" VARCHAR(255) DEFAULT NULL,
   "service_config_version" INT DEFAULT NULL,
+  "service_config_status" VARCHAR(50) DEFAULT NULL,
   "service_config_create_date" timestamp NOT NULL ,
   PRIMARY KEY ("service_config_id")
   CONSTRAINT "Ref_197" FOREIGN KEY ("service_id") REFERENCES "service" ("service_id") ON DELETE NO ACTION ON UPDATE NO ACTION

@@ -141,7 +141,7 @@ def retrieveServiceEvents(conn, configid=None,start=None, end=None, comment=None
     Both start and end time should be in UTC time format.
     If end time is not specified, use current time. If start is not specified, use one week before end time.
     It return a tuple array with format like:
-    [(service_event_id, service_config_id, service_event_user_tag, service_event_UTC_time, service_event_serial_tag)]
+    [(service_event_id, service_config_id, service_event_user_tag, service_event_UTC_time, service_event_user_name)]
     
     >>> import sqlite3
     >>> from pymasarsqlite.service.service import (saveService, retrieveServices)
@@ -234,7 +234,7 @@ def retrieveServiceEvents(conn, configid=None,start=None, end=None, comment=None
     except:
         raise
     
-    results = [('service_event_id', 'service_config_id', 'service_event_user_tag', 'service_event_UTC_time', 'service_event_user_name'),] + results[:]
+    results = [("event_id", "config_id", "comments", "event_time", "user_name"), ] + results[:]
     return results
 
 if __name__ == '__main__':

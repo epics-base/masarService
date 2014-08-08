@@ -65,6 +65,13 @@ def createMasarDb():
             conn = sqlite3.connect(__sqlitedb__)
             cur = conn.cursor()
             cur.executescript(SQL)
+            cur.execute("PRAGMA main.page_size= 4096;")
+            cur.execute("PRAGMA main.cache_size= 10000;")
+            cur.execute("PRAGMA main.locking_mode=EXCLUSIVE;")
+            cur.execute("PRAGMA main.synchronous=NORMAL;")
+            cur.execute("PRAGMA main.journal_mode=WAL;")
+            cur.execute("PRAGMA main.temp_store = MEMORY;")
+
     except sqlite3.Error, e:
         print ("Error %s:" % e.args[0])
         sys.exit(1)
@@ -75,7 +82,7 @@ def createMasarDb():
             sqlfile.close()
         
 def usage():
-    print ("""usage: createSqliteDb.py [options]
+    print ("""usage: createmasardb.py [options]
 
 Options (which can be given in any of the forms shown):
 -s  --source    source.sql [default: masar-sqlite.sql]

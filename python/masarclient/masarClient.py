@@ -93,6 +93,8 @@ class client():
                     name []:         name of each configuration
                     description []:  description of each configuration
                     created date []: date when each configuration was created
+                    version []       version number
+                    status []:       status, active/inactive
                     
                     otherwise, False if nothing is found.
         """
@@ -101,12 +103,13 @@ class client():
         
         if self.__isFault(nttable):
             return False
-        
+
         return (nttable.getValue(0),
                 nttable.getValue(1),
                 nttable.getValue(2),
                 nttable.getValue(3),
-                nttable.getValue(4)) 
+                nttable.getValue(4),
+                nttable.getValue(5))
     
     def retrieveServiceEvents(self, params):
         """
@@ -254,7 +257,7 @@ class client():
 
         if self.__isFault(nttable):
             return False
-        
+
         ts = TimeStamp()
         # [pv name,string value,double value,long value,
         #  dbr type,isConnected,secondsPastEpoch,nanoSeconds,timeStampTag,

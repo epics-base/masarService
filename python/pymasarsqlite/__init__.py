@@ -13,7 +13,7 @@ import service
 import masardata
 #from masardata import *
 
-__all__ = ['version']
+__all__ = [__version__]
 
 __all__.extend(utils.__all__)
 __all__.extend(pvgroup.__all__)

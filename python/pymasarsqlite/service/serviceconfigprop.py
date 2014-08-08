@@ -137,7 +137,7 @@ def retrieveServiceConfigProps(conn, propname=None, servicename=None, configname
     except sqlite3.Error, e:
         print ('Error %s' %e.args[0])
         raise
-    results = [('service_config_prop_id', 'service_config_id', 'service_config_prop_name', 'service_config_prop_value'),] + results[:]
+    results = [('config_prop_id', 'config_idx', 'system_key', 'system_val'),] + results[:]
     return results
 
 if __name__ == '__main__':

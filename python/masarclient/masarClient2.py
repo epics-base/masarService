@@ -47,7 +47,7 @@ class client():
         if self.__isFault(label, nttable):
             return False
 
-	expectedlabel=['service_config_prop_id', 'service_config_id', 'service_config_prop_name', 'service_config_prop_value']
+        expectedlabel = ['config_prop_id', 'config_idx', 'system_key', 'system_val']
         if label != expectedlabel:
             raise RuntimeError("Data structure not as expected for retrieveSystemList().")
 
@@ -70,7 +70,8 @@ class client():
                     name []:         name of each configuration
                     description []:  description of each configuration
                     created date []: date when each configuration was created
-                    status []:       0: inactive, 1: active
+                    version []       version number
+                    status []:       status, active/inactive
 
                     otherwise, False if nothing is found.
         """
@@ -101,8 +102,8 @@ class client():
         if self.__isFault(label, nttable):
             return False
 
-	expectedlabel=['service_config_id', 'service_config_name', 'service_config_desc', 
-                       'service_config_create_date', 'service_config_version', 'service_name']
+        expectedlabel=['config_idx', 'config_name', 'config_desc', 'config_create_date',
+                       'config_version', 'status']
         if label != expectedlabel:
             raise RuntimeError("Data structure not as expected for retrieveServiceConfigs().")
 
@@ -110,7 +111,8 @@ class client():
                 nttable.getScalarArray(label[1]),
                 nttable.getScalarArray(label[2]),
                 nttable.getScalarArray(label[3]),
-                nttable.getScalarArray(label[4]))
+                nttable.getScalarArray(label[4]),
+                nttable.getScalarArray(label[5]))
 
     def retrieveServiceEvents(self, params):
         """
@@ -153,8 +155,7 @@ class client():
         nttable = self.rpc.invoke(request)
 
         label = nttable.getScalarArray('label')
-        expectedlabel = ['service_event_id', 'service_config_id', 'service_event_user_tag', 
-                         'service_event_UTC_time', 'service_event_user_name']
+        expectedlabel = ["event_id", "config_id", "comments", "event_time", "user_name"]
         if label != expectedlabel:
             raise RuntimeError("Data structure not as expected for retrieveServiceEvents().")
         if self.__isFault(label, nttable):
@@ -314,7 +315,7 @@ class client():
             #  pv name,string value,double value,long value,
             #  dbr type,isConnected,secondsPastEpoch,nanoSeconds,timeStampTag,
             #  alarmSeverity,alarmStatus,alarmMessage, is_array, array_value]
-            return (ntTable.getTimeStamp().getInt('userTag'),
+            return (nttable.getTimeStamp().getInt('userTag'),
                     nttable.getValue(0),
                     nttable.getValue(1),
                     nttable.getValue(2),

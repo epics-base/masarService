@@ -38,10 +38,9 @@ import commentdlg
 from showarrayvaluedlg import ShowArrayValueDlg
 from selectrefsnapshotdlg import ShowSelectRefDlg
 
-#import masarclient.masarClient as masarClient
-#from masarclient.channelRPC import epicsExit 
-
-import masarclient.masarClient2 as masarClient
+import masarclient.masarClient as masarClient
+from masarclient.channelRPC import epicsExit 
+#import masarclient.masarClient2 as masarClient
 
 __version__ = "1.1.0"
 
@@ -2229,7 +2228,7 @@ def main(channelname = None):
     atexit._run_exitfuncs()
 
     # it is safe to clean epics objects now.
-    #epicsExit()
+    epicsExit()
     
     # call os.exit() instead of sys.exit()
     # os._exit(0)
