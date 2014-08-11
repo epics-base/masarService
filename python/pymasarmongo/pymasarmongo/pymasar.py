@@ -382,7 +382,8 @@ def retrievesnapshot(conn, collection, eventidx):
 
 
         a Python list to host all pv values with meta data:
-        [(u'pv name', u'string value', u'double value', u'long value', u'dbr type', u'isConnected', u'secondsPastEpoch', u'nanoSeconds', u'timeStampTag', u'alarmSeverity', u'alarmStatus', u'alarmMessage', u'is_array', u'array_value'),
+        [(u'pv name', u'string value', u'double value', u'long value', u'dbr type', u'isConnected', u'secondsPastEpoch',
+          u'nanoSeconds', u'timeStampTag', u'alarmSeverity', u'alarmStatus', u'alarmMessage', u'is_array', u'array_value'),
          (),
          ...
         ]
@@ -429,8 +430,9 @@ def saveevent(conn, collection, **kwds):
     :param data: collected value from each EPICS V3 channel with meta data
     :type  data: list
 
-        a Python list to host all pv values
-        (u'pv name', u'string value', u'double value', u'long value', u'dbr type', u'isConnected', u'secondsPastEpoch', u'nanoSeconds', u'timeStampTag', u'alarmSeverity', u'alarmStatus', u'alarmMessage', u'is_array', u'array_value')
+        a Python list to host all pv values:
+        (u'pv name', u'string value', u'double value', u'long value', u'dbr type', u'isConnected', u'secondsPastEpoch',
+         u'nanoSeconds', u'timeStampTag', u'alarmSeverity', u'alarmStatus', u'alarmMessage', u'is_array', u'array_value')
 
 
     :returns: id of new event
