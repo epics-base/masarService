@@ -8,10 +8,10 @@ import ConfigParser
 
 
 def __loadmasarconfig():
-    cf=ConfigParser.SafeConfigParser()
+    cf = ConfigParser.SafeConfigParser()
     cf.read([
-        '/etc/masarservice.conf',
         os.path.expanduser('~/.masarservice.conf'),
+        '/etc/masarservice.conf',
         'masarservice.conf',
         "%s/masarservice.conf" % os.path.abspath(os.path.dirname(__file__))
     ])

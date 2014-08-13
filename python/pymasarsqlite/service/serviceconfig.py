@@ -120,7 +120,7 @@ def updateServiceConfigStatus(conn, configid, status="active"):
         print ("Error %s:" % e.args[0])
         raise
 
-def retrieveServiceConfigs(conn, servicename=None, configname=None, configversion=None, system=None):
+def retrieveServiceConfigs(conn, servicename=None, configname=None, configversion=None, system=None, eventid=None):
     """
     Retrieve service config attributes like name, description, ... with given service name.    
     If service config name is none, retrieve all configs belong to a service with a given service name.
@@ -196,60 +196,56 @@ def retrieveServiceConfigs(conn, servicename=None, configname=None, configversio
     service_config_version, service_config_status
     from service_config '''
     results = None
-    if configname != None:
-        configname = configname.replace("*","%").replace("?","_")
-    try:
+    if eventid is not None:
+        sql += ' left join service_event using (service_config_id) where service_event_id = ?'
         cur = conn.cursor()
-        join = False
-        if system is not None:
-            join = True
-            joinsql = ' left join service_config_prop using (service_config_id) '
-        
-        if configname is None and servicename is None:
-            if join:
-                sql = sql + joinsql + ' where (service_config_prop_name = "system" and service_config_prop_value like ?) '
-                cur.execute(sql, (system,))
-            else:
-                cur.execute(sql)
-        elif servicename is None:
-            if join:
-                sql = sql + joinsql + ' where service_config_name like ? and '
-                sql = sql + ' service_config_prop_name = "system" and service_config_prop_value like ? ' 
-                cur.execute(sql, (configname, system, ))
-            else:
-                sql = sql + ' where service_config_name like ?'
-                cur.execute(sql, (configname,))
-        elif configname is None:
-            if join:
-                sql = sql + joinsql  + ' left join service using (service_id) where service.service_name = ? and '
-                sql += ' service_config_prop_name = "system" and service_config_prop_value like ? '
-                cur.execute(sql, (servicename, system))
-            else:
-                sql = sql + ' , service where service_config.service_id = service.service_id and service.service_name = ?'
-                cur.execute(sql, (servicename,))
-        else:
-            if join:
-                sql = sql + joinsql + ' left join service using (service_id) '
-                sql = sql + ' where service_config_name like ? and service.service_name = ? and '
-                sql += ' (service_config_prop_name = "system" and service_config_prop_value like ?) ' 
-#                print (sql)
-                cur.execute(sql, (configname, servicename, system,))
-            else:
-                sql = sql + ', service where service_config.service_id = service.service_id and service_config_name like ? and service.service_name = ?'
-                cur.execute(sql, (configname, servicename, ))
+        cur.execute(sql, (eventid,))
         results = cur.fetchall()
-        # for i in range(len(results)):
-        #     cur.execute('select service_name from service where service_id = ?',(results[i][5],))
-        #     # replace service_config_id with service_config_name
-        #     # and set status to be active when version == 1 or inactive when version == 0
-        #     if results[i][4] == 1:
-        #         results[i] = results[i][:4] + ('active', ) + (cur.fetchone()[0],)
-        #     elif results[i][4] == 0:
-        #         results[i] = results[i][:4] + ('inactive', ) + (cur.fetchone()[0],)
-        #     #results[i] = results[i][:-1] + (cur.fetchone()[0],) # replace service_config_id with service_config_name
-    except:
-        raise
-#        sys.exit()
+    else:
+        if configname != None:
+            configname = configname.replace("*","%").replace("?","_")
+        try:
+            cur = conn.cursor()
+            join = False
+            if system is not None:
+                join = True
+                joinsql = ' left join service_config_prop using (service_config_id) '
+
+            if configname is None and servicename is None:
+                if join:
+                    sql = sql + joinsql + ' where (service_config_prop_name = "system" and service_config_prop_value like ?) '
+                    cur.execute(sql, (system,))
+                else:
+                    cur.execute(sql)
+            elif servicename is None:
+                if join:
+                    sql = sql + joinsql + ' where service_config_name like ? and '
+                    sql = sql + ' service_config_prop_name = "system" and service_config_prop_value like ? '
+                    cur.execute(sql, (configname, system, ))
+                else:
+                    sql = sql + ' where service_config_name like ?'
+                    cur.execute(sql, (configname,))
+            elif configname is None:
+                if join:
+                    sql = sql + joinsql  + ' left join service using (service_id) where service.service_name = ? and '
+                    sql += ' service_config_prop_name = "system" and service_config_prop_value like ? '
+                    cur.execute(sql, (servicename, system))
+                else:
+                    sql = sql + ' , service where service_config.service_id = service.service_id and service.service_name = ?'
+                    cur.execute(sql, (servicename,))
+            else:
+                if join:
+                    sql = sql + joinsql + ' left join service using (service_id) '
+                    sql = sql + ' where service_config_name like ? and service.service_name = ? and '
+                    sql += ' (service_config_prop_name = "system" and service_config_prop_value like ?) '
+    #                print (sql)
+                    cur.execute(sql, (configname, servicename, system,))
+                else:
+                    sql = sql + ', service where service_config.service_id = service.service_id and service_config_name like ? and service.service_name = ?'
+                    cur.execute(sql, (configname, servicename, ))
+            results = cur.fetchall()
+        except:
+            raise
     results = [('config_idx', 'config_name', 'config_desc', 'config_create_date', 'config_version', 'status'), ] + results[:]
     return results
 
@@ -571,15 +567,26 @@ def retrieveServiceConfigPVs(conn, configname, servicename=None):
     >>> saveServicePvGroup(conn, confname3, [pvgname3, pvgname4])
     [6, 7]
     >>> retrieveServiceConfigPVs(conn, confname1, servicename=sername1)
-    [u'SR:C01-BI:G02A<BPM:L1>Pos-X', u'SR:C01-BI:G02A<BPM:L2>Pos-X', u'SR:C01-BI:G04A<BPM:M1>Pos-X', u'SR:C01-BI:G04B<BPM:M1>Pos-X', u'SR:C01-BI:G06B<BPM:H1>Pos-X', u'SR:C01-BI:G06B<BPM:H2>Pos-X', u'SR:C02-BI:G02A<BPM:H1>Pos-X', u'SR:C02-BI:G02A<BPM:H2>Pos-X', u'SR:C02-BI:G04A<BPM:M1>Pos-X', u'SR:C02-BI:G04B<BPM:M1>Pos-X', u'SR:C02-BI:G06B<BPM:L1>Pos-X', u'SR:C02-BI:G06B<BPM:L2>Pos-X']
+    [u'SR:C01-BI:G02A<BPM:L1>Pos-X', u'SR:C01-BI:G02A<BPM:L2>Pos-X', u'SR:C01-BI:G04A<BPM:M1>Pos-X', u'SR:C01-BI:G04B<BPM:M1>Pos-X', ...
+    u'SR:C01-BI:G06B<BPM:H1>Pos-X', u'SR:C01-BI:G06B<BPM:H2>Pos-X', u'SR:C02-BI:G02A<BPM:H1>Pos-X', u'SR:C02-BI:G02A<BPM:H2>Pos-X', ...
+    u'SR:C02-BI:G04A<BPM:M1>Pos-X', u'SR:C02-BI:G04B<BPM:M1>Pos-X', u'SR:C02-BI:G06B<BPM:L1>Pos-X', u'SR:C02-BI:G06B<BPM:L2>Pos-X']
     >>> retrieveServiceConfigPVs(conn, confname3, servicename=sername1)
     []
     >>> retrieveServiceConfigPVs(conn, confname1)
-    [u'SR:C01-BI:G02A<BPM:L1>Pos-X', u'SR:C01-BI:G02A<BPM:L2>Pos-X', u'SR:C01-BI:G04A<BPM:M1>Pos-X', u'SR:C01-BI:G04B<BPM:M1>Pos-X', u'SR:C01-BI:G06B<BPM:H1>Pos-X', u'SR:C01-BI:G06B<BPM:H2>Pos-X', u'SR:C02-BI:G02A<BPM:H1>Pos-X', u'SR:C02-BI:G02A<BPM:H2>Pos-X', u'SR:C02-BI:G04A<BPM:M1>Pos-X', u'SR:C02-BI:G04B<BPM:M1>Pos-X', u'SR:C02-BI:G06B<BPM:L1>Pos-X', u'SR:C02-BI:G06B<BPM:L2>Pos-X']
+    [u'SR:C01-BI:G02A<BPM:L1>Pos-X', u'SR:C01-BI:G02A<BPM:L2>Pos-X', u'SR:C01-BI:G04A<BPM:M1>Pos-X', u'SR:C01-BI:G04B<BPM:M1>Pos-X', ...
+    u'SR:C01-BI:G06B<BPM:H1>Pos-X', u'SR:C01-BI:G06B<BPM:H2>Pos-X', u'SR:C02-BI:G02A<BPM:H1>Pos-X', u'SR:C02-BI:G02A<BPM:H2>Pos-X', ...
+    u'SR:C02-BI:G04A<BPM:M1>Pos-X', u'SR:C02-BI:G04B<BPM:M1>Pos-X', u'SR:C02-BI:G06B<BPM:L1>Pos-X', u'SR:C02-BI:G06B<BPM:L2>Pos-X']
     >>> retrieveServiceConfigPVs(conn, confname2)
-    [u'SR:C01-BI:G02A<BPM:L1>Pos-X', u'SR:C01-BI:G02A<BPM:L2>Pos-X', u'SR:C01-BI:G04A<BPM:M1>Pos-X', u'SR:C01-BI:G04B<BPM:M1>Pos-X', u'SR:C01-BI:G06B<BPM:H1>Pos-X', u'SR:C01-BI:G06B<BPM:H2>Pos-X', u'SR:C02-BI:G02A<BPM:H1>Pos-X', u'SR:C02-BI:G02A<BPM:H2>Pos-X', u'SR:C02-BI:G04A<BPM:M1>Pos-X', u'SR:C02-BI:G04B<BPM:M1>Pos-X', u'SR:C02-BI:G06B<BPM:L1>Pos-X', u'SR:C02-BI:G06B<BPM:L2>Pos-X', u'SR:C03-BI:G02A<BPM:L1>Pos-X', u'SR:C03-BI:G02A<BPM:L2>Pos-X', u'SR:C03-BI:G04A<BPM:M1>Pos-X', u'SR:C03-BI:G04B<BPM:M1>Pos-X', u'SR:C03-BI:G06B<BPM:H1>Pos-X', u'SR:C03-BI:G06B<BPM:H2>Pos-X']
+    [u'SR:C01-BI:G02A<BPM:L1>Pos-X', u'SR:C01-BI:G02A<BPM:L2>Pos-X', u'SR:C01-BI:G04A<BPM:M1>Pos-X', u'SR:C01-BI:G04B<BPM:M1>Pos-X', ...
+    u'SR:C01-BI:G06B<BPM:H1>Pos-X', u'SR:C01-BI:G06B<BPM:H2>Pos-X', u'SR:C02-BI:G02A<BPM:H1>Pos-X', u'SR:C02-BI:G02A<BPM:H2>Pos-X', ...
+    u'SR:C02-BI:G04A<BPM:M1>Pos-X', u'SR:C02-BI:G04B<BPM:M1>Pos-X', u'SR:C02-BI:G06B<BPM:L1>Pos-X', u'SR:C02-BI:G06B<BPM:L2>Pos-X', ...
+    u'SR:C03-BI:G02A<BPM:L1>Pos-X', u'SR:C03-BI:G02A<BPM:L2>Pos-X', u'SR:C03-BI:G04A<BPM:M1>Pos-X', u'SR:C03-BI:G04B<BPM:M1>Pos-X', ...
+    u'SR:C03-BI:G06B<BPM:H1>Pos-X', u'SR:C03-BI:G06B<BPM:H2>Pos-X']
     >>> retrieveServiceConfigPVs(conn, confname3)
-    [u'SR:C01-BI:G06B<BPM:H1>Pos-X', u'SR:C01-BI:G06B<BPM:H2>Pos-X', u'SR:C02-BI:G02A<BPM:H1>Pos-X', u'SR:C02-BI:G02A<BPM:H2>Pos-X', u'SR:C03-BI:G02A<BPM:L1>Pos-X', u'SR:C03-BI:G02A<BPM:L2>Pos-X', u'SR:C03-BI:G04A<BPM:M1>Pos-X', u'SR:C03-BI:G04B<BPM:M1>Pos-X', u'SR:C03-BI:G06B<BPM:H1>Pos-X', u'SR:C03-BI:G06B<BPM:H2>Pos-X']
+    [u'SR:C01-BI:G06B<BPM:H1>Pos-X', u'SR:C01-BI:G06B<BPM:H2>Pos-X', u'SR:C02-BI:G02A<BPM:H1>Pos-X', ...
+    u'SR:C02-BI:G02A<BPM:H2>Pos-X', u'SR:C03-BI:G02A<BPM:L1>Pos-X', u'SR:C03-BI:G02A<BPM:L2>Pos-X', ...
+    u'SR:C03-BI:G04A<BPM:M1>Pos-X', u'SR:C03-BI:G04B<BPM:M1>Pos-X', u'SR:C03-BI:G06B<BPM:H1>Pos-X', ...
+    u'SR:C03-BI:G06B<BPM:H2>Pos-X']
     """
     if configname is None:
         raise Exception('service config name is not specified')

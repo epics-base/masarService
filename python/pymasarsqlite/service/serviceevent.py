@@ -135,9 +135,10 @@ def updateServiceEvent(conn, eventid, comment=None, approval=False, username=Non
         raise
     return True
 
-def retrieveServiceEvents(conn, configid=None,start=None, end=None, comment=None, user=None, approval=True):
+def retrieveServiceEvents(conn, configid=None, eventid=None, start=None, end=None, comment=None, user=None, approval=True):
     """
     retrieve an service event with given user tag within given time frame.
+    If event id is given, get service event header information for that given event.
     Both start and end time should be in UTC time format.
     If end time is not specified, use current time. If start is not specified, use one week before end time.
     It return a tuple array with format like:
@@ -197,39 +198,45 @@ def retrieveServiceEvents(conn, configid=None,start=None, end=None, comment=None
     try:
         cur = conn.cursor()
         sql = '''
-        select service_event_id, service_config_id, service_event_user_tag, service_event_UTC_time, service_event_user_name
+        select service_event_id, service_config_id, service_event_user_tag, service_event_UTC_time,
+        service_event_user_name
         from service_event where service_event_approval = 1 
         '''
 
-        if comment != None:
-            comment = comment.replace("*","%").replace("?","_")
-            sql += ' and service_event_user_tag like "%s" ' %(comment)
-        
-        if user != None:
-            user = user.replace("*","%").replace("?","_")
-            sql += ' and service_event_user_name like "%s" ' %(user)
-        
-        if (start is None) and (end is None):
-            if configid is None:
-                cur.execute(sql, )
-            else:
-                sql += ' and service_config_id = ?'
-                cur.execute(sql, (configid, ))
+        if eventid is not None:
+            sql += ' and service_event_id = ?'
+            cur.execute(sql, (eventid,))
+
         else:
-            sql += ' and service_event_UTC_time > ? and service_event_UTC_time < ? '
-            if end is None:
-                end = dt.datetime.utcnow()
-            if start is None:
-                start = end - dt.timedelta(weeks=1)
-            
-            if start > end:
-                raise Exception('Time range error')
-            
-            if configid is None:
-                cur.execute(sql, (start, end, ))
+            if comment != None:
+                comment = comment.replace("*","%").replace("?","_")
+                sql += ' and service_event_user_tag like "%s" ' %(comment)
+
+            if user != None:
+                user = user.replace("*","%").replace("?","_")
+                sql += ' and service_event_user_name like "%s" ' %(user)
+
+            if (start is None) and (end is None):
+                if configid is None:
+                    cur.execute(sql, )
+                else:
+                    sql += ' and service_config_id = ?'
+                    cur.execute(sql, (configid, ))
             else:
-                sql += ' and service_config_id = ? '
-                cur.execute(sql, (start, end, configid, ))
+                sql += ' and service_event_UTC_time > ? and service_event_UTC_time < ? '
+                if end is None:
+                    end = dt.datetime.utcnow()
+                if start is None:
+                    start = end - dt.timedelta(weeks=1)
+
+                if start > end:
+                    raise Exception('Time range error')
+
+                if configid is None:
+                    cur.execute(sql, (start, end, ))
+                else:
+                    sql += ' and service_config_id = ? '
+                    cur.execute(sql, (start, end, configid, ))
         results = cur.fetchall()
     except:
         raise

@@ -13,9 +13,8 @@ if pymongo.version_tuple < (2.5):
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 
-from pymasarmongo.config import masarconfig
-
 __timesformat = "%a, %d %b %Y, %H:%M:%S %Z"
+
 
 def _setup_masarservice_logger(name):
     formatter = logging.Formatter(fmt='%(asctime)s - %(levelname)s - %(module)s - %(message)s')
@@ -31,11 +30,9 @@ def _setup_masarservice_logger(name):
 
 __logger = _setup_masarservice_logger("masarservice")
 
+
 def conn(**kwds):
     """Connect MASAR Mongo DB server.
-    
-    :param userconfig: flag to identify whether to use default configuration or not. It is True by default
-    :type userconfig: Boolean
     
     :param host: MongoDB server name
     :type host: str
@@ -50,20 +47,11 @@ def conn(**kwds):
     
     :raises: ConnectionFailure if the connection cannot be made.
     """
-    useconfig = kwds.get("useconfig", True) 
-    if useconfig:
-        if masarconfig.has_section("mongodb"):
-            db = masarconfig.get('mongodb', 'database')
-            host = masarconfig.get('mongodb', 'host')
-            port = masarconfig.getint('mongodb', 'port')
-        else:
-            raise RuntimeError("Wrong masar configure file format.")
-    else:
-        #db = kwds.get("db", None)
-        host = kwds.get("host", None)
-        port = kwds.get("port", None)
-        if port is not None:
-            port = int(port)
+    db = kwds.get("db", None)
+    host = kwds.get("host", None)
+    port = kwds.get("port", None)
+    if port is not None:
+        port = int(port)
     try:
         conn = MongoClient(host=host, port=port)
         # w=0: disables write acknowledgement

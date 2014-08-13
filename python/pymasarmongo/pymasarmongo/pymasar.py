@@ -215,7 +215,7 @@ def updateconfig(conn, collection, name, **kwds):
     return True
     
 
-def retrieveconfig(conn, collection, name=None, system=None, status=None, configidx=None, withpvs=False):
+def retrieveconfig(conn, collection, name=None, system=None, status=None, configidx=None, eventidx=None, withpvs=False):
     """Retrieve a MASAR configuration according given name, or system name.
     Wildcard is supported:
         * for matching characters matching
@@ -225,7 +225,13 @@ def retrieveconfig(conn, collection, name=None, system=None, status=None, config
     
     :param collection: MongoDB collection name
     :type collection: str
-    
+
+    :param configidx: index number for this configuration, which is auto increased sequence number
+    :type desc: int
+
+    :param eventidx: event index number, only get configuration that this event belongs to
+    :type desc: int
+
     :param name: configuration name, which should be unique in the whole database
     :type name: str
 
@@ -262,20 +268,27 @@ def retrieveconfig(conn, collection, name=None, system=None, status=None, config
         raise RuntimeError("MongoDB connection is inactive.")
 
     query = {}
-    if configidx is not None:
-        query.update({"configidx": configidx})
-    if name is not None:
-        if "*" in name:
-            query.update({"name": {'$regex': "^"+name.replace("*", ".*"), '$options': 'i'}})
+    if eventidx is not None:
+        configs = list(conn[collection][__eventdb].find({"eventidx": eventidx}, {"configidx": 1}))
+        if len(configs) != 0:
+            query['configidx'] = configs[0]["configidx"]
         else:
-            query.update({"name": name})
-    if system is not None:
-        if "*" in system:
-            query.update({"system": {'$regex': "^"+system.replace("*", ".*"), '$options': 'i'}})
-        else:
-            query.update({"system": system})
-    if status is not None and status in ["active", "inactive"]:
-        query.update({"status": status})
+            return configs
+    else:
+        if configidx is not None:
+            query.update({"configidx": configidx})
+        if name is not None:
+            if "*" in name:
+                query.update({"name": {'$regex': "^"+name.replace("*", ".*"), '$options': 'i'}})
+            else:
+                query.update({"name": name})
+        if system is not None:
+            if "*" in system:
+                query.update({"system": {'$regex': "^"+system.replace("*", ".*"), '$options': 'i'}})
+            else:
+                query.update({"system": system})
+        if status is not None and status in ["active", "inactive"]:
+            query.update({"status": status})
 
     if withpvs:
         return list(conn[collection][__configdb].find(query))

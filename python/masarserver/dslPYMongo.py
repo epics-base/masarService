@@ -5,6 +5,7 @@
 #    found in file LICENSE that is included with this distribution.
 # Author: Guobao Shen   2014.08
 
+import os
 import re
 import json
 
@@ -28,7 +29,7 @@ class DSL(object):
         #define    DBF_CHAR    4
         #define    DBF_LONG    5
         #define    DBF_DOUBLE  6
-        self.epicsInt    = [1, 4, 5]
+        self.epicsInt = [1, 4, 5]
         self.epicsString = [0, 3]
         self.epicsDouble = [2, 6]
         self.epicsNoAccess = [7]
@@ -94,7 +95,9 @@ class DSL(object):
         key = ['system', 'configname']
         system, configname = self._parseParams(params, key)
 
-        mongoconn, collection = utils.conn()
+        mongoconn, collection = utils.conn(host=os.environ["MASAR_MONGO_HOST"],
+                                           port=os.environ["MASAR_MONGO_PORT"],
+                                           db=os.environ["MASAR_MONGO_DB"])
         if system is None and configname is None:
             result = pymasar.retrieveconfig(mongoconn, collection)
         elif system is None:
@@ -110,7 +113,7 @@ class DSL(object):
             results.append((int(str(res["_id"]), 16), res["configidx"], "system", res["system"]))
 
         return results
-    
+
     def retrieveServiceConfigs(self, params):
         """Retrieve configurations
 
@@ -122,6 +125,8 @@ class DSL(object):
              "status": [optional], # either active or inactive, otherwise reset to None
             }
 
+            or {'eventid': , # event index number to get which configuration this event belongs to}
+
         :returns: list with tuple with header description for each field. Structure like: ::
 
             [('config_idx', 'config_name', 'config_desc', 'config_create_date', 'config_version', 'status'), ...]
@@ -129,16 +134,22 @@ class DSL(object):
         :raises:
 
         """
-        key = ['configname', 'configversion', 'system', 'status']
-        configname, version, system, status = self._parseParams(params, key)
+        key = ['configname', 'configversion', 'system', 'status', 'eventid']
+        configname, version, system, status, eventid = self._parseParams(params, key)
+        if isinstance(eventid, (str, unicode)):
+            eventid = int(eventid)
         if status is not None:
             status = status.lower()
             if status not in ["active", "inactive"]:
                 status = None
-        if system.lower() == "all":
-            system = None
-        mongoconn, collection = utils.conn()
-        if system is None and configname is None:
+        if system is not None and system.lower() == "all":
+                system = None
+        mongoconn, collection = utils.conn(host=os.environ["MASAR_MONGO_HOST"],
+                                           port=os.environ["MASAR_MONGO_PORT"],
+                                           db=os.environ["MASAR_MONGO_DB"])
+        if eventid is not None:
+            result = pymasar.retrieveconfig(mongoconn, collection, eventidx=eventid)
+        elif system is None and configname is None:
             result = pymasar.retrieveconfig(mongoconn, collection, status=status)
         elif system is None:
             result = pymasar.retrieveconfig(mongoconn, collection, name=configname, status=status)
@@ -171,17 +182,22 @@ class DSL(object):
         :raises:
 
         """
-        key = ['configid', 'start', 'end', 'comment', 'user', 'approval']
-        cid, start, end, comment, user, approval = self._parseParams(params, key)
+        key = ['configid', 'eventid', 'start', 'end', 'comment', 'user', 'approval']
+        cid, eid, start, end, comment, user, approval = self._parseParams(params, key)
         if approval is None:
             approval = True
         else:
             approval = bool(json.loads(str(approval).lower()))
         if isinstance(cid, (str, unicode)):
             cid = int(cid)
-        mongoconn, collection = utils.conn()
+        if isinstance(eid, (str, unicode)):
+            eid = int(eid)
+        mongoconn, collection = utils.conn(host=os.environ["MASAR_MONGO_HOST"],
+                                           port=os.environ["MASAR_MONGO_PORT"],
+                                           db=os.environ["MASAR_MONGO_DB"])
         result = pymasar.retrieveevents(mongoconn, collection,
-                                        configidx=cid, start=start, end=end, comment=comment,
+                                        configidx=cid, eventidx=eid,
+                                        start=start, end=end, comment=comment,
                                         username=user, approval=approval)
         utils.close(mongoconn)
 
@@ -220,7 +236,9 @@ class DSL(object):
         if eid is not None:
             if isinstance(eid, (str, unicode)):
                 eid = int(eid)
-            mongoconn, collection = utils.conn()
+            mongoconn, collection = utils.conn(host=os.environ["MASAR_MONGO_HOST"],
+                                               port=os.environ["MASAR_MONGO_PORT"],
+                                               db=os.environ["MASAR_MONGO_DB"])
             eiddata = pymasar.retrievesnapshot(mongoconn, collection, eid)
             configname = pymasar.retrieveconfig(mongoconn, collection, configidx=eiddata["configidx"])[0]["name"]
             utils.close(mongoconn)
@@ -321,7 +339,9 @@ class DSL(object):
 
         # save into database
         try:
-            mongoconn, collection = utils.conn()
+            mongoconn, collection = utils.conn(host=os.environ["MASAR_MONGO_HOST"],
+                                               port=os.environ["MASAR_MONGO_PORT"],
+                                               db=os.environ["MASAR_MONGO_DB"])
             configs = pymasar.retrieveconfig(mongoconn, collection, name=config)
             if len(configs) != 1:
                 raise RuntimeError("Cannot find a unique configuration.")
@@ -358,7 +378,9 @@ class DSL(object):
         config, _ = self._parseParams(params, key)
 
         if config is not None:
-            mongoconn, collection = utils.conn()
+            mongoconn, collection = utils.conn(host=os.environ["MASAR_MONGO_HOST"],
+                                               port=os.environ["MASAR_MONGO_PORT"],
+                                               db=os.environ["MASAR_MONGO_DB"])
             result = pymasar.retrieveconfig(mongoconn, collection, name=config, withpvs=True)
             utils.close(mongoconn)
         else:
@@ -396,7 +418,9 @@ class DSL(object):
             if eid is not None:
                 if isinstance(eid, (str, unicode)):
                     eid = int(eid)
-                mongoconn, collection = utils.conn()
+                mongoconn, collection = utils.conn(host=os.environ["MASAR_MONGO_HOST"],
+                                                   port=os.environ["MASAR_MONGO_PORT"],
+                                                   db=os.environ["MASAR_MONGO_DB"])
                 result = pymasar.updateevent(mongoconn, collection, eventidx=eid,
                                              approval=True, username=user,
                                              comment=desc)

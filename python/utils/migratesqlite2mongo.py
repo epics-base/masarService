@@ -98,9 +98,9 @@ if __name__ == "__main__":
         mongodb = masarconfig.get("mongodb", "database")
         host = masarconfig.get("mongodb", "host")
         port = masarconfig.get("mongodb", "port")
-        mongoconn, collection = pymasarmongo.db.utils.conn(userconfig=True, host=host, port=port, db=mongodb)
+        mongoconn, collection = pymasarmongo.db.utils.conn(host=host, port=port, db=mongodb)
     else:
-        mongoconn, collection = pymasarmongo.db.utils.conn(userconfig=False)
+        mongoconn, collection = pymasarmongo.db.utils.conn()
 
     time0 = time.time()
     saveconfig2mongo(dsl, mongoconn, collection)

@@ -82,22 +82,29 @@ class DSL(object):
         return result
     
     def retrieveServiceConfigs(self, params):
-        key = ['servicename', 'configname', 'configversion', 'system']
-        service, config, version, system = self._parseParams(params, key)
+        """FGet service configuration information.
+        If event id is given, get configuration header information only for that event belongs to."""
+        key = ['servicename', 'configname', 'configversion', 'system', 'eventid']
+        service, config, version, system, eid = self._parseParams(params, key)
         if not service:
              service = self.__servicename
         if system == 'all':
             system = None
         conn = pymasar.utils.connect()
-        result = pymasar.service.retrieveServiceConfigs(conn, servicename=service, configname=config, configversion=version, system=system)
+        result = pymasar.service.retrieveServiceConfigs(conn, servicename=service, configname=config,
+                                                        configversion=version, system=system,
+                                                        eventid=eid)
         pymasar.utils.close(conn)
         return result
     
     def retrieveServiceEvents(self, params):
-        key = ['configid', 'start', 'end', 'comment', 'user']
-        cid, start, end, comment, user = self._parseParams(params, key)
+        """Get service events with given search constrains.
+        If event id is given, get header information for that event only then."""
+        key = ['configid', 'start', 'end', 'comment', 'user', 'eventid']
+        cid, start, end, comment, user, eid = self._parseParams(params, key)
         conn = pymasar.utils.connect()
-        result = pymasar.service.retrieveServiceEvents(conn, configid=cid,start=start, end=end, comment=comment, user=user)
+        result = pymasar.service.retrieveServiceEvents(conn, configid=cid, eventid=eid,
+                                                       start=start, end=end, comment=comment, user=user)
         pymasar.utils.close(conn)
         return result
 
@@ -116,7 +123,7 @@ class DSL(object):
             service = self.__servicename
         
         rawdata = params[0]
-        nttable = NTTable(rawdata,True)
+        nttable = NTTable(rawdata, True)
         numberValueCount = nttable.getNumberValues()
         if numberValueCount == 1 and 'status' == nttable.getLabel()[0] and not nttable.getValue(0)[0]:
             raise
