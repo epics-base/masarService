@@ -26,6 +26,7 @@ def saveconfig2mongo(dsl, mongoconn, collection):
         name = r[1]
         desc = r[2]
         date = r[3]
+        status = r[5]
         if SHOWTIME:
             start1 = time.time()
         system = dsl.request({"function": "retrieveServiceConfigProps", "configname": r[1]})
@@ -41,7 +42,8 @@ def saveconfig2mongo(dsl, mongoconn, collection):
                                                      desc=desc,
                                                      created_on=date,
                                                      system=system,
-                                                     pvlist=pvlist)
+                                                     pvlist=pvlist,
+                                                     status=status)
         if SHOWTIME:
             print "Insert one into MongoDB: %s seconds" % (time.time() - start2)
 
