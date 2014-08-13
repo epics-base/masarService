@@ -35,9 +35,12 @@ if dbsrc == "mongodb":
 #     print "Using MySQL as backend."
 #     import pymasarmysql as pymasar
 elif dbsrc == "sqlite":
-    print "Using SQLite as backend."
     if os.getenv("MASAR_SQLITE_DB", None) is None:
         os.environ["MASAR_SQLITE_DB"] = masarconfig.get("sqlite", "database")
+    if not os.access(os.environ["MASAR_SQLITE_DB"], os.W_OK):
+        raise RuntimeError("MASAR database (%s) is not aritable." % os.environ["MASAR_SQLITE_DB"])
+    print "Using SQLite as backend."
+    print "DB file: ", os.environ["MASAR_SQLITE_DB"]
     import pymasarsqlite as pymasar
     from dslPYSQLite import DSL
 else:
