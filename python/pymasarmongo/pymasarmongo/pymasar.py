@@ -188,9 +188,10 @@ def updateconfig(conn, collection, name, **kwds):
     if name is None and configidx:
         raise RuntimeError("Cannot identify configuration to update.")
 
-    res = retrieveconfig(conn, collection, name=name, configidx=configidx)
+    res = retrieveconfig(conn, collection, name=name, configidx=configidx, withpvs=True)
     if len(res) != 1:
         raise RuntimeError("Wrong Mongo document for %s" % name)
+
     pvlist0 = res[0]["pvlist"]
     if pvlist0 and pvlist is not None and pvlist0 != pvlist:
         raise RuntimeError("PV collection list exists already, and should not be changed.")

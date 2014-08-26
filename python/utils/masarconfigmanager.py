@@ -137,8 +137,9 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
     def pushbuttonSignalMapperMapped(self, pushbutton):
         configstatus = str(self.masarConfigTableWidget.cellWidget(pushbutton.row, pushbutton.column-1).currentText())
         cid = str(self.masarConfigTableWidget.item(pushbutton.row, 0).text())
+        cname = str(self.masarConfigTableWidget.item(pushbutton.row, 1).text())
 
-        if self.updatemasarconfigstatus(configstatus, cid):
+        if self.updatemasarconfigstatus(configstatus, cid, configname=cname):
             palette = QtGui.QPalette(pushbutton.palette())  # make a copy of the palette
             palette.setColor(QtGui.QPalette.ButtonText, QtGui.QColor('grey'))
             pushbutton.setPalette(palette)
@@ -192,12 +193,14 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
         if self.actionSQLite.isChecked():
             self.dbsource = 0
             self.defaultsqlitedb()
+            self.listPvGroupPushButton.setEnabled(True)
 
     def actionmongodbmenu(self):
         """Answer action when MongoDB is selected."""
         if self.actionMongoDB.isChecked():
             self.dbsource = 1
             self.defaultmongodb()
+            self.listPvGroupPushButton.setEnabled(False)
 
     def actionmysqlmenu(self):
         """Answer action when MySQL is selected."""
@@ -283,8 +286,18 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
 
             import pymasarmongo
             mongoconn, collection = pymasarmongo.db.utils.conn(host=host, port=port, db=database)
-            result = pymasarmongo.pymasarmongo.pymasarmongo.pymasar.retrieveconfig(mongoconn, collection)
+            resultdict = pymasarmongo.pymasarmongo.pymasar.retrieveconfig(mongoconn, collection)
             pymasarmongo.db.utils.close(mongoconn)
+
+            result = [['id', 'name', 'desc', 'date', 'version', 'status']]
+            for res in resultdict:
+                result.append([res['configidx'],
+                               res['name'],
+                               res['desc'],
+                               res['created_on'],
+                               res['version'],
+                               res['status']])
+                               # res['system']
 
         self._setconfigtable(result)
 
@@ -344,7 +357,7 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
 
             self.masarConfigTableWidget.resizeColumnsToContents()
 
-    def updatemasarconfigstatus(self, configstatus, cid):
+    def updatemasarconfigstatus(self, configstatus, cid, configname=None):
         if self.dbsource == 0:
             # get data from sqlite
             if self.usedefaultdb:
@@ -378,7 +391,8 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
             import pymasarmongo
 
             mongoconn, collection = pymasarmongo.db.utils.conn(host=host, port=port, db=database)
-            pymasarmongo.pymasarmongo.pymasar.updateconfig(mongoconn, collection, configidx=cid, status=configstatus)
+            pymasarmongo.pymasarmongo.pymasar.updateconfig(mongoconn, collection, configname,
+                                                           configidx=int(cid), status=configstatus)
             pymasarmongo.db.utils.close(mongoconn)
 
         return True
@@ -487,6 +501,41 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
 
         import pymasarmongo
 
+        mongoconn, collection = pymasarmongo.db.utils.conn(host=host, port=port, db=database)
+        existedresult = pymasarmongo.pymasarmongo.pymasar.retrieveconfig(mongoconn, collection)
+        existedcfg = []
+        for res in existedresult:
+            existedcfg.append([res['configidx'],
+                               res['name'],
+                               res['desc'],
+                               res['created_on'],
+                               res['version'],
+                               res['status']])
+        newcfgdata = self._getnewconfigurationdata(existedcfg)
+        if newcfgdata is None:
+            # Nothing to be added.
+            raise ValueError("Empty configuration.")
+
+        newcfgname = newcfgdata[0]
+        desc = newcfgdata[1]
+        msystem = newcfgdata[2]
+        # config data format: [[name], [desc], [pv files]]
+        cfgdata = newcfgdata[3]
+        pvs = []
+        for pvf in cfgdata[2]:
+            if pvf is not None and os.path.isfile(pvf):
+                pvs += list(np.loadtxt(pvf, dtype=str, delimiter="#"))
+        if pvs:
+            pymasarmongo.pymasarmongo.pymasar.saveconfig(mongoconn, collection, newcfgname,
+                                                         desc=desc,
+                                                         system=msystem,
+                                                         pvlist={"names": pvs})
+            QMessageBox.information(self, "Congratulation", "A new configuration has been added successfully.")
+        else:
+            QMessageBox.warning(self, "Warning", "No PVs available for the new configuration.")
+
+        pymasarmongo.db.utils.close(mongoconn)
+
     def submitmasarconfig(self):
         """submit a new configuration to MASAR database"""
         if self.dbsource is None:
@@ -547,6 +596,8 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
                 pvgroupnames.append(pvgname)
             elif self.newConfigTableWidget.item(count, 4) is None or str(self.newConfigTableWidget.item(count, 4)) == "":
                 continue
+            elif self.dbsource == 1:
+                pvgroupnames.append(None)
             else:
                 QMessageBox.warning(self, "Warning",
                                     "Empty pv group name.")
@@ -626,6 +677,21 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
                 port = str(self.databasePortLineEdit.text())
 
             import pymasarmongo
+
+            mongoconn, collection = pymasarmongo.db.utils.conn(host=host, port=port, db=database)
+
+            result = pymasarmongo.pymasarmongo.pymasar.retrieveconfig(mongoconn, collection)
+            pymasarmongo.db.utils.close(mongoconn)
+
+            results = []
+            for res in result:
+                if res["system"] not in results:
+                    results.append(res["system"])
+            res = sorted(set(results))
+            self.systemComboBox.addItems(res)
+            index = len(res)
+            self.systemComboBox.addItem("Others")
+            self.systemComboBox.setCurrentIndex(index)
 
     def listpvgroups(self):
         """"""

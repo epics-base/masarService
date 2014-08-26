@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_dbmanager.ui'
 #
-# Created: Tue Aug 26 08:46:25 2014
+# Created: Tue Aug 26 14:50:40 2014
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -53,16 +53,13 @@ class Ui_dbmanagerUI(object):
         self.masarConfigTableWidget.setHorizontalHeaderItem(5, item)
         item = QtGui.QTableWidgetItem()
         self.masarConfigTableWidget.setHorizontalHeaderItem(6, item)
-        self.masarConfigTableWidget.horizontalHeader().setVisible(False)
+        self.masarConfigTableWidget.horizontalHeader().setVisible(True)
         self.masarConfigTableWidget.horizontalHeader().setSortIndicatorShown(True)
         self.masarConfigTableWidget.verticalHeader().setVisible(False)
         self.masarConfigTableWidget.verticalHeader().setSortIndicatorShown(False)
         self.showMasarConfigButton = QtGui.QPushButton(self.tab)
         self.showMasarConfigButton.setGeometry(QtCore.QRect(410, 0, 114, 32))
         self.showMasarConfigButton.setObjectName(_fromUtf8("showMasarConfigButton"))
-        self.pushButton = QtGui.QPushButton(self.tab)
-        self.pushButton.setGeometry(QtCore.QRect(1180, 0, 114, 32))
-        self.pushButton.setObjectName(_fromUtf8("pushButton"))
         self.defaultInfoButton = QtGui.QPushButton(self.tab)
         self.defaultInfoButton.setGeometry(QtCore.QRect(10, 0, 171, 32))
         self.defaultInfoButton.setObjectName(_fromUtf8("defaultInfoButton"))
@@ -236,7 +233,7 @@ class Ui_dbmanagerUI(object):
         self.menubar.addAction(self.menuDatabases.menuAction())
 
         self.retranslateUi(dbmanagerUI)
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(0)
         QtCore.QObject.connect(self.actionSQLite, QtCore.SIGNAL(_fromUtf8("changed()")), dbmanagerUI.actionsqlitemenu)
         QtCore.QObject.connect(self.actionMongoDB, QtCore.SIGNAL(_fromUtf8("changed()")), dbmanagerUI.actionmongodbmenu)
         QtCore.QObject.connect(self.actionMySQL, QtCore.SIGNAL(_fromUtf8("changed()")), dbmanagerUI.actionmysqlmenu)
@@ -273,7 +270,6 @@ class Ui_dbmanagerUI(object):
         item = self.masarConfigTableWidget.horizontalHeaderItem(6)
         item.setText(_translate("dbmanagerUI", "update", None))
         self.showMasarConfigButton.setText(_translate("dbmanagerUI", "Show Configs", None))
-        self.pushButton.setText(_translate("dbmanagerUI", "Update Status", None))
         self.defaultInfoButton.setText(_translate("dbmanagerUI", "DB Info (Default)", None))
         self.label_3.setText(_translate("dbmanagerUI", "Port:", None))
         self.label.setText(_translate("dbmanagerUI", "Database:", None))
