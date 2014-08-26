@@ -1,0 +1,978 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>dbmanagerUI</class>
+ <widget class="QMainWindow" name="dbmanagerUI">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1685</width>
+    <height>981</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Masar Configuration Manager</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QTabWidget" name="tabWidget">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>0</y>
+      <width>1661</width>
+      <height>911</height>
+     </rect>
+    </property>
+    <property name="currentIndex">
+     <number>1</number>
+    </property>
+    <widget class="QWidget" name="tab">
+     <attribute name="title">
+      <string>View/Update Configurations</string>
+     </attribute>
+     <widget class="QTableWidget" name="masarConfigTableWidget">
+      <property name="geometry">
+       <rect>
+        <x>290</x>
+        <y>30</y>
+        <width>1361</width>
+        <height>851</height>
+       </rect>
+      </property>
+      <property name="columnCount">
+       <number>7</number>
+      </property>
+      <attribute name="horizontalHeaderVisible">
+       <bool>false</bool>
+      </attribute>
+      <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+       <bool>true</bool>
+      </attribute>
+      <attribute name="verticalHeaderVisible">
+       <bool>false</bool>
+      </attribute>
+      <attribute name="verticalHeaderShowSortIndicator" stdset="0">
+       <bool>false</bool>
+      </attribute>
+      <column>
+       <property name="text">
+        <string>id</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>name</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>description</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>date</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>version</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>status</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>update</string>
+       </property>
+      </column>
+     </widget>
+     <widget class="QPushButton" name="showMasarConfigButton">
+      <property name="geometry">
+       <rect>
+        <x>410</x>
+        <y>0</y>
+        <width>114</width>
+        <height>32</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Show Configs</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="pushButton">
+      <property name="geometry">
+       <rect>
+        <x>1180</x>
+        <y>0</y>
+        <width>114</width>
+        <height>32</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Update Status</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="defaultInfoButton">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>0</y>
+        <width>171</width>
+        <height>32</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>DB Info (Default)</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_3">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>100</y>
+        <width>62</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Port:</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>40</y>
+        <width>62</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Database:</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_2">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>70</y>
+        <width>62</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Host:</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="newInfoButton">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>180</y>
+        <width>171</width>
+        <height>32</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>DB Info (by user)</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_7">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>130</y>
+        <width>62</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>User:</string>
+      </property>
+     </widget>
+     <widget class="QTextBrowser" name="databaseDefault">
+      <property name="geometry">
+       <rect>
+        <x>80</x>
+        <y>30</y>
+        <width>191</width>
+        <height>31</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QTextBrowser" name="hostDefault">
+      <property name="geometry">
+       <rect>
+        <x>80</x>
+        <y>60</y>
+        <width>191</width>
+        <height>31</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QTextBrowser" name="portDefault">
+      <property name="geometry">
+       <rect>
+        <x>80</x>
+        <y>90</y>
+        <width>191</width>
+        <height>31</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QTextBrowser" name="userDefault">
+      <property name="geometry">
+       <rect>
+        <x>80</x>
+        <y>120</y>
+        <width>191</width>
+        <height>31</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_10">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>300</y>
+        <width>62</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>User:</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_11">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>240</y>
+        <width>62</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Host:</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_12">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>270</y>
+        <width>62</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Port:</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_13">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>210</y>
+        <width>62</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Database:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="databaseLineEdit">
+      <property name="geometry">
+       <rect>
+        <x>80</x>
+        <y>210</y>
+        <width>191</width>
+        <height>31</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="databaseHostLineEdit">
+      <property name="geometry">
+       <rect>
+        <x>80</x>
+        <y>240</y>
+        <width>191</width>
+        <height>31</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="databasePortLineEdit">
+      <property name="geometry">
+       <rect>
+        <x>80</x>
+        <y>270</y>
+        <width>191</width>
+        <height>31</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="databaseUserLineEdit">
+      <property name="geometry">
+       <rect>
+        <x>80</x>
+        <y>300</y>
+        <width>191</width>
+        <height>31</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="databasePwLineEdit">
+      <property name="geometry">
+       <rect>
+        <x>80</x>
+        <y>330</y>
+        <width>191</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="echoMode">
+       <enum>QLineEdit::PasswordEchoOnEdit</enum>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_14">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>330</y>
+        <width>62</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Password:</string>
+      </property>
+     </widget>
+     <widget class="QRadioButton" name="useDefaultDBRadioButton">
+      <property name="geometry">
+       <rect>
+        <x>290</x>
+        <y>5</y>
+        <width>121</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Use Default DB</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QTextBrowser" name="textBrowser">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>390</y>
+        <width>281</width>
+        <height>491</height>
+       </rect>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="html">
+       <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'.Lucida Grande UI'; font-size:13pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;View all existing MASAR configurations. There are 2 choices available:&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;1. Defcault configuration, which would be loaded from masarservice.conf;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;2. Specify DB information.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;If &amp;quot;Use Default DB&amp;quot; is selected, this will read information from default one, &lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;otherwise, read information from user specified database.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;From this UI tool, MASAR admin could be able update status of existing configuration&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;to either &amp;quot;active&amp;quot;, or &amp;quot;inactive&amp;quot;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tab_2">
+     <attribute name="title">
+      <string>New Configuration</string>
+     </attribute>
+     <widget class="QLabel" name="label_4">
+      <property name="geometry">
+       <rect>
+        <x>40</x>
+        <y>30</y>
+        <width>51</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Name:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="newConfigurationLineEdit">
+      <property name="geometry">
+       <rect>
+        <x>90</x>
+        <y>20</y>
+        <width>381</width>
+        <height>31</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_5">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>60</y>
+        <width>91</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Description:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="newConfigurationDescription">
+      <property name="geometry">
+       <rect>
+        <x>90</x>
+        <y>50</y>
+        <width>701</width>
+        <height>31</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QTableWidget" name="newConfigTableWidget">
+      <property name="geometry">
+       <rect>
+        <x>450</x>
+        <y>130</y>
+        <width>1201</width>
+        <height>741</height>
+       </rect>
+      </property>
+      <property name="mouseTracking">
+       <bool>true</bool>
+      </property>
+      <property name="acceptDrops">
+       <bool>true</bool>
+      </property>
+      <property name="editTriggers">
+       <set>QAbstractItemView::AnyKeyPressed|QAbstractItemView::CurrentChanged|QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed</set>
+      </property>
+      <property name="rowCount">
+       <number>0</number>
+      </property>
+      <attribute name="horizontalHeaderDefaultSectionSize">
+       <number>200</number>
+      </attribute>
+      <column>
+       <property name="text">
+        <string>pv group name</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>pv group description</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>show pvs</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>choose pv file</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>pv file</string>
+       </property>
+      </column>
+     </widget>
+     <widget class="QPushButton" name="addPvGroupPushButton">
+      <property name="geometry">
+       <rect>
+        <x>570</x>
+        <y>100</y>
+        <width>114</width>
+        <height>32</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Add PV Group</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="removePvGroupPushButton">
+      <property name="geometry">
+       <rect>
+        <x>1460</x>
+        <y>100</y>
+        <width>141</width>
+        <height>32</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Remove PV Group</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="submiConfigurationPushButton">
+      <property name="geometry">
+       <rect>
+        <x>1400</x>
+        <y>40</y>
+        <width>201</width>
+        <height>32</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Create New Configuration</string>
+      </property>
+     </widget>
+     <widget class="Line" name="line">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>90</y>
+        <width>1651</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_6">
+      <property name="geometry">
+       <rect>
+        <x>810</x>
+        <y>30</y>
+        <width>61</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>System:</string>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="systemComboBox">
+      <property name="geometry">
+       <rect>
+        <x>1010</x>
+        <y>20</y>
+        <width>121</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <item>
+       <property name="text">
+        <string>Others</string>
+       </property>
+      </item>
+     </widget>
+     <widget class="QPushButton" name="listAvailableSystemPushButton">
+      <property name="geometry">
+       <rect>
+        <x>870</x>
+        <y>20</y>
+        <width>131</width>
+        <height>32</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>List System</string>
+      </property>
+     </widget>
+     <widget class="Line" name="line_2">
+      <property name="geometry">
+       <rect>
+        <x>795</x>
+        <y>15</y>
+        <width>16</width>
+        <height>81</height>
+       </rect>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+     </widget>
+     <widget class="Line" name="line_3">
+      <property name="geometry">
+       <rect>
+        <x>1330</x>
+        <y>15</y>
+        <width>16</width>
+        <height>81</height>
+       </rect>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="systemLineEdit">
+      <property name="geometry">
+       <rect>
+        <x>1010</x>
+        <y>50</y>
+        <width>311</width>
+        <height>41</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="listPvGroupPushButton">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>100</y>
+        <width>141</width>
+        <height>32</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Browse PV Group</string>
+      </property>
+     </widget>
+     <widget class="QTreeView" name="pvGroupTreeView">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>130</y>
+        <width>401</width>
+        <height>741</height>
+       </rect>
+      </property>
+     </widget>
+    </widget>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1685</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuDatabases">
+    <property name="title">
+     <string>Databases</string>
+    </property>
+    <addaction name="actionSQLite"/>
+    <addaction name="actionMongoDB"/>
+    <addaction name="actionMySQL"/>
+   </widget>
+   <addaction name="menuDatabases"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionSQLite">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>SQLite</string>
+   </property>
+  </action>
+  <action name="actionMongoDB">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>MongoDB</string>
+   </property>
+  </action>
+  <action name="actionMySQL">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>MySQL</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>actionSQLite</sender>
+   <signal>changed()</signal>
+   <receiver>dbmanagerUI</receiver>
+   <slot>actionsqlitemenu()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>666</x>
+     <y>484</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionMongoDB</sender>
+   <signal>changed()</signal>
+   <receiver>dbmanagerUI</receiver>
+   <slot>actionmongodbmenu()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>666</x>
+     <y>484</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionMySQL</sender>
+   <signal>changed()</signal>
+   <receiver>dbmanagerUI</receiver>
+   <slot>actionmysqlmenu()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>666</x>
+     <y>484</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>defaultInfoButton</sender>
+   <signal>pressed()</signal>
+   <receiver>dbmanagerUI</receiver>
+   <slot>showdefaultdbinfo()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>108</x>
+     <y>63</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>670</x>
+     <y>475</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>databaseLineEdit</sender>
+   <signal>editingFinished()</signal>
+   <receiver>dbmanagerUI</receiver>
+   <slot>getdatabasename()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>188</x>
+     <y>273</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>670</x>
+     <y>475</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>databaseHostLineEdit</sender>
+   <signal>editingFinished()</signal>
+   <receiver>dbmanagerUI</receiver>
+   <slot>getdatabasehost()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>188</x>
+     <y>303</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>670</x>
+     <y>475</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>databasePortLineEdit</sender>
+   <signal>editingFinished()</signal>
+   <receiver>dbmanagerUI</receiver>
+   <slot>getdatabaseport()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>188</x>
+     <y>333</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>670</x>
+     <y>475</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>databasePwLineEdit</sender>
+   <signal>editingFinished()</signal>
+   <receiver>dbmanagerUI</receiver>
+   <slot>getdatabasepw()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>188</x>
+     <y>393</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>670</x>
+     <y>475</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>showMasarConfigButton</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>dbmanagerUI</receiver>
+   <slot>showmasarconfigs(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>359</x>
+     <y>63</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>670</x>
+     <y>475</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>useDefaultDBRadioButton</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>dbmanagerUI</receiver>
+   <slot>choosedbsrc(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>363</x>
+     <y>62</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>670</x>
+     <y>475</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>addPvGroupPushButton</sender>
+   <signal>clicked()</signal>
+   <receiver>dbmanagerUI</receiver>
+   <slot>addnewpvgrouprow()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>89</x>
+     <y>143</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>842</x>
+     <y>490</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>removePvGroupPushButton</sender>
+   <signal>clicked()</signal>
+   <receiver>dbmanagerUI</receiver>
+   <slot>removepvgrouprow()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1543</x>
+     <y>143</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>842</x>
+     <y>490</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>submiConfigurationPushButton</sender>
+   <signal>clicked()</signal>
+   <receiver>dbmanagerUI</receiver>
+   <slot>submitmasarconfig()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1503</x>
+     <y>63</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>108</x>
+     <y>63</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>newConfigTableWidget</sender>
+   <signal>cellClicked(int,int)</signal>
+   <receiver>dbmanagerUI</receiver>
+   <slot>currentselectedrow(int, int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>838</x>
+     <y>538</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>842</x>
+     <y>490</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>systemComboBox</sender>
+   <signal>currentIndexChanged(QString)</signal>
+   <receiver>dbmanagerUI</receiver>
+   <slot>updateselectedsystem()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1383</x>
+     <y>93</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>842</x>
+     <y>490</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>listAvailableSystemPushButton</sender>
+   <signal>clicked()</signal>
+   <receiver>dbmanagerUI</receiver>
+   <slot>updatesystemcombobox()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>948</x>
+     <y>83</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>842</x>
+     <y>490</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>listPvGroupPushButton</sender>
+   <signal>clicked()</signal>
+   <receiver>dbmanagerUI</receiver>
+   <slot>listpvgroups()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>83</x>
+     <y>163</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>108</x>
+     <y>63</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>
