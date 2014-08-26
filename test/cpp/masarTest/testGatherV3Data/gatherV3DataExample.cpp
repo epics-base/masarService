@@ -46,7 +46,7 @@ NTTablePtr getLiveMachine(
 void test()
 {
     String builder;
-    int n = 9;
+    int n = 11;
     StringArray channelName(n);
     channelName[0] = "masarExample0000";
     channelName[1] = "masarExample0001";
@@ -57,6 +57,8 @@ void test()
     channelName[6] = "masarExampleStringArray";
     channelName[7] = "masarExampleLongArray";
     channelName[8] = "masarExampleDoubleArray";
+    channelName[9] = "masarExampleBoUninit";
+    channelName[10] = "masarExampleMbboUninit";
 
     NTTablePtr pvt = getLiveMachine(channelName,n);
     PVBooleanArrayPtr isConnected = static_pointer_cast<PVBooleanArray>(pvt->getPVField(5));

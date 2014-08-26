@@ -10,11 +10,12 @@ using namespace std;
 using namespace epics::pvData;
 using namespace epics::pvAccess;
 using std::tr1::static_pointer_cast;
+using std::cout;
+using std::endl;
 
 void test()
 {
-    String builder;
-    int n = 9;
+    int n = 11;
     StringArray channelName(n);
     channelName[0] = "masarExample0000";
     channelName[1] = "masarExample0001";
@@ -25,35 +26,29 @@ void test()
     channelName[6] = "masarExampleStringArray";
     channelName[7] = "masarExampleLongArray";
     channelName[8] = "masarExampleDoubleArray";
+    channelName[9] = "masarExampleBoUninit";
+    channelName[10] = "masarExampleMbboUninit";
     GatherV3DataPtr gather(new GatherV3Data(channelName,n));
     bool result = gather->connect(5.0);
     if(!result) {
-        printf("connect failed\n%s\n",gather->getMessage().c_str());
-        printf("This test requires iocBoot/iocAll ");
-        printf("It must be started before running this test\n");
+        cout << "connect failed " << gather->getMessage() << endl;
+        cout << "This test requires iocBoot/iocAll. ";
+        cout << "It must be started before running this test\n";
         exit(1);
     }
+    result = gather->get();
+    if(!result) {
+        cout << "get problem " << gather->getMessage() << endl;
+    }
     NTTablePtr nttable = gather->getNTTable();
-    BooleanArrayData booldata;
     PVBooleanArrayPtr pvIsArray = static_pointer_cast<PVBooleanArray>
             (nttable->getPVStructure()->getScalarArrayField("isArray",pvBoolean));
-    pvIsArray->get(0,n,booldata);
-    BooleanArray & isArray = booldata.data;
-    DoubleArrayData ddata;
-    gather->getDoubleValue()->get(0,n,ddata);
-    DoubleArray & dvalue = ddata.data;
-    StringArrayData sdata;
-    gather->getStringValue()->get(0,n,sdata);
-    StringArray & svalue = sdata.data;
-    LongArrayData ldata;
-    gather->getLongValue()->get(0,n,ldata);
-    LongArray & lvalue = ldata.data;
-    IntArrayData idata;
-    StructureArrayData structdata;
-    gather->getArrayValue()->get(0,n,structdata);
-    PVStructurePtrArray & structvalue = structdata.data;
-    gather->getDBRType()->get(0,n,idata);
-    IntArray & dbrType = idata.data;
+    uint8 * isArray = pvIsArray->get();
+    double *dvalue = gather->getDoubleValue()->get();
+    String *svalue = gather->getStringValue()->get();
+    int64 * lvalue = gather->getLongValue()->get();
+    PVStructurePtr *structvalue = gather->getArrayValue()->get();
+    int32 * dbrType = gather->getDBRType()->get();
     for(int i=0; i<n; i++) {
         if(isArray[i]) {
             PVStructurePtr pvStructure = structvalue[i];
@@ -90,7 +85,7 @@ void test()
                  break;
             }
             default:
-                printf("got an unexpected DBF type. Logic error\n");
+                cout << "got an unexpected DBF type. Logic error\n";
                 exit(1);
             }
             continue;
@@ -99,7 +94,8 @@ void test()
         case DBF_STRING:
              svalue[i] = String("this is set by gatherV3DataPut"); break;
         case DBF_ENUM:
-             svalue[i] = String("one"); break;
+             svalue[i] = String("one");
+             break;
         case DBF_CHAR:
         case DBF_INT:
         case DBF_LONG:
@@ -108,17 +104,22 @@ void test()
         case DBF_DOUBLE:
              dvalue[i] = i; break;
         default:
-            printf("got an unexpected DBF type. Logic error\n");
+            cout << "got an unexpected DBF type. Logic error\n";
             exit(1);
         }
     }
     result = gather->put();
-    if(!result) {printf("put failed\n%s\n",gather->getMessage().c_str()); exit(1);}
+    if(!result) {
+        cout << "put failed " << gather->getMessage() << endl;
+        exit(1);
+    }
     result = gather->get();
-    if(!result) {printf("get failed\n%s\n",gather->getMessage().c_str()); exit(1);}
-    builder.clear();
-    nttable->getPVStructure()->toString(&builder);
-    printf("nttable\n%s\n",builder.c_str());
+    if(!result) {
+        cout << "get failed " << gather->getMessage() << endl;
+        exit(1);
+    }
+    cout << "nttable\n";
+    cout <<  nttable->getPVStructure()->dumpValue(cout) << endl;
 }
 
 int main(int argc,char *argv[])

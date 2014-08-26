@@ -196,6 +196,7 @@ private:
     {
         return shared_from_this();
     }
+
     class GatherV3DataPvt *pvt;
 };
 

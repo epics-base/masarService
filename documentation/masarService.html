@@ -10,13 +10,28 @@
   <link rel="stylesheet" type="text/css"
   href="http://epics-pvdata.sourceforge.net/epicsv4.css" />
   <style type="text/css">
-/*<![CDATA[*/
+  /*<![CDATA[*/
      .about { margin-left: 3em; margin-right: 3em; font-size: .83em}
      table { margin-left: auto; margin-right: auto }
      .diagram { text-align: center; margin: 2.5em 0 }
-     body { margin-right: 10% }
-/*]]>*/</style>
+     span.opt { color: grey }
+     span.nterm { font-style:italic }
+     span.term { font-family:courier }
+     span.user { font-family:courier }
+     span.user:before { content:"<" }
+     span.user:after { content:">" }
+     .nonnorm { font-style:italic }
+     p.ed { color: #AA0000 }
+     span.ed { color: #AA0000 }
+     p.ed.priv { display: inline; }
+     span.ed.priv { display: inline; }
+  /*]]>*/</style>
+  <!-- Script that generates the Table of Contents -->
+  <script type="text/javascript"
+  src="http://epics-pvdata.sourceforge.net/script/tocgen.js">
+  </script>
 </head>
+<body>
 
 <body>
 
@@ -24,16 +39,26 @@
 <h1>EPICS masarService</h1>
 <!-- Maturity: Working Draft or Request for Comments, or Recommendation, and date.  -->
 
-<h2 class="nocount" id="L50">EPICS v4 Working Group, Working Draft,
-2012.01.20</h2>
+<h2 class="nocount" id="L50">EPICS v4 Working Group, Working Draft, 2014.04.10</h2>
 <dl>
-  <dt>Previous version:</dt>
+    <dt>Latest version:</dt>
     <dd><a
-      href="http://epics-pvdata.sourceforge.net/masarService_20120112.html">masarService_20120116.html</a></dd>
+      href="masarService.html">masarService.html</a>
+    </dd>
+    <dt>This version:</dt>
+    <dd><a
+      href="masarService_20140410.html">masarService_20140410.html</a>
+    </dd>
+    <dt>Previous version:</dt>
+    <dd>None</dd>
   <dt>Editors:</dt>
     <dd>Guobao Shen, BNL</dd>
     <dd>Marty Kraimer, BNL</dd>
 </dl>
+  <p class="copyright">This product is made available subject to acceptance of the <a
+href="http://epics-pvdata.sourceforge.net/LICENSE.html">EPICS open source
+license.</a></p>
+
 <hr />
 </div>
 <hr />
@@ -44,34 +69,10 @@
 <p>masarService is a service that creates, saves, and retrieves snapshots of
 data from a set of V3 channels.</p>
 
-<p>It is one of a set of related products:</p>
-<dl>
-  <dt><a
-  href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/masarService.html">pvData</a></dt>
-    <dd>pvData (Process Variable Daata) defines and implements an efficent way
-      to store, access, and transmit memory resident structured data</dd>
-  <dt><a
-  href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/pvAccessCPP/raw-file/tip/documentation/pvAccessCPP.html">pvAccess</a></dt>
-    <dd>pvAccess is network support for transmitting pvData.</dd>
-  <dt><a
-  href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/pvIOCCPP/raw-file/tip/documentation/pvIOCCPP.html">pvIOC</a></dt>
-    <dd>A pvIOC is a network accessable smart real time database. The database
-      consists of memory resident records. Each record has a name that is
-      uniquie within the local area network and contains a top level pvData
-      structure. Each field of a record can optionally have support code
-      attached to it. The support is called when a request is made to process
-      the record. The support code is what makes the record "smart". A pvAccess
-      server is provided so that the records can be accesed via the network.
-    </dd>
-</dl>
-
-<p>Each of the products has a Java and a C++ implementation.</p>
-
-<p>The products are all part of the <a
-href="http://epics-pvdata.sourceforge.net/">V4</a> implementation of <a
-href="http://www.aps.anl.gov/epics/">Experimental Physics and Industrial
-Control System.</a></p>
-<hr />
+<p>It is one of a set of related products in the EPICS
+V4 control system programming environment:<br />
+<a href="http://epics-pvdata.sourceforge.net/relatedDocumentsV4.html">relatedDocumentsV4.html</a>
+</p>
 
 <h2 class="nocount" id="L109">Status of this Document</h2>
 <hr />
@@ -83,61 +84,12 @@ under development.</p>
 then python will crash when python terminates.</p>
 <hr />
 
-<h2 class="nocount" style="text-align:center" id="L121">Table of Contents</h2>
-<hr />
-
-<p>x</p>
-
-<div class="toc">
-<ul>
-  <li><a href="#L50">EPICS v4 Working Group, Working Draft, 2012.01.20</a></li>
-  <li><a href="#L71">Abstract</a></li>
-  <li><a href="#L109">Status of this Document</a></li>
-  <li><a href="#L121">Table of Contents</a></li>
-  <li><a href="#L129">Preface</a></li>
-  <li><a href="#L149">Introduction</a></li>
-  <li><a href="#L157">Building</a></li>
-  <li><a href="#L191">Testing</a>
-    <ul>
-      <li><a href="#L207">gatherV3ScalarDataPut</a></li>
-      <li><a href="#L213">gatherV3ScalarDataExample</a></li>
-      <li><a href="#L219">gatherV3ScalarDataTest</a></li>
-      <li><a href="#L229">masarServiceRun</a></li>
-      <li><a href="#L241">testezchannelRPC</a></li>
-      <li><a href="#L249">testchannelRPC.py</a></li>
-    </ul>
-  </li>
-  <li><a href="#L261">C++ Client</a>
-    <ul>
-      <li><a href="#L267">ezchannelRPC</a></li>
-      <li><a href="#L323">gatherV3ScalarData</a></li>
-    </ul>
-  </li>
-  <li><a href="#L458">Python Client</a>
-    <ul>
-      <li><a href="#L464">channelRPC</a></li>
-      <li><a href="#L472">ntnameValue</a></li>
-      <li><a href="#L482">nttable</a></li>
-      <li><a href="#L490">alarm</a></li>
-      <li><a href="#L498">timeStamp</a></li>
-    </ul>
-  </li>
-  <li><a href="#L510">C++ Server</a>
-    <ul>
-      <li><a href="#L516">service</a></li>
-      <li><a href="#L530">dsl.h - Data Source Layer</a></li>
-      <li><a href="#L538">dslPy</a></li>
-    </ul>
-  </li>
-  <li><a href="#L544">Python Server</a></li>
-  <li><a href="#L552">Python support for Standard Structures</a></li>
-  <li><a href="#L642">Python support for Normative Types</a></li>
-  <li><a href="#L657">Python support for pvAccess</a></li>
-</ul>
+<div id="toc">
+<h2 class="nocount" style="page-break-before: always">Table of Contents</h2>
 </div>
-<hr />
+<div id="contents" class="contents">
 
-<h2 style="text-align: center" id="L129">Preface</h2>
+<h2>Preface</h2>
 <hr />
 
 <p>This product is available via an <a
@@ -160,42 +112,61 @@ and saved in the relational database.</p>
 the masarSevice.</p>
 <hr />
 
-<h2 style="text-align: center" id="L149">Introduction</h2>
-<hr />
+<h2>Introduction</h2>
 
-<p>x</p>
-<hr />
+<p>This document provides details about how to build masarService and some details about the implementation.
+This distribution includes three additional documents:</p>
+<dl>
+    <dt>userManual</dt>
+    <dd><a
+      href="userManual.html">userManual.html</a>
+    </dd>
+    <dt>masar</dt>
+    <dd><a
+      href="masar.html">masar.html</a>
+    </dd>
+    </dd>
+    <dt>RELEASE_NOTES.md</dt>
+    <dd><a
+      href="RELEASE_NOTES.md">RELEASE_NOTES.md</a>
+    </dd>
+</dl>
 
-<h2 style="text-align: center" id="L157">Building</h2>
-<hr />
+<h2>Building</h2>
+<p>This section provides the steps required to download masarService,
+build it, and  create links for python.</p>
 
+<h3>Downloading Masar</h3>
 <p>For now the only way to obtain the masarService is from the sourceforge
 mercurial repository. For example:</p>
 <pre>hg clone http://epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/masarService</pre>
 
 <p>or</p>
 <pre>hg clone ssh://&lt;your-sourceforge-userid&gt;@epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/masarSevice</pre>
+<h3>Creating Release.local</h3>
 
 <p>After cloning the masarService a RELEASE.local file for C++ must be created
 and the masarService must be built.</p>
-<pre>cd masarSevice/cpp/configure
-create configure/RELEASE.local
-make</pre>
+<p>
+In directory <b>cpp/configure</b> there is a file named <b>ExampleRELEASE.local</b>
+To create your version:</p>
+<pre>
+cd cpp/configure
+cp ExampleRELEASE.local RELEASE.local
+</pre>
+<p>Edit <b>RELEASE.local</b>
 
-<p>The RELEASE.local must define several variables. An example is:</p>
-<pre>PYTHON=python2.7
-PYTHON_BASE=/usr
-
-REPBASE=/home/mrk/hg
-PVDATA=${REPBASE}/pvDataCPP
-PVACCESS=${REPBASE}/pvAccessCPP
-PVIOC=${REPBASE}/pvIOCCPP
-NT=${REPBASE}/alphaCPP/normativeTypes
-
-EPICS_BASE=/home/install/epics/base</pre>
-
-<p>Note that python, pvData, pvAccess, pvIOC, and normative types must all be
+<p>Note that python, pvDataCPP, pvAccessCPP, and normative types must all be
 installed and built in order to build the masarService.</p>
+<h3>Build</h3>
+<p>There are two top level areas that must be built: Masar itself and test.</p>
+<pre>
+cd masarService/cpp 
+make
+cd ../test/cpp
+make
+</pre>
+<h3>Python Links</h3>
 
 <p>Once the masarService is build the tests described in the next section can
 be run to check that everything has built properly.</p>
@@ -213,72 +184,213 @@ export PYTHONPATH=$PYTHONPATH:/home/mrk/hg/masarService/python/src/client
 export PYTHONPATH=$PYTHONPATH:/home/mrk/hg/masarService/python</pre>
 <hr />
 
-<h2 style="text-align: center" id="L191">Testing</h2>
+<h2>Testing</h2>
 <hr />
 
 <p>masarService/python/test has some python tests. This section describes C++
 tests.</p>
 
-<p>The gatherV3ScalarData test require the the V3 IOC provided with this
+<p>The gatherV3Data test require the V3 IOC provided with this
 project is running. It is stated via:</p>
 <pre>
-$cd masarService/test/v3IOC
-$softIoc st.cmd
+cd masarService/test/v3IOC
+softIoc st.cmd
 </pre>
 <p>
 An assumption here is the $EPICS_BASE/bin/$EPICS_HOST_ARCH is in the $PATH already.
 Otherwise, a full path should be given for softIoc, which is included in recent EPICS
-V3 Base release.
+Base release.
 </p>
 <p>The test database has 1000 records named masarExample0000, ...,
 masarExample0999. The first four records have types longout, stringout, bo, and
-mbbo. The other records are all ao records.</p>
-
+mbbo. The other records are all ao records.
+</p>
+<p>There are two addtional recordsi: masarExampleBoUninit and masarExampleMbboUninit.
+masarExampleBoUninit is a bi record that does not configure ZNAM or ONAM.
+masarExampleMbboUninit is an mbbo record that does not configure ZRST,...,FFVL.
+</p>
+<p>There are also a number of waveform records:</p>
+<pre>
+masarExampleBigArray01
+masarExampleBigArray02
+masarExampleBigArray03
+masarExampleBigArray04
+masarExampleBigArray05
+masarExampleBigArray06
+masarExampleBigArray07
+masarExampleBigArray08
+masarExampleBigArray09
+masarExampleBigArray10
+masarExampleCharArray
+masarExampleDoubleArray
+masarExampleFloatArray
+masarExampleLongArray
+masarExampleShortArray
+masarExampleStringArray
+masarExampleUCharArray
+masarExampleULongArray
+masarExampleUShortArray
+</pre>
 <p>Each of the C++ example and test programs can be executed from the installed
 bin directory. For example on my linux machine:</p>
-<pre>cd masarService/cpp/bin/linux-x86
- ./gatherV3ScalarDataPut</pre>
+<pre>cd masarService/test/cpp/bin/linux-x86
+ ./gatherV3DataPut</pre>
 
-<h3 id="L207">gatherV3ScalarDataPut</h3>
+<h3>gatherV3DataPut</h3>
 
 <p>This writes values into the first ten records of the test V3 IOC. A sample
 run is:</p>
-<pre>mrk&gt; pwd
-/home/mrk/hg/masarService/cpp/bin/linux-x86
-mrk&gt; ./gatherV3ScalarDataPut
+<pre>
+mrk &gt; ./gatherV3DataExample
 nttable
-structure NTTable
-    structure timeStamp
+structure 
+    time_t timeStamp
         long secondsPastEpoch 0
         int nanoSeconds 0
         int userTag 0
-    structure alarm
+    alarm_t alarm
         int severity 0
         int status 0
         string message 
-    string[] label [doubleValue,intValue,stringValue,secondsPastEpoch,nanoSeconds,timeStampTag,alarmSeverity,alarmStatus,alarmMessage,dbrType,isConnected,channelName]
-    double[] doubleValue [10,0,0,0,1.9,1,1,1,1,1]
-    int[] intValue [10,0,0,0,0,0,0,0,0,0]
-    string[] stringValue [10,string value,zero,one,1.900000e+00,1.000000e+00,1.000000e+00,1.000000e+00,1.000000e+00,1.000000e+00]
-    long[] secondsPastEpoch [-631152000,-631152000,-631152000,-631152000,-631152000,-631152000,-631152000,-631152000,-631152000,-631152000]
-    int[] nanoSeconds [0,0,0,0,0,0,0,0,0,0]
-    int[] timeStampTag [0,0,0,0,0,0,0,0,0,0]
-    int[] alarmSeverity [3,3,3,3,3,3,3,3,3,3]
-    int[] alarmStatus [17,17,17,17,17,17,17,17,17,17]
-    string[] alarmMessage [UDF,UDF,UDF,UDF,UDF,UDF,UDF,UDF,UDF,UDF]
-    int[] dbrType [5,0,3,3,6,6,6,6,6,6]
-    boolean[] isConnected [true,true,true,true,true,true,true,true,true,true]
-    string[] channelName [masarExample0000,masarExample0001,masarExample0002,masarExample0003,masarExample0004,masarExample0005,masarExample0006,masarExample0007,masarExample0008,masarExample0009]</pre>
-
-<h3 id="L213">gatherV3ScalarDataExample</h3>
+    string[] label []
+    string[] channelName [masarExample0000,masarExample0001,masarExample0002,masarExample0003,masarExample0004,masarExampleCharArray,masarExampleStringArray,masarExampleLongArray,masarExampleDoubleArray,masarExampleBoUninit,masarExampleMbboUninit]
+    string[] stringValue [0,this is set by gatherV3DataPut,one,one,4.000000e+00,0.0,0.0,0.0,0.0,9,10]
+    double[] doubleValue [0,0,0,0,4,0,0,0,0,9,10]
+    long[] longValue [0,0,0,0,4,0,0,0,0,9,10]
+    int[] dbrType [5,0,3,3,6,4,0,5,6,5,5]
+    boolean[] isConnected [1,1,1,1,1,1,1,1,1,1,1]
+    long[] secondsPastEpoch [1397136781,1397136781,1397136781,1397136781,1397136781,1397136781,1397136781,1397136781,1397136781,1397136781,1397136781]
+    int[] nanoSeconds [113560544,113579355,113584353,113590658,113593069,113597026,113601064,113602526,113603908,113605760,113606764]
+    int[] timeStampTag [0,0,0,0,0,0,0,0,0,0,0]
+    int[] alarmSeverity [0,0,0,0,1,0,0,0,0,0,0]
+    int[] alarmStatus [0,0,0,0,4,0,0,0,0,0,0]
+    string[] alarmMessage [NO_ALARM,NO_ALARM,NO_ALARM,NO_ALARM,HIGH,NO_ALARM,NO_ALARM,NO_ALARM,NO_ALARM,NO_ALARM,NO_ALARM]
+    boolean[] isArray [0,0,0,0,0,1,1,1,1,0,0]
+    structure[] arrayValue
+        structure 
+            string[] stringValue []
+            double[] doubleValue []
+            int[] intValue []
+        structure 
+            string[] stringValue []
+            double[] doubleValue []
+            int[] intValue []
+        structure 
+            string[] stringValue []
+            double[] doubleValue []
+            int[] intValue []
+        structure 
+            string[] stringValue []
+            double[] doubleValue []
+            int[] intValue []
+        structure 
+            string[] stringValue []
+            double[] doubleValue []
+            int[] intValue []
+        structure 
+            string[] stringValue []
+            double[] doubleValue []
+            int[] intValue [1,2,3,4]
+        structure 
+            string[] stringValue [aaa,bbb,ccc,ddd]
+            double[] doubleValue []
+            int[] intValue []
+        structure 
+            string[] stringValue []
+            double[] doubleValue []
+            int[] intValue [1,2,3,4]
+        structure 
+            string[] stringValue []
+            double[] doubleValue [10,100,1000,10000]
+            int[] intValue []
+        structure 
+            string[] stringValue []
+            double[] doubleValue []
+            int[] intValue []
+        structure 
+            string[] stringValue []
+            double[] doubleValue []
+            int[] intValue []
+0x605228
+</pre>
+<h3>gatherV3DataExample</h3>
 
 <p>This tests gets a set of V3 channels. It produces:</p>
-<pre>mrk&gt; ./gatherV3ScalarDataExample
-values: double[] doubleValue [10,0,0,0,1.9,1,1,1,1,1]
-values: double[] doubleValue [10,0,0,0,1.9,1,1,1,1,1]
-GatherV3ScalarData::~GatherV3ScalarData()</pre>
+<pre>
+mrk&gt; ./gatherV3DataExample
 
-<h3 id="L219">gatherV3ScalarDataTest</h3>
+structure 
+    time_t timeStamp
+        long secondsPastEpoch 0
+        int nanoSeconds 0
+        int userTag 0
+    alarm_t alarm
+        int severity 0
+        int status 0
+        string message 
+    string[] label []
+    string[] channelName [masarExample0000,masarExample0001,masarExample0002,masarExample0003,masarExample0004,masarExampleCharArray,masarExampleStringArray,masarExampleLongArray,masarExampleDoubleArray,masarExampleBoUninit,masarExampleMbboUninit]
+    string[] stringValue [0,this is set by gatherV3DataPut,one,one,4.000000e+00,0.0,0.0,0.0,0.0,Illegal_Value,10]
+    double[] doubleValue [0,0,0,0,4,0,0,0,0,0,10]
+    long[] longValue [0,0,0,0,4,0,0,0,0,0,10]
+    int[] dbrType [5,0,3,3,6,4,0,5,6,3,5]
+    boolean[] isConnected [true,true,true,true,true,true,true,true,true,true,true]
+    long[] secondsPastEpoch [1397136781,1397136781,1397136781,1397136781,1397136781,1397136781,1397136781,1397136781,1397136781,1397136781,1397136781]
+    int[] nanoSeconds [113560544,113579355,113584353,113590658,113593069,113597026,113601064,113602526,113603908,113605760,113606764]
+    int[] timeStampTag [0,0,0,0,0,0,0,0,0,0,0]
+    int[] alarmSeverity [0,0,0,0,1,0,0,0,0,0,0]
+    int[] alarmStatus [0,0,0,0,4,0,0,0,0,0,0]
+    string[] alarmMessage [NO_ALARM,NO_ALARM,NO_ALARM,NO_ALARM,HIGH,NO_ALARM,NO_ALARM,NO_ALARM,NO_ALARM,NO_ALARM,NO_ALARM]
+    boolean[] isArray [false,false,false,false,false,true,true,true,true,false,false]
+    structure[] arrayValue 
+        structure 
+            string[] stringValue []
+            double[] doubleValue []
+            int[] intValue []
+        structure 
+            string[] stringValue []
+            double[] doubleValue []
+            int[] intValue []
+        structure 
+            string[] stringValue []
+            double[] doubleValue []
+            int[] intValue []
+        structure 
+            string[] stringValue []
+            double[] doubleValue []
+            int[] intValue []
+        structure 
+            string[] stringValue []
+            double[] doubleValue []
+            int[] intValue []
+        structure 
+            string[] stringValue []
+            double[] doubleValue []
+            int[] intValue [1,2,3,4]
+        structure 
+            string[] stringValue [aaa,bbb,ccc,ddd]
+            double[] doubleValue []
+            int[] intValue []
+        structure 
+            string[] stringValue []
+            double[] doubleValue []
+            int[] intValue [1,2,3,4]
+        structure 
+            string[] stringValue []
+            double[] doubleValue [10,100,1000,10000]
+            int[] intValue []
+        structure 
+            string[] stringValue []
+            double[] doubleValue []
+            int[] intValue []
+        structure 
+            string[] stringValue []
+            double[] doubleValue []
+            int[] intValue []
+boolean[] isConnected [true,true,true,true,true,true,true,true,true,true,true]
+boolean[] isConnected [true,true,true,true,true,true,true,true,true,true,true]
+</pre>
+<h3>gatherV3DataTest</h3>
 
 <p>This tests gets a large set of V3 channels. This test also requires the test
 V3 database of the gather service. It must be started before running this
@@ -287,12 +399,12 @@ test.</p>
 <p>This test prints nothing if it is successfull. To run just execute:</p>
 <pre>mrk&gt; pwd
 /home/mrk/hg/masarService/cpp
-mrk&gt; bin/linux-x86/gatherV3ScalarDataExample </pre>
+mrk&gt; bin/linux-x86/gatherV3DataExample </pre>
 
 <p>Thus test can also be run with a debug option. In this case it only gets
 data from the first 6 channels but displays lots of output.</p>
 
-<h3 id="L229">masarServiceRun</h3>
+<h3>masarServiceRun</h3>
 
 <p>This is a dummy server. it just accepts a channelRPC request and always
 returns a PVStructure that is an NTTable.</p>
@@ -305,15 +417,15 @@ returns a PVStructure that is an NTTable.</p>
 
 <p>The server must be run in order to run the next two tests.</p>
 
-<h3 id="L241">testezchannelRPC</h3>
+<h3>testclientRPC</h3>
 
 <p>This is a C++ client that makes a channelRPC request to the dummy server.</p>
 
 <p>To run this test:</p>
 <pre>cd masarService/cpp/bin/&lt;arch&gt;
- ./testezchannelRPC</pre>
+ ./testclientRPC</pre>
 
-<h3 id="L249">testchannelRPC.py</h3>
+<h3>testchannelRPC.py</h3>
 
 <p>This is a python client program that makes a channelRPC request to the dummy
 server.</p>
@@ -325,82 +437,14 @@ python testchannelRPC.py</pre>
 <p></p>
 <hr />
 
-<h2 style="text-align: center" id="L261">C++ Client</h2>
-<hr />
-
-<p>This section describes two client facilities that will both be moved tp
-EZPVA ( Easy PVAccess) when it exists. For now they are here because the
-masarService needs them.</p>
-
-<h3 id="L267">ezchannelRPC</h3>
-
-<p>EZChannelRPC is class that provides an easy way to make a channelRPC
-request. The client provides a PVStructure that is the argument for the
-channelRPC request and receives a PVStructure that holds the result. The class
-definition is:</p>
-<pre>class EZChannelRPC {
-public:
-    EZChannelRPC(String channelName);
-    EZChannelRPC(String channelName,PVStructure::shared_pointer pvRequest);
-    void destroy();
-    bool connect(double timeOut);
-    void issueConnect();
-    bool waitConnect(double timeOut);
-    PVStructure::shared_pointer request(
-        PVStructure::shared_pointer const &amp; pvArgument,bool lastRequest);
-    void  issueRequest(
-        PVStructure::shared_pointer const &amp; pvArgument,bool lastRequest);
-    PVStructure::shared_pointer waitRequest();
-    String getMessage();
-};</pre>
-
-<p>where</p>
-<dl>
-  <dt>EZChannelRPC</dt>
-    <dd>The constructor. channelName is the name of the channelRPC server.
-      pvRequest is a request structure to pass to the server. If pvRequest is
-      not given a default structure will be created.</dd>
-  <dt>destroy</dt>
-    <dd>This will clean up all resources used by the channelRPC </dd>
-  <dt>connect</dt>
-    <dd>Connect to the server. The method blocks until the connection is made
-      or a timeout occurs. It is the same as calling issueConnect and then
-      waitConnect. returns (false,true) if (not connected, is connected). If
-      false then connect must be reissued. </dd>
-  <dt>issueConnect</dt>
-    <dd>Issue a connect request and return immediately. waitConnect must be
-      called to complete the request. </dd>
-  <dt>waitConnect</dt>
-    <dd>Wait for the connect request to complete. timeout is the timeout in
-      seconds to wait. returns (false,true) If (not connected, is connected).
-      If false then connect must be reissued. </dd>
-  <dt>request</dt>
-    <dd>Make a channelRPC request. pvArgument is the argument to pass to the
-      server. If lastRequest is true an automatic destroy is made. returns the
-      result. If the result is null then getMessage can be called to get the
-      reason. </dd>
-  <dt>issueRequest</dt>
-    <dd>Issue a channelRPC request and return immediately. pvArgument is the
-      argument to pass to the server. If lastRequest is true an automatic
-      destroy is made. waitRequest must be called to complete the request. </dd>
-  <dt>waitRequest</dt>
-    <dd>Wait for the request to complete. returns the result. If the result is
-      null then getMessage can be called to get the reason. </dd>
-  <dt>getMessage</dt>
-    <dd>Get the reason why a connect or request failed.</dd>
-</dl>
-
-<p>masarService/cpp/test/testezchannelRPC/testezchannelRPC.cpp provides an
-example of how to use this class.</p>
-
-<h3 id="L323">gatherV3ScalarData</h3>
+<h2>gatherN3Data</h2>
 
 <p>Gather an array of V3 scalar double values. The complete set of data is
 presented as an NTTable. The NTTable has the optional fields alarm and
 timeStamp. The class definition is:</p>
-<pre>class GatherV3ScalarData {
+<pre>class GatherV3Data {
 public:
-    GatherV3ScalarData(String channelNames[],int numberChannels);
+    GatherV3Data(String channelNames[],int numberChannels);
     bool connect(double timeOut);
     void disconnect();
     bool get();
@@ -423,7 +467,7 @@ public:
 
 <p>where</p>
 <dl>
-  <dt>GatherV3ScalarData</dt>
+  <dt>GatherV3Data</dt>
     <dd>The constructor. channelNames is the array of channelNames to gather.
       numberChannels is the number of channels to gather. </dd>
   <dt>connect</dt>
@@ -493,20 +537,19 @@ public:
     <dd>Get the array of channel names for each V3 channel. </dd>
 </dl>
 
-<p>masarService/cpp/test/testGatherV3ScalarData/gatherV3ScalarDataExample.cpp
+<p>masarService/cpp/test/testGatherV3Data/gatherV3DataExample.cpp
 provides an example of how to use this class.</p>
-<hr />
 
-<h2 style="text-align: center" id="L458">Python Client</h2>
-<hr />
+<h2>Python Client</h2>
 
 <p>masarService/python/src/client has a set of python modules. Each implements
 a python class.</p>
 
-<h3 id="L464">channelRPC</h3>
+<h3>channelRPC</h3>
 
 <p>ChannelRPC is a python class that makes a channelRPC request. If is
-implemented via a C extension module channelRPCPy which uses the EZChannelRPC.
+implemented via a C extension module channelRPCPy which uses the 
+rpcClient facliity that is provided by pvAccessCPP.
 Look at masarService/python/test/testchannelRPC.py for an example of how to use
 this class.</p>
 
@@ -515,17 +558,17 @@ this class.</p>
 Python 2.7 (r27:82500, Sep 16 2010, 18:03:06) 
 [GCC 4.5.1 20100907 (Red Hat 4.5.1-3)] on linux2
 Type "help", "copyright", "credits" or "license" for more information.
-&gt;&gt;&gt; from channelRPC import ChannelRPC as ChannelRPC
+&gt;&gt;&gt; from masarclient.channelRPC import ChannelRPC as ChannelRPC
 &gt;&gt;&gt; help(ChannelRPC)</pre>
 
-<h3 id="L472">ntnameValue</h3>
+<h3>ntnameValue</h3>
 
 <p>NTNameValue is a python class that wraps a C++ implementation of
 NTNameValue. Once created it can be passed to other python methods that wrap
 C++ code that expects to receive an PVStructure argument. For example
 ChannelRPC.request expects to receive an argument that is a python object wraps
 a pVStructure. For example testChannelRPC has the statements:</p>
-<pre>from ntnameValue import NTNameValue as NTNameValue
+<pre>from masarclient.ntnameValue import NTNameValue as NTNameValue
 function = "saveMasar"
 args = { "data" : "pv_name,value,status,severity,timeStamp",
          "servicename" : "servicexxx",
@@ -542,10 +585,10 @@ result =  channelRPC.request(ntnv.getNTNameValue(),False)</pre>
 Python 2.7 (r27:82500, Sep 16 2010, 18:03:06) 
 [GCC 4.5.1 20100907 (Red Hat 4.5.1-3)] on linux2
 Type "help", "copyright", "credits" or "license" for more information.
-&gt;&gt;&gt; from ntnameValue import NTNameValue as NTNameValue
+&gt;&gt;&gt; from masarclient.ntnameValue import NTNameValue as NTNameValue
 &gt;&gt;&gt; help(NTNameValue)</pre>
 
-<h3 id="L482">nttable</h3>
+<h3>nttable</h3>
 
 <p>NTTable is a python class that wraps a C++ implementation of NTTable. It is
 created by passing a python object that a wrapper for a C++ PVStructure that is
@@ -557,10 +600,10 @@ testchannelRPC.py for an example of how this is used. </p>
 Python 2.7 (r27:82500, Sep 16 2010, 18:03:06) 
 [GCC 4.5.1 20100907 (Red Hat 4.5.1-3)] on linux2
 Type "help", "copyright", "credits" or "license" for more information.
-&gt;&gt;&gt; from nttable import NTTable as NTTable
+&gt;&gt;&gt; from masarclient.nttable import NTTable as NTTable
 &gt;&gt;&gt; help(NTTable)</pre>
 
-<h3 id="L490">alarm</h3>
+<h3>alarm</h3>
 
 <p>Alarm is a python class is the python equivalent of PVStructure that
 represents an alarm, i.e. is has a severity and a message.</p>
@@ -570,10 +613,10 @@ represents an alarm, i.e. is has a severity and a message.</p>
 Python 2.7 (r27:82500, Sep 16 2010, 18:03:06) 
 [GCC 4.5.1 20100907 (Red Hat 4.5.1-3)] on linux2
 Type "help", "copyright", "credits" or "license" for more information.
-&gt;&gt;&gt; from alarm import Alarm as Alarm
+&gt;&gt;&gt; from masarclient.alarm import Alarm as Alarm
 &gt;&gt;&gt; help(Alarm)</pre>
 
-<h3 id="L498">timeStamp</h3>
+<h3>timeStamp</h3>
 
 <p>TimeStamp is a python class is the python equivalent of PVStructure that
 represents a timeStamp, i.e. is has secondsPastEpoch and nanoSeconds within the
@@ -584,19 +627,19 @@ second. It has many methods for manipulating the timeStamp.</p>
 Python 2.7 (r27:82500, Sep 16 2010, 18:03:06) 
 [GCC 4.5.1 20100907 (Red Hat 4.5.1-3)] on linux2
 Type "help", "copyright", "credits" or "license" for more information.
-&gt;&gt;&gt; from timeStamp import TimeStamp as TimeStamp
+&gt;&gt;&gt; from masarclient.timeStamp import TimeStamp as TimeStamp
 &gt;&gt;&gt; help(TimeStamp)</pre>
 
 <p>Look at masarService/python/test/testTimeStamp.py for examples of how to use
 timeStamp.</p>
 <hr />
 
-<h2 style="text-align: center" id="L510">C++ Server</h2>
+<h2>C++ Server</h2>
 <hr />
 
 <p>x</p>
 
-<h3 id="L516">service</h3>
+<h3>service</h3>
 
 <p>For now this is only handles requests that are implemented by dslPY. Later
 it will ???. For now it :</p>
@@ -610,7 +653,7 @@ it will ???. For now it :</p>
   <li>It calls dslRdb and returns the NTTable returned by dslRdb</li>
 </ul>
 
-<h3 id="L530">dsl.h - Data Source Layer</h3>
+<h3>dsl.h - Data Source Layer</h3>
 
 <p>This is the interface the Data Source Layer must implement. It will be
 called by service. The class definition is:</p>
@@ -623,19 +666,19 @@ public:
 database action is required, and returns a PVStructure that must be an
 NTTable.</p>
 
-<h3 id="L538">dslPy</h3>
+<h3>dslPy</h3>
 
 <p>This is the C++ code that calls the python code that access the relational
 database.</p>
 <hr />
 
-<h2 style="text-align: center" id="L544">Python Server</h2>
+<h2>Python Server</h2>
 <hr />
 
 <p>x</p>
 <hr />
 
-<h2 style="text-align: center" id="L552">Python support for Standard
+<h2>Python support for Standard
 Structures</h2>
 <hr />
 
@@ -690,7 +733,7 @@ has methods:</p>
 <p>Each of these has a corresponding function in alarmPy.cpp.</p>
 <hr />
 
-<h2 style="text-align: center" id="L642">Python support for Normative Types</h2>
+<h2>Python support for Normative Types</h2>
 <hr />
 
 <p>This is similar to the support for standard structures with the following
@@ -703,12 +746,13 @@ differences:</p>
 </ul>
 <hr />
 
-<h2 style="text-align: center" id="L657">Python support for pvAccess</h2>
+<h2>Python support for pvAccess</h2>
 <hr />
 
 <p>At present there is only python suppport for making a channelRPC request.
 Again there is a python class masarService/python/src/client/channelRPC.py
 which makes calls to masarService/cpp/src/python/channelRPCPy.cpp. The C++
-extension "wraps" ezchannelRPC.</p>
+extension "wraps" rpcClient from pvAccessCPP.</p>
+</div>
 </body>
 </html>

@@ -26,7 +26,6 @@ namespace epics { namespace masar {
 
 using namespace epics::pvData;
 using namespace epics::pvAccess;
-using namespace epics::pvIOC;
 
 MasarService::MasarService()
 : dslRdb(createDSL_RDB())
@@ -34,15 +33,16 @@ MasarService::MasarService()
 
 MasarService::~MasarService()
 {
+//printf("MasarService::~MasarService()\n");
 }
 
 void MasarService::destroy()
 {
+//printf("MasarService::destroy()\n");
 }
 
-void MasarService::request(
-    ChannelRPCRequester::shared_pointer const & channelRPCRequester,
-    epics::pvData::PVStructure::shared_pointer const & pvArgument)
+PVStructurePtr MasarService::request(
+    PVStructurePtr const & pvArgument) throw (epics::pvAccess::RPCRequestException)
 {
     static const int numberFunctions = 9;
     static const String functionNames[numberFunctions] = {
@@ -59,52 +59,49 @@ void MasarService::request(
     String builder;
     builder += "pvArgument ";
     if(!NTNameValue::isNTNameValue(pvArgument)) {
-        StringArray names;
-        FieldConstPtrArray fields;
-        NTTablePtr ntTable(NTTable::create(
-            false,true,true,names,fields));
-        PVStructurePtr pvStructure = ntTable->getPVStructure();
-        Alarm alarm;
-        PVAlarm pvAlarm;
-        pvAlarm.attach(ntTable->getTimeStamp());
-        alarm.setMessage("pvArgument is not an NTNameValue");
-        alarm.setSeverity(majorAlarm);
-        pvAlarm.set(alarm);
-        channelRPCRequester->requestDone(Status::Ok,pvStructure);
-        return;
-    }
-    NTNameValuePtr ntNameValue(NTNameValue::create(pvArgument));
-    PVStringPtr function = ntNameValue->getFunction();
-    String functionName;
-    for(int i=0; i<numberFunctions; i++) {
-        if(function->get().compare(functionNames[i])==0) {
-             functionName = functionNames[i];
-             break;
+        String functionName;
+        PVStringPtr pvFunction = pvArgument->getStringField("function");
+        if (pvFunction.get() == NULL) {
+            throw epics::pvAccess::RPCRequestException(Status::STATUSTYPE_ERROR,"unknown MASAR function");
         }
+        functionName = pvFunction->get();
+        if(functionName.c_str()==0) {
+            throw epics::pvAccess::RPCRequestException(Status::STATUSTYPE_ERROR,"pvArgument has an unsupported function");
+        }
+        StringArray fieldNames = pvArgument->getStructure()->getFieldNames();
+        size_t fieldcounts = (size_t) fieldNames.size();
+        std::vector<std::string> names  (fieldcounts-1);
+        std::vector<std::string> values (fieldcounts-1);
+        size_t counts = 0;
+        for (size_t i = 0; i < fieldcounts; i ++) {
+            if(fieldNames[i].compare("function")!=0) {
+                names[counts] = fieldNames[i];
+                values[counts] = pvArgument->getStringField(fieldNames[i])->get();
+                counts += 1;
+            }
+        }
+        return dslRdb->request(functionName,fieldcounts-1,names,values);
+
+    } else{
+        NTNameValuePtr ntNameValue(NTNameValue::create(pvArgument));
+        PVStringPtr function = ntNameValue->getFunction();
+        String functionName;
+        for(int i=0; i<numberFunctions; i++) {
+            if(function->get().compare(functionNames[i])==0) {
+                functionName = functionNames[i];
+                break;
+            }
+        }
+        if(functionName.c_str()==0) {
+            throw epics::pvAccess::RPCRequestException(Status::STATUSTYPE_ERROR,"pvArgument has an unsupported function");
+        }
+        PVStringArrayPtr pvNames = ntNameValue->getNames();
+        PVStringArrayPtr pvValues = ntNameValue->getValues();
+        StringArray const &names = pvNames->getVector();
+        StringArray const &values = pvValues->getVector();
+        int num = pvNames->getLength();
+        return dslRdb->request(functionName,num,names,values);
     }
-    if(functionName.c_str()==0) {
-        StringArray names;
-        FieldConstPtrArray fields;
-        NTTablePtr ntTable(NTTable::create(
-            false,true,true,names,fields));
-        PVStructurePtr pvStructure = ntTable->getPVStructure();
-        Alarm alarm;
-        PVAlarm pvAlarm;
-        pvAlarm.attach(ntTable->getTimeStamp());
-        alarm.setMessage("pvArgument has an unsupported function");
-        alarm.setSeverity(majorAlarm);
-        pvAlarm.set(alarm);
-        channelRPCRequester->requestDone(Status::Ok,pvStructure);
-        return;
-    }
-    PVStringArrayPtr pvNames = ntNameValue->getNames();
-    PVStringArrayPtr pvValues = ntNameValue->getValues();
-    StringArray const &names = pvNames->getVector();
-    StringArray const &values = pvValues->getVector();
-    int num = pvNames->getLength();
-    PVStructure::shared_pointer result = dslRdb->request(
-        functionName,num,names,values);
-    channelRPCRequester->requestDone(Status::Ok,result);
 }
 
 }}
