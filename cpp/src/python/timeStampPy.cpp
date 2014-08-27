@@ -134,7 +134,7 @@ static PyObject * _setSeconds(PyObject *willBeNull, PyObject *args)
         return NULL;
     }
     TimeStampPvt *pvt = static_cast<TimeStampPvt *>(pvoid);
-    int32 nano = pvt->timeStamp.getNanoSeconds();
+    int32 nano = pvt->timeStamp.getNanoseconds();
     pvt->timeStamp.put(value,nano);
     Py_INCREF(Py_None);
     return Py_None;
@@ -157,7 +157,7 @@ static PyObject * _getNano(PyObject *willBeNull, PyObject *args)
         return NULL;
     }
     TimeStampPvt *pvt = static_cast<TimeStampPvt *>(pvoid);
-    return Py_BuildValue("i",pvt->timeStamp.getNanoSeconds());
+    return Py_BuildValue("i",pvt->timeStamp.getNanoseconds());
 }
 
 static PyObject * _setNano(PyObject *willBeNull, PyObject *args)

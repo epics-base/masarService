@@ -23,8 +23,10 @@
 
 namespace epics { namespace masar { 
 
+using namespace std;
 using namespace epics::pvData;
 using namespace epics::pvAccess;
+using namespace epics::nt;
 using std::tr1::static_pointer_cast;
 
 class DSL_RDB;
@@ -40,7 +42,7 @@ public:
     virtual ~DSL_RDB();
     virtual void destroy();
     virtual PVStructurePtr request(
-        String functionName,int num,StringArray const &names,StringArray const &values);
+        string functionName,shared_vector<const string> const &names,shared_vector<const string> const &values);
     bool init();
 private:
     DSL_RDBPtr getPtrSelf()
@@ -77,40 +79,40 @@ bool DSL_RDB::init()
     PyGILState_STATE gstate = PyGILState_Ensure();
     PyObject * module = PyImport_ImportModule("masarserver.dslPY");
     if(module==0) {
-        String message("dslPY");
+        string message("dslPY");
         message += " does not exist or is not a python module";
-        printf("DSL_RDB::init %s\n",message.c_str());
+        cout << "DSL_RDB::init " << message << endl;
         return false;
     }
     PyObject *pclass = PyObject_GetAttrString(module, "DSL");
     if(pclass==0) {
-        String message("class DSL");
+        string message("class DSL");
         message += " does not exist";
-        printf("DSL_RDB::init %s\n",message.c_str());
+        cout << "DSL_RDB::init " << message << endl;
         Py_XDECREF(module);
         return false;
     }
     PyObject *pargs = Py_BuildValue("()");
     if (pargs == NULL) {
         Py_DECREF(pclass);
-        printf("Can't build arguments list\n");
+        cout <<"Can't build arguments list\n";
         return false;
     }
     PyObject *pinstance = PyEval_CallObject(pclass,pargs);
     Py_DECREF(pargs);
     if(pinstance==0) {
-        String message("class DSL");
+        string message("class DSL");
         message += " constructor failed";
-        printf("DSL_RDB::init %s\n",message.c_str());
+        cout << "DSL_RDB::init " << message << endl;
         Py_XDECREF(pclass);
         Py_XDECREF(module);
         return false;
     }
     prequest = PyObject_GetAttrString(pinstance, "request");
     if(prequest==0) {
-        String message("DSL::request");
+        string message("DSL::request");
         message += " could not attach to method";
-        printf("DSL_RDB::init %s\n",message.c_str());
+        cout << "DSL_RDB::init " << message << endl;
         Py_XDECREF(pinstance);
         Py_XDECREF(pclass);
         Py_XDECREF(module);
@@ -118,9 +120,9 @@ bool DSL_RDB::init()
     }
     pgetchannames = PyObject_GetAttrString(pinstance, "retrieveChannelNames");
     if(pgetchannames==0) {
-        String message("DSL::request");
+        string message("DSL::request");
         message += " could not attach to method";
-        printf("DSL_RDB::init %s\n",message.c_str());
+        cout << "DSL_RDB::init " << message << endl;
         Py_XDECREF(pinstance);
         Py_XDECREF(pclass);
         Py_XDECREF(module);
@@ -135,23 +137,19 @@ bool DSL_RDB::init()
 
 void DSL_RDB::destroy() {}
 
-static NTTablePtr noDataEnetry(std::string message) {
-    FieldCreatePtr fieldCreate = getFieldCreate();
-    size_t  n = 1;
-    StringArray names;
-    FieldConstPtrArray fields;
-    names.reserve(n);
-    fields.reserve(n);
-    names.push_back("status");
-    fields.push_back(fieldCreate->createScalarArray(pvBoolean));
-    NTTablePtr ntTable(NTTable::create(
-        false,true,true,names,fields));
+static NTTablePtr noDataEntry(std::string message) {
+    NTTableBuilderPtr builder = NTTable::createBuilder();
+    NTTablePtr ntTable = builder->
+            add("status", pvBoolean)->
+            addAlarm()->
+            addTimeStamp()->
+            create();
     PVStructurePtr pvStructure = ntTable->getPVStructure();
 
-    PVBooleanArrayPtr pvBoolVal = static_pointer_cast<PVBooleanArray> (ntTable->getPVField(0));
-    BooleanArray temp(1);
+    PVBooleanArrayPtr pvBoolVal = pvStructure->getSubField<PVBooleanArray>("status");
+    shared_vector<boolean> temp(1);
     temp[0]=false;
-    pvBoolVal -> put (0, 1, temp, 0);
+    pvBoolVal->replace(freeze(temp));
 
     // Set alarm and severity
     PVAlarm pvAlarm;
@@ -178,7 +176,7 @@ static NTTablePtr retrieveSnapshot(PyObject * list)
 {
     Py_ssize_t top_len = PyList_Size(list);
     if (top_len != 2) {
-        return noDataEnetry("Wrong format for returned data from dslPY when retrieving masar data.");
+        return noDataEntry("Wrong format for returned data from dslPY when retrieving masar data.");
     }
     PyObject * head_array = PyList_GetItem(list, 0); // get head array
     PyObject * head = PyList_GetItem(head_array, 1); // get label array
@@ -189,7 +187,7 @@ static NTTablePtr retrieveSnapshot(PyObject * list)
     // (the first row is a description instead of real data)
     Py_ssize_t numberChannels = PyList_Size(data_array) - 1;
     if (numberChannels < 0)
-        return noDataEnetry("no channel found in this snapshot.");
+        return noDataEntry("no channel found in this snapshot.");
 
     size_t strFieldLen = 3; // pv name, s_value, and alarm message are stored as string.
 
@@ -535,11 +533,11 @@ static NTTablePtr saveSnapshot(PyObject * list, NTTablePtr data, String message)
         eid = PyLong_AsLongLong(pstatus);
     } else {
         // updateSnapshotEvent return: not a tuple, nor list.
-        return noDataEnetry("Wrong format for returned data from dslPY.");
+        return noDataEntry("Wrong format for returned data from dslPY.");
     }
 
     if (eid == -1) {
-        return noDataEnetry("Machine preview failed. "+ message);
+        return noDataEntry("Machine preview failed. "+ message);
     } else {
         // Set alarm and severity
         PVAlarm pvAlarm;
@@ -577,7 +575,7 @@ static NTTablePtr updateSnapshotEvent(PyObject * list)
         eid = PyLong_AsLongLong(pstatus);
     } else {
         // updateSnapshotEvent return: not a tuple, nor list.
-        return noDataEnetry("Wrong format for returned data from dslPY.");
+        return noDataEntry("Wrong format for returned data from dslPY.");
     }
 
     FieldCreatePtr fieldCreate = getFieldCreate();
@@ -639,7 +637,7 @@ static NTTablePtr createResult(
         {
             //THROW_BASE_EXCEPTION("Wrong format for returned data from dslPY.");
             //return pvStructure;
-            return noDataEnetry("Wrong format for returned data from dslPY.");
+            return noDataEntry("Wrong format for returned data from dslPY.");
         }
 
         if (functionName.compare("retrieveSnapshot")==0) {
@@ -653,7 +651,7 @@ static NTTablePtr createResult(
         } else if (functionName.compare("updateSnapshotEvent")==0) {
             pvStructure = updateSnapshotEvent(list);
         } else {
-            pvStructure = noDataEnetry("Did not find data");
+            pvStructure = noDataEntry("Did not find data");
         }
     }
     return pvStructure;
@@ -679,7 +677,7 @@ static NTTablePtr getLiveMachine(StringArray const & channelName,
     if(!result) {
         printf("connect failed\n%s\n",gather->getMessage().c_str());
         if (gather->getConnectedChannels() == 0)
-            return noDataEnetry("connect failed "+gather->getMessage());
+            return noDataEntry("connect failed "+gather->getMessage());
     }
     if((*message).length() == 0) {
         *message = "All channels are connected.";
@@ -692,7 +690,7 @@ static NTTablePtr getLiveMachine(StringArray const & channelName,
 }
 
 PVStructurePtr DSL_RDB::request(
-    String functionName,int num,StringArray const & names,StringArray const &values)
+    string functionName,shared_vector<cons string> const & names,shared_vector<cons string> const &values)
 {
     if (functionName.compare("getLiveMachine")==0) {
         String message;
@@ -733,7 +731,7 @@ PVStructurePtr DSL_RDB::request(
         PyTuple_SetItem(pyTuple, 0, pyDict);
         PyObject *pchannelnames = PyEval_CallObject(pgetchannames,pyTuple);
         if(pchannelnames == NULL) {
-            pvReturn = noDataEnetry("Failed to retrieve channel names.");
+            pvReturn = noDataEntry("Failed to retrieve channel names.");
         } else {
             Py_ssize_t list_len = PyList_Size(pchannelnames);
 
@@ -757,7 +755,7 @@ PVStructurePtr DSL_RDB::request(
             PyTuple_SetItem(pyTuple2, 1, pyDict);
             PyObject *result = PyEval_CallObject(prequest,pyTuple2);
             if(result == NULL) {
-                pvReturn = noDataEnetry("Failed to save snapshot.");
+                pvReturn = noDataEntry("Failed to save snapshot.");
             } else {
                 pvReturn = saveSnapshot(result, data, message);
                 Py_DECREF(result);
@@ -774,7 +772,7 @@ PVStructurePtr DSL_RDB::request(
         PyObject *result = PyEval_CallObject(prequest,pyTuple);
         Py_DECREF(pyTuple);
         if(result == NULL) {
-            pvReturn = noDataEnetry("No data entry found in database.");
+            pvReturn = noDataEntry("No data entry found in database.");
         } else {
             pvReturn = createResult(result,functionName);
             Py_DECREF(result);

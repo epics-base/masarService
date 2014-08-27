@@ -14,8 +14,8 @@
 #include <string>
 #include <stdexcept>
 
-#include <pv/noDefaultMethods.h>
 #include <pv/pvData.h>
+#include <pv/sharedVector.h>
 #include <pv/destroyable.h>
 
 
@@ -28,23 +28,20 @@ typedef std::tr1::shared_ptr<DSL> DSLPtr;
  * This is the interface that the Data Source Layer must implement
  */
 class DSL :
-    public epics::pvData::Destroyable,
-    private epics::pvData::NoDefaultMethods
-
+    public epics::pvData::Destroyable
 {
 public:
-    POINTER_DEFINITIONS(DSL)
+    POINTER_DEFINITIONS(DSL);
     /**
      * Called by service layer to access the database.
      * @param pvArgument The argument which must follow the argument standard
      * for the masarService
      * @return An NTTable which has the results.
      */
-    virtual epics::pvData::PVStructure::shared_pointer request(
-        epics::pvData::String function,
-        int num,
-        epics::pvData::StringArray const &names,
-        epics::pvData::StringArray const &values) = 0;
+    virtual epics::pvData::PVStructurePtr request(
+        std::string const &function,
+        epics::pvData::shared_vector<const std::string> const & names,
+        epics::pvData::shared_vector<const std::string> const & values) = 0;
 };
 
 }}

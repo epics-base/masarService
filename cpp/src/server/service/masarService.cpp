@@ -13,11 +13,11 @@
 #include <cstdlib>
 #include <cstddef>
 #include <string>
-#include <cstdio>
 #include <stdexcept>
 #include <memory>
 
 #include <pv/nt.h>
+#include <pv/sharedVector.h>
 
 #include <pv/masarService.h>
 
@@ -26,6 +26,9 @@ namespace epics { namespace masar {
 
 using namespace epics::pvData;
 using namespace epics::pvAccess;
+using namespace epics::nt;
+using namespace std;
+using std::tr1::static_pointer_cast;
 
 MasarService::MasarService()
 : dslRdb(createDSL_RDB())
@@ -33,74 +36,95 @@ MasarService::MasarService()
 
 MasarService::~MasarService()
 {
-//printf("MasarService::~MasarService()\n");
 }
 
 void MasarService::destroy()
 {
-//printf("MasarService::destroy()\n");
 }
 
 PVStructurePtr MasarService::request(
     PVStructurePtr const & pvArgument) throw (epics::pvAccess::RPCRequestException)
 {
     static const int numberFunctions = 9;
-    static const String functionNames[numberFunctions] = {
-        String("saveSnapshot"),
-        String("retrieveSnapshot"),
-        String("retrieveServiceConfigProps"),
-        String("retrieveServiceConfigs"),
-        String("saveServiceConfig"),
-        String("retrieveServiceEvents"),
-        String("saveServiceEvent"),
-        String("updateSnapshotEvent"),
-        String("getLiveMachine")
+    static const string functionNames[numberFunctions] = {
+        string("saveSnapshot"),
+        string("retrieveSnapshot"),
+        string("retrieveServiceConfigProps"),
+        string("retrieveServiceConfigs"),
+        string("saveServiceConfig"),
+        string("retrieveServiceEvents"),
+        string("saveServiceEvent"),
+        string("updateSnapshotEvent"),
+        string("getLiveMachine")
     };
-    String builder;
-    builder += "pvArgument ";
-    if(!NTNameValue::isNTNameValue(pvArgument)) {
-        String functionName;
-        PVStringPtr pvFunction = pvArgument->getStringField("function");
-        if (pvFunction.get() == NULL) {
-            throw epics::pvAccess::RPCRequestException(Status::STATUSTYPE_ERROR,"unknown MASAR function");
+    if(!NTNameValue::is_a(pvArgument->getStructure())) {
+        string functionName;
+        PVStringPtr pvFunction = pvArgument->getSubField<PVString>("function");
+        if (!pvFunction) {
+            throw epics::pvAccess::RPCRequestException(
+                 Status::STATUSTYPE_ERROR,"unknown MASAR function");
         }
         functionName = pvFunction->get();
-        if(functionName.c_str()==0) {
-            throw epics::pvAccess::RPCRequestException(Status::STATUSTYPE_ERROR,"pvArgument has an unsupported function");
+        if(functionName.size()<1) {
+            throw epics::pvAccess::RPCRequestException(
+                Status::STATUSTYPE_ERROR,"pvArgument has an unsupported function");
         }
         StringArray fieldNames = pvArgument->getStructure()->getFieldNames();
         size_t fieldcounts = (size_t) fieldNames.size();
-        std::vector<std::string> names  (fieldcounts-1);
-        std::vector<std::string> values (fieldcounts-1);
+        shared_vector<string> name(fieldcounts-1);
+        shared_vector<string> value(fieldcounts-1);
         size_t counts = 0;
-        for (size_t i = 0; i < fieldcounts; i ++) {
+        for (size_t i = 0; i < fieldcounts; ++i) {
             if(fieldNames[i].compare("function")!=0) {
-                names[counts] = fieldNames[i];
-                values[counts] = pvArgument->getStringField(fieldNames[i])->get();
+                name[counts] = fieldNames[i];
+                value[counts] = pvArgument->getStringField(fieldNames[i])->get();
                 counts += 1;
             }
         }
-        return dslRdb->request(functionName,fieldcounts-1,names,values);
+        shared_vector<const string> names(freeze(name));
+        shared_vector<const string> values(freeze(value));
+        return dslRdb->request(functionName,names,values);
 
     } else{
-        NTNameValuePtr ntNameValue(NTNameValue::create(pvArgument));
-        PVStringPtr function = ntNameValue->getFunction();
-        String functionName;
-        for(int i=0; i<numberFunctions; i++) {
-            if(function->get().compare(functionNames[i])==0) {
-                functionName = functionNames[i];
-                break;
+//        NTNameValuePtr ntNameValue(NTNameValue::create(pvArgument));
+//        PVStringPtr function = ntNameValue->getFunction();
+//        String functionName;
+//        for(int i=0; i<numberFunctions; i++) {
+//            if(function->get().compare(functionNames[i])==0) {
+//                functionName = functionNames[i];
+//                break;
+//            }
+//        }
+//        if(functionName.c_str()==0) {
+//            throw epics::pvAccess::RPCRequestException(
+//                Status::STATUSTYPE_ERROR,"pvArgument has an unsupported function");
+//        }
+        PVStringArrayPtr pvNames = pvArgument->getSubField<PVStringArray>("names");
+        shared_vector<const string> names = pvNames->view();
+        string functionName;
+        for (size_t i = 0; i < names.size(); ++i) {
+            if(names[i].compare("function")==0) {
+                 functionName = names[i];
+                 break;
             }
         }
-        if(functionName.c_str()==0) {
-            throw epics::pvAccess::RPCRequestException(Status::STATUSTYPE_ERROR,"pvArgument has an unsupported function");
+        if(functionName.size()<1) {
+            throw epics::pvAccess::RPCRequestException(
+                Status::STATUSTYPE_ERROR,"pvArgument has no function definition");
         }
-        PVStringArrayPtr pvNames = ntNameValue->getNames();
-        PVStringArrayPtr pvValues = ntNameValue->getValues();
-        StringArray const &names = pvNames->getVector();
-        StringArray const &values = pvValues->getVector();
-        int num = pvNames->getLength();
-        return dslRdb->request(functionName,num,names,values);
+        PVFieldPtr pvField = pvArgument->getSubField("values");
+        if(pvField->getField()->getType()!=scalarArray) {
+            throw epics::pvAccess::RPCRequestException(
+                Status::STATUSTYPE_ERROR,"pvArgument has illegal type for values");
+        }
+        PVScalarArrayPtr pvScalarArray = static_pointer_cast<PVScalarArray>(pvField);
+        if(pvScalarArray->getScalarArray()->getElementType()!=pvString) {
+	    throw epics::pvAccess::RPCRequestException(
+	        Status::STATUSTYPE_ERROR,"pvArgument has illegal type for values");
+        }
+        PVStringArrayPtr pvValues = static_pointer_cast<PVStringArray>(pvScalarArray);
+        shared_vector<const string> values = pvValues->view();
+        return dslRdb->request(functionName,names,values);
     }
 }
 

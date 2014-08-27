@@ -10,608 +10,411 @@
 #include <vector>
 #include <sstream>
 
-#include <epicsExit.h>
+#include <epicsThread.h>
 #include <alarm.h>
 #include <alarmString.h>
 
-#include <pv/nttable.h>
+#include <pv/createRequest.h>
+#include <pv/convert.h>
+#include <pv/standardPVField.h>
 #include <pv/gatherV3Data.h>
 
-namespace epics { namespace pvAccess {
+namespace epics { namespace masar {
 
 using namespace epics::pvData;
+using namespace epics::pvAccess;
+using namespace epics::nt;
 using std::tr1::static_pointer_cast;
-using std::cout;
-using std::endl;
+using namespace std;
+using namespace epics::masar::detail;
 
-struct GatherV3DataPvt;
+static  FieldCreatePtr fieldCreate = getFieldCreate();
+static PVDataCreatePtr pvDataCreate = getPVDataCreate();
+static StandardPVFieldPtr standardPVField = getStandardPVField();
+static ConvertPtr convert = getConvert();
+static PVStructurePtr pvGetRequest;
+static PVStructurePtr pvPutRequest;
 
 enum State {
     idle,
     connecting,
     connected,
+    creatingGet,
     getting,
+    creatingPut,
     putting,
     destroying,
 };
 
-enum V3RequestType {
-    requestDouble,
-    requestLong,
-    requestString
-};
+namespace detail {
 
-struct ChannelID
+GatherV3DataChannel::GatherV3DataChannel(
+    GatherV3DataPtr const& gatherV3Data, size_t offset)
+: gatherV3Data(gatherV3Data),
+  offset(offset)
 {
-    GatherV3DataPvt *pvt;
-    chid theChid;
-    int offset;
-    V3RequestType requestType;
-    int elementLength;
-    bool getIsConnected;
-    dbr_short_t     status;
-    dbr_short_t     severity;
-    epicsTimeStamp  stamp;         
-};
-
-struct GatherV3DataPvt
-{
-    GatherV3DataPvt(
-        bool hasFunction,bool hasTimeStamp, bool hasAlarm,
-        StringArray const & valueNames,
-        FieldConstPtrArray const &valueFields);
-    ~GatherV3DataPvt(){}
-    void getOne(int index);
-    Mutex mutex;
-    Event event;
-    PVTimeStamp pvtimeStamp;
-    TimeStamp timeStamp;
-    PVAlarm pvalarm;
-    Alarm alarm;
-    String message;
-    NTTablePtr nttable;
-    PVStructurePtr pvStructure;
-    int numberChannels;
-    std::vector<ChannelID *> apchannelID; // array of  pointer to ChanneID
-    PVDoubleArrayPtr pvdoubleValue;
-    PVLongArrayPtr pvlongValue;
-    PVStringArrayPtr pvstringValue;
-    PVStructureArrayPtr pvarrayValue;
-    PVLongArrayPtr pvsecondsPastEpoch;
-    PVIntArrayPtr pvnanoSeconds;
-    PVIntArrayPtr pvtimeStampTag;
-    PVIntArrayPtr pvalarmSeverity;
-    PVIntArrayPtr pvalarmStatus;
-    PVStringArrayPtr pvalarmMessage;
-    PVIntArrayPtr pvDBRType;
-    PVBooleanArrayPtr pvisArray;
-    PVBooleanArrayPtr pvisConnected;
-    PVStringArrayPtr pvchannelName;
-    State state;
-    int numberConnected;
-    int numberCallbacks;
-    bool requestOK;
-    epicsThreadId threadId;
-};
-
-GatherV3DataPvt::GatherV3DataPvt(
-    bool hasFunction,bool hasTimeStamp, bool hasAlarm,
-    StringArray const & valueNames,
-    FieldConstPtrArray const &valueFields)
-: nttable(NTTable::create(
-       hasFunction,hasTimeStamp,hasAlarm,
-       valueNames,valueFields))
-{
-   pvStructure = nttable->getPVStructure();
 }
 
-// concatenate a new message onto message
-static void messageCat(
-    GatherV3DataPvt *pvt,const char *cafunc,int castatus,int channel)
+GatherV3DataChannel::~GatherV3DataChannel()
 {
-    String name = pvt->pvchannelName->get()[channel];
-    String buf = String(cafunc);
-    buf += " ";
-    buf += String(ca_message(castatus));
-    buf += " for channel ";
-    buf += name;
-    pvt->message += buf;
+   if(channel) {
+      channel->destroy();
+      channel.reset();
+   }
 }
 
-static void connectionCallback(struct connection_handler_args args)
+void GatherV3DataChannel::destroy()
 {
-    chid        chid = args.chid;
-    ChannelID *id = static_cast<ChannelID *>(ca_puser(chid));
-    GatherV3DataPvt * pvt = id->pvt;
-    if(pvt->state==destroying) return;
-    int offset = id->offset;
+   if(channel) {
+      channel->destroy();
+      channel.reset();
+   }
+}
 
-    boolean *data = pvt->pvisConnected->get();
-    bool isConnected = data[offset];
-    bool newState = ((ca_state(chid)==cs_conn) ? true : false);
-    if(isConnected==newState) {
-        printf("gatherV3Data connectionCallback."
-               " Why extra connection callback?\n");
+void GatherV3DataChannel::message(
+    std::string const &message,
+    MessageType messageType)
+{
+}
+
+void GatherV3DataChannel::channelCreated(
+        const Status& status,
+        Channel::shared_pointer const & channel)
+{
+    if(gatherV3Data->state==destroying) return;
+}
+
+void GatherV3DataChannel::channelStateChange(
+    Channel::shared_pointer const & channel,
+    Channel::ConnectionState connectionState)
+{
+    if(gatherV3Data->state==destroying) return;
+    bool isConnected = false;
+    if(connectionState==Channel::CONNECTED) isConnected = true;
+    Lock xx(gatherV3Data->mutex);
+    if(isConnected==gatherV3Data->isConnected[offset]) {
+        cout << "gatherV3Data connectionCallback. Why extra connection callback?\n";
         return;
     }
-    data[offset] = newState;
-    Lock xx(pvt->mutex);
-    if(newState) {
-        int dbrType = ca_field_type(chid);
-        unsigned long numberElements = ca_element_count(chid);
-        switch(dbrType) {
-        case DBF_STRING:
-        case DBF_ENUM:
-            id->requestType = requestString; break;
-        case DBF_CHAR:
-        case DBF_SHORT:
-        case DBF_LONG:
-            id->requestType = requestLong; break;
-        case DBF_FLOAT:
-        case DBF_DOUBLE:
-            id->requestType = requestDouble; break;
-        default:
-            printf("warning %s has unsupported type %d\n",
-                ca_name(chid),dbrType);
-            id->requestType = requestString; break;
-        }
-        int32 *pvalue = pvt->pvDBRType->get();
-        pvalue[offset] = dbrType;
-        boolean *isArray =  pvt->pvisArray->get();
-        if(numberElements==1) {
-            isArray[offset] = false;
-        } else {
-            isArray[offset] = true;
-        }
-        pvt->numberConnected++;
-        if(pvt->state==connecting && pvt->numberConnected==pvt->numberChannels) {
-            pvt->event.signal();
-        }
-        return;
-    }
-    pvt->numberConnected--;
-}
-
-static void getCallback ( struct event_handler_args args )
-{
-    chid        chid = args.chid;
-    ChannelID *id = static_cast<ChannelID *>(ca_puser(chid));
-    GatherV3DataPvt * pvt = id->pvt;
-    if(pvt->state!=getting) return;
-    int offset = id->offset;
-    Lock xx(pvt->mutex);
-    pvt->numberCallbacks++;
-    if ( args.status != ECA_NORMAL ) {
-          messageCat(pvt,"getCallback",args.status,offset);
-          if(pvt->numberCallbacks==pvt->numberChannels) {
-              pvt->event.signal();
-          }
-          return;
-    }
-    id->getIsConnected = true;
-    unsigned long numberElements = args.count;
-    // all DBR_TIME_XXX start with status,severity, timeStamp
-    const struct dbr_time_double * pTime =
-         ( const struct dbr_time_double * ) args.dbr;
-    id->severity = pTime->severity;
-    id->status = pTime->status;
-    id->stamp = pTime->stamp;
-    boolean isArray = pvt->pvisArray->get()[offset];
-    if(!isArray) {
-        if(id->requestType==requestDouble) {
-            const struct dbr_time_double * pTD =
-                 ( const struct dbr_time_double * ) args.dbr;
-            // set double value
-            double * pvalue = pvt->pvdoubleValue->get();
-            pvalue[offset] = pTD->value;
-    
-            // convert double value to string
-            String * pstring = pvt->pvstringValue->get();
-            char buffer[20];
-            sprintf(buffer,"%e",pTD->value);
-            pstring[offset] = String(buffer);
-    
-            // put the integer part to keep at least some information.
-            int64 * plvalue = pvt->pvlongValue->get();
-            plvalue[offset] = pTD->value;
-        } else if(id->requestType==requestLong) {
-            const struct dbr_time_long * pTL =
-                 ( const struct dbr_time_long * ) args.dbr;
-            // set long value as 64-bit
-            int64 * pvalue = pvt->pvlongValue->get();
-            pvalue[offset] = pTL->value;
-    
-            // put 64-bit long to a double array
-            pvt->pvdoubleValue->get()[offset] = pTL->value;
-    
-            // convert long value to a string
-            char buffer[20];
-            sprintf(buffer,"%d",pTL->value);
-            pvt->pvstringValue->get()[offset] = String(buffer);
-        } else if(id->requestType==requestString) {
-            const struct dbr_time_string * pTS =
-                 ( const struct dbr_time_string * ) args.dbr;
-            // set to string array only
-            pvt->pvstringValue->get()[offset] = String(pTS->value);
-            if(pTS->value[0]==0) {
-                pvt->numberCallbacks-- ;
-                int32 *pvalue = pvt->pvDBRType->get();
-                pvalue[offset] = DBF_LONG;
-                id->requestType = requestLong;
-                id->getIsConnected = false;
-                pvt->getOne(id->offset);
-                ca_flush_io();
-            }
-        } else {
-            throw std::logic_error("unknown DBR_TYPE");
+    gatherV3Data->isConnected[offset] = isConnected;;
+    if(isConnected) {
+         ++gatherV3Data->numberConnected;
+        if(gatherV3Data->state==connecting
+        && gatherV3Data->numberConnected==gatherV3Data->numberChannel)
+        {
+            gatherV3Data->event.signal();
         }
     } else {
-        PVStructurePtr pvStructure = pvt->pvarrayValue->get()[offset];
-        PVFieldPtrArray pvfields = pvStructure->getPVFields();
-        PVStringArrayPtr pvstringarray = static_pointer_cast<PVStringArray>(pvfields[0]);
-        PVDoubleArrayPtr pvdoublearray = static_pointer_cast<PVDoubleArray>(pvfields[1]);
-        PVIntArrayPtr pvintarray = static_pointer_cast<PVIntArray>(pvfields[2]);
-        if(id->requestType==requestDouble) {
-            const struct dbr_time_double * pTD =
-                 ( const struct dbr_time_double * ) args.dbr;
-            // set double value
-            pvdoublearray->setLength(numberElements);
-            double * pvalue = pvdoublearray->get();
-            memcpy(pvalue,&pTD->value,numberElements*sizeof(double));
-        } else if(id->requestType==requestLong) {
-            const struct dbr_time_long * pTL =
-                 ( const struct dbr_time_long * ) args.dbr;
-            // set long value as 32-bit
-            pvintarray->setLength(numberElements);
-            int32 * pvalue = pvintarray->get();
-            memcpy(pvalue,&pTL->value,numberElements*sizeof(int32));
-        } else if(id->requestType==requestString) {
-            const struct dbr_time_string * pTS =
-                 ( const struct dbr_time_string * ) args.dbr;
-            // set to string array only
-            pvstringarray->setLength(numberElements);
-            String * pvalue = pvstringarray->get();
-            const char *pfrom = pTS->value;
-            for(unsigned long i=0; i<numberElements; i++) {
-                pvalue[i] = String(pfrom);
-                pfrom += MAX_STRING_SIZE;
-            }
-        } else {
-            throw std::logic_error("unknown DBR_TYPE");
+         --gatherV3Data->numberConnected;
+    }
+    return;
+}
+
+void GatherV3DataChannel::channelGetConnect(
+    const Status& status,
+    ChannelGet::shared_pointer const & channelGet,
+    Structure::const_shared_pointer const & structure)
+{
+    Lock xx(gatherV3Data->mutex);
+    while(true) {
+        if(!status.isOK()) {
+             string message = gatherV3Data->channelName[offset] +
+                  " " + status.getMessage();
+             gatherV3Data->message += message;
+             gatherV3Data->requestOK = false;
+             break;
         }
+        FieldConstPtr value = structure->getField("value");
+        if(!value) {
+            string message = gatherV3Data->channelName[offset] +
+                 " no value field";
+            gatherV3Data->message += message;
+            gatherV3Data->requestOK = false;
+            break;
+        }
+        Type type = value->getType();
+        if(type==scalar) {
+             ScalarConstPtr scalar = static_pointer_cast<const Scalar>(value);
+             PVScalarPtr pvScalar = pvDataCreate->createPVScalar(
+                 scalar->getScalarType());
+             gatherV3Data->value[offset]->set(pvScalar);
+             break;
+        }
+        if (type==scalarArray) {
+             ScalarArrayConstPtr scalarArray =
+                 static_pointer_cast<const ScalarArray>(value);
+             PVScalarArrayPtr pvScalarArray = pvDataCreate->createPVScalarArray(
+                 scalarArray->getElementType());
+             gatherV3Data->value[offset]->set(pvScalarArray);
+             break;
+        }
+        if (type==epics::pvData::structure) {
+             StructureConstPtr structure =
+                 static_pointer_cast<const Structure>(value);
+             if(structure->getField("index")
+             || (structure->getField("choices"))) {
+                 StringArray stringArray;
+                 gatherV3Data->value[offset]->set(
+                     standardPVField->enumerated(stringArray)); 
+             }
+             break;
+        }
+         string message = gatherV3Data->channelName[offset] +
+                 "  value field has unsupported type ";
+         gatherV3Data->message += message;
+         gatherV3Data->requestOK = false;
     }
-
-    if(pvt->numberCallbacks==pvt->numberConnected) {
-        pvt->event.signal();
+    ++gatherV3Data->numberCallback;
+    if(gatherV3Data->numberCallback==gatherV3Data->numberChannel) {
+        gatherV3Data->event.signal();
     }
 }
 
-void GatherV3DataPvt::getOne(int i)
+void GatherV3DataChannel::getDone(
+    const Status& status,
+    ChannelGet::shared_pointer const & channelGet,
+    PVStructure::shared_pointer const & pvStructure,
+    BitSet::shared_pointer const & bitSet)
 {
-    ChannelID *channelId = apchannelID[i];
-    chid theChid = channelId->theChid;
-    V3RequestType requestType = channelId->requestType;
-    int req = DBR_TIME_DOUBLE;
-    if(requestType==requestLong) req = DBR_TIME_LONG;
-    if(requestType==requestString) req = DBR_TIME_STRING;
-    int result = ca_array_get_callback(
-        req,
-        0,
-        theChid,
-        getCallback,
-        channelId);
-    if(result==ECA_NORMAL) return;
-    if(result==ECA_DISCONN) {
-        messageCat(this,"ca_get_callback",ECA_DISCONN,i);
-        channelId->getIsConnected = false;
-        this->requestOK = false;
-        return;
-    }
-    if(result!=ECA_NORMAL) {
-        messageCat(this,"ca_get_callback",result,i);
-        this->requestOK = false;
+    Lock xx(gatherV3Data->mutex);
+    PVFieldPtr pvFrom = pvStructure->getSubField("value");
+    PVFieldPtr pvTo = gatherV3Data->value[offset]->get();
+    convert->copy(pvFrom,pvTo);
+    PVLongPtr pvSec = pvStructure->getSubField<PVLong>("timeStamp.secondsPastEpoch");
+    gatherV3Data->secondsPastEpoch[offset] = pvSec->get();
+    PVIntPtr pvNano = pvStructure->getSubField<PVInt>("timeStamp.nanoseconds");
+    gatherV3Data->nanoseconds[offset] = pvNano->get();
+    PVIntPtr pvUser = pvStructure->getSubField<PVInt>("timeStamp.userTag");
+    gatherV3Data->userTag[offset] = pvUser->get();
+    PVIntPtr pvSev = pvStructure->getSubField<PVInt>("alarm.severity");
+    gatherV3Data->alarmSeverity[offset] = pvSev->get();
+    PVIntPtr pvStat = pvStructure->getSubField<PVInt>("alarm.status");
+    gatherV3Data->alarmStatus[offset] = pvStat->get();
+    PVStringPtr pvMess = pvStructure->getSubField<PVString>("alarm.message");
+    gatherV3Data->alarmMessage[offset] = pvMess->get();
+    ++gatherV3Data->numberCallback;
+    if(gatherV3Data->numberCallback==gatherV3Data->numberChannel) {
+        gatherV3Data->event.signal();
     }
 }
 
-static void putCallback ( struct event_handler_args args )
+void GatherV3DataChannel::channelPutConnect(
+    const Status& status,
+    ChannelPut::shared_pointer const & channelPut,
+    Structure::const_shared_pointer const & structure)
 {
-    chid        chid = args.chid;
-    ChannelID *id = static_cast<ChannelID *>(ca_puser(chid));
-    GatherV3DataPvt * pvt = id->pvt;
-    if(pvt->state!=putting) return;
-    int offset = id->offset;
-    Lock xx(pvt->mutex);
-    pvt->numberCallbacks++;
-    if ( args.status != ECA_NORMAL ) {
-          messageCat(pvt,"putCallback",args.status,offset);
-          if(pvt->numberCallbacks==pvt->numberChannels) {
-              pvt->event.signal();
-          }
-          return;
+    Lock xx(gatherV3Data->mutex);
+    gatherV3Data->putPVStructure[offset] =
+       pvDataCreate->createPVStructure(structure);
+    gatherV3Data->putBitSet[offset] = BitSetPtr(
+         new BitSet(gatherV3Data->putPVStructure[offset]->getNumberFields()));
+    ++gatherV3Data->numberCallback;
+    if(gatherV3Data->numberCallback==gatherV3Data->numberChannel) {
+        gatherV3Data->event.signal();
     }
-    if(pvt->numberCallbacks==pvt->numberChannels) {
-        pvt->event.signal();
+}
+
+void GatherV3DataChannel::putDone(
+    const Status& status,
+    ChannelPut::shared_pointer const & channelPut)
+{
+    Lock xx(gatherV3Data->mutex);
+    ++gatherV3Data->numberCallback;
+    if(gatherV3Data->numberCallback==gatherV3Data->numberChannel) {
+        gatherV3Data->event.signal();
     }
+}
+
+void GatherV3DataChannel::getDone(
+    const Status& status,
+    ChannelPut::shared_pointer const & channelPut,
+    PVStructure::shared_pointer const & pvStructure,
+    BitSet::shared_pointer const & bitSet)
+{
+}
+
+
+void  GatherV3DataChannel::connect()
+{
+     channel = gatherV3Data->channelProvider->createChannel(
+        gatherV3Data->channelName[offset],getPtrSelf());
+}
+
+void GatherV3DataChannel::disconnect()
+{
+    destroy();
+}
+
+void GatherV3DataChannel::createGet()
+{
+   channelGet = channel->createChannelGet(getPtrSelf(),pvGetRequest);
+}
+
+void GatherV3DataChannel::get()
+{
+    channelGet->get();
+}
+
+
+void GatherV3DataChannel::createPut()
+{
+   channelPut = channel->createChannelPut(getPtrSelf(),pvPutRequest);
+}
+
+
+void GatherV3DataChannel::put()
+{
+    PVStructurePtr pvTop = gatherV3Data->putPVStructure[offset];
+    PVUnionPtr pvUnion = gatherV3Data->value[offset];
+    PVFieldPtr pvFrom = pvUnion->get();
+    PVFieldPtr pvTo = pvTop->getSubField("value");
+    BitSetPtr bitSet = gatherV3Data->putBitSet[offset];
+    bitSet->clear();
+    if(pvTo->getField()->getType()==structure) {
+        PVStructurePtr pv = static_pointer_cast<PVStructure>(pvFrom);
+        PVIntPtr from = pv->getSubField<PVInt>("index");
+        pv = static_pointer_cast<PVStructure>(pvTo);
+        PVIntPtr to = pv->getSubField<PVInt>("index");
+        to->put(from->get());
+        bitSet->set(to->getFieldOffset());
+    } else {
+        convert->copy(pvFrom,pvTo);
+        bitSet->set(pvTo->getFieldOffset());
+    }
+    channelPut->put(pvTop,bitSet);
+}
+
+
+} // end detail
+
+
+
+
+GatherV3DataPtr GatherV3Data::create(
+    shared_vector<const std::string> const & channelNames)
+{
+    NTMultiChannelBuilderPtr builder = NTMultiChannel::createBuilder();
+    NTMultiChannelPtr multiChannel = builder->
+            addValue(fieldCreate->createVariantUnion()) ->
+            addAlarm()->
+            addTimeStamp()->
+            addSeverity() ->
+            addStatus() ->
+            addMessage() ->
+            addSecondsPastEpoch() ->
+            addNanoseconds() ->
+            addUserTag() ->
+            create();
+    PVStringArrayPtr pvChannelName = multiChannel->getChannelName();
+    pvChannelName->replace(channelNames);
+    GatherV3DataPtr xx(new GatherV3Data(multiChannel,channelNames.size()));
+    xx->init();
+    return xx;
 }
 
 GatherV3Data::GatherV3Data(
-    StringArray const & channelNames,
-    int numberChannels)
-: pvt(0)
+    NTMultiChannelPtr const & multiChannel,
+    size_t numberChannel)
+: channelProvider(getChannelProviderRegistry()->getProvider("ca")),
+  multiChannel(multiChannel),
+  numberChannel(numberChannel),
+  channelName(multiChannel->getChannelName()->view())
+{ }
+
+void GatherV3Data::init()
 {
-    FieldCreatePtr fieldCreate = getFieldCreate();
-    size_t naf = 3;
-    StringArray names;
-    names.reserve(naf);
-    FieldConstPtrArray arrfields;
-    arrfields.reserve(naf);
-    names.push_back("stringValue");
-    names.push_back("doubleValue");
-    names.push_back("intValue");
-    arrfields.push_back(fieldCreate->createScalarArray(pvString));
-    arrfields.push_back(fieldCreate->createScalarArray(pvDouble));
-    arrfields.push_back(fieldCreate->createScalarArray(pvInt));
-    StructureConstPtr arrStructure = fieldCreate->createStructure(
-         names,arrfields);
-    int n = 14;
-    StringArray fieldNames;
-    fieldNames.reserve(n);
-    FieldConstPtrArray fields;
-    fields.reserve(n);
-    // The order is mapped into SQL query sequence to keep data format consistency.
-    // Update RDB query each time when fields order is changed.
-    // fields order & type
-    // 'pv name', 'string value', 'double value', 'long value',
-    // string,     string,         double,         long,      ,
-    // 'array value',     'isArray', 'dbr type', 'isConnected',
-    // structureArray,     boolean,   int,        boolean,
-    // 'secondsPastEpoch', 'nanoSeconds', 'timeStampTag',
-    // long,                int,           int,          
-    // 'alarmSeverity', 'alarmStatus', 'alarmMessage'
-    //  int,             int,           string
-    fieldNames.push_back("channelName");
-    fieldNames.push_back("stringValue");
-    fieldNames.push_back("doubleValue");
-    fieldNames.push_back("longValue");
-    fieldNames.push_back("dbrType");
-    fieldNames.push_back("isConnected");
-    fieldNames.push_back("secondsPastEpoch");
-    fieldNames.push_back("nanoSeconds");
-    fieldNames.push_back("timeStampTag");
-    fieldNames.push_back("alarmSeverity");
-    fieldNames.push_back("alarmStatus");
-    fieldNames.push_back("alarmMessage");
-    fieldNames.push_back("isArray");
-    fieldNames.push_back("arrayValue");
-    fields.push_back(fieldCreate->createScalarArray(pvString));
-    fields.push_back(fieldCreate->createScalarArray(pvString));
-    fields.push_back(fieldCreate->createScalarArray(pvDouble));
-    fields.push_back(fieldCreate->createScalarArray(pvLong));
-    fields.push_back(fieldCreate->createScalarArray(pvInt));
-    fields.push_back(fieldCreate->createScalarArray(pvBoolean));
-    fields.push_back(fieldCreate->createScalarArray(pvLong));
-    fields.push_back(fieldCreate->createScalarArray(pvInt));
-    fields.push_back(fieldCreate->createScalarArray(pvInt));
-    fields.push_back(fieldCreate->createScalarArray(pvInt));
-    fields.push_back(fieldCreate->createScalarArray(pvInt));
-    fields.push_back(fieldCreate->createScalarArray(pvString));
-    fields.push_back(fieldCreate->createScalarArray(pvBoolean));
-    fields.push_back(fieldCreate->createStructureArray(arrStructure));
-    
-
-    pvt = new GatherV3DataPvt(false,true,true,fieldNames,fields);
-    pvt->nttable->attachTimeStamp(pvt->pvtimeStamp);
-    pvt->nttable->attachAlarm(pvt->pvalarm);
-    pvt->pvtimeStamp.attach(pvt->pvStructure->getSubField("timeStamp"));
-    pvt->pvalarm.attach(pvt->pvStructure->getSubField("alarm"));
-    pvt->numberChannels = numberChannels;
-//    ChannelID **apchannelID = new ChannelID*[numberChannels];
-    pvt->apchannelID.resize(numberChannels);
-    for(int i=0; i<numberChannels; i++) {
-        ChannelID *pChannelID = new ChannelID();
-        pChannelID->pvt = pvt;
-        pChannelID->theChid = 0;
-        pChannelID->offset = i;
-        pChannelID->requestType = requestString;
-        pChannelID->elementLength = 1;
-        pChannelID->getIsConnected = false;
-        pChannelID->status = epicsAlarmUDF;
-        pChannelID->severity = epicsSevInvalid;
-        pChannelID->stamp.secPastEpoch = 0;
-        pChannelID->stamp.nsec = 0;
-        pvt->apchannelID[i] = pChannelID;
+ChannelProvider::shared_pointer  xxx = getChannelProviderRegistry()->getProvider("ca");
+    CreateRequest::shared_pointer createRequest = CreateRequest::create();
+    pvGetRequest = createRequest->createRequest("value,alarm,timeStamp");
+    pvPutRequest = createRequest->createRequest("value");
+    multiChannel->attachTimeStamp(pvtimeStamp);
+    multiChannel->attachAlarm(pvalarm);
+    PVStructurePtr pvStructure = multiChannel->getPVStructure();
+    pvtimeStamp.attach(pvStructure->getSubField("timeStamp"));
+    pvalarm.attach(pvStructure->getSubField("alarm"));
+    channel.resize(numberChannel);
+    value.resize(numberChannel);
+    isConnected.resize(numberChannel);
+    secondsPastEpoch.resize(numberChannel);
+    nanoseconds.resize(numberChannel);
+    userTag.resize(numberChannel);
+    alarmSeverity.resize(numberChannel);
+    alarmStatus.resize(numberChannel);
+    alarmMessage.resize(numberChannel);
+    for(size_t i=0; i<numberChannel; ++i) {
+        value[i] = pvDataCreate->createPVVariantUnion();
+        isConnected[i] = false;
+        secondsPastEpoch[i] = 0;
+        nanoseconds[i] = 0;
+        userTag[i] = 0;
+        alarmSeverity[i] = undefinedAlarm;
+        alarmStatus[i] = 0;
+        alarmMessage[i] = "never connected";
     }
-
-    pvt->pvchannelName = static_pointer_cast<PVStringArray>(
-        pvt->nttable->getPVField(0));
-    pvt->pvchannelName->setCapacity(numberChannels);
-    pvt->pvchannelName->setCapacityMutable(false);
-    pvt->pvchannelName->put(0,numberChannels,channelNames,0);
-
-    pvt->pvstringValue = static_pointer_cast<PVStringArray>(
-        pvt->nttable->getPVField(1));
-    pvt->pvstringValue->setCapacity(numberChannels);
-    pvt->pvstringValue->setCapacityMutable(false);
-    pvt->pvstringValue->setLength(numberChannels);
-    String *pstrings = pvt->pvstringValue->get();
-    for (int i=0; i<numberChannels; i++) {
-         pstrings[i] = String("0.0");
-    }
-
-    pvt->pvdoubleValue = static_pointer_cast<PVDoubleArray>(
-        pvt->nttable->getPVField(2));
-    pvt->pvdoubleValue->setCapacity(numberChannels);
-    pvt->pvdoubleValue->setCapacityMutable(false);
-    pvt->pvdoubleValue->setLength(numberChannels);
-    double *pdouble = pvt->pvdoubleValue->get();
-    for (int i=0; i<numberChannels; i++) pdouble[i] = 0.0;
-
-    pvt->pvlongValue = static_pointer_cast<PVLongArray>(
-        pvt->nttable->getPVField(3));
-    pvt->pvlongValue->setCapacity(numberChannels);
-    pvt->pvlongValue->setCapacityMutable(false);
-    pvt->pvlongValue->setLength(numberChannels);
-    int64 * plong = pvt->pvlongValue->get();
-    for (int i=0; i<numberChannels; i++) plong[i] = 0.0;
-
-    pvt->pvDBRType = static_pointer_cast<PVIntArray>(
-        pvt->nttable->getPVField(4));
-    pvt->pvDBRType->setCapacity(numberChannels);
-    pvt->pvDBRType->setCapacityMutable(false);
-    pvt->pvDBRType->setLength(numberChannels);
-    int32 *pDBRType = pvt->pvDBRType->get();
-    for (int i=0; i<numberChannels; i++) pDBRType[i] = DBF_NO_ACCESS;
-
-    pvt->pvisConnected = static_pointer_cast<PVBooleanArray>(
-        pvt->nttable->getPVField(5));
-    pvt->pvisConnected->setCapacity(numberChannels);
-    pvt->pvisConnected->setCapacityMutable(false);
-    pvt->pvisConnected->setLength(numberChannels);
-    boolean *pbool = pvt->pvisConnected->get();
-    for (int i=0; i<numberChannels; i++) pbool[i] = false;
-
-    pvt->pvsecondsPastEpoch = static_pointer_cast<PVLongArray>(
-        pvt->nttable->getPVField(6));
-    pvt->pvsecondsPastEpoch->setCapacity(numberChannels);
-    pvt->pvsecondsPastEpoch->setCapacityMutable(false);
-    pvt->pvsecondsPastEpoch->setLength(numberChannels);
-    int64 * psecondsPastEpoch = pvt->pvsecondsPastEpoch->get();
-    for (int i=0; i<numberChannels; i++) psecondsPastEpoch[i] = 0;
-
-    pvt->pvnanoSeconds = static_pointer_cast<PVIntArray>(
-        pvt->nttable->getPVField(7));
-    pvt->pvnanoSeconds->setCapacity(numberChannels);
-    pvt->pvnanoSeconds->setCapacityMutable(false);
-    pvt->pvnanoSeconds->setLength(numberChannels);
-    int32* pnanoSeconds = pvt->pvnanoSeconds->get();
-    for (int i=0; i<numberChannels; i++) pnanoSeconds[i] = 0;
-
-    pvt->pvtimeStampTag = static_pointer_cast<PVIntArray>(
-        pvt->nttable->getPVField(8));
-    pvt->pvtimeStampTag->setCapacity(numberChannels);
-    pvt->pvtimeStampTag->setCapacityMutable(false);
-    pvt->pvtimeStampTag->setLength(numberChannels);
-    int32 *ptimeStampTag = pvt->pvtimeStampTag->get();
-    for (int i=0; i<numberChannels; i++) ptimeStampTag[i] = 0;
-
-    pvt->pvalarmSeverity = static_pointer_cast<PVIntArray>(
-        pvt->nttable->getPVField(9));
-    pvt->pvalarmSeverity->setCapacity(numberChannels);
-    pvt->pvalarmSeverity->setCapacityMutable(false);
-    pvt->pvalarmSeverity->setLength(numberChannels);
-    int32 *palarmSeverity = pvt->pvalarmSeverity->get();
-    for (int i=0; i<numberChannels; i++) palarmSeverity[i] = INVALID_ALARM;
-
-    pvt->pvalarmStatus = static_pointer_cast<PVIntArray>(
-        pvt->nttable->getPVField(10));
-    pvt->pvalarmStatus->setCapacity(numberChannels);
-    pvt->pvalarmStatus->setCapacityMutable(false);
-    pvt->pvalarmStatus->setLength(numberChannels);
-    int32 * palarmStatus = pvt->pvalarmStatus->get();
-    for (int i=0; i<numberChannels; i++) palarmStatus[i] = epicsAlarmComm;
-
-    pvt->pvalarmMessage = static_pointer_cast<PVStringArray>(
-        pvt->nttable->getPVField(11));
-    pvt->pvalarmMessage->setCapacity(numberChannels);
-    pvt->pvalarmMessage->setCapacityMutable(false);
-    pvt->pvalarmMessage->setLength(numberChannels);
-    String * palarmMessage = pvt->pvalarmMessage->get();
-    for (int i=0; i<numberChannels; i++) palarmMessage[i] = String();
-
-    pvt->pvisArray = static_pointer_cast<PVBooleanArray>(
-        pvt->nttable->getPVField(12));
-    pvt->pvisArray->setCapacity(numberChannels);
-    pvt->pvisArray->setCapacityMutable(false);
-    pvt->pvisArray->setLength(numberChannels);
-    pbool = pvt->pvisArray->get();
-    for (int i=0; i<numberChannels; i++) pbool[i] = false;
-
-    pvt->pvarrayValue = static_pointer_cast<PVStructureArray>(
-        pvt->nttable->getPVField(13));
-    pvt->pvarrayValue->setCapacity(numberChannels);
-    pvt->pvarrayValue->setCapacityMutable(false);
-    pvt->pvarrayValue->setLength(numberChannels);
-    PVStructurePtr *ppPVStructure = pvt->pvarrayValue->get();
-    StructureConstPtr pstructure
-        = pvt->pvarrayValue->getStructureArray()->getStructure();
-    PVDataCreatePtr pvDataCreate = getPVDataCreate();
-    for (int i=0; i<numberChannels; i++) {
-        ppPVStructure[i] = pvDataCreate->createPVStructure(pstructure);
-    }
-
-    pvt->state = idle;
-    pvt->numberConnected = 0;
-    pvt->numberCallbacks = 0;
-    pvt->requestOK = false;
-    pvt->threadId = 0;
+    state = idle;
+    numberConnected = 0;
+    numberCallback = 0;
+    requestOK = false;
+    getCreated = false;
+    putCreated = false;
+    atLeastOneGet = false;
 }
 
 GatherV3Data::~GatherV3Data()
 {
-    if(pvt->state!=idle) disconnect();
-    for(int i=0; i<pvt->numberChannels; i++) {
-        ChannelID *pChannelID = pvt->apchannelID[i];
-        delete pChannelID;
+    if(state!=idle) disconnect();
+    for(size_t i=0; i<numberChannel; i++) {
+        channel[i]->destroy();
     }
-    delete pvt;
+    channel.clear();
 }
 
 bool GatherV3Data::connect(double timeOut)
 {
-    if(pvt->state!=idle) {
+    if(state!=idle) {
         throw std::logic_error(
             "GatherV3Data::connect only legal when state is idle\n");
     }
-    SEVCHK(ca_context_create(ca_enable_preemptive_callback),"ca_context_create");
-    pvt->threadId = epicsThreadGetIdSelf();
-    pvt->state = connecting;
-    pvt->numberConnected = 0;
-    pvt->numberCallbacks = 0;
-    pvt->requestOK = true;
-    pvt->event.tryWait();
-    int numberChannels = pvt->numberChannels;
-    boolean* isConnected = pvt->pvisConnected->get();
-    String *channelNames = pvt->pvchannelName->get();
-    for(int i=0; i< numberChannels; i++) {
-        isConnected[i] = false;
-        const char * channelName = channelNames[i].c_str();
-        ChannelID *pchannelID = pvt->apchannelID[i];
-        int result = ca_create_channel(
-           channelName,
-           connectionCallback,
-           pchannelID,
-           20,
-           &pchannelID->theChid);
-        if(result!=ECA_NORMAL) {
-            printf("%s ca_create_channel failed %s\n",
-               channelName,ca_message(result));
-        }
+    for(size_t i=0; i<numberChannel; ++i) {
+        GatherV3DataChannelPtr xxx(new GatherV3DataChannel(getPtrSelf(),i));
+        channel[i] = xxx;
     }
-    ca_flush_io();
+    state = connecting;
+    numberConnected = 0;
+    numberCallback = 0;
+    requestOK = true;
+    getCreated = false;
+    putCreated = false;
+    atLeastOneGet = false;
+    event.tryWait();
+    for(size_t i=0; i< numberChannel; i++) {
+        isConnected[i] = false;
+        channel[i]->connect();
+    }
     std::stringstream ss;
     while(true) {
-        int oldNumber = pvt->numberConnected;
-        bool result = pvt->event.wait(timeOut);
-        if(result && pvt->requestOK) {
-            pvt->state = connected;
-            return pvt->requestOK;
+        size_t oldNumber = numberConnected;
+        bool result = event.wait(timeOut);
+        if(result && requestOK) {
+            state = connected;
+            return requestOK;
         }
-        if(pvt->numberConnected!=pvt->numberChannels) {
+        if(numberConnected!=numberChannel) {
             ss.str("");
-            ss << (pvt->numberChannels - pvt->numberConnected);
-            String buf = ss.str();
+            ss << (numberChannel - numberConnected);
+            std::string buf = ss.str();
             buf += " channels of ";
             ss.str("");
-            ss << pvt->numberChannels;
+            ss << numberChannel;
             buf += ss.str();
             buf += " are not connected.";
-            pvt->message = buf;
-            pvt->alarm.setMessage(pvt->message);
-            pvt->alarm.setSeverity(invalidAlarm);
-            pvt->alarm.setStatus(clientStatus);
+            message = buf;
+            alarm.setMessage(message);
+            alarm.setSeverity(invalidAlarm);
+            alarm.setStatus(clientStatus);
         }
-        if(oldNumber==pvt->numberConnected) {
-            pvt->state = connected;
+        if(oldNumber==numberConnected) {
+            state = connected;
             return false;
         }
         timeOut = 1.0;
@@ -621,294 +424,142 @@ bool GatherV3Data::connect(double timeOut)
 
 void GatherV3Data::disconnect()
 {
-    Lock xx(pvt->mutex);
-    if(pvt->state==idle) return;
-    if(pvt->threadId!=epicsThreadGetIdSelf()) {
-        throw std::logic_error(
-            "GatherV3Data::disconnect must be same thread that called connect\n");
+    Lock xx(mutex);
+    if(state==idle) return;
+    state = destroying;
+    for(size_t i=0; i< numberChannel; i++) {
+        channel[i]->disconnect();
+        channel[i].reset();
     }
-    int numberChannels = pvt->numberChannels;
-    pvt->state = destroying;
-    for(int i=0; i< numberChannels; i++) {
-        chid theChid = pvt->apchannelID[i]->theChid;
-        ca_clear_channel(theChid);
-    }
-    ca_context_destroy();
-    pvt->state = idle;
+    epicsThreadSleep(1.0);
+    putPVStructure.clear();
+    putBitSet.clear();
+    state = idle;
 }
 
+bool GatherV3Data::createGet()
+{
+    if(state!=connected) {
+        throw std::logic_error("GatherV3Data::get illegal state\n");
+    }
+    state = creatingGet;
+    numberCallback = 0;
+    requestOK = true;
+    message = std::string();
+    event.tryWait();
+    for(size_t i=0; i< numberChannel; i++) {
+        channel[i]->createGet();
+    }
+    channelProvider->flush();
+    event.wait();
+    getCreated = true;
+    state = connected;
+    return requestOK;
+}
 
 bool GatherV3Data::get()
 {
-    if(pvt->state!=connected) {
+    if(state!=connected) {
         throw std::logic_error("GatherV3Data::get illegal state\n");
     }
-    if(pvt->threadId!=epicsThreadGetIdSelf()) {
-        throw std::logic_error(
-            "GatherV3Data::get must be same thread that called connect\n");
+    if(!getCreated) createGet();
+    state = getting;
+    numberCallback = 0;
+    requestOK = true;
+    message = std::string();
+    event.tryWait();
+    timeStamp.getCurrent();
+    alarm.setMessage("");
+    alarm.setSeverity(noAlarm);
+    alarm.setStatus(noStatus);
+    for(size_t i=0; i< numberChannel; i++) {
+        channel[i]->get();
     }
-    pvt->state = getting;
-    pvt->numberCallbacks = 0;
-    pvt->requestOK = true;
-    pvt->message = String();
-    pvt->event.tryWait();
-    pvt->timeStamp.getCurrent();
-    pvt->alarm.setMessage("");
-    pvt->alarm.setSeverity(noAlarm);
-    pvt->alarm.setStatus(noStatus);
-    for(int i=0; i< pvt->numberChannels; i++) {
-        pvt->getOne(i);
+    channelProvider->flush();
+    event.wait();
+    PVUnionArrayPtr pvValue = multiChannel->getValue();
+    PVBooleanArrayPtr pvIsConnected = multiChannel->getIsConnected();
+    PVLongArrayPtr pvSecondsPastEpoch = multiChannel->getSecondsPastEpoch();
+    PVIntArrayPtr pvNanoseconds = multiChannel->getNanoseconds();
+    PVIntArrayPtr pvUserTag = multiChannel->getUserTag();
+    PVIntArrayPtr pvSeverity = multiChannel->getSeverity();
+    PVIntArrayPtr pvStatus = multiChannel->getStatus();
+    PVStringArrayPtr pvMessage = multiChannel->getMessage();
+    shared_vector<PVUnionPtr> xvalue(numberChannel);
+    shared_vector<boolean> xisConnected(numberChannel);
+    shared_vector<int64> xsecondsPastEpoch(numberChannel);
+    shared_vector<int32> xnanoseconds(numberChannel);
+    shared_vector<int32> xuserTag(numberChannel);
+    shared_vector<int32> xalarmSeverity(numberChannel);
+    shared_vector<int32> xalarmStatus(numberChannel);
+    shared_vector<string> xalarmMessage(numberChannel);
+    for(size_t i=0; i< numberChannel; i++) {
+        xvalue[i] = pvDataCreate->createPVVariantUnion();
+        xvalue[i]->set(value[i]->get());
+        xisConnected[i] = isConnected[i];
+        xsecondsPastEpoch[i] = secondsPastEpoch[i];
+        xnanoseconds[i] = nanoseconds[i];
+        xuserTag[i] = userTag[i];
+        xalarmSeverity[i] = alarmSeverity[i];
+        xalarmStatus[i] = alarmStatus[i];
+        xalarmMessage[i] = alarmMessage[i];
     }
-    ca_flush_io();
-    bool result = false;
-    while(true) {
-        int oldNumber = pvt->numberCallbacks;
-        result = pvt->event.wait(1.0);
-        if(result) break;
-        if(pvt->numberCallbacks==oldNumber) break;
+    pvValue->replace(freeze(xvalue));
+    pvIsConnected->replace(freeze(xisConnected));
+    pvSecondsPastEpoch->replace(freeze(xsecondsPastEpoch));
+    pvNanoseconds->replace(freeze(xnanoseconds));
+    pvUserTag->replace(freeze(xuserTag));
+    pvSeverity->replace(freeze(xalarmSeverity));
+    pvStatus->replace(freeze(xalarmSeverity));
+    pvMessage->replace(freeze(xalarmMessage));
+    atLeastOneGet = true;
+    state = connected;
+    return requestOK;
+}
+
+bool GatherV3Data::createPut()
+{
+    if(state!=connected) {
+        throw std::logic_error("GatherV3Data::cretePut illegal state\n");
     }
-    if(!result) {
-        pvt->message += " timeout";
-        pvt->requestOK = false;
-        pvt->alarm.setMessage(pvt->message);
-        pvt->alarm.setSeverity(invalidAlarm);
-        pvt->alarm.setStatus(clientStatus);
+    if(!atLeastOneGet) get();
+    putPVStructure.resize(numberChannel);
+    putBitSet.resize(numberChannel);
+    state = creatingPut;
+    numberCallback = 0;
+    requestOK = true;
+    message = std::string();
+    event.tryWait();
+    for(size_t i=0; i< numberChannel; i++) {
+        channel[i]->createPut();
     }
-    int numberChannels = pvt->numberChannels;
-    boolean * isConnected = pvt->pvisConnected->get();
-    int64 * secondsPastEpoch = pvt->pvsecondsPastEpoch->get();
-    int32 * nanoSeconds = pvt->pvnanoSeconds->get();
-    int32 * alarmSeverity = pvt->pvalarmSeverity->get();
-    int32 * alarmStatus = pvt->pvalarmStatus->get();
-    String * alarmMessage = pvt->pvalarmMessage->get();
-    for(int i=0; i<numberChannels; i++) {
-        ChannelID *pID = pvt->apchannelID[i];
-        isConnected[i] = pID->getIsConnected;
-        // pID->stamp.secPastEpoch should be 0 if record is not processed yet.
-        // otherwise, use EPOCH time.
-        if (pID->stamp.secPastEpoch > posixEpochAtEpicsEpoch)
-            secondsPastEpoch[i] =
-                pID->stamp.secPastEpoch + posixEpochAtEpicsEpoch;
-        nanoSeconds[i] = pID->stamp.nsec;
-        alarmSeverity[i] = pID->severity;
-        alarmStatus[i] = pID->status;
-        alarmMessage[i] = String(epicsAlarmConditionStrings[pID->status]);
-        if(pvt->alarm.getSeverity()<pID->severity) {
-            pvt->alarm.setSeverity(static_cast<AlarmSeverity>(alarmSeverity[i]));
-            pvt->alarm.setStatus(static_cast<AlarmStatus>(alarmStatus[i]));
-            pvt->alarm.setMessage(alarmMessage[i]);
-        }
-    }
-    pvt->state = connected;
-    return pvt->requestOK;
+    channelProvider->flush();
+    event.wait();
+    putCreated = true;
+    state = connected;
+    return requestOK;
 }
 
 bool GatherV3Data::put()
 {
-    if(pvt->state!=connected) {
+    if(state!=connected) {
         throw std::logic_error("GatherV3Data::put illegal state\n");
     }
-    if(pvt->threadId!=epicsThreadGetIdSelf()) {
-        throw std::logic_error(
-            "GatherV3Data::put must be same thread that called connect\n");
+    if(!putCreated) createPut();
+    state = putting;
+    numberCallback = 0;
+    requestOK = true;
+    message = std::string();
+    event.tryWait();
+    for(size_t i=0; i< numberChannel; i++) {
+        channel[i]->put();
     }
-    pvt->state = putting;
-    pvt->numberCallbacks = 0;
-    pvt->requestOK = true;
-    pvt->message = String();
-    pvt->event.tryWait();
-    pvt->timeStamp.getCurrent();
-    pvt->alarm.setMessage("");
-    pvt->alarm.setSeverity(noAlarm);
-    pvt->alarm.setStatus(noStatus);
-    int64 * plvalue = pvt->pvlongValue->get();
-    double * pdvalue = pvt->pvdoubleValue->get();
-    String * psvalue = pvt->pvstringValue->get();
-    PVStructurePtr * parrayvalue = pvt->pvarrayValue->get();
-    boolean * isArray = pvt->pvisArray->get();
-    for(int i=0; i< pvt->numberChannels; i++) {
-        ChannelID *channelId = pvt->apchannelID[i];
-        chid theChid = channelId->theChid;
-        V3RequestType requestType = channelId->requestType;
-        unsigned long count = 1;
-        unsigned long sizebuf = 0;
-        char *buffer = 0;
-        const void *pdata = 0;
-        int req = 0;
-        if(isArray[i]) {
-            switch(requestType) {
-                case requestLong: {
-                    req = DBR_LONG;
-                    PVIntArrayPtr pvvalue = static_pointer_cast<PVIntArray>(
-                         parrayvalue[i]->getScalarArrayField("intValue",pvInt));
-                    count = pvvalue->getLength();
-                    pdata = pvvalue->get();
-                }
-                break;
-                case requestDouble: {
-                    req = DBR_DOUBLE;
-                    PVDoubleArrayPtr pvvalue = static_pointer_cast<PVDoubleArray>(
-                         parrayvalue[i]->getScalarArrayField("doubleValue",pvDouble));
-                    count = pvvalue->getLength();
-                    pdata = pvvalue->get();
-                }
-                break;
-                case requestString: {
-                    req = DBR_STRING;
-                    PVStringArrayPtr pvvalue = static_pointer_cast<PVStringArray>(
-                         parrayvalue[i]->getScalarArrayField("stringValue",pvString));
-                    int length = pvvalue->getLength();
-                    String * values = pvvalue->get();
-                    sizebuf = length*MAX_STRING_SIZE;
-                    count = length;
-                    buffer = new char[sizebuf];
-                    memset(buffer,0,sizebuf);
-                    pdata = buffer;
-                    char *p = buffer;
-                    for(int j=0; j< length; j++) {
-                        String value = values[j];
-                        const char *pfrom = value.c_str();
-                        int num = value.length();
-                        if(num>=MAX_STRING_SIZE) num = MAX_STRING_SIZE-1;
-                        memcpy(p,pfrom,num);
-                        p += MAX_STRING_SIZE;
-                    }
-                }
-                break;
-            default:
-                 printf(
-                     "%s warning gatherV3Data::put has unsupported type %d\n",
-                     ca_name(theChid),requestType);
-                    
-            }
-        } else {
-            switch(requestType) {
-            case requestLong:
-                req = DBR_LONG; pdata = &plvalue[i]; break;
-            case requestDouble:
-                req = DBR_DOUBLE; pdata = &pdvalue[i]; break;
-            case requestString:
-                req = DBR_STRING; pdata = psvalue[i].c_str();
-                break;
-            }
-        }
-        int result = ca_array_put_callback(
-            req,
-            count,
-            theChid,
-            pdata,
-            putCallback,
-            pvt->apchannelID[i]);
-        if(result!=ECA_NORMAL) {
-            messageCat(pvt,"ca_put_callback",result,i);
-            pvt->requestOK = false;
-        }
-        if(sizebuf>0) delete[] buffer;
-    }
-    ca_flush_io();
-    bool result = false;
-    while(true) {
-        int oldNumber = pvt->numberCallbacks;
-        result = pvt->event.wait(1.0);
-        if(result) break;
-        if(pvt->numberCallbacks==oldNumber) break;
-    }
-    if(!result) {
-        pvt->message += " timeout";
-        pvt->requestOK = false;
-        pvt->alarm.setMessage(pvt->message);
-        pvt->alarm.setSeverity(invalidAlarm);
-        pvt->alarm.setStatus(clientStatus);
-    }
-    pvt->state = connected;
-    return pvt->requestOK;
+    channelProvider->flush();
+    event.wait();
+    putCreated = true;
+    state = connected;
+    return requestOK;
+
 }
 
-String GatherV3Data::getMessage()
-{
-    return pvt->message;
-}
-
-PVStructurePtr GatherV3Data::getNTTableStructure()
-{
-    return pvt->pvStructure;
-}
-
-NTTablePtr  GatherV3Data::getNTTable(){
-    return pvt->nttable;
-}
-
-PVDoubleArrayPtr GatherV3Data::getDoubleValue()
-{
-    return pvt->pvdoubleValue;
-}
-
-PVLongArrayPtr GatherV3Data::getLongValue()
-{
-    return pvt->pvlongValue;
-}
-
-PVStringArrayPtr GatherV3Data::getStringValue()
-{
-    return pvt->pvstringValue;
-}
-
-PVStructureArrayPtr GatherV3Data::getArrayValue()
-{
-    return pvt->pvarrayValue;
-}
-
-PVLongArrayPtr GatherV3Data::getSecondsPastEpoch()
-{
-    return pvt->pvsecondsPastEpoch;
-}
-
-PVIntArrayPtr GatherV3Data::getNanoSeconds()
-{
-    return pvt->pvnanoSeconds;
-}
-
-PVIntArrayPtr GatherV3Data::getTimeStampTag()
-{
-    return pvt->pvtimeStampTag;
-}
-
-PVIntArrayPtr GatherV3Data::getAlarmSeverity()
-{
-    return pvt->pvalarmSeverity;
-}
-
-PVIntArrayPtr GatherV3Data::getAlarmStatus()
-{
-    return pvt->pvalarmStatus;
-}
-
-PVStringArrayPtr GatherV3Data::getAlarmMessage()
-{
-    return pvt->pvalarmMessage;
-}
-
-PVIntArrayPtr GatherV3Data::getDBRType()
-{
-    return pvt->pvDBRType;
-}
-
-PVBooleanArrayPtr GatherV3Data::getIsArray()
-{
-    return pvt->pvisArray;
-}
-
-PVBooleanArrayPtr GatherV3Data::getIsConnected()
-{
-    return pvt->pvisConnected;
-}
-
-PVStringArrayPtr GatherV3Data::getChannelName()
-{
-    return pvt->pvchannelName;
-}
-int GatherV3Data::getConnectedChannels()
-{
-    return pvt->numberConnected;
-}
 }}

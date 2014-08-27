@@ -2,111 +2,190 @@
 
 /* Author: Marty Kraimer */
 
-#include <epicsExit.h>
 
 #include <pv/gatherV3Data.h>
+#include <pv/clientFactory.h>
+#include <pv/caProvider.h>
 
 using namespace std;
 using namespace epics::pvData;
 using namespace epics::pvAccess;
+using namespace epics::masar;
+using namespace epics::nt;
 using std::tr1::static_pointer_cast;
-using std::cout;
-using std::endl;
 
 void test()
 {
-    int n = 11;
-    StringArray channelName(n);
-    channelName[0] = "masarExample0000";
-    channelName[1] = "masarExample0001";
-    channelName[2] = "masarExample0002";
-    channelName[3] = "masarExample0003";
-    channelName[4] = "masarExample0004";
-    channelName[5] = "masarExampleCharArray";
-    channelName[6] = "masarExampleStringArray";
-    channelName[7] = "masarExampleLongArray";
-    channelName[8] = "masarExampleDoubleArray";
-    channelName[9] = "masarExampleBoUninit";
-    channelName[10] = "masarExampleMbboUninit";
-    GatherV3DataPtr gather(new GatherV3Data(channelName,n));
+    size_t n = 11;
+n = 4;
+    shared_vector<string> names(n);
+names[0] = "masarExampleStringArray";
+names[1] = "masarExampleCharArray";
+names[2] = "masarExampleLongArray";
+names[3] = "masarExampleDoubleArray";
+//    names[0] = "masarExample0000";
+//    names[1] = "masarExample0001";
+//    names[2] = "masarExample0002";
+//    names[3] = "masarExample0003";
+//    names[4] = "masarExample0004";
+//    names[5] = "masarExampleCharArray";
+//    names[6] = "masarExampleStringArray";
+//    names[7] = "masarExampleLongArray";
+//    names[8] = "masarExampleDoubleArray";
+//    names[9] = "masarExampleBoUninit";
+//    names[10] = "masarExampleMbboUninit";
+    shared_vector<const string> channelName(freeze(names));
+    GatherV3DataPtr gather = GatherV3Data::create(channelName);
     bool result = gather->connect(5.0);
     if(!result) {
         cout << "connect failed " << gather->getMessage() << endl;
         cout << "This test requires iocBoot/iocAll. ";
         cout << "It must be started before running this test\n";
-        exit(1);
+        return;
     }
     result = gather->get();
     if(!result) {
         cout << "get problem " << gather->getMessage() << endl;
     }
-    NTTablePtr nttable = gather->getNTTable();
-    PVBooleanArrayPtr pvIsArray = static_pointer_cast<PVBooleanArray>
-            (nttable->getPVStructure()->getScalarArrayField("isArray",pvBoolean));
-    uint8 * isArray = pvIsArray->get();
-    double *dvalue = gather->getDoubleValue()->get();
-    String *svalue = gather->getStringValue()->get();
-    int64 * lvalue = gather->getLongValue()->get();
-    PVStructurePtr *structvalue = gather->getArrayValue()->get();
-    int32 * dbrType = gather->getDBRType()->get();
-    for(int i=0; i<n; i++) {
-        if(isArray[i]) {
-            PVStructurePtr pvStructure = structvalue[i];
-            switch(dbrType[i]) {
-            case DBF_STRING: {
-                PVStringArrayPtr pvValue = static_pointer_cast<PVStringArray>(
-                    pvStructure->getScalarArrayField("stringValue",pvString));
-                int num = 4;
-                String value[4];
+    NTMultiChannelPtr ntmultiChannel = gather->getNTMultiChannel();
+    PVUnionArrayPtr pvUnionArray = ntmultiChannel->getValue();
+    shared_vector<const PVUnionPtr> pvUnions = pvUnionArray->view();
+
+   for(size_t i=0; i<n; i++) {
+        const PVUnionPtr pvUnion = pvUnions[i];
+        PVFieldPtr pvField = pvUnion->get();
+        Type type = pvField->getField()->getType();
+        if(type==scalar) {
+             PVScalarPtr pvScalar = static_pointer_cast<PVScalar>(pvField);
+             ScalarType scalarType = pvScalar->getScalar()->getScalarType();
+             if(scalarType==pvString) {
+                 PVStringPtr pvValue = static_pointer_cast<PVString>(pvScalar);
+                 ostringstream oss;
+                 oss << "channel " << i;
+                 pvValue->put(oss.str());
+                 continue;
+             }
+             if(scalarType==pvByte) {
+                 PVBytePtr pvValue = static_pointer_cast<PVByte>(pvScalar);
+                 pvValue->put(i);
+                 continue;
+             }
+             if(scalarType==pvShort) {
+                 PVShortPtr pvValue = static_pointer_cast<PVShort>(pvScalar);
+                 pvValue->put(i);
+                 continue;
+             }
+             if(scalarType==pvInt) {
+                 PVIntPtr pvValue = static_pointer_cast<PVInt>(pvScalar);
+                 pvValue->put(i);
+                 continue;
+             }
+             if(scalarType==pvFloat) {
+                 PVFloatPtr pvValue = static_pointer_cast<PVFloat>(pvScalar);
+                 pvValue->put(i);
+                 continue;
+             }
+             if(scalarType==pvDouble) {
+                 PVDoublePtr pvValue = static_pointer_cast<PVDouble>(pvScalar);
+                 pvValue->put(i);
+                 continue;
+             }
+             cout << "got unexpected type\n";
+             exit(1);
+        }
+        if(type==scalarArray) {
+             PVScalarArrayPtr pvScalarArray = static_pointer_cast<PVScalarArray>(pvField);
+             ScalarType elementType = pvScalarArray->getScalarArray()->getElementType();
+             if(elementType==pvString) {
+                PVStringArrayPtr pvValue = static_pointer_cast<PVStringArray>(pvScalarArray);
+                size_t num = 4;
+                shared_vector<string> value(num);
                 value[0] = "aaa";
                 value[1] = "bbb";
                 value[2] = "ccc";
                 value[3] = "ddd";
-                pvValue->put(0,num,value,0);
-                break;
-            }
-            case DBF_CHAR:
-            case DBF_INT:
-            case DBF_LONG: {
-                PVIntArrayPtr pvValue = static_pointer_cast<PVIntArray>(
-                    pvStructure->getScalarArrayField("intValue",pvInt));
-                int num = 4;
-                int32 value[4] = {1,2,3,4};
-                pvValue->put(0,num,value,0);
-                 break;
-            }
-            case DBF_FLOAT:
-            case DBF_DOUBLE: {
-                PVDoubleArrayPtr pvValue = static_pointer_cast<PVDoubleArray>(
-                    pvStructure->getScalarArrayField("doubleValue",pvDouble));
-                int num = 4;
-                double value[4] = {1e1,1e2,1e3,1e4};
-                pvValue->put(0,num,value,0);
-                 break;
-            }
-            default:
-                cout << "got an unexpected DBF type. Logic error\n";
-                exit(1);
+                shared_vector<const string> xxx(freeze(value));
+                pvValue->replace(xxx);
+                continue;
+             }
+             if(elementType==pvByte) {
+                PVByteArrayPtr pvValue = static_pointer_cast<PVByteArray>(pvScalarArray);
+                size_t num = 4;
+                shared_vector<int8> value(num);
+                value[0] = 1;
+                value[1] = 2;
+                value[2] = 3;
+                value[3] = 4;
+                shared_vector<const int8> xxx(freeze(value));
+                pvValue->replace(xxx);
+                continue;
+             }
+             if(elementType==pvShort) {
+                PVShortArrayPtr pvValue = static_pointer_cast<PVShortArray>(pvScalarArray);
+                size_t num = 4;
+                shared_vector<int16> value(num);
+                value[0] = 1;
+                value[1] = 2;
+                value[2] = 3;
+                value[3] = 4;
+                shared_vector<const int16> xxx(freeze(value));
+                pvValue->replace(xxx);
+                continue;
+             } 
+             if(elementType==pvInt) {
+                PVIntArrayPtr pvValue = static_pointer_cast<PVIntArray>(pvScalarArray);
+                size_t num = 4;
+                shared_vector<int32> value(num);
+                value[0] = 1;
+                value[1] = 2;
+                value[2] = 3;
+                value[3] = 4;
+                shared_vector<const int32> xxx(freeze(value));
+                pvValue->replace(xxx);
+                continue;
+             } 
+             if(elementType==pvFloat) {
+                PVFloatArrayPtr pvValue = static_pointer_cast<PVFloatArray>(pvScalarArray);
+                size_t num = 4;
+                shared_vector<float> value(num);
+                value[0] = 1;
+                value[1] = 2;
+                value[2] = 3;
+                value[3] = 4;
+                shared_vector<const float> xxx(freeze(value));
+                pvValue->replace(xxx);
+                continue;
+             } 
+             if(elementType==pvDouble) {
+                PVDoubleArrayPtr pvValue = static_pointer_cast<PVDoubleArray>(pvScalarArray);
+                size_t num = 4;
+                shared_vector<double> value(num);
+                value[0] = 1;
+                value[1] = 2;
+                value[2] = 3;
+                value[3] = 4;
+                shared_vector<const double> xxx(freeze(value));
+                pvValue->replace(xxx);
+                continue;
+             } 
+             if(type==structure) {
+                 continue;
+             }
+             cout << "got unexpected type\n";
+             exit(1);
+        }
+        if(type==structure) {
+            PVStructurePtr pvTop = static_pointer_cast<PVStructure>(pvField);
+            PVIntPtr pvIndex = pvTop->getSubField<PVInt>("index");
+            if(!pvIndex) {
+                cout << "got unexpected " << *pvTop << endl;
+            } else {
+                pvIndex->put(1);
             }
             continue;
         }
-        switch(dbrType[i]) {
-        case DBF_STRING:
-             svalue[i] = String("this is set by gatherV3DataPut"); break;
-        case DBF_ENUM:
-             svalue[i] = String("one");
-             break;
-        case DBF_CHAR:
-        case DBF_INT:
-        case DBF_LONG:
-             lvalue[i] = i; break;
-        case DBF_FLOAT:
-        case DBF_DOUBLE:
-             dvalue[i] = i; break;
-        default:
-            cout << "got an unexpected DBF type. Logic error\n";
-            exit(1);
-        }
+        cout << "got unexpected type\n";
+        exit(1);
     }
     result = gather->put();
     if(!result) {
@@ -118,16 +197,15 @@ void test()
         cout << "get failed " << gather->getMessage() << endl;
         exit(1);
     }
-    cout << "nttable\n";
-    cout <<  nttable->getPVStructure()->dumpValue(cout) << endl;
+    cout << "ntmultiChannel\n";
+    cout <<  *ntmultiChannel->getPVStructure() << endl;
 }
 
 int main(int argc,char *argv[])
 {
+    ClientFactory::start();
+    ::epics::pvAccess::ca::CAClientFactory::start();
     test();
-    epicsThreadSleep(.5);
-    epicsExitCallAtExits();
-    epicsThreadSleep(1.0);
     return 0;
 }
 

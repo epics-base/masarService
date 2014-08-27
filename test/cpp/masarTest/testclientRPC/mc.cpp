@@ -3,6 +3,7 @@
 #include <pv/clientFactory.h>
 #include <pv/rpcClient.h>
 
+using namespace std;
 using namespace epics::pvData;
 using namespace epics::pvAccess;
 
@@ -13,12 +14,12 @@ class RequesterImpl : public Requester,
 {
 public:
 
-    virtual String getRequesterName()
+    virtual string getRequesterName()
     {
         return "RequesterImpl";
     };
 
-    virtual void message(String const & message,MessageType messageType)
+    virtual void message(string const & message,MessageType messageType)
     {
         std::cout << "[" << getRequesterName() << "] message(" << message << ", " << getMessageTypeName(messageType) << ")" << std::endl;
     }

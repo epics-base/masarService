@@ -2,78 +2,71 @@
 
 /* Author: Marty Kraimer */
 
-#include <epicsExit.h>
+#include <sstream>
 
 #include <pv/gatherV3Data.h>
+#include <pv/clientFactory.h>
+#include <pv/caProvider.h>
+
 
 using namespace std;
 using namespace epics::pvData;
 using namespace epics::pvAccess;
+using namespace epics::masar;
+using namespace epics::nt;
 
 void testGet(bool debug,GatherV3DataPtr gather)
 {
-    String builder;
-    NTTablePtr nttable = gather->getNTTable();
+    NTMultiChannelPtr ntmultiChannel = gather->getNTMultiChannel();
+    cout << "calling gather->get\n";
     bool result = gather->get();
-    if(!result) printf("get failed\n%s\n",gather->getMessage().c_str());
+    if(!result) cout << "get failed\n";
     if(debug) {
-        builder.clear();
-        nttable->getPVStructure()->toString(&builder);
-        printf("nttable\n%s\n",builder.c_str());
+        cout << *ntmultiChannel->getPVStructure() << endl;
     }
-    PVDoubleArrayPtr values = gather->getDoubleValue();
-    PVIntArrayPtr severitys = gather->getAlarmSeverity();
-    PVBooleanArrayPtr isConnecteds = gather->getIsConnected();
-    PVStringArrayPtr channelNames = gather->getChannelName();
+    PVUnionArrayPtr values = ntmultiChannel->getValue();
+    PVIntArrayPtr severitys = ntmultiChannel->getSeverity();
+    PVBooleanArrayPtr isConnecteds = ntmultiChannel->getIsConnected();
+    PVStringArrayPtr channelNames = ntmultiChannel->getChannelName();
     if(debug) {
-        builder.clear();
-        values->toString(&builder);
-        printf("value: %s\n",builder.c_str());
-        builder.clear();
-        severitys->toString(&builder);
-        printf("severity: %s\n",builder.c_str());
-        builder.clear();
-        isConnecteds->toString(&builder);
-        printf("isConnected: %s\n",builder.c_str());
-        builder.clear();
-        channelNames->toString(&builder);
-        printf("channelName: %s\n",builder.c_str());
+        cout << "value " << *values << endl;
+        cout << "severity " << *severitys << endl;
+        cout << "isConnected " << *isConnecteds << endl;
+        cout << "channelName " << *channelNames << endl;
     }
 }
 
 void testConnect(bool debug,GatherV3DataPtr gather)
 {
-    bool result = gather->connect(1.0);
+    cout << "calling gather->connect\n";
+    bool result = gather->connect(5.0);
     if(!result) {
-        printf("connect failed\n%s\n",gather->getMessage().c_str());
-        printf("This test requires the test V3 database"
-           " of the gather service.\n"); 
-        printf("It must be started before running"
-           " this test\n");
+        cout << "connect failed " << gather->getMessage() << endl;
+        cout << "This test requires the test V3 database"
+           " of the gather service.\n"; 
+        cout << "It must be started before running this test\n";
     }
     testGet(debug,gather);
     testGet(debug,gather);
+    cout << "calling gather->disconnect\n";
     gather->disconnect();
 }
 
 void test(bool debug, size_t count)
 {
-    String builder;
-    int n = 1000;
+    size_t n = 1000;
     if(debug) n = count;
-    StringArray channelName(n);
+    shared_vector<string> names(n);
     char name[40];
-    for(int i=0; i<n; i++) {
-        sprintf(name,"masarExample%4.4d",i);
-        channelName[i] = String(name);
+    for(size_t i=0; i<n; i++) {
+        sprintf(name,"masarExample%4.4d",(int)i);
+        names[i] = string(name);
     }
-
-    GatherV3DataPtr gather(new GatherV3Data(channelName,n));
-    NTTablePtr nttable = gather->getNTTable();
+    shared_vector<const string> channelName(freeze(names));
+    GatherV3DataPtr gather = GatherV3Data::create(channelName);
+    NTMultiChannelPtr ntmultiChannel = gather->getNTMultiChannel();
     if(debug) {
-        builder.clear();
-        nttable->getPVStructure()->toString(&builder);
-        printf("nttable initial\n%s\n",builder.c_str());
+        cout << *ntmultiChannel->getPVStructure() << endl;
     }
     testConnect(debug,gather);
     testConnect(debug,gather);
@@ -81,11 +74,13 @@ void test(bool debug, size_t count)
 
 int main(int argc,char *argv[])
 {
+    ClientFactory::start();
+    ::epics::pvAccess::ca::CAClientFactory::start();
     bool debug = false;
     if(argc>1) {
         char * arg = argv[1];
         if(strcmp(arg,"debug")==0) {
-           printf("debug is true\n");
+           cout << "debug is true\n";
            debug = true;
         }
     }
@@ -94,8 +89,6 @@ int main(int argc,char *argv[])
         n = atoi(argv[2]);
     }
     test(debug, n);
-    epicsExitCallAtExits();
-    epicsThreadSleep(1.0);
     return(0);
 }
 
