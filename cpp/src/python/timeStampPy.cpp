@@ -16,7 +16,10 @@
 #include <pv/pvTimeStamp.h>
 #include <stdexcept>
 
-namespace epics { namespace pvData {
+namespace epics { namespace masar {
+
+using namespace epics::pvData;
+using namespace std;
 
 class TimeStampPvt {
 public:
@@ -74,6 +77,34 @@ static PyObject * _destroy(PyObject *willBeNull, PyObject *args)
     Py_INCREF(Py_None);
     return Py_None;
 }
+
+static PyObject * _str(PyObject *willBeNull, PyObject *args)
+{
+    PyObject *pcapsule = 0;
+    if(!PyArg_ParseTuple(args,"O:timeStampPy",
+        &pcapsule))
+    {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt)");
+        return NULL;
+    }
+    void *pvoid = PyCapsule_GetPointer(pcapsule,"timeStampPvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
+    TimeStampPvt *pvt = static_cast<TimeStampPvt *>(pvoid);
+    char buffer[256];
+    int64 seconds = pvt->timeStamp.getSecondsPastEpoch();
+    int32 nano = pvt->timeStamp.getNanoseconds();
+    int32 userTag = pvt->timeStamp.getUserTag();
+
+    sprintf(buffer,"secondsPastEpoch %li severity %i userTag %i",
+        seconds,nano,userTag);
+    return Py_BuildValue("s",buffer);
+}
+
 
 static PyObject * _getTimeStampPy(PyObject *willBeNull, PyObject *args)
 {
@@ -207,6 +238,7 @@ static PyObject * _getUserTag(PyObject *willBeNull, PyObject *args)
 
 static char _initDoc[] = "_init timeStampPy.";
 static char _destroyDoc[] = "_destroy timeStampPy.";
+static char _strDoc[] = "_str timeStampPy.";
 static char _getTimeStampDoc[] = "_getTimeStampPy timeStampPy.";
 static char _getSecondsDoc[] = "_getSeconds timeStampPy.";
 static char _setSecondsDoc[] = "_setSeconds timeStampPy.";
@@ -217,6 +249,7 @@ static char _getUserTagDoc[] = "_getUserTag timeStampPy.";
 static PyMethodDef methods[] = {
     {"_init",_init,METH_VARARGS,_initDoc},
     {"_destroy",_destroy,METH_VARARGS,_destroyDoc},
+    {"_str",_str,METH_VARARGS,_strDoc},
     {"_getTimeStampPy",_getTimeStampPy,METH_VARARGS,_getTimeStampDoc},
     {"_getSeconds",_getSeconds,METH_VARARGS,_getSecondsDoc},
     {"_setSeconds",_setSeconds,METH_VARARGS,_setSecondsDoc},

@@ -8,9 +8,10 @@
 
 #undef _POSIX_C_SOURCE
 #undef _XOPEN_SOURCE
+#include <Python.h>
+
 #include <iostream>
 #include <stdexcept>
-#include <Python.h>
 
 #include <epicsExit.h>
 
@@ -19,38 +20,30 @@
 #include <pv/pvAccess.h>
 #include <pv/clientFactory.h>
 
+namespace epics { namespace masar {
+
 using namespace epics::pvData;
+using namespace epics::pvAccess;
 using namespace std;
 
-namespace epics { namespace pvAccess {
 
+typedef std::tr1::shared_ptr<RPCClient> RPCClientPtr;
 class ChannelRPCPyPvt {
 public:
-    ChannelRPCPyPvt(const char *channelName);
-    ChannelRPCPyPvt(
-        const char *channelName,
-        PVStructure::shared_pointer pvRequest);
+    ChannelRPCPyPvt(string const &serviceName);
     ~ChannelRPCPyPvt();
     void destroy();
-    RPCClientPtr const & getChannelRPC(){
+    RPCClientPtr getChannelRPC(){
         return channelRPC;
     }
-    PVStructure::shared_pointer pvResponse;
+    PVStructurePtr pvResponse;
 private:
     RPCClientPtr channelRPC;
 };
 
 ChannelRPCPyPvt::ChannelRPCPyPvt(
-    const char *channelName)
-: channelRPC(RPCClient::create(channelName,PVStructurePtr()))
-{
-     ClientFactory::start();
-}
-
-ChannelRPCPyPvt::ChannelRPCPyPvt(
-    const char *channelName,
-    PVStructurePtr pvRequest)
-: channelRPC(RPCClient::create(channelName,pvRequest))
+    string const &channelName)
+: channelRPC(RPCClient::create(channelName))
 {
      ClientFactory::start();
 }
@@ -66,23 +59,7 @@ void ChannelRPCPyPvt::destroy()
    channelRPC.reset();
 }
 
-class RequesterImpl : public Requester,
-     public std::tr1::enable_shared_from_this<RequesterImpl>
-{
-public:
-
-    virtual string getRequesterName()
-    {
-        return "RequesterImpl";
-    };
-
-    virtual void message(string const & message,MessageType messageType)
-    {
-        std::cout << "[" << getRequesterName() << "] message(" << message << ", " << getMessageTypeName(messageType) << ")" << std::endl;
-    }
-};
-
-static PyObject * _init1(PyObject *willBeNull, PyObject *args)
+static PyObject * _init(PyObject *willBeNull, PyObject *args)
 {
     const char *serverName = 0;
     if(!PyArg_ParseTuple(args,"s:channelRPCPy",
@@ -97,27 +74,6 @@ static PyObject * _init1(PyObject *willBeNull, PyObject *args)
     return pyObject;
 }
 
-static PyObject * _init2(PyObject *willBeNull, PyObject *args)
-{
-    const char *serverName = 0;
-    const char *request = 0;
-    if(!PyArg_ParseTuple(args,"ss:channelRPCPy",
-        &serverName,
-        &request))
-    {
-        PyErr_SetString(PyExc_SyntaxError,
-           "Bad argument. Expected (serverName,request)");
-        return NULL;
-    }
-    Requester::shared_pointer requester(new RequesterImpl());
-//    CreateRequest::shared_pointer createRequest = getCreateRequest();
-    PVStructure::shared_pointer pvRequest =
-         getCreateRequest()->createRequest(request, requester);
-
-    ChannelRPCPyPvt *pvt = new ChannelRPCPyPvt(serverName,pvRequest);
-    PyObject *pyObject = PyCapsule_New(pvt,"channelRPCPyPvt",0);
-    return pyObject;
-}
 
 static PyObject * _destroy(PyObject *willBeNull, PyObject *args)
 {
@@ -301,7 +257,7 @@ static PyObject * _issueRequest(PyObject *willBeNull, PyObject *args)
     return Py_None;
 }
 
-static PyObject * _waitRequest(PyObject *willBeNull, PyObject *args)
+static PyObject * _waitResponse(PyObject *willBeNull, PyObject *args)
 {
     PyObject *pcapsule = 0;
     if(!PyArg_ParseTuple(args,"O:channelRPCPy",
@@ -320,7 +276,7 @@ static PyObject * _waitRequest(PyObject *willBeNull, PyObject *args)
     ChannelRPCPyPvt *pvt = static_cast<ChannelRPCPyPvt *>(pvoid);
     RPCClientPtr const & channelRPC = pvt->getChannelRPC();
     Py_BEGIN_ALLOW_THREADS
-        pvt->pvResponse = channelRPC->waitRequest();
+        pvt->pvResponse = channelRPC->waitResponse();
     Py_END_ALLOW_THREADS
     if(pvt->pvResponse.get()==0) {
         //ExceptionMixin ss(__FILE__, __LINE__);
@@ -333,67 +289,24 @@ static PyObject * _waitRequest(PyObject *willBeNull, PyObject *args)
     return pyObject;
 }
 
-static PyObject * _getMessage(PyObject *willBeNull, PyObject *args)
-{
-    PyObject *pcapsule = 0;
-    if(!PyArg_ParseTuple(args,"O:channelRPCPy",
-        &pcapsule))
-    {
-        PyErr_SetString(PyExc_SyntaxError,
-           "Bad argument. Expected (pvt)");
-        return NULL;
-    }
-    void *pvoid = PyCapsule_GetPointer(pcapsule,"channelRPCPyPvt");
-    if(pvoid==0) {
-        PyErr_SetString(PyExc_SyntaxError,
-           "first arg must be return from _init");
-        return NULL;
-    }
-    ChannelRPCPyPvt *pvt = static_cast<ChannelRPCPyPvt *>(pvoid);
-    RPCClientPtr const & channelRPC = pvt->getChannelRPC();
-    String message;
-    Py_BEGIN_ALLOW_THREADS
-        message = channelRPC->getMessage();
-    Py_END_ALLOW_THREADS
-    PyObject *pyObject = Py_BuildValue("s",message.c_str());
-    return pyObject;
-}
-
-static PyObject * _epicsExitCallAtExits(PyObject *willBeNull, PyObject *args)
-{
-    Py_BEGIN_ALLOW_THREADS
-        //Would it be better to call epicsExit() since epicsExitCallAtExits()
-        // is called inside epicsExit()
-        epicsExitCallAtExits();
-    Py_END_ALLOW_THREADS
-    Py_INCREF(Py_None);
-    return Py_None;
-}
-
-static char _init1Doc[] = "_init1 channelRPCPy.";
-static char _init2Doc[] = "_init2 channelRPCPy.";
+static char _initDoc[] = "_init1 channelRPCPy.";
 static char _destroyDoc[] = "_destroy channelRPCPy.";
 static char _connectDoc[] = "_connect.";
 static char _issueConnectDoc[] = "_issueConnect.";
 static char _waitConnectDoc[] = "_waitConnect(timeout).";
 static char _requestDoc[] = "_request.";
 static char _issueRequestDoc[] = "_issueRequest.";
-static char _waitRequestDoc[] = "_waitRequest.";
-static char _getMessageDoc[] = "_getMessage.";
-static char _epicsExitCallAtExitsDoc[] = "_epicsExitCallAtExits.";
+static char _waitResponseDoc[] = "_waitResponse.";
 
 static PyMethodDef methods[] = {
-    {"_init1",_init1,METH_VARARGS,_init1Doc},
-    {"_init2",_init2,METH_VARARGS,_init2Doc},
+    {"_init",_init,METH_VARARGS,_initDoc},
     {"_destroy",_destroy,METH_VARARGS,_destroyDoc},
     {"_connect",_connect,METH_VARARGS,_connectDoc},
     {"_issueConnect",_issueConnect,METH_VARARGS,_issueConnectDoc},
     {"_waitConnect",_waitConnect,METH_VARARGS,_waitConnectDoc},
     {"_request",_request,METH_VARARGS,_requestDoc},
     {"_issueRequest",_issueRequest,METH_VARARGS,_issueRequestDoc},
-    {"_waitRequest",_waitRequest,METH_VARARGS,_waitRequestDoc},
-    {"_getMessage",_getMessage,METH_VARARGS,_getMessageDoc},
-    {"_epicsExitCallAtExits",_epicsExitCallAtExits,METH_VARARGS,_epicsExitCallAtExitsDoc},
+    {"_waitResponse",_waitResponse,METH_VARARGS,_waitResponseDoc},
     {NULL,NULL,0,NULL}
 };
 

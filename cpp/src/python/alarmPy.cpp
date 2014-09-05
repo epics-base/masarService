@@ -16,8 +16,9 @@
 #include <pv/pvAlarm.h>
 #include <stdexcept>
 
-namespace epics { namespace pvData {
+namespace epics { namespace masar {
 
+using namespace epics::pvData;
 using namespace std;
 
 class AlarmPvt {

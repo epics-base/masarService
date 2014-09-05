@@ -10,13 +10,18 @@
 #undef _XOPEN_SOURCE
 #include <Python.h>
 
+#include <sstream>
 
 #include <pv/nt.h>
 #include <stdexcept>
 
-using namespace epics::pvData;
+namespace epics { namespace masar {
 
-namespace epics { namespace pvAccess {
+using namespace epics::pvData;
+using namespace epics::nt;
+using namespace std;
+
+static FieldCreatePtr fieldCreate = getFieldCreate();
 
 class NTNameValuePvt {
 public:
@@ -65,26 +70,35 @@ static PyObject * _init(PyObject *willbenull, PyObject *args)
         return NULL;
     }
     Py_ssize_t n = PyDict_Size(dict);
-    String names[n];
-    String values[n];
+    shared_vector<string> names(n);
+    shared_vector<string> values(n);
     PyObject *pkey, *pvalue;
     Py_ssize_t pos = 0;
     for(Py_ssize_t i=0; i< n; i++) {
         PyDict_Next(dict,&pos, &pkey, &pvalue);
         char *key = PyString_AS_STRING(pkey);
         char *val = PyString_AS_STRING(pvalue);
-        names[i] = String(key);
-        values[i] = String(val);
+        names[i] = string(key);
+        values[i] = string(val);
     }
 
-    NTNameValuePtr ntnamevalue = NTNameValue::create(true,false,false);
+    FieldConstPtr field = fieldCreate->createScalar(pvString);
+    NTNameValueBuilderPtr builder = NTNameValue::createBuilder();
+    NTNameValuePtr ntnamevalue = builder ->
+         value(pvString) ->
+         addDescriptor() ->
+         addTimeStamp() ->
+         addAlarm() ->
+         create();
     PVStructurePtr pv = ntnamevalue->getPVStructure();
-    PVStringPtr pvfunction = ntnamevalue->getFunction();
-    PVStringArrayPtr pvnames = ntnamevalue->getNames();
-    PVStringArrayPtr pvvalues = ntnamevalue->getValues();
-    pvnames->put(0,n,names,0);
-    pvvalues->put(0,n,values,0);
+    PVStringArrayPtr pvnames = pv->getSubField<PVStringArray>("names");
+    PVStringArrayPtr pvvalues = pv->getSubField<PVStringArray>("values");
+    PVStringPtr pvfunction = ntnamevalue->getDescriptor();
     pvfunction->put(function);
+    shared_vector<const string> nn(freeze(names));
+    pvnames->replace(nn);
+    shared_vector<const string> vv(freeze(values));
+    pvvalues->replace(vv);
     NTNameValuePvt *pvt = new NTNameValuePvt(ntnamevalue,pv);
     return PyCapsule_New(pvt,"ntnameValuePvt",0);
 }
@@ -130,9 +144,10 @@ static PyObject * _str(PyObject *willBeNull, PyObject *args)
         return NULL;
     }
     NTNameValuePvt *pvt = static_cast<NTNameValuePvt *>(pvoid);
-    String buffer;
-    pvt->ntnameValue->getPVStructure()->toString(&buffer);
-    return Py_BuildValue("s",buffer.c_str());
+
+    std::stringstream buffer;
+    buffer << *(pvt->ntnameValue->getPVStructure());
+    return Py_BuildValue("s",buffer.str().c_str());
 
 }
 
@@ -154,6 +169,28 @@ static PyObject * _getNTNameValuePy(PyObject *willBeNull, PyObject *args)
     }
     NTNameValuePvt *pvt = static_cast<NTNameValuePvt *>(pvoid);
     return pvt->get();
+}
+
+static PyObject * _getFunction(PyObject *willBeNull, PyObject *args)
+{
+    PyObject *pcapsule = 0;
+    if(!PyArg_ParseTuple(args,"O:ntnameValuePy",
+        &pcapsule))
+    {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt)");
+        return NULL;
+    }
+    void *pvoid = PyCapsule_GetPointer(pcapsule,"ntnameValuePvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
+    NTNameValuePvt *pvt = static_cast<NTNameValuePvt *>(pvoid);
+    PVStringPtr pvString = pvt->ntnameValue->getDescriptor();
+    string message = pvString->get();
+    return Py_BuildValue("s",message.c_str());
 }
 
 static PyObject * _getTimeStamp(PyObject *willBeNull, PyObject *args)
@@ -235,13 +272,13 @@ static PyObject * _getNames(PyObject *willBeNull, PyObject *args)
         return NULL;
     }
     NTNameValuePvt *pvt = static_cast<NTNameValuePvt *>(pvoid);
-    PVStringArrayPtr pvNames = pvt->ntnameValue->getNames();
-    StringArrayData stringArrayData;
-    int num = pvNames->get(0,pvNames->getLength(), stringArrayData);
-    StringArray & data = stringArrayData.data;
+    PVStructurePtr pvStructure = pvt->ntnameValue->getPVStructure();
+    PVStringArrayPtr pvNames = pvStructure->getSubField<PVStringArray>("names");
+    const shared_vector<const string> names(pvNames->view());
+    size_t num = names.size();
     PyObject *result = PyTuple_New(num);
-    for(int i=0; i<num; i++) {
-        PyObject *elem = Py_BuildValue("s",data[i].c_str());
+    for(size_t i=0; i<num; i++) {
+        PyObject *elem = Py_BuildValue("s",names[i].c_str());
         PyTuple_SetItem(result, i, elem);
     }
     return result;
@@ -264,13 +301,13 @@ static PyObject * _getValues(PyObject *willBeNull, PyObject *args)
         return NULL;
     }
     NTNameValuePvt *pvt = static_cast<NTNameValuePvt *>(pvoid);
-    PVStringArrayPtr pvValues = pvt->ntnameValue->getValues();
-    StringArrayData stringArrayData;
-    int num = pvValues->get(0,pvValues->getLength(), stringArrayData);
-    StringArray & data = stringArrayData.data;
+    PVStructurePtr pvStructure = pvt->ntnameValue->getPVStructure();
+    PVStringArrayPtr pvValues = pvStructure->getSubField<PVStringArray>("values");
+    const shared_vector<const string> values(pvValues->view());
+    size_t num = values.size();
     PyObject *result = PyTuple_New(num);
-    for(int i=0; i<num; i++) {
-        PyObject *elem = Py_BuildValue("s",data[i].c_str());
+    for(size_t i=0; i<num; i++) {
+        PyObject *elem = Py_BuildValue("s",values[i].c_str());
         PyTuple_SetItem(result, i, elem);
     }
     return result;
@@ -280,6 +317,7 @@ static char _initDoc[] = "_init ntnamevaluePy.";
 static char _destroyDoc[] = "_destroy ntnamevaluePy.";
 static char _strDoc[] = "_str ntnamevaluePy.";
 static char _getNTNameValuePyDoc[] = "_getNTNameValuePy ntnamevaluePy.";
+static char _getFunctionDoc[] = "_getFunction ntnamevaluePy.";
 static char _getTimeStampDoc[] = "_getTimeStamp ntnamevaluePy.";
 static char _getAlarmDoc[] = "_getAlarm ntnamevaluePy.";
 static char _getNamesDoc[] = "_getNames ntnamevaluePy.";
@@ -289,8 +327,9 @@ static char _getValuesDoc[] = "_getValues ntnamevaluePy.";
 static PyMethodDef methods[] = {
     {"_init",_init,METH_VARARGS,_initDoc},
     {"_destroy",_destroy,METH_VARARGS,_destroyDoc},
-    {"__str__",_str,METH_VARARGS,_strDoc},
+    {"_str",_str,METH_VARARGS,_strDoc},
     {"_getNTNameValuePy",_getNTNameValuePy,METH_VARARGS,_getNTNameValuePyDoc},
+    {"_getFunction",_getFunction,METH_VARARGS,_getFunctionDoc},
     {"_getTimeStamp",_getTimeStamp,METH_VARARGS,_getTimeStampDoc},
     {"_getAlarm",_getAlarm,METH_VARARGS,_getAlarmDoc},
     {"_getNames",_getNames,METH_VARARGS,_getNamesDoc},

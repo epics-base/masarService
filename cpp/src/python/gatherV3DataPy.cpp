@@ -13,25 +13,27 @@
 #include <pv/gatherV3Data.h>
 #include <stdexcept>
 
-using namespace epics::pvData;
+namespace epics { namespace masar {
 
-namespace epics { namespace pvAccess {
+using namespace epics::pvData;
+using namespace epics::nt;
+using namespace std;
+typedef std::tr1::shared_ptr<NTMultiChannel> NTMultiChannelPtr;
 
 class GatherV3DataPyPvt {
 public:
     GatherV3DataPyPvt(
-        StringArray const & channelNames,int numberChannels);
+        shared_vector<const std::string> const & channelNames);
     ~GatherV3DataPyPvt();
 public:
     GatherV3DataPtr gatherV3Data;
-    NTTablePtr nttable;
-    PVStructurePtr nttableStructure;
+    NTMultiChannelPtr ntmultiChannel;
+    PVStructurePtr ntmultiChannelStructure;
 };
 
 GatherV3DataPyPvt::GatherV3DataPyPvt(
-    StringArray const & channelNames, int numberChannels)
-
-: gatherV3Data(new GatherV3Data(channelNames,numberChannels))
+    shared_vector<const std::string> const & channelNames)
+: gatherV3Data(GatherV3Data::create(channelNames))
 {
 }
 
@@ -56,7 +58,7 @@ static PyObject * _init(PyObject *willBeNull, PyObject *args)
         return NULL;
     }
     Py_ssize_t num = PyTuple_GET_SIZE(pytuple);
-    StringArray names(num);
+    shared_vector<string> names(num);
     for(Py_ssize_t i=0; i<num; i++) {
         PyObject *pyobject = PyTuple_GetItem(pytuple,i);
         if(pyobject==NULL) {
@@ -70,9 +72,10 @@ static PyObject * _init(PyObject *willBeNull, PyObject *args)
                "a channelName is not a string");
             return NULL;
         }
-        names[i] = String(sval);
+        names[i] = string(sval);
     }
-    GatherV3DataPyPvt *pvt = new GatherV3DataPyPvt(names,num);
+    shared_vector<const string> name(freeze(names));
+    GatherV3DataPyPvt *pvt = new GatherV3DataPyPvt(name);
     return PyCapsule_New(pvt,"gatherV3DataPy",0);
 }
 
@@ -229,12 +232,12 @@ static PyObject * _getMessage(PyObject *willBeNull, PyObject *args)
         return NULL;
     }
     GatherV3DataPyPvt *pvt = static_cast<GatherV3DataPyPvt *>(pvoid);
-    String message = pvt->gatherV3Data->getMessage();
+    string message = pvt->gatherV3Data->getMessage();
     PyObject *pyObject = Py_BuildValue("s",message.c_str());
     return pyObject;
 }
 
-static PyObject * _getNTtable(PyObject *willBeNull, PyObject *args)
+static PyObject * _getNTMultiChannel(PyObject *willBeNull, PyObject *args)
 {
     PyObject *pcapsule = 0;
     if(!PyArg_ParseTuple(args,"O:gatherV3DataPy",
@@ -249,8 +252,8 @@ static PyObject * _getNTtable(PyObject *willBeNull, PyObject *args)
         return NULL;
     }
     GatherV3DataPyPvt *pvt = static_cast<GatherV3DataPyPvt *>(pvoid);
-    pvt->nttable = pvt->gatherV3Data->getNTTable();
-    return PyCapsule_New(&pvt->nttable,"pvStructure",0);
+    pvt->ntmultiChannel = pvt->gatherV3Data->getNTMultiChannel();
+    return PyCapsule_New(&pvt->ntmultiChannel,"pvStructure",0);
 }
 
 static char _initDoc[] = "_init gatherV3DataPy.";
@@ -260,7 +263,7 @@ static char _disconnectDoc[] = "_disconnect.";
 static char _getDoc[] = "_get.";
 static char _putDoc[] = "_put.";
 static char _getMessageDoc[] = "_getMessage.";
-static char _getNTtableDoc[] = "_getNTtable.";
+static char _getNTMultiChannelDoc[] = "_getNTMultiChannel.";
 
 static PyMethodDef methods[] = {
     {"_init",_init,METH_VARARGS,_initDoc},
@@ -270,7 +273,7 @@ static PyMethodDef methods[] = {
     {"_get",_get,METH_VARARGS,_getDoc},
     {"_put",_put,METH_VARARGS,_putDoc},
     {"_getMessage",_getMessage,METH_VARARGS,_getMessageDoc},
-    {"_getNTTable",_getNTtable,METH_VARARGS,_getNTtableDoc},
+    {"_getNTMultiChannel",_getNTMultiChannel,METH_VARARGS,_getNTMultiChannelDoc},
     {NULL,NULL,0,NULL}
 };
 
