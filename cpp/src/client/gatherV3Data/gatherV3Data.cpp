@@ -52,17 +52,17 @@ GatherV3DataChannel::GatherV3DataChannel(
   offset(offset),
   beingDestroyed(false)
 {
-cout << "GatherV3DataChannel::GatherV3DataChannel\n";
+//cout << "GatherV3DataChannel::GatherV3DataChannel\n";
 }
 
 GatherV3DataChannel::~GatherV3DataChannel()
 {
-cout << "GatherV3DataChannel::~GatherV3DataChannel\n";
+//cout << "GatherV3DataChannel::~GatherV3DataChannel\n";
 }
 
 void GatherV3DataChannel::destroy()
 {
-cout << "GatherV3DataChannel::destroy\n";
+//cout << "GatherV3DataChannel::destroy\n";
    { 
         Lock xx(gatherV3Data->mutex);
         if(beingDestroyed) return;
@@ -328,7 +328,7 @@ GatherV3Data::GatherV3Data(
 
 void GatherV3Data::init()
 {
-cout << "GatherV3Data::init\n";
+//cout << "GatherV3Data::init\n";
 ChannelProvider::shared_pointer  xxx = getChannelProviderRegistry()->getProvider("ca");
     CreateRequest::shared_pointer createRequest = CreateRequest::create();
     pvGetRequest = createRequest->createRequest("value,alarm,timeStamp");
