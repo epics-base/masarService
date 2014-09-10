@@ -97,8 +97,10 @@ static PyObject * _destroy(PyObject *willBeNull, PyObject *args)
         return NULL;
     }
     GatherV3DataPyPvt *pvt = static_cast<GatherV3DataPyPvt *>(pvoid);
+    GatherV3DataPtr const & gatherV3Data = pvt->gatherV3Data;
     Py_BEGIN_ALLOW_THREADS
-         delete pvt;
+        gatherV3Data->destroy();
+        delete pvt;
     Py_END_ALLOW_THREADS
     Py_RETURN_NONE;
 }
@@ -132,32 +134,6 @@ static PyObject * _connect(PyObject *willBeNull, PyObject *args)
     }
     Py_RETURN_FALSE;
 }
-
-static PyObject * _disconnect(PyObject *willBeNull, PyObject *args)
-{
-    PyObject *pcapsule = 0;
-    if(!PyArg_ParseTuple(args,"O:gatherV3DataPy",
-        &pcapsule))
-    {
-        PyErr_SetString(PyExc_SyntaxError,
-           "Bad argument. Expected (pvt)");
-        return NULL;
-    }
-    void *pvoid = PyCapsule_GetPointer(pcapsule,"gatherV3DataPy");
-    if(pvoid==0) {
-        PyErr_SetString(PyExc_SyntaxError,
-           "first arg must be return from _init");
-        return NULL;
-    }
-    GatherV3DataPyPvt *pvt = static_cast<GatherV3DataPyPvt *>(pvoid);
-    GatherV3DataPtr const & gatherV3Data = pvt->gatherV3Data;
-    Py_BEGIN_ALLOW_THREADS
-        gatherV3Data->disconnect();
-    Py_END_ALLOW_THREADS
-    Py_INCREF(Py_None);
-    return Py_None;
-}
-
 
 static PyObject * _get(PyObject *willBeNull, PyObject *args)
 {
@@ -259,7 +235,6 @@ static PyObject * _getNTMultiChannel(PyObject *willBeNull, PyObject *args)
 static char _initDoc[] = "_init gatherV3DataPy.";
 static char _destroyDoc[] = "_destroy gatherV3DataPy.";
 static char _connectDoc[] = "_connect.";
-static char _disconnectDoc[] = "_disconnect.";
 static char _getDoc[] = "_get.";
 static char _putDoc[] = "_put.";
 static char _getMessageDoc[] = "_getMessage.";
@@ -269,7 +244,6 @@ static PyMethodDef methods[] = {
     {"_init",_init,METH_VARARGS,_initDoc},
     {"_destroy",_destroy,METH_VARARGS,_destroyDoc},
     {"_connect",_connect,METH_VARARGS,_connectDoc},
-    {"_disconnect",_disconnect,METH_VARARGS,_disconnectDoc},
     {"_get",_get,METH_VARARGS,_getDoc},
     {"_put",_put,METH_VARARGS,_putDoc},
     {"_getMessage",_getMessage,METH_VARARGS,_getMessageDoc},

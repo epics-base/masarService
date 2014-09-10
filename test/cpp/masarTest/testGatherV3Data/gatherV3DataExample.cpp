@@ -32,7 +32,8 @@ NTMultiChannelPtr getLiveMachine(
     NTMultiChannelPtr ntmultiChannel = gather->getNTMultiChannel();
     cout << *ntmultiChannel->getPVStructure() << endl;
 
-    cout << *ntmultiChannel->getIsConnected() << endl;
+    cout << "isConnected " << *ntmultiChannel->getIsConnected() << endl;
+    gather->destroy();
     return ntmultiChannel;
 }
 
@@ -56,7 +57,7 @@ void test()
     shared_vector<const string> xxx(freeze(channelName));
 
     NTMultiChannelPtr pvt = getLiveMachine(xxx);
-    cout << *pvt->getIsConnected();
+    pvt = getLiveMachine(xxx);
 }
 
 int main(int argc,char *argv[])
@@ -64,6 +65,8 @@ int main(int argc,char *argv[])
     ClientFactory::start();
     ::epics::pvAccess::ca::CAClientFactory::start();
     test();
+    ::epics::pvAccess::ca::CAClientFactory::stop();
+    ClientFactory::stop();
     return 0;
 }
 

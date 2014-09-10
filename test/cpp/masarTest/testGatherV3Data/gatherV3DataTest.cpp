@@ -48,8 +48,8 @@ void testConnect(bool debug,GatherV3DataPtr gather)
     }
     testGet(debug,gather);
     testGet(debug,gather);
-    cout << "calling gather->disconnect\n";
-    gather->disconnect();
+    cout << "calling gather->destroy\n";
+    gather->destroy();
 }
 
 void test(bool debug, size_t count)
@@ -68,7 +68,6 @@ void test(bool debug, size_t count)
     if(debug) {
         cout << *ntmultiChannel->getPVStructure() << endl;
     }
-    testConnect(debug,gather);
     testConnect(debug,gather);
 }
 
@@ -89,6 +88,8 @@ int main(int argc,char *argv[])
         n = atoi(argv[2]);
     }
     test(debug, n);
+    ::epics::pvAccess::ca::CAClientFactory::stop();
+    ClientFactory::stop();
     return(0);
 }
 

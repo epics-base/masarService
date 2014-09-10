@@ -17,8 +17,6 @@ using namespace epics::nt;
 
 void test()
 {
-    ClientFactory::start();
-    ::epics::pvAccess::ca::CAClientFactory::start();
     size_t n = 1000;
     shared_vector<string> names(n);
     char name[40];
@@ -36,9 +34,8 @@ void test()
         cout << "It must be started before running this test\n";
         return;
     }
-    size_t ntimes = 0;
-    while(true) {
-        cout << "calling get ntimes " << ntimes++ << endl;
+    for(int ntimes=0; ntimes<10; ++ntimes) {
+        cout << "calling get ntime " << ntimes << endl;
         result = gather->get();
         if(!result) cout <<"get failed " << gather->getMessage() << endl;
         NTMultiChannelPtr multi = gather->getNTMultiChannel();
@@ -49,13 +46,17 @@ void test()
                 cout << "channel " << channelName[i] << " not connected\n";
             }
         }
-        epicsThreadSleep(1.0);
     }
+    gather->destroy();
 }
 
 int main(int argc,char *argv[])
 {
+    ClientFactory::start();
+    ::epics::pvAccess::ca::CAClientFactory::start();
     test();
+    ::epics::pvAccess::ca::CAClientFactory::stop();
+    ClientFactory::stop();
     return 0;
 }
 

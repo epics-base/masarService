@@ -28,12 +28,10 @@ using std::tr1::static_pointer_cast;
 using namespace std;
 using namespace epics::masar::detail;
 
-static  FieldCreatePtr fieldCreate = getFieldCreate();
+static FieldCreatePtr fieldCreate = getFieldCreate();
 static PVDataCreatePtr pvDataCreate = getPVDataCreate();
 static StandardPVFieldPtr standardPVField = getStandardPVField();
 static ConvertPtr convert = getConvert();
-static PVStructurePtr pvGetRequest;
-static PVStructurePtr pvPutRequest;
 
 enum State {
     idle,
@@ -51,24 +49,32 @@ namespace detail {
 GatherV3DataChannel::GatherV3DataChannel(
     GatherV3DataPtr const& gatherV3Data, size_t offset)
 : gatherV3Data(gatherV3Data),
-  offset(offset)
+  offset(offset),
+  beingDestroyed(false)
 {
+cout << "GatherV3DataChannel::GatherV3DataChannel\n";
 }
 
 GatherV3DataChannel::~GatherV3DataChannel()
 {
-   if(channel) {
-      channel->destroy();
-      channel.reset();
-   }
+cout << "GatherV3DataChannel::~GatherV3DataChannel\n";
 }
 
 void GatherV3DataChannel::destroy()
 {
+cout << "GatherV3DataChannel::destroy\n";
+   { 
+        Lock xx(gatherV3Data->mutex);
+        if(beingDestroyed) return;
+        beingDestroyed = true;
+   }
    if(channel) {
       channel->destroy();
       channel.reset();
    }
+   gatherV3Data.reset();
+   channelGet.reset();
+   channelPut.reset();
 }
 
 void GatherV3DataChannel::message(
@@ -81,13 +87,13 @@ void GatherV3DataChannel::channelCreated(
         const Status& status,
         Channel::shared_pointer const & channel)
 {
-    if(gatherV3Data->state==destroying) return;
 }
 
 void GatherV3DataChannel::channelStateChange(
     Channel::shared_pointer const & channel,
     Channel::ConnectionState connectionState)
 {
+//cout << "GatherV3DataChannel::channelStateChange\n";
     if(gatherV3Data->state==destroying) return;
     bool isConnected = false;
     if(connectionState==Channel::CONNECTED) isConnected = true;
@@ -115,6 +121,7 @@ void GatherV3DataChannel::channelGetConnect(
     ChannelGet::shared_pointer const & channelGet,
     Structure::const_shared_pointer const & structure)
 {
+//cout << "GatherV3DataChannel::channelGetConnect\n";
     Lock xx(gatherV3Data->mutex);
     while(true) {
         if(!status.isOK()) {
@@ -176,6 +183,7 @@ void GatherV3DataChannel::getDone(
     PVStructure::shared_pointer const & pvStructure,
     BitSet::shared_pointer const & bitSet)
 {
+//cout << "GatherV3DataChannel::getDone\n";
     Lock xx(gatherV3Data->mutex);
     PVFieldPtr pvFrom = pvStructure->getSubField("value");
     PVFieldPtr pvTo = gatherV3Data->value[offset]->get();
@@ -218,6 +226,7 @@ void GatherV3DataChannel::putDone(
     const Status& status,
     ChannelPut::shared_pointer const & channelPut)
 {
+//cout << "GatherV3DataChannel::getDone\n";
     Lock xx(gatherV3Data->mutex);
     ++gatherV3Data->numberCallback;
     if(gatherV3Data->numberCallback==gatherV3Data->numberChannel) {
@@ -240,14 +249,10 @@ void  GatherV3DataChannel::connect()
         gatherV3Data->channelName[offset],getPtrSelf());
 }
 
-void GatherV3DataChannel::disconnect()
-{
-    destroy();
-}
 
 void GatherV3DataChannel::createGet()
 {
-   channelGet = channel->createChannelGet(getPtrSelf(),pvGetRequest);
+   channelGet = channel->createChannelGet(getPtrSelf(),gatherV3Data->pvGetRequest);
 }
 
 void GatherV3DataChannel::get()
@@ -258,7 +263,7 @@ void GatherV3DataChannel::get()
 
 void GatherV3DataChannel::createPut()
 {
-   channelPut = channel->createChannelPut(getPtrSelf(),pvPutRequest);
+   channelPut = channel->createChannelPut(getPtrSelf(),gatherV3Data->pvPutRequest);
 }
 
 
@@ -323,6 +328,7 @@ GatherV3Data::GatherV3Data(
 
 void GatherV3Data::init()
 {
+cout << "GatherV3Data::init\n";
 ChannelProvider::shared_pointer  xxx = getChannelProviderRegistry()->getProvider("ca");
     CreateRequest::shared_pointer createRequest = CreateRequest::create();
     pvGetRequest = createRequest->createRequest("value,alarm,timeStamp");
@@ -362,11 +368,8 @@ ChannelProvider::shared_pointer  xxx = getChannelProviderRegistry()->getProvider
 
 GatherV3Data::~GatherV3Data()
 {
-    if(state!=idle) disconnect();
-    for(size_t i=0; i<numberChannel; i++) {
-        channel[i]->destroy();
-    }
-    channel.clear();
+cout << "GatherV3Data::~GatherV3Data()\n";
+    destroy();
 }
 
 bool GatherV3Data::connect(double timeOut)
@@ -422,15 +425,19 @@ bool GatherV3Data::connect(double timeOut)
     return false;
 }
 
-void GatherV3Data::disconnect()
+void GatherV3Data::destroy()
 {
-    Lock xx(mutex);
-    if(state==idle) return;
-    state = destroying;
+cout << "GatherV3Data::destroy state " << state << endl;
+    {
+        Lock xx(mutex);
+        if(state==idle) return;
+        state = destroying;
+    }
     for(size_t i=0; i< numberChannel; i++) {
-        channel[i]->disconnect();
+        channel[i]->destroy();
         channel[i].reset();
     }
+    channel.clear();
     epicsThreadSleep(1.0);
     putPVStructure.clear();
     putBitSet.clear();

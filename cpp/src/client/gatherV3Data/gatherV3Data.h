@@ -98,7 +98,6 @@ private:
     GatherV3DataChannel(GatherV3DataPtr const& gatherV3Data, size_t offset);
     void init();
     void connect();
-    void disconnect();
     void createGet();
     void get();
     void createPut();
@@ -110,6 +109,7 @@ private:
     epics::pvAccess::Channel::shared_pointer channel;
     epics::pvAccess::ChannelGet::shared_pointer channelGet;
     epics::pvAccess::ChannelPut::shared_pointer channelPut;
+    bool beingDestroyed;
     friend class epics::masar::GatherV3Data;
 };
 }
@@ -139,9 +139,9 @@ public:
      */
     bool connect(double timeOut);
     /**
-     * Disconnect from the V3 channels.
+     * destroy:
      */
-    void disconnect();
+    void destroy();
     /**
      *  Create channelGet.
      *  @returns (false,true) if all channelGets were created.
@@ -200,6 +200,8 @@ private:
     epics::nt::NTMultiChannelPtr multiChannel;
     size_t numberChannel;
     epics::pvData::shared_vector<const std::string> channelName;
+    epics::pvData::PVStructurePtr pvGetRequest;
+    epics::pvData::PVStructurePtr pvPutRequest;
     epics::pvData::Mutex mutex;
     epics::pvData::Event event;
     epics::pvData::PVTimeStamp pvtimeStamp;

@@ -17,23 +17,18 @@ using std::tr1::static_pointer_cast;
 void test()
 {
     size_t n = 11;
-n = 4;
     shared_vector<string> names(n);
-names[0] = "masarExampleStringArray";
-names[1] = "masarExampleCharArray";
-names[2] = "masarExampleLongArray";
-names[3] = "masarExampleDoubleArray";
-//    names[0] = "masarExample0000";
-//    names[1] = "masarExample0001";
-//    names[2] = "masarExample0002";
-//    names[3] = "masarExample0003";
-//    names[4] = "masarExample0004";
-//    names[5] = "masarExampleCharArray";
-//    names[6] = "masarExampleStringArray";
-//    names[7] = "masarExampleLongArray";
-//    names[8] = "masarExampleDoubleArray";
-//    names[9] = "masarExampleBoUninit";
-//    names[10] = "masarExampleMbboUninit";
+    names[0] = "masarExample0000";
+    names[1] = "masarExample0001";
+    names[2] = "masarExample0002";
+    names[3] = "masarExample0003";
+    names[4] = "masarExample0004";
+    names[5] = "masarExampleCharArray";
+    names[6] = "masarExampleStringArray";
+    names[7] = "masarExampleLongArray";
+    names[8] = "masarExampleDoubleArray";
+    names[9] = "masarExampleBoUninit";
+    names[10] = "masarExampleMbboUninit";
     shared_vector<const string> channelName(freeze(names));
     GatherV3DataPtr gather = GatherV3Data::create(channelName);
     bool result = gather->connect(5.0);
@@ -197,6 +192,7 @@ names[3] = "masarExampleDoubleArray";
         cout << "get failed " << gather->getMessage() << endl;
         exit(1);
     }
+    gather->destroy();
     cout << "ntmultiChannel\n";
     cout <<  *ntmultiChannel->getPVStructure() << endl;
 }
@@ -206,6 +202,8 @@ int main(int argc,char *argv[])
     ClientFactory::start();
     ::epics::pvAccess::ca::CAClientFactory::start();
     test();
+    ::epics::pvAccess::ca::CAClientFactory::stop();
+    ClientFactory::stop();
     return 0;
 }
 

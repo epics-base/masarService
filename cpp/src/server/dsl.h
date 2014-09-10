@@ -32,6 +32,8 @@ class DSL :
 {
 public:
     POINTER_DEFINITIONS(DSL);
+    DSL(){}
+    virtual ~DSL(){}
     /**
      * Called by service layer to access the database.
      * @param pvArgument The argument which must follow the argument standard

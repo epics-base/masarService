@@ -86,6 +86,7 @@ static PyObject * _init(PyObject *willbenull, PyObject *args)
     NTNameValueBuilderPtr builder = NTNameValue::createBuilder();
     NTNameValuePtr ntnamevalue = builder ->
          value(pvString) ->
+         add("function",fieldCreate->createScalar(pvString)) ->
          addDescriptor() ->
          addTimeStamp() ->
          addAlarm() ->
@@ -93,7 +94,7 @@ static PyObject * _init(PyObject *willbenull, PyObject *args)
     PVStructurePtr pv = ntnamevalue->getPVStructure();
     PVStringArrayPtr pvnames = pv->getSubField<PVStringArray>("names");
     PVStringArrayPtr pvvalues = pv->getSubField<PVStringArray>("values");
-    PVStringPtr pvfunction = ntnamevalue->getDescriptor();
+    PVStringPtr pvfunction = pv->getSubField<PVString>("function");
     pvfunction->put(function);
     shared_vector<const string> nn(freeze(names));
     pvnames->replace(nn);
