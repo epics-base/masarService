@@ -255,6 +255,7 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
 
     def showmasarconfigs(self):
         """"""
+        result = None
         if self.dbsource == 0:
             # get data from sqlite
             if self.usedefaultdb:
@@ -299,7 +300,8 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
                                res['status']])
                                # res['system']
 
-        self._setconfigtable(result)
+        if result is not None:
+            self._setconfigtable(result)
 
     def choosedbsrc(self, bool):
         """Choose DB source"""

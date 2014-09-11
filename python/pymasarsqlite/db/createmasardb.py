@@ -66,7 +66,7 @@ def createMasarDb():
             cur = conn.cursor()
             cur.executescript(SQL)
             cur.execute("PRAGMA main.page_size= 4096;")
-            cur.execute("PRAGMA main.cache_size= 10000;")
+            cur.execute("PRAGMA main.default_cache_size= 10000;")
             cur.execute("PRAGMA main.locking_mode=EXCLUSIVE;")
             cur.execute("PRAGMA main.synchronous=NORMAL;")
             cur.execute("PRAGMA main.journal_mode=WAL;")

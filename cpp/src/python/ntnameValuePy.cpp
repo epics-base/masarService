@@ -216,7 +216,8 @@ static PyObject * _getTimeStamp(PyObject *willBeNull, PyObject *args)
     pvoid = PyCapsule_GetPointer(ptimeStamp,"timeStamp");
     TimeStamp *xxx = static_cast<TimeStamp *>(pvoid);
     PVStructurePtr pvStructure = pvt->ntnameValue->getTimeStamp();
-    if(pvStructure!=0) {
+    //if(pvStructure!=0) {
+    if(!pvStructure) {
         PVTimeStamp pvTimeStamp;
         pvTimeStamp.attach(pvStructure);
         pvTimeStamp.get(*xxx);
@@ -247,7 +248,8 @@ static PyObject * _getAlarm(PyObject *willBeNull, PyObject *args)
     pvoid = PyCapsule_GetPointer(palarm,"alarm");
     Alarm *xxx = static_cast<Alarm *>(pvoid);
     PVStructurePtr pvStructure = pvt->ntnameValue->getAlarm();
-    if(pvStructure!=0) {
+    //if(pvStructure!=0) {
+    if(!pvStructure) {
         PVAlarm pvAlarm;
         pvAlarm.attach(pvStructure);
         pvAlarm.get(*xxx);
