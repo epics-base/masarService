@@ -18,7 +18,6 @@ __sql__ = None
 
 __version__ = '0.0.1'
 
-
 def checkAnswer(answer):
     result = False
     if answer in ("N", "n", "no", "NO", "No"):
@@ -52,6 +51,8 @@ def createMasarDb():
 
     conn = None
     sqlfile = None
+
+    os.environ["MASAR_SQLITE_DB"] = __sqlitedb__
     try:
         if __sql__ is None:
             from pymasarsqlite.db.masarsqlite import SQL
@@ -71,6 +72,9 @@ def createMasarDb():
             cur.execute("PRAGMA main.synchronous=NORMAL;")
             cur.execute("PRAGMA main.journal_mode=WAL;")
             cur.execute("PRAGMA main.temp_store = MEMORY;")
+
+        from pymasarsqlite.service.service import (saveService)
+        saveService(conn, 'masar', desc='machine snapshot, archiving, and retrieve service')
 
     except sqlite3.Error, e:
         print ("Error %s:" % e.args[0])

@@ -24,7 +24,7 @@ void test()
     shared_vector<string> name(n);
     shared_vector<string> value(n);
     name[0] = "configname";
-    value[0] = "sr_test";
+    value[0] = "test";
     name[1] = "servicename";
     value[1] = "masar";
     const shared_vector<const string> names(freeze(name));

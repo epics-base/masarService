@@ -45,7 +45,7 @@ void test()
     shared_vector<string> value(n);
     name[0] = string("configname");
     name[1] = string("servicename");
-    value[0] = string("sr_test");
+    value[0] = string("test");
     value[1] = string("masar");
     pvNames->replace(freeze(name));
     pvValues->replace(freeze(value));
