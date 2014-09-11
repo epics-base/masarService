@@ -1,4 +1,4 @@
-/*testChannelRPCC.cpp */
+/*testDSLGetLiveMachine.cpp */
 
 /* Author: Marty Kraimer */
 
@@ -14,8 +14,6 @@ using namespace std;
 using namespace epics::pvData;
 using namespace epics::pvAccess;
 using namespace epics::masar;
-
-FieldCreatePtr fieldCreate = getFieldCreate();
 
 void test()
 {
@@ -45,6 +43,18 @@ void test()
     {
         cout << e.what() << endl;
         return;
+    }
+    for(int i=0; i<3; ++i) {
+        try {
+            PVStructurePtr pvResponse = dslRdb->request(
+                 "getLiveMachine",names,values);
+            cout << "alarm.message ";
+            cout << pvResponse->getSubField<PVString>("alarm.message")->get() << endl;
+        } catch (std::exception &e)
+        {
+            cout << e.what() << endl;
+            return;
+        }
     }
 }
 

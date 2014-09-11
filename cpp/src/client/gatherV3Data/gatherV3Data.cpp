@@ -57,12 +57,12 @@ GatherV3DataChannel::GatherV3DataChannel(
 
 GatherV3DataChannel::~GatherV3DataChannel()
 {
-//cout << "GatherV3DataChannel::~GatherV3DataChannel\n";
+//cout << "GatherV3DataChannel::~GatherV3DataChannel " << offset << endl;
 }
 
 void GatherV3DataChannel::destroy()
 {
-//cout << "GatherV3DataChannel::destroy\n";
+//cout << "GatherV3DataChannel::destroy " << offset << endl;
    { 
         Lock xx(gatherV3Data->mutex);
         if(beingDestroyed) return;
@@ -87,13 +87,15 @@ void GatherV3DataChannel::channelCreated(
         const Status& status,
         Channel::shared_pointer const & channel)
 {
+//cout << "GatherV3DataChannel::channelCreated " << offset << endl;
+//cout << "state " << channel->getConnectionState() << endl;
 }
 
 void GatherV3DataChannel::channelStateChange(
     Channel::shared_pointer const & channel,
     Channel::ConnectionState connectionState)
 {
-//cout << "GatherV3DataChannel::channelStateChange\n";
+//cout << "GatherV3DataChannel::channelStateChange " << offset << " state " << gatherV3Data->state << endl;
     if(gatherV3Data->state==destroying) return;
     bool isConnected = false;
     if(connectionState==Channel::CONNECTED) isConnected = true;
@@ -368,12 +370,13 @@ ChannelProvider::shared_pointer  xxx = getChannelProviderRegistry()->getProvider
 
 GatherV3Data::~GatherV3Data()
 {
-cout << "GatherV3Data::~GatherV3Data()\n";
+//cout << "GatherV3Data::~GatherV3Data()\n";
     destroy();
 }
 
 bool GatherV3Data::connect(double timeOut)
 {
+//cout << "GatherV3Data::connect()\n";
     if(state!=idle) {
         throw std::logic_error(
             "GatherV3Data::connect only legal when state is idle\n");
@@ -427,7 +430,7 @@ bool GatherV3Data::connect(double timeOut)
 
 void GatherV3Data::destroy()
 {
-cout << "GatherV3Data::destroy state " << state << endl;
+//cout << "GatherV3Data::destroy state " << state << endl;
     {
         Lock xx(mutex);
         if(state==idle) return;

@@ -114,9 +114,10 @@ int main(int argc,char *argv[])
     RPCServer server;
     MasarService::shared_pointer service(MasarService::shared_pointer(new MasarService()));
     server.registerService(name,service);
+    service.reset();
     server.printInfo();
     server.run();
     return 0;
 }
-
 #endif
+

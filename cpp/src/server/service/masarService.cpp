@@ -45,18 +45,6 @@ void MasarService::destroy()
 PVStructurePtr MasarService::request(
     PVStructurePtr const & pvArgument) throw (epics::pvAccess::RPCRequestException)
 {
-    static const int numberFunctions = 9;
-    static const string functionNames[numberFunctions] = {
-        string("saveSnapshot"),
-        string("retrieveSnapshot"),
-        string("retrieveServiceConfigProps"),
-        string("retrieveServiceConfigs"),
-        string("saveServiceConfig"),
-        string("retrieveServiceEvents"),
-        string("saveServiceEvent"),
-        string("updateSnapshotEvent"),
-        string("getLiveMachine")
-    };
     if(!NTNameValue::is_a(pvArgument->getStructure())) {
         throw epics::pvAccess::RPCRequestException(
              Status::STATUSTYPE_ERROR,"pvArgument is not an NTNameValue");
@@ -73,6 +61,10 @@ PVStructurePtr MasarService::request(
             Status::STATUSTYPE_ERROR,"pvArgument has an unsupported function");
     }
     try {
+cout<< "calling dslRdb->request function " << functionName << endl;
+cout << *pvArgument->getSubField<PVStringArray>("names") << endl;
+cout << *pvArgument->getSubField<PVStringArray>("values") << endl;
+
         const shared_vector<const string> name = pvArgument->getSubField<PVStringArray>("names")->view();
         const shared_vector<const string> value = pvArgument->getSubField<PVStringArray>("values")->view();
         return dslRdb->request(functionName,name,value);

@@ -488,8 +488,8 @@ static NTTablePtr noDataTable(string message)
             addTimeStamp()->
             create();
     PVStructurePtr pvStructure = ntTable->getPVStructure();
-
-    PVBooleanArrayPtr pvBoolVal = pvStructure->getSubField<PVBooleanArray>("status");
+    PVBooleanArrayPtr pvBoolVal =
+        pvStructure->getSubField<PVBooleanArray>("value.status");
     shared_vector<boolean> temp(1);
     temp[0]=false;
     pvBoolVal->replace(freeze(temp));
@@ -541,7 +541,6 @@ static NTTablePtr retrieveServiceConfigEvents(PyObject * list, long numeric)
             addTimeStamp()->
             create();
     PVStructurePtr pvStructure = ntTable->getPVStructure();
-
 
     // Get values for each fields from list
     for (int index = 1; index < list_len; index++ ){
