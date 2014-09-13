@@ -542,27 +542,52 @@ static NTTablePtr retrieveServiceConfigEvents(PyObject * list, long numeric)
             create();
     PVStructurePtr pvStructure = ntTable->getPVStructure();
 
+    std::vector<shared_vector<int64> > scIdVals(numeric);
+    for(size_t i=0; i<scIdVals.size(); i++) {
+        scIdVals[i].resize(list_len-1);
+    }
+
+    std::vector<shared_vector<string> > vals (tuple_size-numeric);
+    for (size_t i = 0; i < vals.size(); i++){
+        vals[i].resize(list_len-1);
+    }
     // Get values for each fields from list
+    PyObject * sublist;
     for (int index = 1; index < list_len; index++ ){
-        PyObject *sublist = PyList_GetItem(list, index);
-        if(index<numeric) {
-            shared_vector<int64> value(tuple_size);
-            for (int i = 0; i < tuple_size; i ++) {
-                PyObject * temp = PyTuple_GetItem(sublist, i);
-                value[i] = PyLong_AsLongLong(temp);
+        sublist = PyList_GetItem(list, index);
+        for (int i = 0; i < tuple_size; i ++) {
+            PyObject * temp = PyTuple_GetItem(sublist, i);
+            if (i < numeric){
+                // PyLong_Check for type check?
+                scIdVals[i][index-1] = PyLong_AsLongLong(temp);
+            } else {
+                // PyString_Check for type check?
+                if (PyString_AsString(temp) == NULL) {
+                    vals[i-numeric][index-1] = "";
+                } else {
+                    vals[i-numeric][index-1] = PyString_AsString(temp);
+                }
             }
-            PVLongArrayPtr pvLongArray = pvStructure->getSubField<PVLongArray>(label[index-1]);
-            pvLongArray->replace(freeze(value));   
-        } else {
-            shared_vector<string> value(tuple_size);
-            for (int i = 0; i < tuple_size; i ++) {
-                PyObject * temp = PyTuple_GetItem(sublist, i);
-                value[i] = PyString_AsString(temp);
-            }
-            PVStringArrayPtr pvStringArray = pvStructure->getSubField<PVStringArray>(label[index-1]);
-            pvStringArray->replace(freeze(value));   
         }
     }
+
+    // set value to each numeric field
+    for (int i = 0; i < numeric; i ++) {
+        //PVLongArrayPtr pvLongArray = ntTable->getColumn<PVLongArray>(label[i]);
+        PVLongArrayPtr pvLongArray = pvStructure->getSubField<PVLongArray>("value."+label[i]);
+        //TODO: add logging information here
+        if (!pvLongArray) cout << "empty sub field for " << label[i] << endl;
+        else pvLongArray->replace(freeze(scIdVals[i]));
+    }
+    // set value to each string field
+    for (int i = numeric; i < tuple_size; i ++) {
+        //PVStringArrayPtr pvStringArray = ntTable->getColumn<PVStringArray>(label[i]);
+        PVStringArrayPtr pvStringArray = pvStructure->getSubField<PVStringArray>("value."+label[i]);
+        //TODO: add logging information here
+        if (!pvStringArray) cout << "empty sub field for " << label[i] << endl;
+        else pvStringArray->replace(freeze(vals[i-numeric]));
+    }
+
     PVTimeStamp pvTimeStamp;
     ntTable->attachTimeStamp(pvTimeStamp);
     TimeStamp timeStamp;
