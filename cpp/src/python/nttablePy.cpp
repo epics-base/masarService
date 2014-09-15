@@ -61,76 +61,25 @@ void NTTablePvt::destroy()
 
 static PyObject * _init(PyObject *willbenull, PyObject *args)
 {
-    PyObject *dict = 0;
-    if(!PyArg_ParseTuple(args,"O!:ntnamevaluepy",
-        &PyDict_Type,&dict))
+    PyObject *capsule = 0;
+    if(!PyArg_ParseTuple(args,"O:nttablepy",
+        &capsule))
     {
         PyErr_SetString(PyExc_SyntaxError,
-           "Bad argument. Expected (dictionary)");
+           "Bad argument. Expected (pvStructure)");
         return NULL;
     }
-    Py_ssize_t n = PyDict_Size(dict);
-    shared_vector<string> names(n);
-    shared_vector<string> types(n);
-    PyObject *pkey, *ptype;
-    Py_ssize_t pos = 0;
-    for(Py_ssize_t i=0; i< n; i++) {
-        PyDict_Next(dict,&pos, &pkey, &ptype);
-        char *key = PyString_AS_STRING(pkey);
-        char *typ = PyString_AS_STRING(ptype);
-        names[i] = string(key);
-        types[i] = string(typ);
-    }
-    shared_vector<ScalarType> scalarType(n);
-    size_t nn = n;
-    for(size_t i=0; i<nn; ++i) {
-         string next = types[i];
-         if(next.compare("boolean")==0) {
-             scalarType[i] = pvBoolean;
-             continue;
-         }
-         if(next.compare("byte")==0) {
-             scalarType[i] = pvByte;
-             continue;
-         }
-         if(next.compare("short")==0) {
-             scalarType[i] = pvShort;
-             continue;
-         }
-         if(next.compare("int")==0) {
-             scalarType[i] = pvInt;
-             continue;
-         }
-         if(next.compare("long")==0) {
-             scalarType[i] = pvLong;
-             continue;
-         }
-         if(next.compare("float")==0) {
-             scalarType[i] = pvFloat;
-             continue;
-         }
-         if(next.compare("double")==0) {
-             scalarType[i] = pvDouble;
-             continue;
-         }
-         if(next.compare("string")==0) {
-             scalarType[i] = pvString;
-             continue;
-         }
-         PyErr_SetString(PyExc_SyntaxError,
-           "Bad argument. illegal type specified");
+    void *pvoid = PyCapsule_GetPointer(capsule,"pvStructure");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Must be pvStructure PyCapsule");
         return NULL;
     }
-    NTTableBuilderPtr builder = NTTable::createBuilder();
-    for(size_t i=0; i<nn; ++i) {
-        builder->add(names[i],scalarType[i]);
-    }
-    NTTablePtr nttable = builder ->
-         addTimeStamp() ->
-         addAlarm() ->
-         create();
-    PVStructurePtr pv = nttable->getPVStructure();
-    NTTablePvt *pvt = new NTTablePvt(nttable,pv);
+    PVStructurePtr *pv =
+        static_cast<PVStructurePtr *>(pvoid);
+    PVStructurePtr pvStructure = *pv;
+    NTTablePtr nttable = NTTable::narrow(pvStructure);
+    NTTablePvt *pvt = new NTTablePvt(nttable,pvStructure);
     return PyCapsule_New(pvt,"nttablePvt",0);
 }
 

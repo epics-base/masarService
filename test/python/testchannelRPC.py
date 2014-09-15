@@ -25,15 +25,17 @@ def __clientRPC(function, params):
     if(result==None) :
         print channelRPC.getMessage()
         exit(1)
-    print "problem to get nttable using getNTTable()"
-    nttable = NTTable(result).getNTTable()
-    print "Problem above"
-    print nttable
+#    print "problem to get nttable using getNTTable()"
     
-    nttable.getAlarm(alarm.getAlarmPy())
+    # nttable = NTTable(result).getNTTable()
+    nttable = NTTable(result);
+#    print "Problem above"
+#    print nttable
+    
+#    nttable.getAlarm(alarm.getAlarmPy())
 #    print alarm;
     
-    nttable.getTimeStamp(timeStamp.getTimeStampPy())
+#    nttable.getTimeStamp(timeStamp.getTimeStampPy())
 #    print timeStamp;
     
 #    numberValues = nttable.getNumberValues()

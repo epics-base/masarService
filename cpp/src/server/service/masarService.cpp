@@ -61,13 +61,11 @@ PVStructurePtr MasarService::request(
             Status::STATUSTYPE_ERROR,"pvArgument has an unsupported function");
     }
     try {
-cout<< "calling dslRdb->request function " << functionName << endl;
-cout << *pvArgument->getSubField<PVStringArray>("names") << endl;
-cout << *pvArgument->getSubField<PVStringArray>("values") << endl;
 
         const shared_vector<const string> name = pvArgument->getSubField<PVStringArray>("names")->view();
         const shared_vector<const string> value = pvArgument->getSubField<PVStringArray>("values")->view();
-        return dslRdb->request(functionName,name,value);
+        PVStructurePtr result = dslRdb->request(functionName,name,value);
+        return result;
     } catch (std::exception &e) {
         throw RPCRequestException(Status::STATUSTYPE_ERROR,
             std::string("request failed ") + e.what());
