@@ -37,7 +37,7 @@ class client():
         ntnv = NTNameValue(function,params)
         
         # now do issue + wait
-        channelRPC = ChannelRPC(self.channelname,"record[process=true]field()")
+        channelRPC = ChannelRPC(self.channelname)
         channelRPC.issueConnect()
         if not channelRPC.waitConnect(1.0) :
             print channelRPC.getMessage()

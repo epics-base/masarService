@@ -15,17 +15,19 @@ def __clientRPC(function, params):
     ntnv = NTNameValue(function,params)
     
     # now do issue + wait
-    channelRPC = ChannelRPC("masarService","record[process=true]field()")
+    channelRPC = ChannelRPC("masarService")
     channelRPC.issueConnect()
     if not channelRPC.waitConnect(1.0) :
-        print channelRPC.getMessage()
+        print "error when waiting connection.", channelRPC.getMessage()
         exit(1)
     channelRPC.issueRequest(ntnv.getNTNameValue(),False)
-    result = channelRPC.waitRequest()
+    result = channelRPC.waitResponse()
     if(result==None) :
         print channelRPC.getMessage()
         exit(1)
-    nttable = NTTable(result)
+    print "problem to get nttable using getNTTable()"
+    nttable = NTTable(result).getNTTable()
+    print "Problem above"
     print nttable
     
     nttable.getAlarm(alarm.getAlarmPy())

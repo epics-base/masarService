@@ -289,7 +289,7 @@ static PyObject * _waitResponse(PyObject *willBeNull, PyObject *args)
     return pyObject;
 }
 
-static char _initDoc[] = "_init1 channelRPCPy.";
+static char _initDoc[] = "_init channelRPCPy.";
 static char _destroyDoc[] = "_destroy channelRPCPy.";
 static char _connectDoc[] = "_connect.";
 static char _issueConnectDoc[] = "_issueConnect.";
