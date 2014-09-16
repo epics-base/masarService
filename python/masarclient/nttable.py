@@ -46,12 +46,9 @@ class NTTable(object) :
         alarm must be alarm.getAlarmPy()
         """
         return nttablePy._getAlarm(self.cppPvt,alarm);
-    def getNumberValues(self) :
-        """get the number of value fields"""
-        return nttablePy._getNumberValues(self.cppPvt);
-    def getLabel(self) :
+    def getLabels(self) :
         """get the label"""
-        return nttablePy._getLabel(self.cppPvt);
-    def getValue(self,index) :
+        return nttablePy._getLabels(self.cppPvt);
+    def getColumn(self,index) :
         """get the value for the specified index"""
-        return nttablePy._getValue(self.cppPvt,index);
+        return nttablePy._getColumn(self.cppPvt,index);

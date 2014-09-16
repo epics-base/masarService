@@ -17,6 +17,10 @@
 #include <pv/createRequest.h>
 #include <pv/convert.h>
 #include <pv/standardPVField.h>
+
+#include <pv/clientFactory.h>
+#include <pv/caProvider.h>
+
 #include <pv/gatherV3Data.h>
 
 namespace epics { namespace masar {
@@ -247,6 +251,7 @@ void GatherV3DataChannel::getDone(
 
 void  GatherV3DataChannel::connect()
 {
+//cout << "GatherV3DataChannel::connect()\n";
      channel = gatherV3Data->channelProvider->createChannel(
         gatherV3Data->channelName[offset],getPtrSelf());
 }
@@ -300,6 +305,12 @@ void GatherV3DataChannel::put()
 GatherV3DataPtr GatherV3Data::create(
     shared_vector<const std::string> const & channelNames)
 {
+    if(!getChannelProviderRegistry()->getProvider("pva")) {
+       ClientFactory::start();
+    }
+    if(!getChannelProviderRegistry()->getProvider("caa")) {
+       ::epics::pvAccess::ca::CAClientFactory::start();
+    }
     NTMultiChannelBuilderPtr builder = NTMultiChannel::createBuilder();
     NTMultiChannelPtr multiChannel = builder->
             addValue(fieldCreate->createVariantUnion()) ->
@@ -376,7 +387,8 @@ GatherV3Data::~GatherV3Data()
 
 bool GatherV3Data::connect(double timeOut)
 {
-//cout << "GatherV3Data::connect()\n";
+//cout << "GatherV3Data::connect() numberChannel " << numberChannel << endl;
+//cout << *multiChannel->getPVStructure() << endl;
     if(state!=idle) {
         throw std::logic_error(
             "GatherV3Data::connect only legal when state is idle\n");
@@ -394,7 +406,9 @@ bool GatherV3Data::connect(double timeOut)
     atLeastOneGet = false;
     event.tryWait();
     for(size_t i=0; i< numberChannel; i++) {
+//cout << "isConnected[" << i << "] = false\n";
         isConnected[i] = false;
+//cout << "calling channel[" << i << "]->connect()\n";
         channel[i]->connect();
     }
     std::stringstream ss;
@@ -469,6 +483,7 @@ bool GatherV3Data::createGet()
 
 bool GatherV3Data::get()
 {
+//cout << "GatherV3Data::get()\n";
     if(state!=connected) {
         throw std::logic_error("GatherV3Data::get illegal state\n");
     }
@@ -483,6 +498,7 @@ bool GatherV3Data::get()
     alarm.setSeverity(noAlarm);
     alarm.setStatus(noStatus);
     for(size_t i=0; i< numberChannel; i++) {
+//cout << "calling channel[" << i << "]->get()\n";
         channel[i]->get();
     }
     channelProvider->flush();

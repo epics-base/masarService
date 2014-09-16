@@ -5,3 +5,4 @@
 #import ntnameValue
 #import nttable
 #import timeStamp
+#import ntmultiChannel

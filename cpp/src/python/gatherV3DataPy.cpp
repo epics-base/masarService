@@ -27,8 +27,7 @@ public:
     ~GatherV3DataPyPvt();
 public:
     GatherV3DataPtr gatherV3Data;
-    NTMultiChannelPtr ntmultiChannel;
-    PVStructurePtr ntmultiChannelStructure;
+    PVStructurePtr pvStructure;
 };
 
 GatherV3DataPyPvt::GatherV3DataPyPvt(
@@ -213,7 +212,7 @@ static PyObject * _getMessage(PyObject *willBeNull, PyObject *args)
     return pyObject;
 }
 
-static PyObject * _getNTMultiChannel(PyObject *willBeNull, PyObject *args)
+static PyObject * _getPVStructure(PyObject *willBeNull, PyObject *args)
 {
     PyObject *pcapsule = 0;
     if(!PyArg_ParseTuple(args,"O:gatherV3DataPy",
@@ -228,8 +227,8 @@ static PyObject * _getNTMultiChannel(PyObject *willBeNull, PyObject *args)
         return NULL;
     }
     GatherV3DataPyPvt *pvt = static_cast<GatherV3DataPyPvt *>(pvoid);
-    pvt->ntmultiChannel = pvt->gatherV3Data->getNTMultiChannel();
-    return PyCapsule_New(&pvt->ntmultiChannel,"pvStructure",0);
+    pvt->pvStructure = pvt->gatherV3Data->getNTMultiChannel()->getPVStructure();
+    return PyCapsule_New(&pvt->pvStructure,"pvStructure",0);
 }
 
 static char _initDoc[] = "_init gatherV3DataPy.";
@@ -238,7 +237,7 @@ static char _connectDoc[] = "_connect.";
 static char _getDoc[] = "_get.";
 static char _putDoc[] = "_put.";
 static char _getMessageDoc[] = "_getMessage.";
-static char _getNTMultiChannelDoc[] = "_getNTMultiChannel.";
+static char _getPVStructureDoc[] = "_getPVStructure.";
 
 static PyMethodDef methods[] = {
     {"_init",_init,METH_VARARGS,_initDoc},
@@ -247,7 +246,7 @@ static PyMethodDef methods[] = {
     {"_get",_get,METH_VARARGS,_getDoc},
     {"_put",_put,METH_VARARGS,_putDoc},
     {"_getMessage",_getMessage,METH_VARARGS,_getMessageDoc},
-    {"_getNTMultiChannel",_getNTMultiChannel,METH_VARARGS,_getNTMultiChannelDoc},
+    {"_getPVStructure",_getPVStructure,METH_VARARGS,_getPVStructureDoc},
     {NULL,NULL,0,NULL}
 };
 
