@@ -35,7 +35,11 @@ class NTTable(object) :
         """Get a python object that can be passed to
         another python method that is a wrapper to a C++ method
         that expects a PVStructure object."""
-        return ntnameValuePy._getNTTablePy(self.cppPvt);
+        return nttablePy._getNTTablePy(self.cppPvt);
+    def getPVStructure(self) :
+        """The data is saved as a PVStructure Get it.
+        returns the PVStructure"""
+        return nttablePy._getPVStructure(self.cppPvt)
     def getTimeStamp(self,timeStamp) :
         """Get the timeStamp from the NTTable
         timeStamp must be timeStamp.getTimeStampPy()

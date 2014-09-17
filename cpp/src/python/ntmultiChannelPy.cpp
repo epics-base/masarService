@@ -148,6 +148,26 @@ static PyObject * _getNTMultiChannelPy(PyObject *willBeNull, PyObject *args)
     return pvt->get();
 }
 
+static PyObject * _getPVStructure(PyObject *willBeNull, PyObject *args)
+{
+    PyObject *pcapsule = 0;
+    if(!PyArg_ParseTuple(args,"O:ntmultiChannelPy",
+        &pcapsule))
+    {
+        return NULL;
+    }
+    void *pvoid = PyCapsule_GetPointer(pcapsule,"ntmultiChannelPy");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
+    NTMultiChannelPvt *pvt = static_cast<NTMultiChannelPvt *>(pvoid);
+    pvt->pvStructure = pvt->ntmultiChannel->getPVStructure();
+    return PyCapsule_New(&pvt->pvStructure,"pvStructure",0);
+}
+
+
 static PyObject * _getTimeStamp(PyObject *willBeNull, PyObject *args)
 {
     PyObject *pcapsule = 0;
@@ -757,6 +777,7 @@ static char _initDoc[] = "_init ntmultiChannelPy.";
 static char _destroyDoc[] = "_destroy ntmultiChannelPy.";
 static char _strDoc[] = "_str  ntmultiChannelPy.";
 static char _getNTMultiChannelPyDoc[] = "_getNTMultiChannelPy ntmultiChannelPy.";
+static char _getPVStructureDoc[] = "_getPVStructure.";
 static char _getTimeStampDoc[] = "_getTimeStamp ntmultiChannelPy.";
 static char _getAlarmDoc[] = "_getAlarm ntmultiChannelPy.";
 static char _getNumberChannelDoc[] = "_getNumberChannel ntmultiChannelPy.";
@@ -776,6 +797,7 @@ static PyMethodDef methods[] = {
     {"_destroy",_destroy,METH_VARARGS,_destroyDoc},
     {"_str",_str,METH_VARARGS,_strDoc},
     {"_getNTMultiChannelPy",_getNTMultiChannelPy,METH_VARARGS,_getNTMultiChannelPyDoc},
+    {"_getPVStructure",_getPVStructure,METH_VARARGS,_getPVStructureDoc},
     {"_getTimeStamp",_getTimeStamp,METH_VARARGS,_getTimeStampDoc},
     {"_getAlarm",_getAlarm,METH_VARARGS,_getAlarmDoc},
     {"_getNumberChannel",_getNumberChannel,METH_VARARGS,_getNumberChannelDoc},

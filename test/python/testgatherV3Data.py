@@ -21,20 +21,30 @@ if __name__ == '__main__':
     pvStructure = gatherV3Data.getPVStructure()
     ntmultiChannel = NTMultiChannel(pvStructure)
     print ntmultiChannel
-#    alarm = Alarm()
-#    ntmultiChannel->getAlarm(alarm.getAlarmPy())
-#    print alarm
-#    timeStamp TimeStamp()
-#    ntmultiChannel->getTimeStamp(timeStamp.getTimeStampPy())
-#    print timeStamp
-    print ntmultiChannel.getNumberChannel();
+    alarm = Alarm()
+    ntmultiChannel.getAlarm(alarm)
+    print "alarm:" ,alarm
+    timeStamp = TimeStamp()
+    ntmultiChannel.getTimeStamp(timeStamp)
+    print "timeStamp:",timeStamp
+    print "numberChannel:" ,ntmultiChannel.getNumberChannel();
+    print "value:"
     print ntmultiChannel.getValue();
+    print "channelName"
     print ntmultiChannel.getChannelName();
+    print "isConnected:"
     print ntmultiChannel.getIsConnected();
+    print "severity:"
     print ntmultiChannel.getSeverity();
+    print "status:"
     print ntmultiChannel.getStatus();
+    print "message:"
     print ntmultiChannel.getMessage();
+    print "seconds:"
     print ntmultiChannel.getSecondsPastEpoch();
+    print "nanoseconds:"
     print ntmultiChannel.getNanoseconds();
+    print "userTag:"
     print ntmultiChannel.getUserTag();
+    print "descriptor:"
     print ntmultiChannel.getDescriptor();

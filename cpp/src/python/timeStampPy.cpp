@@ -200,7 +200,7 @@ static PyObject * _setNano(PyObject *willBeNull, PyObject *args)
         &value))
     {
         PyErr_SetString(PyExc_SyntaxError,
-           "Bad argument. Expected (pvt,nanoSeconds)");
+           "Bad argument. Expected (pvt,nanoseconds)");
         return NULL;
     }
     void *pvoid = PyCapsule_GetPointer(pcapsule,"timeStampPvt");

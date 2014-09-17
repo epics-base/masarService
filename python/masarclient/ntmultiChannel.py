@@ -35,17 +35,21 @@ class NTMultiChannel(object) :
         """Get a python object that can be passed to
         another python method that is a wrapper to a C++ method
         that expects a PVStructure object."""
-        return ntnameValuePy._getNTMultiChannelPy(self.cppPvt);
+        return ntmultiChannelPy._getNTMultiChannelPy(self.cppPvt);
+    def getPVStructure(self) :
+        """The data is saved as a PVStructure Get it.
+        returns the PVStructure"""
+        return ntmultiChannelPy._getPVStructure(self.cppPvt)
     def getTimeStamp(self,timeStamp) :
         """Get the timeStamp from the NTMultiChannel
         timeStamp must be timeStamp.getTimeStampPy()
         """
-        return ntmultiChannelPy._getTimeStamp(self.cppPvt,timeStamp);
+        return ntmultiChannelPy._getTimeStamp(self.cppPvt,timeStamp.getTimeStampPy());
     def getAlarm(self,alarm) :
         """Get the alarm from the NTMultiChannel
         alarm must be alarm.getAlarmPy()
         """
-        return ntmultiChannelPy._getAlarm(self.cppPvt,alarm);
+        return ntmultiChannelPy._getAlarm(self.cppPvt,alarm.getAlarmPy());
     def getNumberChannel(self) :
         """Get the alarm from the NTMultiChannel
         """

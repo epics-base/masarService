@@ -72,6 +72,6 @@ class GatherV3Data(object) :
         """Get a message for a connect or request failure"""
         return gatherV3DataPy._getMessage(self.cppPvt);
     def getPVStructure(self) :
-        """The data is saved as an PVStructure with alarm and timeStamp. Get it.
+        """The data is saved as a PVStructure Get it.
         returns the PVStructure"""
         return gatherV3DataPy._getPVStructure(self.cppPvt)

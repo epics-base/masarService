@@ -30,6 +30,10 @@ class NTNameValue(object) :
         another python method that is a wrapper to a C++ method
         that expects a PVStructure object."""
         return ntnameValuePy._getNTNameValuePy(self.cppPvt);
+    def getPVStructure(self) :
+        """The data is saved as a PVStructure Get it.
+        returns the PVStructure"""
+        return ntnameValuePy._getPVStructure(self.cppPvt)
     def getTimeStamp(self,timeStamp) :
         """Get the timeStamp from the NTTable
         timeStamp must be timeStamp.getTimeStampPy()

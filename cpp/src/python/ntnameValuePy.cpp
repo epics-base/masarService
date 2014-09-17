@@ -172,6 +172,26 @@ static PyObject * _getNTNameValuePy(PyObject *willBeNull, PyObject *args)
     return pvt->get();
 }
 
+static PyObject * _getPVStructure(PyObject *willBeNull, PyObject *args)
+{
+    PyObject *pcapsule = 0;
+    if(!PyArg_ParseTuple(args,"O:ntnameValuePy",
+        &pcapsule))
+    {
+        return NULL;
+    }
+    void *pvoid = PyCapsule_GetPointer(pcapsule,"ntnameValuePy");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
+    NTNameValuePvt *pvt = static_cast<NTNameValuePvt *>(pvoid);
+    pvt->pvStructure = pvt->ntnameValue->getPVStructure();
+    return PyCapsule_New(&pvt->pvStructure,"pvStructure",0);
+}
+
+
 static PyObject * _getFunction(PyObject *willBeNull, PyObject *args)
 {
     PyObject *pcapsule = 0;
@@ -320,6 +340,7 @@ static char _initDoc[] = "_init ntnamevaluePy.";
 static char _destroyDoc[] = "_destroy ntnamevaluePy.";
 static char _strDoc[] = "_str ntnamevaluePy.";
 static char _getNTNameValuePyDoc[] = "_getNTNameValuePy ntnamevaluePy.";
+static char _getPVStructureDoc[] = "_getPVStructure.";
 static char _getFunctionDoc[] = "_getFunction ntnamevaluePy.";
 static char _getTimeStampDoc[] = "_getTimeStamp ntnamevaluePy.";
 static char _getAlarmDoc[] = "_getAlarm ntnamevaluePy.";
@@ -332,6 +353,7 @@ static PyMethodDef methods[] = {
     {"_destroy",_destroy,METH_VARARGS,_destroyDoc},
     {"_str",_str,METH_VARARGS,_strDoc},
     {"_getNTNameValuePy",_getNTNameValuePy,METH_VARARGS,_getNTNameValuePyDoc},
+    {"_getPVStructure",_getPVStructure,METH_VARARGS,_getPVStructureDoc},
     {"_getFunction",_getFunction,METH_VARARGS,_getFunctionDoc},
     {"_getTimeStamp",_getTimeStamp,METH_VARARGS,_getTimeStampDoc},
     {"_getAlarm",_getAlarm,METH_VARARGS,_getAlarmDoc},
