@@ -83,6 +83,62 @@ static PyObject * _init(PyObject *willbenull, PyObject *args)
     return PyCapsule_New(pvt,"nttablePvt",0);
 }
 
+static PyObject * _create(PyObject *willbenull, PyObject *args)
+{
+    PyObject *dict = 0;
+    if(!PyArg_ParseTuple(args,"O!:ntnametypepy",
+        &PyDict_Type,&dict))
+    {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (dictionary)");
+        return NULL;
+    }
+    Py_ssize_t n = PyDict_Size(dict);
+    PyObject *pkey, *ptype;
+    Py_ssize_t pos = 0;
+    NTTableBuilderPtr builder = NTTable::createBuilder();
+    for(Py_ssize_t i=0; i< n; i++) {
+        PyDict_Next(dict,&pos, &pkey, &ptype);
+        char *key = PyString_AS_STRING(pkey);
+        char *val = PyString_AS_STRING(ptype);
+        string name(key);
+        string type(val);
+        ScalarType scalarType(pvString);
+        if(type.compare("string")==0) {
+        } else if(type.compare("string")==0) {
+            scalarType = pvString;
+        } else if(type.compare("boolean")==0) {
+            scalarType = pvBoolean;
+        } else if(type.compare("byte")==0) {
+            scalarType = pvByte;
+        } else if(type.compare("short")==0) {
+            scalarType = pvShort;
+        } else if(type.compare("int")==0) {
+            scalarType = pvInt;
+        } else if(type.compare("long")==0) {
+            scalarType = pvLong;
+        } else if(type.compare("float")==0) {
+            scalarType = pvFloat;
+        } else if(type.compare("double")==0) {
+            scalarType = pvDouble;
+        } else {
+            PyErr_SetString(PyExc_SyntaxError,
+               "Bad argument. Illegal scalarType");
+            return NULL;
+        }
+        builder->add(name,scalarType);
+    }
+    
+    NTTablePtr nttable =  builder ->
+         addDescriptor() ->
+         addTimeStamp() ->
+         addAlarm() ->
+         create();
+    NTTablePvt *pvt = new NTTablePvt(nttable,nttable->getPVStructure());
+    return PyCapsule_New(pvt,"nttablePvt",0);
+}
+
+
 static PyObject * _destroy(PyObject *willBeNull, PyObject *args)
 {
     PyObject *pcapsule = 0;
@@ -447,6 +503,7 @@ static PyObject * _getColumn(PyObject *willbenull, PyObject *args)
 
 
 static char _initDoc[] = "_init nttablePy.";
+static char _createDoc[] = "_create nttablePy.";
 static char _destroyDoc[] = "_destroy nttablePy.";
 static char _strDoc[] = "_str  nttablePy.";
 static char _getNTTablePyDoc[] = "_getNTTablePy nttablePy.";
@@ -458,6 +515,7 @@ static char _getColumnDoc[] = "_getColumn nttablePy.";
 
 static PyMethodDef methods[] = {
     {"_init",_init,METH_VARARGS,_initDoc},
+    {"_create",_create,METH_VARARGS,_createDoc},
     {"_destroy",_destroy,METH_VARARGS,_destroyDoc},
     {"_str",_str,METH_VARARGS,_strDoc},
     {"_getNTTablePy",_getNTTablePy,METH_VARARGS,_getNTTablePyDoc},

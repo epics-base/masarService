@@ -11,7 +11,7 @@ timeStamp = TimeStamp()
 timeStamp.getCurrent()
 print "secondsPastEpoch ",timeStamp.getSecondsPastEpoch()
 print "epicsSecondsPastEpoch ",timeStamp.getEpicsSecondsPastEpoch()
-print "nanoSeconds ",timeStamp.getNanoSeconds()
+print "nanoseconds ",timeStamp.getNanoseconds()
 print "seconds ",timeStamp.toSeconds()
 print "toString",timeStamp
 tm = timeStamp.toSeconds()
@@ -24,7 +24,7 @@ string = time.strftime("%X",tupletime)
 print string
 string = time.strftime("%c %Z",tupletime)
 print string
-another = TimeStamp(timeStamp.getSecondsPastEpoch(),timeStamp.getNanoSeconds())
+another = TimeStamp(timeStamp.getSecondsPastEpoch(),timeStamp.getNanoseconds())
 print "seconds ",another.toSeconds()
 if not timeStamp==another :
     print "timeStamp==another failed"

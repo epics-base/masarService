@@ -83,6 +83,55 @@ static PyObject * _init(PyObject *willbenull, PyObject *args)
     return PyCapsule_New(pvt,"ntscalarPvt",0);
 }
 
+static PyObject * _create(PyObject *willbenull, PyObject *args)
+{
+    const char *type = 0;
+    if(!PyArg_ParseTuple(args,"s:ntnamevaluepy",&type))
+    {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected scalarType");
+        return NULL;
+    }
+    ScalarType scalarType(pvString);
+    string stype(type);
+    if(stype.compare("string")==0) {
+    } else if(stype.compare("string")==0) {
+        scalarType = pvString;
+    } else if(stype.compare("boolean")==0) {
+        scalarType = pvBoolean;
+    } else if(stype.compare("byte")==0) {
+        scalarType = pvByte;
+    } else if(stype.compare("short")==0) {
+        scalarType = pvShort;
+    } else if(stype.compare("int")==0) {
+        scalarType = pvInt;
+    } else if(stype.compare("long")==0) {
+        scalarType = pvLong;
+    } else if(stype.compare("float")==0) {
+        scalarType = pvFloat;
+    } else if(stype.compare("double")==0) {
+        scalarType = pvDouble;
+    } else {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Illegal scalarType");
+        return NULL;
+    }
+
+    NTScalarBuilderPtr builder = NTScalar::createBuilder();
+    NTScalarPtr ntscalar = builder->
+            value(scalarType)->
+            addDescriptor()->
+            addAlarm()->
+            addTimeStamp()->
+            addDisplay()->
+            addControl()->
+            create();
+
+    NTScalarPvt *pvt = new NTScalarPvt(ntscalar,ntscalar->getPVStructure());
+    return PyCapsule_New(pvt,"ntscalarPvt",0);
+}
+
+
 static PyObject * _destroy(PyObject *willBeNull, PyObject *args)
 {
     PyObject *pcapsule = 0;
@@ -409,6 +458,7 @@ static PyObject * _getDescriptor(PyObject *willBeNull, PyObject *args)
 
 
 static char _initDoc[] = "_init ntscalarPy.";
+static char _createDoc[] = "_create ntscalarPy.";
 static char _destroyDoc[] = "_destroy ntscalarPy.";
 static char _strDoc[] = "_str  ntscalarPy.";
 static char _getNTScalarPyDoc[] = "_getNTScalarPy ntscalarPy.";
@@ -422,6 +472,7 @@ static char _getDescriptorDoc[] = "_getDescriptor ntscalarPy.";
 
 static PyMethodDef methods[] = {
     {"_init",_init,METH_VARARGS,_initDoc},
+    {"_create",_create,METH_VARARGS,_createDoc},
     {"_destroy",_destroy,METH_VARARGS,_destroyDoc},
     {"_str",_str,METH_VARARGS,_strDoc},
     {"_getNTScalarPy",_getNTScalarPy,METH_VARARGS,_getNTScalarPyDoc},

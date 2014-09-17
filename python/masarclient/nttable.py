@@ -17,14 +17,17 @@ class NTTable(object) :
     NOTE: THIS CLASS NEEDS MORE METHODS.
 
     """
-    def __init__(self,capsule) :
+    def __init__(self,arg) :
         """Constructor
 
-        capsule Must be a pvStructure capsule
-        This is created by other code that wraps a C++ method the
+        arg must be a dictionary or a pvStructure capsule
+        A capsule is created by other code that wraps a C++ method the
         returns a capsule.
         """
-        self.cppPvt = nttablePy._init(capsule)
+        if isinstance(arg,dict) :
+            self.cppPvt = nttablePy._create(arg)
+        else :
+            self.cppPvt = nttablePy._init(arg)
     def __del__(self) :
         """Destructor destroy the connection to the C++ data."""
         nttablePy._destroy(self.cppPvt)
@@ -44,12 +47,12 @@ class NTTable(object) :
         """Get the timeStamp from the NTTable
         timeStamp must be timeStamp.getTimeStampPy()
         """
-        return nttablePy._getTimeStamp(self.cppPvt,timeStamp);
+        return nttablePy._getTimeStamp(self.cppPvt,timeStamp.getTimeStampPy());
     def getAlarm(self,alarm) :
         """Get the alarm from the NTTable
         alarm must be alarm.getAlarmPy()
         """
-        return nttablePy._getAlarm(self.cppPvt,alarm);
+        return nttablePy._getAlarm(self.cppPvt,alarm.getAlarmPy());
     def getLabels(self) :
         """get the label"""
         return nttablePy._getLabels(self.cppPvt);

@@ -24,7 +24,7 @@ class NTNameValue(object) :
         ntnameValuePy._destroy(self.cppPvt)
     def __str__(self) :
         """Get a string value for the NTNameValue."""
-        return ntnameValuePy.__str__(self.cppPvt)
+        return ntnameValuePy._str(self.cppPvt)
     def getNTNameValue(self) :
         """Get a python object that can be passed to
         another python method that is a wrapper to a C++ method

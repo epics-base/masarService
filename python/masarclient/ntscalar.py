@@ -17,14 +17,17 @@ class NTScalar(object) :
     NOTE: THIS CLASS NEEDS MORE METHODS.
 
     """
-    def __init__(self,capsule) :
+    def __init__(self,arg) :
         """Constructor
 
-        capsule Must be a pvStructure capsule
-        This is created by other code that wraps a C++ method the
+        arg must be a scalarType or a pvStructure capsule
+        A capsule is created by other code that wraps a C++ method the
         returns a capsule.
         """
-        self.cppPvt = ntscalarPy._init(capsule)
+        if isinstance(arg,str) :
+            self.cppPvt = ntscalarPy._create(arg)
+        else :
+            self.cppPvt = ntscalarPy._init(arg)
     def __del__(self) :
         """Destructor destroy the connection to the C++ data."""
         ntscalarPy._destroy(self.cppPvt)
