@@ -313,7 +313,7 @@ GatherV3DataPtr GatherV3Data::create(
     }
     NTMultiChannelBuilderPtr builder = NTMultiChannel::createBuilder();
     NTMultiChannelPtr multiChannel = builder->
-            addValue(fieldCreate->createVariantUnion()) ->
+            value(fieldCreate->createVariantUnion()) ->
             addAlarm()->
             addTimeStamp()->
             addSeverity() ->

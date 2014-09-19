@@ -212,7 +212,7 @@ static NTMultiChannelPtr retrieveSnapshot(PyObject * list)
 
     NTMultiChannelBuilderPtr builder = NTMultiChannel::createBuilder();
     NTMultiChannelPtr multiChannel = builder->
-            addValue(fieldCreate->createVariantUnion()) ->
+            value(fieldCreate->createVariantUnion()) ->
             addAlarm()->
             addTimeStamp()->
             addSeverity() ->
