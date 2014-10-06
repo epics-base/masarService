@@ -78,7 +78,12 @@ static PyObject * _init(PyObject *willbenull, PyObject *args)
     PVStructurePtr *pv =
         static_cast<PVStructurePtr *>(pvoid);
     PVStructurePtr pvStructure = *pv;
-    NTScalarPtr ntscalar = NTScalar::narrow(pvStructure);
+    NTScalarPtr ntscalar = NTScalar::wrap(pvStructure);
+    if(!ntscalar) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. pvStructure was not a NTScalar");
+        return NULL;
+    }
     NTScalarPvt *pvt = new NTScalarPvt(ntscalar,pvStructure);
     return PyCapsule_New(pvt,"ntscalarPvt",0);
 }

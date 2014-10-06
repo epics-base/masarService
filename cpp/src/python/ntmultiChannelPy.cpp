@@ -78,7 +78,12 @@ static PyObject * _init(PyObject *willbenull, PyObject *args)
     PVStructurePtr *pv =
         static_cast<PVStructurePtr *>(pvoid);
     PVStructurePtr pvStructure = *pv;
-    NTMultiChannelPtr ntmultiChannel = NTMultiChannel::narrow(pvStructure);
+    NTMultiChannelPtr ntmultiChannel = NTMultiChannel::wrap(pvStructure);
+    if(!ntmultiChannel) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. pvStructure was not a NTMultiChannel");
+        return NULL;
+    }
     NTMultiChannelPvt *pvt = new NTMultiChannelPvt(ntmultiChannel,pvStructure);
     return PyCapsule_New(pvt,"ntmultiChannelPvt",0);
 }

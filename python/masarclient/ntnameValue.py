@@ -44,9 +44,9 @@ class NTNameValue(object) :
         alarm must be alarm.getAlarmPy()
         """
         return ntnameValuePy._getAlarm(self.cppPvt,alarm);
-    def getNames(self) :
+    def getName(self) :
         """get the names"""
-        return ntnameValuePy._getNames(self.cppPvt);
-    def getValues(self) :
+        return ntnameValuePy._getName(self.cppPvt);
+    def getValue(self) :
         """get the values"""
-        return ntnameValuePy._getValues(self.cppPvt);
+        return ntnameValuePy._getValue(self.cppPvt);

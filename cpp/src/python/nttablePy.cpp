@@ -78,7 +78,12 @@ static PyObject * _init(PyObject *willbenull, PyObject *args)
     PVStructurePtr *pv =
         static_cast<PVStructurePtr *>(pvoid);
     PVStructurePtr pvStructure = *pv;
-    NTTablePtr nttable = NTTable::narrow(pvStructure);
+    NTTablePtr nttable = NTTable::wrap(pvStructure);
+    if(!nttable) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. pvStructure was not a NTTable");
+        return NULL;
+    }
     NTTablePvt *pvt = new NTTablePvt(nttable,pvStructure);
     return PyCapsule_New(pvt,"nttablePvt",0);
 }

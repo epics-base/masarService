@@ -70,18 +70,17 @@ static PyObject * _init(PyObject *willbenull, PyObject *args)
         return NULL;
     }
     Py_ssize_t n = PyDict_Size(dict);
-    shared_vector<string> names(n);
-    shared_vector<string> values(n);
+    shared_vector<string> name(n);
+    shared_vector<string> value(n);
     PyObject *pkey, *pvalue;
     Py_ssize_t pos = 0;
     for(Py_ssize_t i=0; i< n; i++) {
         PyDict_Next(dict,&pos, &pkey, &pvalue);
         char *key = PyString_AS_STRING(pkey);
         char *val = PyString_AS_STRING(pvalue);
-        names[i] = string(key);
-        values[i] = string(val);
+        name[i] = string(key);
+        value[i] = string(val);
     }
-
     FieldConstPtr field = fieldCreate->createScalar(pvString);
     NTNameValueBuilderPtr builder = NTNameValue::createBuilder();
     NTNameValuePtr ntnamevalue = builder ->
@@ -92,14 +91,14 @@ static PyObject * _init(PyObject *willbenull, PyObject *args)
          addAlarm() ->
          create();
     PVStructurePtr pv = ntnamevalue->getPVStructure();
-    PVStringArrayPtr pvnames = pv->getSubField<PVStringArray>("names");
-    PVStringArrayPtr pvvalues = pv->getSubField<PVStringArray>("values");
+    PVStringArrayPtr pvname = pv->getSubField<PVStringArray>("name");
+    PVStringArrayPtr pvvalue = pv->getSubField<PVStringArray>("value");
     PVStringPtr pvfunction = pv->getSubField<PVString>("function");
     pvfunction->put(function);
-    shared_vector<const string> nn(freeze(names));
-    pvnames->replace(nn);
-    shared_vector<const string> vv(freeze(values));
-    pvvalues->replace(vv);
+    shared_vector<const string> nn(freeze(name));
+    pvname->replace(nn);
+    shared_vector<const string> vv(freeze(value));
+    pvvalue->replace(vv);
     NTNameValuePvt *pvt = new NTNameValuePvt(ntnamevalue,pv);
     return PyCapsule_New(pvt,"ntnameValuePvt",0);
 }
@@ -278,7 +277,7 @@ static PyObject * _getAlarm(PyObject *willBeNull, PyObject *args)
     return Py_None;
 }
 
-static PyObject * _getNames(PyObject *willBeNull, PyObject *args)
+static PyObject * _getName(PyObject *willBeNull, PyObject *args)
 {
     PyObject *pcapsule = 0;
     if(!PyArg_ParseTuple(args,"O:ntnameValuePy",
@@ -296,18 +295,18 @@ static PyObject * _getNames(PyObject *willBeNull, PyObject *args)
     }
     NTNameValuePvt *pvt = static_cast<NTNameValuePvt *>(pvoid);
     PVStructurePtr pvStructure = pvt->ntnameValue->getPVStructure();
-    PVStringArrayPtr pvNames = pvStructure->getSubField<PVStringArray>("names");
-    const shared_vector<const string> names(pvNames->view());
-    size_t num = names.size();
+    PVStringArrayPtr pvName = pvStructure->getSubField<PVStringArray>("name");
+    const shared_vector<const string> name(pvName->view());
+    size_t num = name.size();
     PyObject *result = PyTuple_New(num);
     for(size_t i=0; i<num; i++) {
-        PyObject *elem = Py_BuildValue("s",names[i].c_str());
+        PyObject *elem = Py_BuildValue("s",name[i].c_str());
         PyTuple_SetItem(result, i, elem);
     }
     return result;
 }
 
-static PyObject * _getValues(PyObject *willBeNull, PyObject *args)
+static PyObject * _getValue(PyObject *willBeNull, PyObject *args)
 {
     PyObject *pcapsule = 0;
     if(!PyArg_ParseTuple(args,"O:ntnameValuePy",
@@ -325,12 +324,12 @@ static PyObject * _getValues(PyObject *willBeNull, PyObject *args)
     }
     NTNameValuePvt *pvt = static_cast<NTNameValuePvt *>(pvoid);
     PVStructurePtr pvStructure = pvt->ntnameValue->getPVStructure();
-    PVStringArrayPtr pvValues = pvStructure->getSubField<PVStringArray>("values");
-    const shared_vector<const string> values(pvValues->view());
-    size_t num = values.size();
+    PVStringArrayPtr pvValue = pvStructure->getSubField<PVStringArray>("value");
+    const shared_vector<const string> value(pvValue->view());
+    size_t num = value.size();
     PyObject *result = PyTuple_New(num);
     for(size_t i=0; i<num; i++) {
-        PyObject *elem = Py_BuildValue("s",values[i].c_str());
+        PyObject *elem = Py_BuildValue("s",value[i].c_str());
         PyTuple_SetItem(result, i, elem);
     }
     return result;
@@ -344,8 +343,8 @@ static char _getPVStructureDoc[] = "_getPVStructure.";
 static char _getFunctionDoc[] = "_getFunction ntnamevaluePy.";
 static char _getTimeStampDoc[] = "_getTimeStamp ntnamevaluePy.";
 static char _getAlarmDoc[] = "_getAlarm ntnamevaluePy.";
-static char _getNamesDoc[] = "_getNames ntnamevaluePy.";
-static char _getValuesDoc[] = "_getValues ntnamevaluePy.";
+static char _getNameDoc[] = "_getName ntnamevaluePy.";
+static char _getValueDoc[] = "_getValue ntnamevaluePy.";
 
 
 static PyMethodDef methods[] = {
@@ -357,8 +356,8 @@ static PyMethodDef methods[] = {
     {"_getFunction",_getFunction,METH_VARARGS,_getFunctionDoc},
     {"_getTimeStamp",_getTimeStamp,METH_VARARGS,_getTimeStampDoc},
     {"_getAlarm",_getAlarm,METH_VARARGS,_getAlarmDoc},
-    {"_getNames",_getNames,METH_VARARGS,_getNamesDoc},
-    {"_getValues",_getValues,METH_VARARGS,_getValuesDoc},
+    {"_getName",_getName,METH_VARARGS,_getNameDoc},
+    {"_getValue",_getValue,METH_VARARGS,_getValueDoc},
 
     {NULL,NULL,0,NULL}
 };
