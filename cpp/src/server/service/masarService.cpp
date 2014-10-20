@@ -62,8 +62,8 @@ PVStructurePtr MasarService::request(
     }
     try {
 
-        const shared_vector<const string> name = pvArgument->getSubField<PVStringArray>("names")->view();
-        const shared_vector<const string> value = pvArgument->getSubField<PVStringArray>("values")->view();
+        const shared_vector<const string> name = pvArgument->getSubField<PVStringArray>("name")->view();
+        const shared_vector<const string> value = pvArgument->getSubField<PVStringArray>("value")->view();
         PVStructurePtr result = dslRdb->request(functionName,name,value);
         return result;
     } catch (std::exception &e) {
