@@ -159,10 +159,10 @@ def saveSnapshot():
 if __name__ == '__main__':
     try:
         # retrieveSystemList()
-        # retrieveServiceConfigs()
+        retrieveServiceConfigs()
         # retrieveServiceConfigProps()
         # retrieveServiceEvents()
-        retrieveSnapshot()
+        # retrieveSnapshot()
         # saveSnapshot()
     except AttributeError:
         print traceback.print_exc()

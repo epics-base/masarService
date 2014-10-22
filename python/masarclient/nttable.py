@@ -65,6 +65,6 @@ class NTTable(object):
         """get the label"""
         return nttablePy._getLabels(self.cppPvt)
 
-    def getColumn(self,index):
-        """get the value for the specified index"""
-        return nttablePy._getColumn(self.cppPvt, index)
+    def getColumn(self, name):
+        """get the value for the specified column name"""
+        return nttablePy._getColumn(self.cppPvt, name)
