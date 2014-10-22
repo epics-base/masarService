@@ -89,7 +89,7 @@ static PyObject * _destroy(PyObject *willBeNull, PyObject *args)
            "Bad argument. Expected (pvt)");
         return NULL;
     }
-    void *pvoid = PyCapsule_GetPointer(pcapsule,"gatherV3DataPy");
+    void *pvoid = PyCapsule_GetPointer(pcapsule,"gatherV3DataPvt");
     if(pvoid==0) {
         PyErr_SetString(PyExc_SyntaxError,
            "first arg must be return from _init");

@@ -161,7 +161,7 @@ static PyObject * _getPVStructure(PyObject *willBeNull, PyObject *args)
     {
         return NULL;
     }
-    void *pvoid = PyCapsule_GetPointer(pcapsule,"ntmultiChannelPy");
+    void *pvoid = PyCapsule_GetPointer(pcapsule,"ntmultiChannelPvt");
     if(pvoid==0) {
         PyErr_SetString(PyExc_SyntaxError,
            "first arg must be return from _init");

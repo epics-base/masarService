@@ -19,6 +19,9 @@ from ntnameValue import NTNameValue
 from nttable import NTTable
 from alarm import Alarm
 from timeStamp import TimeStamp
+from ntscalar import NTScalar
+from ntmultiChannel import NTMultiChannel
+
 
 class client():
     def __init__(self, channelname = 'masarService'):
@@ -42,18 +45,24 @@ class client():
         if not channelRPC.waitConnect(1.0) :
             print channelRPC.getMessage()
             raise Exception(channelRPC.getMessage())
-        channelRPC.issueRequest(ntnv.getNTNameValue(),False)
+        channelRPC.issueRequest(ntnv.getNTNameValue(), False)
         result = channelRPC.waitRequest()
-        if(result==None) :
+        if result is None:
             print channelRPC.getMessage()
             raise Exception(channelRPC.getMessage())
-        nttable = NTTable(result)
-        nttable.getAlarm(alarm.getAlarmPy())    
-        nttable.getTimeStamp(timeStamp.getTimeStampPy())
-        return nttable
+        if function in ["retrieveSnapshot", "getLiveMachine", "saveSnapshot"]:
+            result = NTMultiChannel(result)
+        elif function in ["retrieveServiceEvents", "retrieveServiceConfigs", "retrieveServiceConfigProps"]:
+            result = NTTable(result)
+        elif function == "updateSnapshotEvent":
+            result = NTScalar(result)
+
+        result.getAlarm(alarm)
+        result.getTimeStamp(timeStamp)
+        return result
     
     def __isFault(self, nttable):        
-        label = nttable.getLabel()
+        label = nttable.getLabels()
         if label[0] == 'status' and not nttable.getValue(0)[0]:
             return True
         return False
@@ -203,23 +212,24 @@ class client():
         # [pv name,string value,double value,long value,
         #  dbr type,isConnected,secondsPastEpoch,nanoSeconds,timeStampTag,
         #  alarmSeverity,alarmStatus,alarmMessage, is_array, array_value]
-        nttable = self.__clientRPC(function, params)
+        ntmultichannels = self.__clientRPC(function, params)
 
-        if self.__isFault(nttable):
-            return False
+        # @TODO check fault
+        # if self.__isFault(ntmultichannels):
+        #     return False
         
-        return (nttable.getValue(0), 
-                nttable.getValue(1), 
-                nttable.getValue(2),
-                nttable.getValue(3),
-                nttable.getValue(4),
-                nttable.getValue(5),
-                nttable.getValue(6),
-                nttable.getValue(7),
-                nttable.getValue(9),
-                nttable.getValue(10),
-                nttable.getValue(12),
-                nttable.getValue(13))
+        return (ntmultichannels.getValue(0), 
+                ntmultichannels.getValue(1), 
+                ntmultichannels.getValue(2),
+                ntmultichannels.getValue(3),
+                ntmultichannels.getValue(4),
+                ntmultichannels.getValue(5),
+                ntmultichannels.getValue(6),
+                ntmultichannels.getValue(7),
+                ntmultichannels.getValue(9),
+                ntmultichannels.getValue(10),
+                ntmultichannels.getValue(12),
+                ntmultichannels.getValue(13))
     
     def saveSnapshot(self, params):
         """
@@ -253,29 +263,30 @@ class client():
                     otherwise, False if operation failed.
         """
         function = 'saveSnapshot'
-        nttable = self.__clientRPC(function, params)
+        ntmultichannels = self.__clientRPC(function, params)
 
-        if self.__isFault(nttable):
-            return False
+        # @TODO check fault
+        # if self.__isFault(ntmultichannels):
+        #     return False
 
         ts = TimeStamp()
         # [pv name,string value,double value,long value,
         #  dbr type,isConnected,secondsPastEpoch,nanoSeconds,timeStampTag,
         #  alarmSeverity,alarmStatus,alarmMessage, is_array, array_value]
-        nttable.getTimeStamp(ts.getTimeStampPy())
+        ntmultichannels.getTimeStamp(ts)
         return (ts.getUserTag(),
-                nttable.getValue(0), 
-                nttable.getValue(1), 
-                nttable.getValue(2),
-                nttable.getValue(3),
-                nttable.getValue(4),
-                nttable.getValue(5),
-                nttable.getValue(6),
-                nttable.getValue(7),
-                nttable.getValue(9),
-                nttable.getValue(10),
-                nttable.getValue(12),
-                nttable.getValue(13))
+                ntmultichannels.getValue(0), 
+                ntmultichannels.getValue(1), 
+                ntmultichannels.getValue(2),
+                ntmultichannels.getValue(3),
+                ntmultichannels.getValue(4),
+                ntmultichannels.getValue(5),
+                ntmultichannels.getValue(6),
+                ntmultichannels.getValue(7),
+                ntmultichannels.getValue(9),
+                ntmultichannels.getValue(10),
+                ntmultichannels.getValue(12),
+                ntmultichannels.getValue(13))
 
     def updateSnapshotEvent(self, params):
         """
@@ -290,9 +301,10 @@ class client():
         """
         function = 'updateSnapshotEvent'
         nttable = self.__clientRPC(function, params)
-#
-#        if self.__isFault(nttable):
-#            return False
+
+        # @TODO check fault
+       # if self.__isFault(nttable):
+       #     return False
         
         return nttable.getValue(0)[0]
     
@@ -327,8 +339,9 @@ class client():
         function = 'getLiveMachine'
         nttable = self.__clientRPC(function, params)
 
-        if self.__isFault(nttable):
-            return False
+        # @TODO check fault
+        # if self.__isFault(nttable):
+        #     return False
         
         # channelName,stringValue,doubleValue,longValue,dbrType,isConnected, is_array, array_value
         return (nttable.getValue(0),

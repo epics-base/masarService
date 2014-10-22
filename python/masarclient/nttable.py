@@ -8,7 +8,8 @@
 
 import nttablePy
 
-class NTTable(object) :
+
+class NTTable(object):
     """Create an NTTable
     Given a object that is a python wrapper for a PVStructure
     that is a valid NTTable. This class can retrieve data from th
@@ -17,7 +18,7 @@ class NTTable(object) :
     NOTE: THIS CLASS NEEDS MORE METHODS.
 
     """
-    def __init__(self,arg) :
+    def __init__(self, arg):
         """Constructor
 
         arg must be a dictionary or a pvStructure capsule
@@ -28,34 +29,42 @@ class NTTable(object) :
             self.cppPvt = nttablePy._create(arg)
         else :
             self.cppPvt = nttablePy._init(arg)
-    def __del__(self) :
+
+    def __del__(self):
         """Destructor destroy the connection to the C++ data."""
         nttablePy._destroy(self.cppPvt)
-    def __str__(self) :
+
+    def __str__(self):
         """Get a string value for the NTTable"""
-        return nttablePy._str(self.cppPvt);
-    def getNTTable(self) :
+        return nttablePy._str(self.cppPvt)
+
+    def getNTTable(self):
         """Get a python object that can be passed to
         another python method that is a wrapper to a C++ method
         that expects a PVStructure object."""
-        return nttablePy._getNTTablePy(self.cppPvt);
-    def getPVStructure(self) :
+        return nttablePy._getNTTablePy(self.cppPvt)
+
+    def getPVStructure(self):
         """The data is saved as a PVStructure Get it.
         returns the PVStructure"""
         return nttablePy._getPVStructure(self.cppPvt)
-    def getTimeStamp(self,timeStamp) :
+
+    def getTimeStamp(self, timeStamp):
         """Get the timeStamp from the NTTable
         timeStamp must be timeStamp.getTimeStampPy()
         """
-        return nttablePy._getTimeStamp(self.cppPvt,timeStamp.getTimeStampPy());
-    def getAlarm(self,alarm) :
+        return nttablePy._getTimeStamp(self.cppPvt, timeStamp.getTimeStampPy())
+
+    def getAlarm(self, alarm):
         """Get the alarm from the NTTable
         alarm must be alarm.getAlarmPy()
         """
-        return nttablePy._getAlarm(self.cppPvt,alarm.getAlarmPy());
-    def getLabels(self) :
+        return nttablePy._getAlarm(self.cppPvt, alarm.getAlarmPy())
+
+    def getLabels(self):
         """get the label"""
-        return nttablePy._getLabels(self.cppPvt);
-    def getColumn(self,index) :
+        return nttablePy._getLabels(self.cppPvt)
+
+    def getColumn(self,index):
         """get the value for the specified index"""
-        return nttablePy._getColumn(self.cppPvt,index);
+        return nttablePy._getColumn(self.cppPvt, index)
