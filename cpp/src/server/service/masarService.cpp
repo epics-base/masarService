@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include <cstddef>
 #include <string>
+#include <cstdio>
 #include <stdexcept>
 #include <memory>
 
@@ -46,31 +47,59 @@ PVStructurePtr MasarService::request(
     PVStructurePtr const & pvArgument) throw (epics::pvAccess::RPCRequestException)
 {
     if(!NTNameValue::is_a(pvArgument->getStructure())) {
-        throw epics::pvAccess::RPCRequestException(
-             Status::STATUSTYPE_ERROR,"pvArgument is not an NTNameValue");
-    }
-    string functionName;
-    PVStringPtr pvFunction = pvArgument->getSubField<PVString>("function");
-    if (!pvFunction) {
-        throw epics::pvAccess::RPCRequestException(
-             Status::STATUSTYPE_ERROR,"pvArgument does not have function field");
-    }
-    functionName = pvFunction->get();
-    if(functionName.size()<1) {
-        throw epics::pvAccess::RPCRequestException(
-            Status::STATUSTYPE_ERROR,"pvArgument has an unsupported function");
-    }
-    try {
+        // support non NTNameValue Pair for some general purpose client, for example command line tools
+        string functionName;
+        PVStringPtr pvFunction = pvArgument->getSubField<PVString>("function");
+        if (!pvFunction) {
+            throw epics::pvAccess::RPCRequestException(
+                Status::STATUSTYPE_ERROR,"unknown MASAR function");
+        }
+        functionName = pvFunction->get();
+        if(functionName.size() < 1) {
+            throw epics::pvAccess::RPCRequestException(
+                Status::STATUSTYPE_ERROR,"pvArgument has an unsupported function");
+        }
+        StringArray fieldNames = pvArgument->getStructure()->getFieldNames();
+        size_t fieldcounts = (size_t) fieldNames.size();
+        shared_vector<string> names  (fieldcounts-1);
+        shared_vector< string> values (fieldcounts-1);
+        size_t counts = 0;
+        for (size_t i = 0; i < fieldcounts; i ++) {
+            if(fieldNames[i].compare("function")!=0) {
+                names[counts] = fieldNames[i];
+                values[counts] = pvArgument->getStringField(fieldNames[i])->get();
+                counts += 1;
+            }
+        }
+        try {
+            return dslRdb->request(functionName, freeze(names), freeze(values));
+        } catch (std::exception &e) {
+            throw RPCRequestException(Status::STATUSTYPE_ERROR,
+                std::string("request failed ") + e.what());
+        }
+    } else{
+        string functionName;
+        PVStringPtr pvFunction = pvArgument->getSubField<PVString>("function");
+        if (!pvFunction) {
+            throw epics::pvAccess::RPCRequestException(
+                 Status::STATUSTYPE_ERROR,"unknown MASAR function");
+        }
+        functionName = pvFunction->get();
+        if(functionName.size()<1) {
+            throw epics::pvAccess::RPCRequestException(
+                Status::STATUSTYPE_ERROR,"pvArgument has an unsupported function");
+        }
+        try {
 
-        const shared_vector<const string> name = pvArgument->getSubField<PVStringArray>("name")->view();
-        const shared_vector<const string> value = pvArgument->getSubField<PVStringArray>("value")->view();
-        PVStructurePtr result = dslRdb->request(functionName,name,value);
-        return result;
-    } catch (std::exception &e) {
-        throw RPCRequestException(Status::STATUSTYPE_ERROR,
-            std::string("request failed ") + e.what());
+            const shared_vector<const string> name = pvArgument->getSubField<PVStringArray>("name")->view();
+            const shared_vector<const string> value = pvArgument->getSubField<PVStringArray>("value")->view();
+            PVStructurePtr result = dslRdb->request(functionName,name,value);
+            return result;
+        } catch (std::exception &e) {
+            throw RPCRequestException(Status::STATUSTYPE_ERROR,
+                std::string("request failed ") + e.what());
+        }
     }
-
 }
 
 }}

@@ -58,6 +58,7 @@ class DSL(object):
             func = argument[1]
             func = func['function']
             result = self.dispatch(func, argument)
+
         return (result, )
 
     def _parseParams(self, params, key):

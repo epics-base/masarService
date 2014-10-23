@@ -39,7 +39,7 @@ def __clientRPC(function, params):
     elif function == "updateSnapshotEvent":
         result = NTScalar(result)
 #    print "Problem above"
-    print result
+#     print result
 
     result.getAlarm(alarm)
     # print alarm
@@ -94,13 +94,16 @@ def retrieveSnapshot():
     function = 'retrieveSnapshot'
     print ("=== test %s ===" %function)
     params = {'eventid': '365'}
-#    params = {'eventid': '132'}
+    # params = {'eventid': '132'}
     ntmultichannels = __clientRPC(function, params)
     result = ntmultichannels
     print "All: ", ntmultichannels
-    print "PV Values:", ntmultichannels.getValue()
-    print "PV Names:", ntmultichannels.getChannelName()
-    print "Structure", ntmultichannels.getPVStructure()
+    # print "PV Values:", ntmultichannels.getValue()
+    # print "PV Names:", ntmultichannels.getChannelName()
+    # print "Structure:", ntmultichannels.getPVStructure()
+    # print "NTMultiChannel:", ntmultichannels.getNTMultiChannel()
+    # print "NTMultiChannel:", ntmultichannels.getDescriptor()
+
     # # should return
     # # 'pv name': 0
     # # 'string value': 1
@@ -159,10 +162,10 @@ def saveSnapshot():
 if __name__ == '__main__':
     try:
         # retrieveSystemList()
-        retrieveServiceConfigs()
+        # retrieveServiceConfigs()
         # retrieveServiceConfigProps()
         # retrieveServiceEvents()
-        # retrieveSnapshot()
+        retrieveSnapshot()
         # saveSnapshot()
     except AttributeError:
         print traceback.print_exc()
