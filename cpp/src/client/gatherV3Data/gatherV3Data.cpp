@@ -322,6 +322,7 @@ GatherV3DataPtr GatherV3Data::create(
             addSecondsPastEpoch() ->
             addNanoseconds() ->
             addUserTag() ->
+            addDescriptor() ->
             create();
     PVStringArrayPtr pvChannelName = multiChannel->getChannelName();
     pvChannelName->replace(channelNames);

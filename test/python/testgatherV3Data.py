@@ -48,3 +48,4 @@ if __name__ == '__main__':
     print ntmultiChannel.getUserTag();
     print "descriptor:"
     print ntmultiChannel.getDescriptor();
+    print "all done"

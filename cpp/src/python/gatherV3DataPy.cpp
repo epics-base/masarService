@@ -75,7 +75,7 @@ static PyObject * _init(PyObject *willBeNull, PyObject *args)
     }
     shared_vector<const string> name(freeze(names));
     GatherV3DataPyPvt *pvt = new GatherV3DataPyPvt(name);
-    return PyCapsule_New(pvt,"gatherV3DataPy",0);
+    return PyCapsule_New(pvt,"gatherV3DataPvt",0);
 }
 
 
@@ -116,7 +116,7 @@ static PyObject * _connect(PyObject *willBeNull, PyObject *args)
            "Bad argument. Expected (pvt,timeout)");
         return NULL;
     }
-    void *pvoid = PyCapsule_GetPointer(pcapsule,"gatherV3DataPy");
+    void *pvoid = PyCapsule_GetPointer(pcapsule,"gatherV3DataPvt");
     if(pvoid==0) {
         PyErr_SetString(PyExc_SyntaxError,
            "first arg must be return from _init");
@@ -144,7 +144,7 @@ static PyObject * _get(PyObject *willBeNull, PyObject *args)
            "Bad argument. Expected (pvt)");
         return NULL;
     }
-    void *pvoid = PyCapsule_GetPointer(pcapsule,"gatherV3DataPy");
+    void *pvoid = PyCapsule_GetPointer(pcapsule,"gatherV3DataPvt");
     if(pvoid==0) {
         PyErr_SetString(PyExc_SyntaxError,
            "arg must be return from _init");
@@ -172,7 +172,7 @@ static PyObject * _put(PyObject *willBeNull, PyObject *args)
            "Bad argument. Expected (pvt)");
         return NULL;
     }
-    void *pvoid = PyCapsule_GetPointer(pcapsule,"gatherV3DataPy");
+    void *pvoid = PyCapsule_GetPointer(pcapsule,"gatherV3DataPvt");
     if(pvoid==0) {
         PyErr_SetString(PyExc_SyntaxError,
            "arg must be return from _init");
@@ -200,7 +200,7 @@ static PyObject * _getMessage(PyObject *willBeNull, PyObject *args)
            "Bad argument. Expected (pvt)");
         return NULL;
     }
-    void *pvoid = PyCapsule_GetPointer(pcapsule,"gatherV3DataPy");
+    void *pvoid = PyCapsule_GetPointer(pcapsule,"gatherV3DataPvt");
     if(pvoid==0) {
         PyErr_SetString(PyExc_SyntaxError,
            "first arg must be return from _init");
@@ -220,7 +220,7 @@ static PyObject * _getPVStructure(PyObject *willBeNull, PyObject *args)
     {
         return NULL;
     }
-    void *pvoid = PyCapsule_GetPointer(pcapsule,"gatherV3DataPy");
+    void *pvoid = PyCapsule_GetPointer(pcapsule,"gatherV3DataPvt");
     if(pvoid==0) {
         PyErr_SetString(PyExc_SyntaxError,
            "first arg must be return from _init");
