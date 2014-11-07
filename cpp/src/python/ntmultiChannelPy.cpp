@@ -507,6 +507,53 @@ static PyObject * _getValue(PyObject *willbenull, PyObject *args)
     return result;
 }
 
+static PyObject * _getChannelValue(PyObject *willbenull, PyObject *args)
+{
+    PyObject *pcapsule = 0;
+    int index = 0;
+    if(!PyArg_ParseTuple(args,"Oi:ntmultiChannelPy",
+        &pcapsule,
+        &index))
+    {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt,index)");
+        return NULL;
+    }
+    void *pvoid = PyCapsule_GetPointer(pcapsule,"ntmultiChannelPvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
+    NTMultiChannelPvt *pvt = static_cast<NTMultiChannelPvt *>(pvoid);
+    PVUnionArrayPtr pvValue =
+        pvt->ntmultiChannel->getPVStructure()->getSubField<PVUnionArray>("value");
+    shared_vector<const PVUnionPtr> data(pvValue->view());
+    int num = data.size();
+    if(index<0 || index>=num) {
+        PyErr_SetString(PyExc_RuntimeError,
+           "index out of bounds");
+        return NULL;
+    }
+    PVFieldPtr pvField = data[index]->get();
+    PyObject *result = NULL;
+    Type type = pvField->getField()->getType();
+    switch(type) {
+    case scalar:
+         result = getScalarValue(static_pointer_cast<PVScalar>(pvField));
+         break;
+    case scalarArray:
+         result = getScalarArrayValue(static_pointer_cast<PVScalarArray>(pvField));
+         break;
+    default:
+        string value("unhandled type");
+        result = Py_BuildValue("s",value.c_str());
+        break;
+       
+    }
+    return result;
+}
+
 static PyObject * _getChannelName(PyObject *willbenull, PyObject *args)
 {
     PyObject *pcapsule = 0;
@@ -787,6 +834,7 @@ static char _getTimeStampDoc[] = "_getTimeStamp ntmultiChannelPy.";
 static char _getAlarmDoc[] = "_getAlarm ntmultiChannelPy.";
 static char _getNumberChannelDoc[] = "_getNumberChannel ntmultiChannelPy.";
 static char _getValueDoc[] = "_getValue ntmultiChannelPy.";
+static char _getChannelValueDoc[] = "_getChannelValue ntmultiChannelPy.";
 static char _getChannelNameDoc[] = "_getChannelName ntmultiChannelPy.";
 static char _getIsConnectedDoc[] = "_getIsConnected ntmultiChannelPy.";
 static char _getSeverityDoc[] = "_getSeverity ntmultiChannelPy.";
@@ -807,6 +855,7 @@ static PyMethodDef methods[] = {
     {"_getAlarm",_getAlarm,METH_VARARGS,_getAlarmDoc},
     {"_getNumberChannel",_getNumberChannel,METH_VARARGS,_getNumberChannelDoc},
     {"_getValue",_getValue,METH_VARARGS,_getValueDoc},
+    {"_getChannelValue",_getChannelValue,METH_VARARGS,_getChannelValueDoc},
     {"_getChannelName",_getChannelName,METH_VARARGS,_getChannelNameDoc},
     {"_getIsConnected",_getIsConnected,METH_VARARGS,_getIsConnectedDoc},
     {"_getSeverity",_getSeverity,METH_VARARGS,_getSeverityDoc},

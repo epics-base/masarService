@@ -67,6 +67,10 @@ class NTMultiChannel(object):
         """get value """
         return ntmultiChannelPy._getValue(self.cppPvt)
 
+    def getChannelValue(self,index):
+        """get channelValue """
+        return ntmultiChannelPy._getChannelValue(self.cppPvt,index)
+
     def getChannelName(self):
         """get channelName"""
         return ntmultiChannelPy._getChannelName(self.cppPvt)

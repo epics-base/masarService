@@ -48,4 +48,10 @@ if __name__ == '__main__':
     print ntmultiChannel.getUserTag();
     print "descriptor:"
     print ntmultiChannel.getDescriptor();
+    num = ntmultiChannel.getNumberChannel()
+    i = 0
+    while i < num :
+        value = ntmultiChannel.getChannelValue(i)
+        print "index ", i, value
+        i += 1
     print "all done"
