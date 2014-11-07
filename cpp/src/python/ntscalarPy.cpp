@@ -62,7 +62,7 @@ void NTScalarPvt::destroy()
 static PyObject * _init(PyObject *willbenull, PyObject *args)
 {
     PyObject *capsule = 0;
-    if(!PyArg_ParseTuple(args,"O:ntscalarpy",
+    if(!PyArg_ParseTuple(args,"O:ntscalarPy",
         &capsule))
     {
         PyErr_SetString(PyExc_SyntaxError,
@@ -91,7 +91,7 @@ static PyObject * _init(PyObject *willbenull, PyObject *args)
 static PyObject * _create(PyObject *willbenull, PyObject *args)
 {
     const char *type = 0;
-    if(!PyArg_ParseTuple(args,"s:ntnamevaluepy",&type))
+    if(!PyArg_ParseTuple(args,"s:ntscalarPy",&type))
     {
         PyErr_SetString(PyExc_SyntaxError,
            "Bad argument. Expected scalarType");
@@ -210,7 +210,7 @@ static PyObject * _getPVStructure(PyObject *willBeNull, PyObject *args)
     {
         return NULL;
     }
-    void *pvoid = PyCapsule_GetPointer(pcapsule,"ntscalarPy");
+    void *pvoid = PyCapsule_GetPointer(pcapsule,"ntscalarPvt");
     if(pvoid==0) {
         PyErr_SetString(PyExc_SyntaxError,
            "first arg must be return from _init");

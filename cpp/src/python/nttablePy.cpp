@@ -62,7 +62,7 @@ void NTTablePvt::destroy()
 static PyObject * _init(PyObject *willbenull, PyObject *args)
 {
     PyObject *capsule = 0;
-    if(!PyArg_ParseTuple(args,"O:nttablepy",
+    if(!PyArg_ParseTuple(args,"O:nttablePy",
         &capsule))
     {
         PyErr_SetString(PyExc_SyntaxError,
@@ -91,7 +91,7 @@ static PyObject * _init(PyObject *willbenull, PyObject *args)
 static PyObject * _create(PyObject *willbenull, PyObject *args)
 {
     PyObject *dict = 0;
-    if(!PyArg_ParseTuple(args,"O!:ntnametypepy",
+    if(!PyArg_ParseTuple(args,"O!:nttablePy",
         &PyDict_Type,&dict))
     {
         PyErr_SetString(PyExc_SyntaxError,

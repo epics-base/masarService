@@ -61,7 +61,7 @@ static PyObject * _init(PyObject *willbenull, PyObject *args)
 {
     const char *function = 0;
     PyObject *dict = 0;
-    if(!PyArg_ParseTuple(args,"sO!:ntnamevaluepy",
+    if(!PyArg_ParseTuple(args,"sO!:ntnamevaluePy",
         &function,
         &PyDict_Type,&dict))
     {

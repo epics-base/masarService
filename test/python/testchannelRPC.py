@@ -95,14 +95,14 @@ def retrieveSnapshot():
     print ("=== test %s ===" %function)
     params = {'eventid': '365'}
     # params = {'eventid': '132'}
-    ntmultichannels = __clientRPC(function, params)
-    result = ntmultichannels
-    print "All: ", ntmultichannels
-    # print "PV Values:", ntmultichannels.getValue()
-    # print "PV Names:", ntmultichannels.getChannelName()
-    # print "Structure:", ntmultichannels.getPVStructure()
-    # print "NTMultiChannel:", ntmultichannels.getNTMultiChannel()
-    # print "NTMultiChannel:", ntmultichannels.getDescriptor()
+    ntmultichannel = __clientRPC(function, params)
+    result = ntmultichannel
+    print "All: ", ntmultichannel
+    # print "PV Values:", ntmultichannel.getValue()
+    # print "PV Names:", ntmultichannel.getChannelName()
+    # print "Structure:", ntmultichannel.getPVStructure()
+    # print "NTMultiChannel:", ntmultichannel.getNTMultiChannel()
+    # print "NTMultiChannel:", ntmultichannel.getDescriptor()
 
     # # should return
     # # 'pv name': 0
@@ -121,16 +121,16 @@ def retrieveSnapshot():
     # # 'array_value'13
     # # numbers = nttable.getNumberValues()
     # print result
-    # print ntmultichannels.getNumberChannel()
+    # print ntmultichannel.getNumberChannel()
     # label = result.getLabels()
     #
-    # if label[0] == 'status' and not ntmultichannels.getValue(0)[0]:
-    #     print (ntmultichannels)
+    # if label[0] == 'status' and not ntmultichannel.getValue(0)[0]:
+    #     print (ntmultichannel)
     # else:
-    #     dbr_type = ntmultichannels.getValue(4)
-    #     is_array = ntmultichannels.getValue(12)
+    #     dbr_type = ntmultichannel.getValue(4)
+    #     is_array = ntmultichannel.getValue(12)
     #     print (is_array)
-    #     raw_array_value = ntmultichannels.getValue(13)
+    #     raw_array_value = ntmultichannel.getValue(13)
     #     print (raw_array_value)
     #     array_value = []
     #     epicsint    = [1, 4, 5]
@@ -155,8 +155,8 @@ def saveSnapshot():
 #              'servicename': 'masar'}
     params = {'configname': 'wf_test',
               'servicename': 'masar'}
-    ntmultichannels = __clientRPC(function, params)
-    print(ntmultichannels)
+    ntmultichannel = __clientRPC(function, params)
+    print(ntmultichannel)
     print ("=== test %s end ===" %function)
 
 if __name__ == '__main__':
