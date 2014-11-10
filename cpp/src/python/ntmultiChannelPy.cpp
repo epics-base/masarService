@@ -14,6 +14,7 @@
 
 #include <pv/convert.h>
 #include <pv/nt.h>
+#include <pv/pvEnumerated.h>
 #include <stdexcept>
 
 
@@ -496,6 +497,26 @@ static PyObject * _getValue(PyObject *willbenull, PyObject *args)
         case scalarArray:
              PyTuple_SetItem(result,i,getScalarArrayValue(static_pointer_cast<PVScalarArray>(pvField)));
              break;
+        case structure:
+             {
+                 PVEnumerated pvEnumerated;
+                 if(pvEnumerated.attach(pvField)) {
+                     if(pvEnumerated.getChoices().empty()) {
+                         int32 value = pvEnumerated.getIndex();
+                         PyTuple_SetItem(result,i,Py_BuildValue("i",value));
+                     } else {
+                         string value = pvEnumerated.getChoice();
+                         if(value.size() >= 1) {
+                             PyTuple_SetItem(result,i,Py_BuildValue("s",value.c_str()));
+                         } else {
+                             int32 value = pvEnumerated.getIndex();
+                             PyTuple_SetItem(result,i,Py_BuildValue("i",value));
+                         }
+                     }
+                     break;
+                 }
+             }
+             // just fall through
         default:
             string value("unhandled type");
             PyObject *elem = Py_BuildValue("s",value.c_str());
@@ -545,6 +566,26 @@ static PyObject * _getChannelValue(PyObject *willbenull, PyObject *args)
     case scalarArray:
          result = getScalarArrayValue(static_pointer_cast<PVScalarArray>(pvField));
          break;
+    case structure:
+         {
+             PVEnumerated pvEnumerated;
+             if(pvEnumerated.attach(pvField)) {
+                 if(pvEnumerated.getChoices().empty()) {
+                     int32 value = pvEnumerated.getIndex();
+                     result = Py_BuildValue("i",value);
+                 } else {
+                     string value = pvEnumerated.getChoice();
+                         if(value.size() >= 1) {
+                             result = Py_BuildValue("s",value.c_str());
+                         } else {
+                             int32 value = pvEnumerated.getIndex();
+                             result = Py_BuildValue("i",value);
+                         }
+                 }
+                 break;
+             }
+         }
+         // just fall through
     default:
         string value("unhandled type");
         result = Py_BuildValue("s",value.c_str());

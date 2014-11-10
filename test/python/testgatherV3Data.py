@@ -6,9 +6,12 @@ from masarclient.timeStamp import TimeStamp as TimeStamp
 
 if __name__ == '__main__':
     names = (
+        'masarExampleBoUninit',
+        'masarExampleMbboUninit',
+        'masarExample0002',
+        'masarExample0003',
         'masarExample0000',
         'masarExample0001',
-        'masarExample0002',
         'masarExample0004',
         'masarExampleCharArray',
         'masarExampleStringArray',
