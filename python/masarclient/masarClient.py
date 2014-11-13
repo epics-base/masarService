@@ -196,43 +196,50 @@ class client():
 
         result:     list of list with the following format:
                     pv name []:          pv name list
-                    string value []:     value list in string format
-                    double value []      value list in double format
-                    long value []        value list in long format
-                    dbr_type []:         EPICS DBR types
+                    value []             value list
                     isConnected []:      connection status, either True or False
                     secondsPastEpoch []: seconds after EPOCH time
                     nanoSeconds []:      nano-seconds
+                    userTags []:
                     alarmSeverity []:    EPICS IOC severity
                     alarmStatus []:      EPICS IOC status
-                    is_array []:         whether value is array, either True or False
-                    array_value [[]]:    if it is array, the value is stored here.
                             
                     otherwise, False if nothing is found.
         """
         function = 'retrieveSnapshot'
-        # [pv name,string value,double value,long value,
-        #  dbr type,isConnected,secondsPastEpoch,nanoSeconds,timeStampTag,
-        #  alarmSeverity,alarmStatus,alarmMessage, is_array, array_value]
         ntmultichannels = self.__clientRPC(function, params)
-
         # @TODO check fault
-        # if self.__isFault(ntmultichannels):
-        #     return False
+        if ntmultichannels.getNumberChannel() == 0:
+            # No returned value. 
+            return False
 
-        # print (ntmultichannels.getChannelName(),
-        #         ntmultichannels.getValue(),
-        #         ntmultichannels.getValue(),
-        #         ntmultichannels.getValue(),
-        #         ntmultichannels.getDescriptor(),
-        #         ntmultichannels.getIsConnected(),
-        #         ntmultichannels.getSecondsPastEpoch(),
-        #         ntmultichannels.getNanoseconds(),
-        #         ntmultichannels.getSeverity(),
-        #         ntmultichannels.getStatus(),
-        #         ntmultichannels.getValue(),
-        #         ntmultichannels.getValue())
+        alarm = Alarm()
+        ntmultichannels.getAlarm(alarm)
+        # [pv name, value,
+        #  isConnected, secondsPastEpoch, nanoSeconds, timeStampTag,
+        #  alarmSeverity, alarmStatus, alarmMessage, is_array]
 
+        #print ntmultichannels.getValue()
+        print ntmultichannels.getChannelName()
+        print ntmultichannels.getValue()
+        #print ntmultichannels.getValue() # has problem here
+        #print ntmultichannels.getIsConnected()
+        #print ntmultichannels.getSecondsPastEpoch()
+        #print ntmultichannels.getNanoseconds()
+        #print ntmultichannels.getMessage()()
+        #print ntmultichannels.getSeverity()
+        #print ntmultichannels.getStatus()
+        #print alarm.getMessage()
+
+        #return (ntmultichannels.getChannelName(),
+        #        ntmultichannels.getChannelValue(),
+        #        ntmultichannels.getIsConnected(),
+        #        ntmultichannels.getSecondsPastEpoch(),
+        #        ntmultichannels.getNanoseconds(),
+        #        ntmultichannels.getMessage()(),
+        #        ntmultichannels.getSeverity(),
+        #        ntmultichannels.getStatus(),
+        #        alarm.getMessage())
         
         # return (ntmultichannels.getValue(0),
         #         ntmultichannels.getValue(1),

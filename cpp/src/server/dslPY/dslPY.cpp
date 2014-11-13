@@ -233,6 +233,7 @@ static NTMultiChannelPtr retrieveSnapshot(PyObject * list)
     shared_vector<string> message(numberChannels);
     PyObject * sublist;
     for(size_t index = 0; index < (size_t)numberChannels; index++ ){
+        channelValue[index] = pvDataCreate->createPVVariantUnion();
         sublist = PyList_GetItem(data_array, index+1);
         // ('pv name', 'string value', 'double value', 'long value', 'dbr type', 'isConnected',
         //  'secondsPastEpoch', 'nanoSeconds', 'timeStampTag', 'alarmSeverity', 'alarmStatus', 'alarmMessage'
@@ -344,6 +345,15 @@ static NTMultiChannelPtr retrieveSnapshot(PyObject * list)
             }
         }
     }
+    multiChannel->getChannelName()->replace(freeze(channelName));
+    multiChannel->getValue()->replace(freeze(channelValue));
+    multiChannel->getIsConnected()->replace(freeze(isConnected));
+    multiChannel->getSecondsPastEpoch()->replace(freeze(secondsPastEpoch));
+    multiChannel->getNanoseconds()->replace(freeze(nanoseconds));
+    multiChannel->getUserTag()->replace(freeze(userTag));
+    multiChannel->getSeverity()->replace(freeze(severity));
+    multiChannel->getStatus()->replace(freeze(status));
+    multiChannel->getMessage()->replace(freeze(message));
 
     // set time stamp
     PVTimeStamp pvTimeStamp;
@@ -601,16 +611,6 @@ static NTTablePtr retrieveServiceConfigEvents(PyObject * list, long numeric)
 PVStructurePtr DSL_RDB::request(
     string const & functionName,shared_vector<const string> const & names,shared_vector<const string> const &values)
 {
-cout << "DSL_RDB::request " << functionName << endl;
-size_t len = names.size();
-cout << "names";
-for(size_t i=0; i<len; ++i) cout << " "<< names[i];
-cout << endl;
-len = names.size();
-cout << "values";
-for(size_t i=0; i<len; ++i) cout << " "<< values[i];
-cout << endl;
-
     if (functionName.compare("getLiveMachine")==0) {
         NTMultiChannelPtr ntmultiChannel = getLiveMachine(values);
         return ntmultiChannel->getPVStructure();
