@@ -186,13 +186,13 @@ static NTMultiChannelPtr getLiveMachine(shared_vector<const string> const & chan
         return noDataMultiChannel("get failed");
     }
     NTMultiChannelPtr ntmultiChannel = gather->getNTMultiChannel();
-    // set time stamp
-    PVTimeStamp pvTimeStamp;
-    ntmultiChannel->attachTimeStamp(pvTimeStamp);
-    TimeStamp timeStamp;
-    timeStamp.getCurrent();
-    timeStamp.setUserTag(0);
-    pvTimeStamp.set(timeStamp);
+    // set time stamp, no need anymore since gather put time stamp on it
+    //PVTimeStamp pvTimeStamp;
+    //ntmultiChannel->attachTimeStamp(pvTimeStamp);
+    //TimeStamp timeStamp;
+    //timeStamp.getCurrent();
+    //timeStamp.setUserTag(0);
+    //pvTimeStamp.set(timeStamp);
     gather->destroy();
     return ntmultiChannel;
 }
@@ -362,6 +362,7 @@ static NTMultiChannelPtr saveSnapshot(PyObject * list, NTMultiChannelPtr data)
     // Get save masar event id
     // -1 means saveSnapshot failure
     int64 eid = -2;
+
     if (PyTuple_Check(list)){
         PyObject * plist = PyTuple_GetItem(list, 0);
         PyObject * pstatus = PyList_GetItem(plist,0);
@@ -663,7 +664,7 @@ PVStructurePtr DSL_RDB::request(
         PyObject * pyTuple = PyTuple_New(1);
         // put dictionary into the tuple
         PyTuple_SetItem(pyTuple, 0, pyDict);
-        PyObject *pchannelnames = PyEval_CallObject(pgetchannames,pyTuple);
+        PyObject *pchannelnames = PyEval_CallObject(pgetchannames, pyTuple);
         if(pchannelnames == NULL) {
             pvReturn = noDataMultiChannel("Failed to retrieve channel names.");
         } else {
@@ -675,26 +676,31 @@ PVStructurePtr DSL_RDB::request(
                 name = PyList_GetItem(pchannelnames, i);
                 channames[i] = PyString_AsString(name);
             }
-            shared_vector<const string> names(freeze(channames));
-            Py_DECREF(pchannelnames);
-            NTMultiChannelPtr data = getLiveMachine(names);
+            if (channames.size() == 0)
+                pvReturn = noDataMultiChannel("Failed to retrieve channel names.");
+            else {
+                shared_vector<const string> names(freeze(channames));
+                Py_DECREF(pchannelnames);
+                NTMultiChannelPtr data = getLiveMachine(names);
+                PVStructurePtr pvStructure = data->getPVStructure();
 
-            // create a tuple is needed to pass to Python as parameter.
-            PyObject * pdata = PyCapsule_New(&data,"pvStructure",0);
-            PyObject * pyTuple2 = PyTuple_New(2);
+                // create a tuple is needed to pass to Python as parameter.
+                PyObject * pdata = PyCapsule_New(&pvStructure, "pvStructure", 0);
+                PyObject * pyTuple2 = PyTuple_New(2);
 
-            // first value is the data from live machine
-            PyTuple_SetItem(pyTuple2, 0, pdata);
-            // second value is the dictionary
-            PyTuple_SetItem(pyTuple2, 1, pyDict);
-            PyObject *result = PyEval_CallObject(prequest,pyTuple2);
-            if(result == NULL) {
-                pvReturn = noDataMultiChannel("Failed to save snapshot.");
-            } else {
-                pvReturn = saveSnapshot(result, data);
-                Py_DECREF(result);
+                // first value is the data from live machine
+                PyTuple_SetItem(pyTuple2, 0, pdata);
+                // second value is the dictionary
+                PyTuple_SetItem(pyTuple2, 1, pyDict);
+                PyObject *result = PyEval_CallObject(prequest,pyTuple2);
+                if(result == NULL) {
+                    pvReturn = noDataMultiChannel("Failed to save snapshot.");
+                } else {
+                    pvReturn = saveSnapshot(result, data);
+                    Py_DECREF(result);
+                }
+                Py_DECREF(pyTuple2);
             }
-            Py_DECREF(pyTuple2);
         }
         Py_DECREF(pyTuple);
         PyGILState_Release(gstate);

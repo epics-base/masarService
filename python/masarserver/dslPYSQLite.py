@@ -8,7 +8,7 @@
 
 import re
 
-from masarclient.nttable import NTTable
+from masarclient.ntmultiChannel import NTMultiChannel
 import pymasarsqlite as pymasar
 
 __all__=['DSL']
@@ -123,17 +123,17 @@ class DSL(object):
         if not service:
             service = self.__servicename
         
-        rawdata = params[0]
-        nttable = NTTable(rawdata, True)
-        numberValueCount = nttable.getNumberValues()
-        if numberValueCount == 1 and 'status' == nttable.getLabel()[0] and not nttable.getValue(0)[0]:
-            raise
+        result = NTMultiChannel(params[0])
+        dataLen = result.getNumberChannel() 
+        if dataLen == 0:
+            raise RuntimeError("No available snapshot data.")
         
-        # values format: the value is raw data from IOC 
-        # [(channel name,), (string value,),(double value,),(long value,),(dbr type),(is connected),
-        #  (second past epoch,),(nano seconds,),(time stamp tag,),(alarm severity,),(alarm status,),(alarm message,), (is_array), (array_value)]
-        values = []
-
+        # values format: the value is raw data from IOC
+        # [(pv name), (value),
+        #  (isConnected), (secondsPastEpoch), (nanoSeconds), (timeStampTag),
+        #  (alarmSeverity), (alarmStatu)s, (alarmMessage)]
+        values=result.getValue()
+ 
         # data format: the data is prepared to save into rdb
         # rawdata format
         # [('channel name', 'string value', 'double value', 'long value', 'dbr type', 'is connected', 
@@ -141,34 +141,7 @@ class DSL(object):
         #  ...
         # ]
         datas = []
-        dataLen = len(nttable.getValue(0))
         
-        dbrtype = nttable.getValue(4)
-        is_array = nttable.getValue(12)
-        # get IOC raw data
-        for i in range(numberValueCount):
-            if i == 13:
-                raw_array_value = nttable.getValue(i)
-                array_value = []
-                for j in range(len(is_array)):
-                    if dbrtype[j] in self.epicsDouble:
-                        array_value.append(raw_array_value[j][1])
-                    elif dbrtype[j] in self.epicsInt:
-                        array_value.append(raw_array_value[j][2])
-                    elif dbrtype[j] in self.epicsString:
-                        array_value.append(raw_array_value[j][0])
-                    elif dbrtype[j] in self.epicsNoAccess:
-                        array_value.append(raw_array_value[j][0])
-                values.append(array_value)
-            else:
-                values.append(list(nttable.getValue(i)))
-        # problem when a negative value is passed from C++
-        #define DBF_FLOAT   2
-        #define DBF_DOUBLE  6
-        for i in range(len(values[2])):
-            if values[4][i] in [2, 6] and values[2][i] < 0:
-                values[3][i] = int(values[2][i])
-
         # initialize data for rdb
         for j in range(dataLen):
             datas.append(())
