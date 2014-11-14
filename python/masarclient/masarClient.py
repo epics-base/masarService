@@ -62,7 +62,6 @@ class client():
     
     def __isFault(self, nttable):        
         label = nttable.getLabels()
-        print nttable
         if label[0] == 'status' and not nttable.getValue(0)[0]:
             return True
         return False
@@ -78,6 +77,8 @@ class client():
         params = {}
         nttable = self.__clientRPC(function, params)
 
+        if not isinstance(nttable, NTTable):
+            raise RuntimeError("Wrong returned data type")
         if self.__isFault(nttable):
             return False
         results = nttable.getColumn(nttable.getLabels()[-1])
@@ -110,6 +111,8 @@ class client():
         nttable = self.__clientRPC(function, params)
         labels = nttable.getLabels()
 
+        if not isinstance(nttable, NTTable):
+            raise RuntimeError("Wrong returned data type")
         if self.__isFault(nttable):
             return False
 
@@ -147,6 +150,8 @@ class client():
         function = 'retrieveServiceEvents'
         nttable = self.__clientRPC(function, params)
 
+        if not isinstance(nttable, NTTable):
+            raise RuntimeError("Wrong returned data type")
         if self.__isFault(nttable):
             return False
         
@@ -203,57 +208,37 @@ class client():
                     userTags []:
                     alarmSeverity []:    EPICS IOC severity
                     alarmStatus []:      EPICS IOC status
+                    alarmMessage []:     EPICS IOC pv status message
                             
                     otherwise, False if nothing is found.
         """
         function = 'retrieveSnapshot'
         ntmultichannels = self.__clientRPC(function, params)
-        # @TODO check fault
+        
+        # check fault
+        if not isinstance(ntmultichannels, NTMultiChannel):
+            raise RuntimeError("Wrong returned data type")
         if ntmultichannels.getNumberChannel() == 0:
             # No returned value. 
             return False
 
-        alarm = Alarm()
-        ntmultichannels.getAlarm(alarm)
+        # alarm and timestamp is not needed for now
+        # alarm = Alarm()
+        # ntmultichannels.getAlarm(alarm)
         # [pv name, value,
         #  isConnected, secondsPastEpoch, nanoSeconds, timeStampTag,
-        #  alarmSeverity, alarmStatus, alarmMessage, is_array]
+        #  alarmSeverity, alarmStatus, alarmMessage]
 
-        #print ntmultichannels.getValue()
-        print ntmultichannels.getChannelName()
-        print ntmultichannels.getValue()
-        #print ntmultichannels.getValue() # has problem here
-        #print ntmultichannels.getIsConnected()
-        #print ntmultichannels.getSecondsPastEpoch()
-        #print ntmultichannels.getNanoseconds()
-        #print ntmultichannels.getMessage()()
-        #print ntmultichannels.getSeverity()
-        #print ntmultichannels.getStatus()
-        #print alarm.getMessage()
-
-        #return (ntmultichannels.getChannelName(),
-        #        ntmultichannels.getChannelValue(),
-        #        ntmultichannels.getIsConnected(),
-        #        ntmultichannels.getSecondsPastEpoch(),
-        #        ntmultichannels.getNanoseconds(),
-        #        ntmultichannels.getMessage()(),
-        #        ntmultichannels.getSeverity(),
-        #        ntmultichannels.getStatus(),
-        #        alarm.getMessage())
+        return (ntmultichannels.getChannelName(),
+                ntmultichannels.getValue(),
+                ntmultichannels.getIsConnected(),
+                ntmultichannels.getSecondsPastEpoch(),
+                ntmultichannels.getNanoseconds(),
+                ntmultichannels.getUserTag(),
+                ntmultichannels.getSeverity(),
+                ntmultichannels.getStatus(),
+                ntmultichannels.getMessage())
         
-        # return (ntmultichannels.getValue(0),
-        #         ntmultichannels.getValue(1),
-        #         ntmultichannels.getValue(2),
-        #         ntmultichannels.getValue(3),
-        #         ntmultichannels.getValue(4),
-        #         ntmultichannels.getValue(5),
-        #         ntmultichannels.getValue(6),
-        #         ntmultichannels.getValue(7),
-        #         ntmultichannels.getValue(9),
-        #         ntmultichannels.getValue(10),
-        #         ntmultichannels.getValue(12),
-        #         ntmultichannels.getValue(13))
-    
     def saveSnapshot(self, params):
         """
         This function is to take a machine snapshot data and send data to client for preview . 
@@ -269,47 +254,44 @@ class client():
                     'comment':     [optional] exact comment. 
 
         result:     list of list with the following format:
-                    id: id of this new event
+                    id:                  id of this new event
                     pv name []:          pv name list
-                    string value []:     value list in string format
-                    double value []      value list in double format
-                    long value []        value list in long format
-                    dbr_type []:         EPICS DBR types
+                    value []             value list
                     isConnected []:      connection status, either True or False
                     secondsPastEpoch []: seconds after EPOCH time
                     nanoSeconds []:      nano-seconds
+                    userTags []:
                     alarmSeverity []:    EPICS IOC severity
                     alarmStatus []:      EPICS IOC status
-                    is_array []:         whether value is array, either True or False
-                    array_value [[]]:    if it is array, the value is stored here.
-                            
-                    otherwise, False if operation failed.
+                    alarmMessage []:     EPICS IOC pv status message
+
+                    otherwise, False if nothing is found.
         """
         function = 'saveSnapshot'
         ntmultichannels = self.__clientRPC(function, params)
 
-        # @TODO check fault
-        # if self.__isFault(ntmultichannels):
-        #     return False
+        # check fault
+        if not isinstance(ntmultichannels, NTMultiChannel):
+            raise RuntimeError("Wrong returned data type")
+        if ntmultichannels.getNumberChannel() == 0:
+            # No returned value. 
+            return False
 
         ts = TimeStamp()
-        # [pv name,string value,double value,long value,
-        #  dbr type,isConnected,secondsPastEpoch,nanoSeconds,timeStampTag,
-        #  alarmSeverity,alarmStatus,alarmMessage, is_array, array_value]
+        # [pv name, value,
+        #  isConnected, secondsPastEpoch, nanoSeconds, timeStampTag,
+        #  alarmSeverity, alarmStatus, alarmMessage]
         ntmultichannels.getTimeStamp(ts)
         return (ts.getUserTag(),
-                ntmultichannels.getValue(0), 
-                ntmultichannels.getValue(1), 
-                ntmultichannels.getValue(2),
-                ntmultichannels.getValue(3),
-                ntmultichannels.getValue(4),
-                ntmultichannels.getValue(5),
-                ntmultichannels.getValue(6),
-                ntmultichannels.getValue(7),
-                ntmultichannels.getValue(9),
-                ntmultichannels.getValue(10),
-                ntmultichannels.getValue(12),
-                ntmultichannels.getValue(13))
+                ntmultichannels.getChannelName(),
+                ntmultichannels.getValue(),
+                ntmultichannels.getIsConnected(),
+                ntmultichannels.getSecondsPastEpoch(),
+                ntmultichannels.getNanoseconds(),
+                ntmultichannels.getUserTag(),
+                ntmultichannels.getSeverity(),
+                ntmultichannels.getStatus(),
+                ntmultichannels.getMessage())
 
     def updateSnapshotEvent(self, params):
         """
@@ -324,12 +306,10 @@ class client():
         """
         function = 'updateSnapshotEvent'
         result = self.__clientRPC(function, params)
+        if not isinstance(result, NTScalar):
+            raise RuntimeError("Wrong returned data type.")
 
-        # @TODO check fault
-       # if self.__isFault(nttable):
-       #     return False
-        
-        return result.getValue(0)[0]
+        return bool(result.getValue())
     
     def getLiveMachine(self, params):
         """
@@ -345,37 +325,35 @@ class client():
 
         result:     list of list with the following format:
                     pv name []:          pv name list
-                    string value []:     value list in string format
-                    double value []      value list in double format
-                    long value []        value list in long format
-                    dbr_type []:         EPICS DBR types
+                    value []             value list
                     isConnected []:      connection status, either True or False
                     secondsPastEpoch []: seconds after EPOCH time
                     nanoSeconds []:      nano-seconds
+                    userTags []:
                     alarmSeverity []:    EPICS IOC severity
                     alarmStatus []:      EPICS IOC status
-                    is_array []:         whether value is array, either True or False
-                    array_value [[]]:    if it is array, the value is stored here.
-                            
+                    alarmMessage []:     EPICS IOC pv status message
+
                     otherwise, False if operation failed.
         """        
         function = 'getLiveMachine'
-        nttable = self.__clientRPC(function, params)
+        ntmultichannel = self.__clientRPC(function, params)
 
-        # @TODO check fault
-        # if self.__isFault(nttable):
-        #     return False
+        # check fault
+        if not isinstance(ntmultichannel, NTMultiChannel):
+            raise RuntimeError("Wrong returned data type")
+        if ntmultichannel.getNumberChannel() == 0:
+             return False
         
-        # channelName,stringValue,doubleValue,longValue,dbrType,isConnected, is_array, array_value
-        return (nttable.getValue(0),
-                nttable.getValue(1),
-                nttable.getValue(2),
-                nttable.getValue(3),
-                nttable.getValue(4),
-                nttable.getValue(5),
-                nttable.getValue(6),
-                nttable.getValue(7),
-                nttable.getValue(9),
-                nttable.getValue(10),
-                nttable.getValue(12),
-                nttable.getValue(13))
+        # [pv name, value,
+        #  isConnected, secondsPastEpoch, nanoSeconds, timeStampTag,
+        #  alarmSeverity, alarmStatus, alarmMessage]
+        return (ntmultichannels.getChannelName(),
+                ntmultichannels.getValue(),
+                ntmultichannels.getIsConnected(),
+                ntmultichannels.getSecondsPastEpoch(),
+                ntmultichannels.getNanoseconds(),
+                ntmultichannels.getUserTag(),
+                ntmultichannels.getSeverity(),
+                ntmultichannels.getStatus(),
+                ntmultichannels.getMessage())

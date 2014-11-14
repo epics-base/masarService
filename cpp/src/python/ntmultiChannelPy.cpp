@@ -490,10 +490,10 @@ static PyObject * _getValue(PyObject *willbenull, PyObject *args)
     for(int i=0; i<num; ++i) {
         PVFieldPtr pvField = data[i]->get();
         if(!pvField) {
-            string value("no value");
+            string value("NULL VALUE");
             PyObject *elem = Py_BuildValue("s",value.c_str());
             PyTuple_SetItem(result, i, elem);
-            break;
+            continue;
         }
         Type type = pvField->getField()->getType();
         switch(type) {
