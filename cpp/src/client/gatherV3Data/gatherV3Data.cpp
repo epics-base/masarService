@@ -494,10 +494,6 @@ bool GatherV3Data::get()
     requestOK = true;
     message = std::string();
     event.tryWait();
-    timeStamp.getCurrent();
-    alarm.setMessage("");
-    alarm.setSeverity(noAlarm);
-    alarm.setStatus(noStatus);
     for(size_t i=0; i< numberChannel; i++) {
 //cout << "calling channel[" << i << "]->get()\n";
         channel[i]->get();
@@ -531,13 +527,37 @@ bool GatherV3Data::get()
         xalarmStatus[i] = alarmStatus[i];
         xalarmMessage[i] = alarmMessage[i];
     }
+    multiChannel->attachTimeStamp(pvtimeStamp);
+    timeStamp.getCurrent();
+    timeStamp.setUserTag(0);
+    pvtimeStamp.set(timeStamp);
+    multiChannel->attachAlarm(pvalarm);
+    alarm.setMessage("");
+    alarm.setSeverity(noAlarm);
+    alarm.setStatus(noStatus);
+    for(size_t i=0; i< numberChannel; i++) {
+        if(!isConnected[i]) {
+            if(alarm.getSeverity()<undefinedAlarm) {
+        alarm.setSeverity(undefinedAlarm);
+                alarm.setStatus(undefinedStatus);
+                alarm.setMessage("channel not connected");
+            }
+        } else if(alarm.getSeverity()<alarmSeverity[i]) {
+             alarm.setSeverity(
+                 AlarmSeverityFunc::getSeverity(alarmSeverity[i]));
+             alarm.setStatus(
+                 AlarmStatusFunc::getStatus(alarmStatus[i]));
+             alarm.setMessage(alarmMessage[i]);
+        }
+    }
+    pvalarm.set(alarm);
     pvValue->replace(freeze(xvalue));
     pvIsConnected->replace(freeze(xisConnected));
     pvSecondsPastEpoch->replace(freeze(xsecondsPastEpoch));
     pvNanoseconds->replace(freeze(xnanoseconds));
     pvUserTag->replace(freeze(xuserTag));
     pvSeverity->replace(freeze(xalarmSeverity));
-    pvStatus->replace(freeze(xalarmSeverity));
+    pvStatus->replace(freeze(xalarmStatus));
     pvMessage->replace(freeze(xalarmMessage));
     atLeastOneGet = true;
     state = connected;

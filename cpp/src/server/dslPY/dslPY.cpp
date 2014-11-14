@@ -354,15 +354,6 @@ static NTMultiChannelPtr retrieveSnapshot(PyObject * list)
     multiChannel->getSeverity()->replace(freeze(severity));
     multiChannel->getStatus()->replace(freeze(status));
     multiChannel->getMessage()->replace(freeze(message));
-
-    // set time stamp
-    PVTimeStamp pvTimeStamp;
-    multiChannel->attachTimeStamp(pvTimeStamp);
-    TimeStamp timeStamp;
-    timeStamp.getCurrent();
-    timeStamp.setUserTag(0);
-    pvTimeStamp.set(timeStamp);
-
     return multiChannel;
 }
 
