@@ -757,6 +757,36 @@ static PyObject * _getMessage(PyObject *willbenull, PyObject *args)
     return result;
 }
 
+static PyObject * _getDbrType(PyObject *willbenull, PyObject *args)
+{
+    PyObject *pcapsule = 0;
+    if(!PyArg_ParseTuple(args,"O:ntmultiChannelPy",
+        &pcapsule))
+    {
+        PyErr_SetString(PyExc_SyntaxError,
+           "Bad argument. Expected (pvt)");
+        return NULL;
+    }
+    void *pvoid = PyCapsule_GetPointer(pcapsule,"ntmultiChannelPvt");
+    if(pvoid==0) {
+        PyErr_SetString(PyExc_SyntaxError,
+           "first arg must be return from _init");
+        return NULL;
+    }
+    NTMultiChannelPvt *pvt = static_cast<NTMultiChannelPvt *>(pvoid);
+    PVIntArrayPtr pvValue =
+        pvt->ntmultiChannel->getPVStructure()->getSubField<PVIntArray>("dbrType");
+    shared_vector<const int32> data(pvValue->view());
+    int num = data.size();
+    PyObject *result = PyTuple_New(num);
+    for(int i=0; i<num; ++i) {
+        int value = data[i];
+        PyObject *elem = Py_BuildValue("i",value);
+        PyTuple_SetItem(result, i, elem);
+    }
+    return result;
+}
+
 static PyObject * _getSecondsPastEpoch(PyObject *willbenull, PyObject *args)
 {
     PyObject *pcapsule = 0;
@@ -887,6 +917,7 @@ static char _getIsConnectedDoc[] = "_getIsConnected ntmultiChannelPy.";
 static char _getSeverityDoc[] = "_getSeverity ntmultiChannelPy.";
 static char _getStatusDoc[] = "_getStatus ntmultiChannelPy.";
 static char _getMessageDoc[] = "_getMessage ntmultiChannelPy.";
+static char _getDbrTypeDoc[] = "_getDbrType ntmultiChannelPy.";
 static char _getSecondsPastEpochDoc[] = "_getSecondsPastEpoch ntmultiChannelPy.";
 static char _getNanosecondsDoc[] = "_getNanoseconds ntmultiChannelPy.";
 static char _getUserTagDoc[] = "_getUserTag ntmultiChannelPy.";
@@ -908,6 +939,7 @@ static PyMethodDef methods[] = {
     {"_getSeverity",_getSeverity,METH_VARARGS,_getSeverityDoc},
     {"_getStatus",_getStatus,METH_VARARGS,_getStatusDoc},
     {"_getMessage",_getMessage,METH_VARARGS,_getMessageDoc},
+    {"_getDbrType",_getDbrType,METH_VARARGS,_getDbrTypeDoc},
     {"_getSecondsPastEpoch",_getSecondsPastEpoch,METH_VARARGS,_getSecondsPastEpochDoc},
     {"_getNanoseconds",_getNanoseconds,METH_VARARGS,_getNanosecondsDoc},
     {"_getUserTag",_getUserTag,METH_VARARGS,_getUserTagDoc},

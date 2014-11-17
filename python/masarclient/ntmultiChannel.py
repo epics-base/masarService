@@ -91,6 +91,10 @@ class NTMultiChannel(object):
         """get message"""
         return ntmultiChannelPy._getMessage(self.cppPvt)
 
+    def getDbrType(self):
+        """get dbrType"""
+        return ntmultiChannelPy._getDbrType(self.cppPvt)
+
     def getSecondsPastEpoch(self):
         """get secondsPastEpoch"""
         return ntmultiChannelPy._getSecondsPastEpoch(self.cppPvt)

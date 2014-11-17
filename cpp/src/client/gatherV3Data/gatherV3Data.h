@@ -218,6 +218,7 @@ private:
     epics::pvData::shared_vector<epics::pvData::int32> alarmSeverity;
     epics::pvData::shared_vector<epics::pvData::int32> alarmStatus;
     epics::pvData::shared_vector<std::string> alarmMessage;
+    epics::pvData::shared_vector<epics::pvData::int32> dbrType;
     epics::pvData::shared_vector<epics::pvData::PVStructurePtr>putPVStructure;
     epics::pvData::shared_vector<epics::pvData::BitSetPtr>putBitSet;
     int state;

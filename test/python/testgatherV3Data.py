@@ -43,6 +43,8 @@ if __name__ == '__main__':
     print ntmultiChannel.getStatus();
     print "message:"
     print ntmultiChannel.getMessage();
+    print "dbrType"
+    print ntmultiChannel.getDbrType();
     print "seconds:"
     print ntmultiChannel.getSecondsPastEpoch();
     print "nanoseconds:"

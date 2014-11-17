@@ -1,4 +1,3 @@
-/* gatherV3Data.cpp */
 /*
  * Copyright - See the COPYRIGHT that is included with this distribution.
  * This code is distributed subject to a Software License Agreement found
@@ -46,6 +45,23 @@ enum State {
     creatingPut,
     putting,
     destroying,
+};
+
+
+static int32 scalarType2dbrType[] = 
+{
+   4, // boolean to DBR_CHAR
+   4, // byte to DBF_CHAR
+   1, // short to DBF_INT
+   5, // int to DBF_LONG
+   5, // long to DBF_LONG
+   4, // ubyte to DBF_CHAR
+   1, // ushort to DBF_INT
+   5, // uint to DBF_LONG
+   5, // ulong to DBF_LONG
+   2, // float to DBF_FLOAT
+   6, // double to DBF_DOUBLE
+   0  // string to DBR_STRING  
 };
 
 namespace detail {
@@ -151,6 +167,8 @@ void GatherV3DataChannel::channelGetConnect(
              PVScalarPtr pvScalar = pvDataCreate->createPVScalar(
                  scalar->getScalarType());
              gatherV3Data->value[offset]->set(pvScalar);
+             gatherV3Data->dbrType[offset] =
+                 scalarType2dbrType[scalar->getScalarType()];
              break;
         }
         if (type==scalarArray) {
@@ -159,18 +177,21 @@ void GatherV3DataChannel::channelGetConnect(
              PVScalarArrayPtr pvScalarArray = pvDataCreate->createPVScalarArray(
                  scalarArray->getElementType());
              gatherV3Data->value[offset]->set(pvScalarArray);
+             gatherV3Data->dbrType[offset] =
+                 scalarType2dbrType[scalarArray->getElementType()];
              break;
         }
         if (type==epics::pvData::structure) {
              StructureConstPtr structure =
                  static_pointer_cast<const Structure>(value);
              if(structure->getField("index")
-             || (structure->getField("choices"))) {
+             && (structure->getField("choices"))) {
                  StringArray stringArray;
                  gatherV3Data->value[offset]->set(
                      standardPVField->enumerated(stringArray)); 
-             }
+                 gatherV3Data->dbrType[offset] = scalarType2dbrType[pvString];
              break;
+             }
         }
          string message = gatherV3Data->channelName[offset] +
                  "  value field has unsupported type ";
@@ -194,6 +215,18 @@ void GatherV3DataChannel::getDone(
     PVFieldPtr pvFrom = pvStructure->getSubField("value");
     PVFieldPtr pvTo = gatherV3Data->value[offset]->get();
     convert->copy(pvFrom,pvTo);
+    if(pvTo->getField()->getType()==structure) {
+         PVStructurePtr pvStructure = static_pointer_cast<PVStructure>(pvTo);
+         PVStringArrayPtr pvChoices =
+              pvStructure->getSubField<PVStringArray>("choices");
+         if(!pvChoices) {
+              throw std::logic_error(
+                   "GatherV3Data::getDone illegal enumerated value\n");
+         }
+         if(pvChoices->getLength()==0) {
+             gatherV3Data->dbrType[offset] = scalarType2dbrType[pvInt];
+         }
+    }
     PVLongPtr pvSec = pvStructure->getSubField<PVLong>("timeStamp.secondsPastEpoch");
     gatherV3Data->secondsPastEpoch[offset] = pvSec->get();
     PVIntPtr pvNano = pvStructure->getSubField<PVInt>("timeStamp.nanoseconds");
@@ -323,6 +356,7 @@ GatherV3DataPtr GatherV3Data::create(
             addNanoseconds() ->
             addUserTag() ->
             addDescriptor() ->
+            add("dbrType",fieldCreate->createScalarArray(pvInt)) ->
             create();
     PVStringArrayPtr pvChannelName = multiChannel->getChannelName();
     pvChannelName->replace(channelNames);
@@ -361,6 +395,7 @@ ChannelProvider::shared_pointer  xxx = getChannelProviderRegistry()->getProvider
     alarmSeverity.resize(numberChannel);
     alarmStatus.resize(numberChannel);
     alarmMessage.resize(numberChannel);
+    dbrType.resize(numberChannel);
     for(size_t i=0; i<numberChannel; ++i) {
         value[i] = pvDataCreate->createPVVariantUnion();
         isConnected[i] = false;
@@ -370,6 +405,7 @@ ChannelProvider::shared_pointer  xxx = getChannelProviderRegistry()->getProvider
         alarmSeverity[i] = undefinedAlarm;
         alarmStatus[i] = 0;
         alarmMessage[i] = "never connected";
+        dbrType[i] = 0;
     }
     state = idle;
     numberConnected = 0;
@@ -508,6 +544,11 @@ bool GatherV3Data::get()
     PVIntArrayPtr pvSeverity = multiChannel->getSeverity();
     PVIntArrayPtr pvStatus = multiChannel->getStatus();
     PVStringArrayPtr pvMessage = multiChannel->getMessage();
+    PVIntArrayPtr pvDbrType = multiChannel->getPVStructure()->
+        getSubField<PVIntArray>("dbrType");
+    if(!pvDbrType) {
+        throw std::logic_error("GatherV3Data::get why no dbrType?\n");
+    }
     shared_vector<PVUnionPtr> xvalue(numberChannel);
     shared_vector<boolean> xisConnected(numberChannel);
     shared_vector<int64> xsecondsPastEpoch(numberChannel);
@@ -516,6 +557,7 @@ bool GatherV3Data::get()
     shared_vector<int32> xalarmSeverity(numberChannel);
     shared_vector<int32> xalarmStatus(numberChannel);
     shared_vector<string> xalarmMessage(numberChannel);
+    shared_vector<int32> xdbrType(numberChannel);
     for(size_t i=0; i< numberChannel; i++) {
         xvalue[i] = pvDataCreate->createPVVariantUnion();
         xvalue[i]->set(value[i]->get());
@@ -526,6 +568,7 @@ bool GatherV3Data::get()
         xalarmSeverity[i] = alarmSeverity[i];
         xalarmStatus[i] = alarmStatus[i];
         xalarmMessage[i] = alarmMessage[i];
+        xdbrType[i] = dbrType[i];
     }
     multiChannel->attachTimeStamp(pvtimeStamp);
     timeStamp.getCurrent();
@@ -538,7 +581,7 @@ bool GatherV3Data::get()
     for(size_t i=0; i< numberChannel; i++) {
         if(!isConnected[i]) {
             if(alarm.getSeverity()<undefinedAlarm) {
-        alarm.setSeverity(undefinedAlarm);
+                alarm.setSeverity(undefinedAlarm);
                 alarm.setStatus(undefinedStatus);
                 alarm.setMessage("channel not connected");
             }
@@ -559,6 +602,7 @@ bool GatherV3Data::get()
     pvSeverity->replace(freeze(xalarmSeverity));
     pvStatus->replace(freeze(xalarmStatus));
     pvMessage->replace(freeze(xalarmMessage));
+    pvDbrType->replace(freeze(xdbrType));
     atLeastOneGet = true;
     state = connected;
     return requestOK;
