@@ -113,7 +113,7 @@ class DSL(object):
         key = ['eventid', 'start', 'end', 'comment']
         eid, start, end, comment = self._parseParams(params, key)
         conn = pymasar.utils.connect()
-        result = pymasar.masardata.retrieveSnapshot(conn, eventid=eid,start=start,end=end,comment=comment)
+        result = pymasar.masardata.retrieveSnapshot(conn, eventid=eid, start=start, end=end, comment=comment)
         pymasar.utils.close(conn)
         return result
     
@@ -132,25 +132,43 @@ class DSL(object):
         # [(pv name), (value),
         #  (isConnected), (secondsPastEpoch), (nanoSeconds), (timeStampTag),
         #  (alarmSeverity), (alarmStatu)s, (alarmMessage)]
-        values=result.getValue()
- 
+        pvnames = result.getChannelName()
+        values = result.getValue()
+        dbrtype = result.getDbrType()
+        isconnected = result.getIsConnected()
+        severity = result.getSeverity()
+        status = result.getStatus()
+        message = result.getMessage()
+        sec = result.getSecondsPastEpoch()
+        nanosec = result.getNanoseconds()
+        usertag = result.getUserTag()
+
         # data format: the data is prepared to save into rdb
         # rawdata format
         # [('channel name', 'string value', 'double value', 'long value', 'dbr type', 'is connected', 
-        #  'seconds past epoch', 'nano seconds', 'time stamp tag', 'alarm severity', 'alarm status', 'alarm message', 'is_array', 'array_value'),
+        #  'seconds past epoch', 'nano seconds', 'time stamp tag', 'alarm severity', 'alarm status', 'alarm message',
+        #  'is_array', 'array_value'),
         #  ...
         # ]
         datas = []
-        
-        # initialize data for rdb
-        for j in range(dataLen):
-            datas.append(())
-        
-        # convert data format values ==> datas
-        for i in range(numberValueCount):
-            for j in range(dataLen):
-                datas[j] = datas[j] + (values[i][j],)
-        
+
+        for i in range(dataLen):
+            tmp = []
+            if isinstance(values[i], (list, tuple)):
+                tmp = [pvnames[i], "", None, None, dbrtype[i], isconnected[i],
+                       sec[i], nanosec[i], usertag[i], severity[i], status[i], message[i],
+                       1, values[i]]
+            else:
+                if dbrtype[i] in self.epicsString:
+                     tmp = [pvnames[i], values[i], None, None, dbrtype[i], isconnected[i],
+                           sec[i], nanosec[i], usertag[i], severity[i], status[i], message[i],
+                           0, None]
+                else:
+                     tmp = [pvnames[i], str(values[i]), values[i], values[i], dbrtype[i], isconnected[i],
+                           sec[i], nanosec[i], usertag[i], severity[i], status[i], message[i],
+                           0, None]
+            datas.append(tmp)
+
         # save into database
         try:
             conn = pymasar.utils.connect()
@@ -164,7 +182,6 @@ class DSL(object):
             return [-1]
     
     def retrieveChannelNames(self, params):
-        #key = ['servicename','configname','comment']
         key = ['servicename','configname']
         service, config = self._parseParams(params, key)
         if not service:
@@ -176,7 +193,6 @@ class DSL(object):
         return result
     
     def updateSnapshotEvent(self, params):
-        #key = ['eventid', 'user', 'desc', 'configname']
         key = ['eventid', 'user', 'desc']
         eid, user, desc = self._parseParams(params, key)
         try:

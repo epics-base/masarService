@@ -221,6 +221,7 @@ static NTMultiChannelPtr retrieveSnapshot(PyObject * list)
             addSecondsPastEpoch() ->
             addNanoseconds() ->
             addUserTag() ->
+            add("dbrType",fieldCreate->createScalarArray(pvInt)) ->
             create();
     shared_vector<string> channelName(numberChannels);
     shared_vector<PVUnionPtr> channelValue(numberChannels);
@@ -231,6 +232,7 @@ static NTMultiChannelPtr retrieveSnapshot(PyObject * list)
     shared_vector<int32> severity(numberChannels);
     shared_vector<int32> status(numberChannels);
     shared_vector<string> message(numberChannels);
+    shared_vector<int32> dbr_type(numberChannels);
     PyObject * sublist;
     for(size_t index = 0; index < (size_t)numberChannels; index++ ){
         channelValue[index] = pvDataCreate->createPVVariantUnion();
@@ -240,6 +242,8 @@ static NTMultiChannelPtr retrieveSnapshot(PyObject * list)
         //  'is_array', 'array_value')
         PyObject * temp = PyTuple_GetItem(sublist,0);
         channelName[index] = (PyString_AsString(temp)==NULL) ? "" : PyString_AsString (temp);
+        temp = PyTuple_GetItem(sublist,4);
+        dbr_type[index] = PyLong_AsLong(temp);
         temp = PyTuple_GetItem(sublist,5);
         isConnected[index] = (PyLong_AsLong(temp)==0) ? false : true;
         temp = PyTuple_GetItem(sublist,6);
@@ -254,25 +258,25 @@ static NTMultiChannelPtr retrieveSnapshot(PyObject * list)
         status[index] = PyLong_AsLong(temp);
         temp = PyTuple_GetItem(sublist,11);
         message[index] = PyString_AsString(temp);
-        int32 dbr_type = PyLong_AsLong(PyTuple_GetItem(sublist,4));
+        //int32 dbr_type = PyLong_AsLong(PyTuple_GetItem(sublist,4));
         int32 is_array = PyLong_AsLong(PyTuple_GetItem(sublist,12));
         bool isArray = (is_array==0) ? false : true;
         if(!isArray) {
-            if(dbr_type==DBR_STRING) {
+            if(dbr_type[index]==DBR_STRING) {
                 char * str = PyString_AsString(PyTuple_GetItem(sublist,1));
                 PVStringPtr pvString = pvDataCreate->createPVScalar<PVString>();
                 pvString->put(str);
                 channelValue[index]->set(pvString);
                 continue;
             }
-            if(dbr_type==DBR_LONG) {
+            if(dbr_type[index]==DBR_LONG) {
                 int32 val = PyLong_AsLong(PyTuple_GetItem(sublist,3));
                 PVIntPtr pvInt = pvDataCreate->createPVScalar<PVInt>();
                 pvInt->put(val);
                 channelValue[index]->set(pvInt);
                 continue;
             }
-            if(dbr_type==DBR_DOUBLE) {
+            if(dbr_type[index]==DBR_DOUBLE) {
                 double val = PyFloat_AsDouble(PyTuple_GetItem(sublist,2));
                 PVDoublePtr pvDouble = pvDataCreate->createPVScalar<PVDouble>();
                 pvDouble->put(val);
@@ -281,7 +285,7 @@ static NTMultiChannelPtr retrieveSnapshot(PyObject * list)
             }
         } else {
             PyObject * arrayValueList = PyTuple_GetItem(sublist, 13);
-            if(dbr_type==DBR_STRING) {
+            if(dbr_type[index]==DBR_STRING) {
                 shared_vector<string> values;
                 if (PyList_Check(arrayValueList)) {
                     size_t array_len = (size_t)PyList_Size(arrayValueList);
@@ -303,7 +307,7 @@ static NTMultiChannelPtr retrieveSnapshot(PyObject * list)
                 channelValue[index]->set(pvStringArray);
                 continue;
             }
-            if(dbr_type==DBR_LONG) {
+            if(dbr_type[index]==DBR_LONG) {
                 shared_vector<int> values;
                 if (PyList_Check(arrayValueList)) {
                     size_t array_len = (size_t)PyList_Size(arrayValueList);
@@ -323,7 +327,7 @@ static NTMultiChannelPtr retrieveSnapshot(PyObject * list)
                 channelValue[index]->set(pvIntArray);
                 continue;
             }
-            if(dbr_type==DBR_DOUBLE) {
+            if(dbr_type[index]==DBR_DOUBLE) {
                 shared_vector<double> values;
                 if (PyList_Check(arrayValueList)) {
                     size_t array_len = (size_t)PyList_Size(arrayValueList);
@@ -345,8 +349,10 @@ static NTMultiChannelPtr retrieveSnapshot(PyObject * list)
             }
         }
     }
+
     multiChannel->getChannelName()->replace(freeze(channelName));
     multiChannel->getValue()->replace(freeze(channelValue));
+    multiChannel->getPVStructure()->getSubField<PVIntArray>("dbrType")->replace(freeze(dbr_type));
     multiChannel->getIsConnected()->replace(freeze(isConnected));
     multiChannel->getSecondsPastEpoch()->replace(freeze(secondsPastEpoch));
     multiChannel->getNanoseconds()->replace(freeze(nanoseconds));
@@ -636,8 +642,7 @@ PVStructurePtr DSL_RDB::request(
         Py_DECREF(result);
         PyGILState_Release(gstate);
         return pvReturn->getPVStructure();
-    }
-    if (functionName.compare("retrieveSnapshot")==0) {
+    } else if (functionName.compare("retrieveSnapshot")==0) {
         NTMultiChannelPtr pvReturn;
         PyObject * pyTuple = PyTuple_New(1);
         // put dictionary into the tuple
@@ -657,8 +662,7 @@ PVStructurePtr DSL_RDB::request(
         Py_DECREF(result);
         PyGILState_Release(gstate);
         return pvReturn->getPVStructure();
-    }
-    if (functionName.compare("saveSnapshot")==0) {
+    } else if (functionName.compare("saveSnapshot")==0) {
         NTMultiChannelPtr pvReturn;
         // A tuple is needed to pass to Python as parameter.
         PyObject * pyTuple = PyTuple_New(1);
@@ -667,6 +671,7 @@ PVStructurePtr DSL_RDB::request(
         PyObject *pchannelnames = PyEval_CallObject(pgetchannames, pyTuple);
         if(pchannelnames == NULL) {
             pvReturn = noDataMultiChannel("Failed to retrieve channel names.");
+            Py_DECREF(pchannelnames);
         } else {
             Py_ssize_t list_len = PyList_Size(pchannelnames);
 
@@ -697,44 +702,46 @@ PVStructurePtr DSL_RDB::request(
                     pvReturn = noDataMultiChannel("Failed to save snapshot.");
                 } else {
                     pvReturn = saveSnapshot(result, data);
-                    Py_DECREF(result);
+                    //Py_DECREF(result);
                 }
+                Py_DECREF(result);
                 Py_DECREF(pyTuple2);
             }
         }
         Py_DECREF(pyTuple);
         PyGILState_Release(gstate);
         return pvReturn->getPVStructure();
-    }
-    NTTablePtr pvReturn;
-    // A tuple is needed to pass to Python as parameter.
-    PyObject * pyTuple = PyTuple_New(1);
-    // put dictionary into the tuple
-    PyTuple_SetItem(pyTuple, 0, pyDict);
-
-    PyObject *result = PyEval_CallObject(prequest,pyTuple);
-    Py_DECREF(pyTuple);
-    if(result == NULL) {
-        pvReturn = noDataTable("No data entry found in database.");
     } else {
-        PyObject *list = 0;
-        if(!PyArg_ParseTuple(result,"O!:dslPY", &PyList_Type,&list))
-        {
-            throw std::runtime_error("Wrong format for returned data from dslPY.");
-        }
-        if (functionName.compare("retrieveServiceEvents")==0) {
-            pvReturn = retrieveServiceConfigEvents(list, 2);
-        } else if (functionName.compare("retrieveServiceConfigs")==0) {
-            pvReturn = retrieveServiceConfigEvents(list, 1);
-        } else if (functionName.compare("retrieveServiceConfigProps")==0) {
-            pvReturn = retrieveServiceConfigEvents(list, 2);
+        NTTablePtr pvReturn;
+        // A tuple is needed to pass to Python as parameter.
+        PyObject * pyTuple = PyTuple_New(1);
+        // put dictionary into the tuple
+        PyTuple_SetItem(pyTuple, 0, pyDict);
+
+        PyObject *result = PyEval_CallObject(prequest,pyTuple);
+        Py_DECREF(pyTuple);
+        if(result == NULL) {
+            pvReturn = noDataTable("No data entry found in database.");
         } else {
-            pvReturn = noDataTable("Did not find data");
+            PyObject *list = 0;
+            if(!PyArg_ParseTuple(result,"O!:dslPY", &PyList_Type,&list))
+            {
+                throw std::runtime_error("Wrong format for returned data from dslPY.");
+            }
+            if (functionName.compare("retrieveServiceEvents")==0) {
+                pvReturn = retrieveServiceConfigEvents(list, 2);
+            } else if (functionName.compare("retrieveServiceConfigs")==0) {
+                pvReturn = retrieveServiceConfigEvents(list, 1);
+            } else if (functionName.compare("retrieveServiceConfigProps")==0) {
+                pvReturn = retrieveServiceConfigEvents(list, 2);
+            } else {
+                pvReturn = noDataTable("Did not find data");
+            }
+            Py_DECREF(result);
         }
-        Py_DECREF(result);
+        PyGILState_Release(gstate);
+        return pvReturn->getPVStructure();
     }
-    PyGILState_Release(gstate);
-    return pvReturn->getPVStructure();
 }
 
 DSLPtr createDSL_RDB()

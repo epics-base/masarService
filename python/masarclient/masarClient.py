@@ -202,6 +202,7 @@ class client():
         result:     list of list with the following format:
                     pv name []:          pv name list
                     value []             value list
+                    dbrTypee []          EPICS V3 DBR type for each channel
                     isConnected []:      connection status, either True or False
                     secondsPastEpoch []: seconds after EPOCH time
                     nanoSeconds []:      nano-seconds
@@ -214,7 +215,6 @@ class client():
         """
         function = 'retrieveSnapshot'
         ntmultichannels = self.__clientRPC(function, params)
-        
         # check fault
         if not isinstance(ntmultichannels, NTMultiChannel):
             raise RuntimeError("Wrong returned data type")
@@ -231,6 +231,7 @@ class client():
 
         return (ntmultichannels.getChannelName(),
                 ntmultichannels.getValue(),
+                ntmultichannels.getDbrType(),
                 ntmultichannels.getIsConnected(),
                 ntmultichannels.getSecondsPastEpoch(),
                 ntmultichannels.getNanoseconds(),
@@ -257,6 +258,7 @@ class client():
                     id:                  id of this new event
                     pv name []:          pv name list
                     value []             value list
+                    dbrTypee []          EPICS V3 DBR type for each channel
                     isConnected []:      connection status, either True or False
                     secondsPastEpoch []: seconds after EPOCH time
                     nanoSeconds []:      nano-seconds
@@ -278,13 +280,14 @@ class client():
             return False
 
         ts = TimeStamp()
+        ntmultichannels.getTimeStamp(ts)
         # [pv name, value,
         #  isConnected, secondsPastEpoch, nanoSeconds, timeStampTag,
         #  alarmSeverity, alarmStatus, alarmMessage]
-        ntmultichannels.getTimeStamp(ts)
         return (ts.getUserTag(),
                 ntmultichannels.getChannelName(),
                 ntmultichannels.getValue(),
+                ntmultichannels.getDbrType(),
                 ntmultichannels.getIsConnected(),
                 ntmultichannels.getSecondsPastEpoch(),
                 ntmultichannels.getNanoseconds(),
@@ -326,6 +329,7 @@ class client():
         result:     list of list with the following format:
                     pv name []:          pv name list
                     value []             value list
+                    dbrTypee []          EPICS V3 DBR type for each channel
                     isConnected []:      connection status, either True or False
                     secondsPastEpoch []: seconds after EPOCH time
                     nanoSeconds []:      nano-seconds
@@ -337,12 +341,12 @@ class client():
                     otherwise, False if operation failed.
         """        
         function = 'getLiveMachine'
-        ntmultichannel = self.__clientRPC(function, params)
+        ntmultichannels = self.__clientRPC(function, params)
 
         # check fault
-        if not isinstance(ntmultichannel, NTMultiChannel):
+        if not isinstance(ntmultichannels, NTMultiChannel):
             raise RuntimeError("Wrong returned data type")
-        if ntmultichannel.getNumberChannel() == 0:
+        if ntmultichannels.getNumberChannel() == 0:
              return False
         
         # [pv name, value,
@@ -350,6 +354,7 @@ class client():
         #  alarmSeverity, alarmStatus, alarmMessage]
         return (ntmultichannels.getChannelName(),
                 ntmultichannels.getValue(),
+                ntmultichannels.getDbrType(),
                 ntmultichannels.getIsConnected(),
                 ntmultichannels.getSecondsPastEpoch(),
                 ntmultichannels.getNanoseconds(),

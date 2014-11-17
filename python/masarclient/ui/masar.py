@@ -2,23 +2,20 @@
 '''
 Created on Dec 1, 2011
 
-@author: shengb
+@Original author: shengb
+@co-author: Yong Hu (yhu@bnl.gov)
 '''
 
 from __future__ import division
 from __future__ import print_function
 #from __future__ import unicode_literals
 
-import os
-import sys
-import time
-import datetime
-import re
-import fnmatch
+import os, sys, time, datetime, re, fnmatch, imp, traceback, platform
 
 from PyQt4.QtGui import (QApplication, QMainWindow, QMessageBox, QTableWidgetItem, QTableWidget,
-                          QFileDialog, QColor, QBrush, QTabWidget)
-from PyQt4.QtCore import (QDateTime, Qt, QString, QObject, SIGNAL, QThread)
+                        QFileDialog, QColor, QBrush, QTabWidget, QShortcut, QKeySequence,
+                        QDialog, QGridLayout, QLineEdit, QPushButton, QLabel, QDialogButtonBox)
+from PyQt4.QtCore import (QDateTime, Qt, QString, QObject, SIGNAL, QThread, QEventLoop)
 #import PyQt4.QTest as QTest
 
 try:
@@ -32,17 +29,25 @@ else:
     print ('Python version 2.7 or higher is needed.')
     sys.exit()
 
+try:
+    imp.find_module('pyOlog')
+    pyOlogExisting = True
+except ImportError:
+    pyOlogExisting = False
 
 import ui_masar
 import commentdlg
 from showarrayvaluedlg import ShowArrayValueDlg
 from selectrefsnapshotdlg import ShowSelectRefDlg
+from finddlg import FindDlg
+from verifysetpoint import VerifySetpoint
+from gradualput import GradualPut
+import getmasarconfig 
 
 import masarclient.masarClient as masarClient
 from masarclient.channelRPC import epicsExit 
-#import masarclient.masarClient2 as masarClient
 
-__version__ = "1.1.0"
+__version__ = "1.0.1"
 
 def usage():
     print("""usage: masar.py [option]
@@ -55,8 +60,11 @@ masar.py v {0}. Copyright (c) 2011 Brookhaven National Laboratory. All rights re
     sys.exit()
 
 # import this last to avoid import error on some platform and with different versions. 
+os.environ["EPICS_CA_MAX_ARRAY_BYTES"] = '40000000'
+import cothread
 import cothread.catools as cav3
 from cothread import Sleep
+#qtapp = cothread.iqt()
 
 #class masarUI(QMainWindow, ui_masar.Ui_masar, QTabWidgetExt):
 class masarUI(QMainWindow, ui_masar.Ui_masar):
@@ -102,15 +110,20 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.currentConfigFilter = str(self.configFilterLineEdit.text())  
         #self.currentRestoreFilter = str(self.restoreFilterLineEdit.text()) 
         self.currentPvFilter = str(self.pvFilterLineEdit.text()) 
+        self.pvFilterLineEdit.returnPressed.connect(self.searchPV)
+        self.snapshotIdLineEdit.returnPressed.connect(self.retrieveSnapshotById)
+        
+        self.__initSystemCombox()   
+        time.sleep(1.0)
         
         self.eventConfigFilter = str(self.eventFilterLineEdit.text())
         self.authorText = str(self.authorTextEdit.text())  
         self.UTC_OFFSET_TIMEDELTA = datetime.datetime.utcnow() - datetime.datetime.now()
         self.time_format = "%Y-%m-%d %H:%M:%S"
         self.tabWindowDict = {'comment': self.commentTab}# comment, preview, compare, filter
-        self.e2cDict = {} # event to config dictionary
-        self.pv4cDict = {} # pv name list for each selected configuration
-        self.data4eid = {} # snapshot data for eventId
+        self.e2cDict = {} # event to config dict; see retrieveEventData(): self.e2cDict[eid] = [cid, desc,configName]
+        self.pv4cDict = {} # pv name list for each selected configuration / eid
+        self.data4eid = {} # snapshot data for eventId: 'filter' is an eventID  
         self.arrayData = {} # store all array data
         self.previewId = None
         self.previewConfName = None
@@ -119,6 +132,13 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.compareSnapshotsTableKeys = []
         self.eventIds = []
         self.origID = ""
+        self.passWd = ''
+        self.timeAtRetrieveSnapshot = 0
+        self.timeAtSetSnapshotTabWindow = 0
+        #self.shortcut4Find = None
+        self.dlgFlag = [0]
+        self.verifyWindowDict = {}#
+        
         # set bad pv row to grey: bad pvs means that they were bad when the snapshot was taken
         self.brushbadpv = QBrush(QColor(128, 128, 128))
         self.brushbadpv.setStyle(Qt.SolidPattern)
@@ -140,9 +160,8 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         self.epicsNoAccess = [7]
         
         #automatically fetch all configs at startup. This action should be quick
-        self.__initSystemCombox()   
         self.fetchConfigAction()
-        #time.sleep(1.0)
+        time.sleep(1.0)
 
     def __setDateTime(self):
         self.eventStartDateTime.setDateTime(QDateTime.currentDateTime())
@@ -209,11 +228,13 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             reorderedData['Config Id'] = data['Id']
             reorderedData['Description'] = data['Description']
             reorderedData['Date'] = data['Date']
+            reorderedData['Status'] = data['Status']
             reorderedData['Version'] = data['Version']
             #print(reorderedData)
             data = reorderedData
             self.setTable(data, self.configTableWidget)
-            self.configTableWidget.sortByColumn(3)
+            self.configTableWidget.sortByColumn(3,1)
+            self.configTableWidget.sortByColumn(4,0)
             #signal cellClicked or itemClicked covers single click and double click
             #signal cellActivated seems equal to double click
             #signal itemSelectionChanged is the best: one can use keyboard to select table row
@@ -259,6 +280,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         data['Date'] = config_ts
         data['Version'] = rpcResult[4]
         data['Id'] = rpcResult[0]
+        data['Status'] = rpcResult[5]
         return data
     
     def setTable(self, data, table):
@@ -267,8 +289,6 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         The data has to be an ordered dictionary, and table is a QtGui.QTableWidget
         Here is an example to construct an ordered dictionary.
         """
-        #print(data)
-        #reorderedData = odict()        
         if data:
             length = len(data.values()[0])
         else:
@@ -327,13 +347,103 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             self.tabWindowDict[str(eventID)] = tableWidget
             QObject.connect(tableWidget, SIGNAL(_fromUtf8("cellDoubleClicked (int,int)")),  
                             self.__showArrayData)
+            shortcut4Find = QShortcut(QKeySequence('Ctrl+F'), tableWidget)
+            shortcut4Find.activated.connect(self.handleFind)
         
         self.snapshotTabWidget.addTab(tableWidget, label)
         self.snapshotTabWidget.setTabText(self.snapshotTabWidget.count(), label)  
         self.snapshotTabWidget.setCurrentWidget(tableWidget)    
         return tableWidget 
     
+    def handleFind(self):
+        if self.dlgFlag[0] == 1:#only open one Find dialog
+            return
+        #print("test find1")
+        self.dlgFlag[0] = 1
+        tabWidget = self.snapshotTabWidget
+        #self.dlgFlag is a list which could be modified inside FindDlg()
+        findDlg = FindDlg(tabWidget, self.dlgFlag, self) 
+        findDlg.show()
+
 #********* Start of Save machine snapshot ********************************************************* 
+    def getAuthentication(self):
+        masarConfigDict = getmasarconfig.getmasarconfig()
+        try: 
+            ldapConfig = masarConfigDict['LDAP']
+        except:
+            return True # no authentication if no related config
+        if pyOlogExisting:
+            import ldap  
+            from authendlg import AuthenDlg
+
+            userID = os.popen('whoami').read()
+            dlg = AuthenDlg(self.passWd)
+            dlg.exec_()
+            if dlg.isAccepted:
+                self.passWd = dlg.result()
+                #if ldapExisting[:-1] != 'True':
+                if masarConfigDict['LDAP']['existing'] != 'True':
+                    return True # don't use ldap to verify username if ldap doesn't exist
+                
+                user = userID[:-1]#remove trailing '\n' 
+                ldap.protocol_version = 3
+                ldap.set_option(ldap.OPT_REFERRALS, 0)
+                try:
+                    #lp = ldap.initialize("ldap://ldapmaster.cs.nsls2.local:389")
+                    lp = ldap.initialize(masarConfigDict['LDAP']['url'])
+                    #for NSLS2, cn is admin, must use uid instead
+                    #username = "uid=%s,ou=people,dc=nsls2,dc=bnl,dc=gov"%user
+                    username = masarConfigDict['LDAP']['username']%user
+                    #print(username)
+                    lp.simple_bind_s(username, self.passWd)
+                    return True
+                except:
+                    self.passWd = ""
+                    QMessageBox.warning(self, 'Warning', 
+'Failed to get anthentication, you may have typed wrong password, try again if you like')   
+                    return False
+                        
+            else:#if dlg.isAccepted:
+                return False   
+        
+        return True#if pyOlogExisting: 
+    
+        
+    def createLogEntry(self, logText, logbookName = None):
+        masarConfigDict = getmasarconfig.getmasarconfig()
+        try: 
+            ldapConfig = masarConfigDict['LDAP']
+        except:
+            return # no log if no related config
+        
+        if pyOlogExisting:        
+            userID =  os.popen('whoami').read() 
+            try:    
+                #import requests
+                #print("requests version: %s"%requests.__version__) 
+                from pyOlog import OlogClient, Tag, Logbook, LogEntry  
+                if 'https_proxy' in os.environ.keys():
+                    #print("unset https_proxy: %s"%(os.environ['https_proxy']))
+                    del os.environ['https_proxy']   
+                         
+                client = OlogClient(url=str(masarConfigDict['Olog']['url']).strip(),\
+                                    username=str(userID).strip(), password=self.passWd)     
+                     
+                logbookNames=str(masarConfigDict['Olog']['logbookname']).strip().split(',')
+                logbooks = []
+                for name in logbookNames:
+                    logbooks.append(Logbook(name=name))
+                    
+                client.log(LogEntry(text=logText, owner=userID[:-1], \
+                                 #logbooks=[Logbook(name=logbookName, owner='Controls')],\
+                                 logbooks=logbooks,\
+                                 tags=[Tag(name='MASAR')]))
+            except:
+                #QMessageBox.warning(self, 'Warning', 
+            #'Although failing to create an Olog entry, you are done with your action / command') 
+                print("%s: failed to create an Olog entry"%datetime.datetime.now())
+                traceback.print_exc()
+                      
     def saveMachineSnapshot(self):
         """
         See ui_masar.py(.ui):
@@ -352,6 +462,11 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 "Please select one configuration from the left-top Config Table, and one only.")
             return
 
+        if not self.getAuthentication():
+            return
+        
+        self.saveMachineSnapshotButton.setEnabled(False)
+        QApplication.processEvents(QEventLoop.ExcludeUserInputEvents)
         self.previewId = None
         self.previewConfName = None
         
@@ -361,150 +476,52 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         disConnectedPVs = []
         
         cname = str(self.configTableWidget.item(selectedConfig[0].row(), 0).text())
+        configID = str(self.configTableWidget.item(selectedConfig[0].row(), 1).text())
+        configDesc = str(self.configTableWidget.item(selectedConfig[0].row(), 2).text())
         result = self.getMachinePreviewData(cname)
-        
-        #=======================================================================
-        # cid = str(self.configTableWidget.item(selectedConfig[0].row(), 1).text())
-        # configIds.append(cid)
-        # configNames.append(cname)
-        # print(configIds)
-        # print(configNames)
-        # #eventData = self.mc.retrieveServiceEvents(params)
-        # eventData = self.retrieveEventData(configids=configIds, confignames=configNames)
-        # print(eventData)
-        # print(eventData['Id'])
-        # #if eventData == None:
-        # if eventData['Id'] == []:
-        #     params = {'configname': configNames,
-        #               #'servicename': 'masarServiceDevelopment'}
-        #               'servicename': 'masar'} 
-        #     try:
-        #         rpcResult = self.mc.saveSnapshot(params)
-        #     except:
-        #         QMessageBox.warning(self,"Warning","Exception happened during getting machine preview.")
-        #         return False
-        #     if not rpcResult:
-        #         QMessageBox.warning(self,"Warning","can't save a snapshot.")
-        #         return False
-        #     #eventid = rpcResult[0]
-        #     #pvnames = rpcResult[1]
-        #     firstEventId = rpcResult[0]
-        # else:          
-        #     #print(eventData['Id'])
-        #     firstEventId = eventData['Id'][0]
-        # 
-        # eventIds.append(firstEventId)
-        # print(firstEventId) 
-        # #print('eventIds:%s'%eventIds)
-        # 
-        # #params = {'eventid': eventIds}
-        # params = {'eventid': str(firstEventId)}
-        # rpcResult = self.mc.retrieveSnapshot(params)
-        # if rpcResult == None:
-        #     QMessageBox.warning(self,"Warning","Except happened when getting machine preview.")
-        #     return
-        # else:
-        #     #print("self.mc.retrieveSnapshot:")
-        #     #print(rpcResult)
-        #     #have to wait 2 seconds before calling getLiveMachineData() if the snapshot has big data set
-        #     QThread.sleep(2)
-        #     pvList = list(rpcResult[0])
-        #     #print(pvList)
-        #     result = self.getLiveMachineData(pvList)
-        #     #print(len(result[0]))
-        #     #print(result[8])
-        #     #print("self.getLiveMachineData:")
-        #     #print(result)
-        #     if result == None:
-        #         QMessageBox.warning(self,"Warning", "can't get machine preview data")
-        #         return
-        #     else:
-        #         self.resizeSplitter(1)
-        #         connectedPVs = list(set(pvList) - set(result[8]))
-        #         disConnectedPVs = result[8]
-        #         #print("total PV:%d; disconnected: %d; connected: %d" %(len(pvList),len(result[8]),len(connectedPVs)))
-        #         #v3Result = []
-        #         #have to define the length of the list status[]
-        #         status = [""]*len(pvList)
-        #         severity = [""]*len(pvList)
-        #         timestamp = [0]*len(pvList)
-        #     
-        #         #v3Results = cav3.caget(pvList, timeout=2,format=cav3.FORMAT_TIME, throw=False)
-        #         v3Results = cav3.caget(connectedPVs, timeout=2,format=cav3.FORMAT_TIME, throw=False)
-        #         #print(len(v3Results))
-        #         #v3Result = cav3.caget('LTB-BI{VF:1}Go-Sel',format=cav3.FORMAT_TIME, timeout=1, throw=False)
-        #         #print(v3Result.status)
-        #         for v3Result in v3Results:
-        #             if v3Result.name not in result[0]:
-        #                 QMessageBox.warning(self,"Waring","Exception happened when reading data by cav3.caget")
-        #                 return
-        #             pvIndex = result[0].index(v3Result.name)
-        #             if v3Result.ok == True:
-        #                 status[pvIndex] = self.alarmDict[v3Result.status]
-        #                 severity[pvIndex] = self.severityDict[v3Result.severity] 
-        #                 timestamp[pvIndex] = v3Result.timestamp  
-        #             else:
-        #                 status[pvIndex] = 'UDF_ALARM'
-        #                 severity[pvIndex] = 'INVALID_ALARM'
-        #                 timestamp[pvIndex] = 0
-        #         #print(v3Result[0].value)
-        #         data = odict()
-        #         data['PV Name'] = result[0]
-        #         #data['Status'] = [""]*len(pvList)
-        #         data['Status'] = status
-        #         data['Severity'] = severity
-        #         data['Time stamp'] = timestamp
-        #         data['Time stamp (nano)'] = [0]*len(pvList)
-        #         data['DBR'] = result[4]
-        #         data['S_value'] = result[1]
-        #         data['I_value'] = result[3]
-        #         data['D_value'] = result[2]
-        #         data['isConnected'] = result[5]
-        #         data['isArray'] = result[6]
-        #         data['arrayValue'] = result[7]
-        #         eid = firstEventId
-        #=======================================================================
-        if result: 
-                self.resizeSplitter(1)      
-                eid = result[0]
-                data = result[1]
-                self.pv4cDict[str(eid)] = data['PV Name']
-                self.data4eid[str(eid)] = data
-                
-                label = QString.fromUtf8((cname+': Preview'))
-                tabWidget = self.createNewTableWidget('preview', label)
-            
-                self.setSnapshotTable(data, tabWidget, eid)
-                #sort the table by "Connection"
-                tabWidget.sortByColumn(1,1)
-                #set self.previewId in saveMachinePreviewAction instead of here
-                self.previewId = eid
-                self.previewConfName = cname
-                self.isPreviewSaved = False
-                
-                for j in range(len(data['isConnected'])):
-                    if not data['isConnected'][j]:
-                        disConnectedPVs.append(data['PV Name'][j])
-                if len(disConnectedPVs) > 0:
-                    detailedText = ""
-                    for i in range(len(disConnectedPVs)):
-                        detailedText += '\n' + disConnectedPVs[i]          
-                    #print(detailedText)
-                    msg = QMessageBox(self, windowTitle="Warning", 
-text="%d PVs are disconnected, click Show Details ... below to see the PV list\n\n\
-Click Continue... if you are satisfied, Otherwise click Ignore"%len(disConnectedPVs))
-                    msg.setDetailedText(detailedText)
-                else:
-                    msg = QMessageBox(self, windowTitle="Good Machine Snapshot", 
-                    text="Great! All PVs have valid data so it's a good snapshot\n\n\
- Click Ignore if you don't want to save it to the MASAR database, Otherwise Click Continue...")             
-                msg.setModal(False)
-                continueButton = msg.addButton("Continue...", QMessageBox.ActionRole)
-                quitButton = msg.addButton(QMessageBox.Ignore)
-                msg.setAttribute(Qt.WA_DeleteOnClose)
-                msg.show()
-                continueButton.clicked.connect(self.saveMachinePreviewAction) 
-                quitButton.clicked.connect(self.ignore) 
+        if result:
+            self.resizeSplitter(1)
+            eid = result[0]
+            data = result[1]
+            #set self.previewId in saveMachinePreviewAction instead of here
+            self.previewId = eid
+            self.previewConfName = cname
+            self.isPreviewSaved = False
+            self.pv4cDict[str(eid)] = data['PV Name']
+            self.data4eid[str(eid)] = data
+            self.e2cDict[str(self.previewId)] = [configID, configDesc, cname]#needed for configTab
+
+            label = QString.fromUtf8((cname+': Preview: '+str(eid)))
+            tabWidget = self.createNewTableWidget('preview', label)
+            self.setSnapshotTable(data, tabWidget, eid)
+            #sort the table by "Connection"
+            tabWidget.sortByColumn(1, 1)
+
+            for j in range(len(data['isConnected'])):
+                if not data['isConnected'][j]:
+                    disConnectedPVs.append(data['PV Name'][j])
+            if len(disConnectedPVs) > 0:
+                detailedText = ""
+                for i in range(len(disConnectedPVs)):
+                    detailedText += '\n' + disConnectedPVs[i]
+                #print(detailedText)
+                msg = QMessageBox(self, windowTitle="Warning",
+text="%d PVs in the Config %s are disconnected, click Show Details ... below to see the PV list\n\n\
+Click Continue... if you are satisfied, Otherwise click Ignore"%(len(disConnectedPVs),cname))
+                msg.setDetailedText(detailedText)
+            else:
+                msg = QMessageBox(self, windowTitle="Good Machine Snapshot",
+                text="Great! All PVs in the Config %s have valid data so it's a good snapshot\n\n\
+Click Ignore if you don't want to save it to the MASAR database, Otherwise Click Continue..."%cname)
+            msg.setModal(False)
+            continueButton = msg.addButton("Continue...", QMessageBox.ActionRole)
+            quitButton = msg.addButton(QMessageBox.Ignore)
+            msg.setAttribute(Qt.WA_DeleteOnClose)
+            msg.show()
+            continueButton.clicked.connect(self.saveMachinePreviewAction)
+            quitButton.clicked.connect(self.createLog4InvisibleSnapshot)
+        else:
+            self.saveMachineSnapshotButton.setEnabled(True)
 
     def getMachinePreviewData(self, configName):
         """
@@ -525,19 +542,14 @@ Click Continue... if you are satisfied, Otherwise click Ignore"%len(disConnected
             return False
         eventid = rpcResult[0]
         pvnames = rpcResult[1]
-        s_value = rpcResult[2]
-        d_value = rpcResult[3]
-        i_value = rpcResult[4]
-        dbrtype = rpcResult[5]
-        isConnected = rpcResult[6]
-        ts = rpcResult[7]
-        ts_nano = list(rpcResult[8])
-        severity = list(rpcResult[9])
-        status = list(rpcResult[10])
-        is_array = rpcResult[11]
-        raw_array_value  = rpcResult[12]
+        value = rpcResult[2]
+        dbrtype = rpcResult[3]
+        isConnected = rpcResult[4]
+        ts = rpcResult[5]
+        ts_nano = list(rpcResult[6])
+        severity = list(rpcResult[7])
+        status = list(rpcResult[8])
 
-        array_value = []
         for i in range(len(severity)):
             try:
                 severity[i] = self.severityDict[severity[i]]
@@ -548,16 +560,16 @@ Click Continue... if you are satisfied, Otherwise click Ignore"%len(disConnected
             except:
                 status[i] = 'N/A'
 
-            if dbrtype[i] in self.epicsLong:
-                array_value.append(raw_array_value[i][2])
-            elif dbrtype[i] in self.epicsDouble:
-                array_value.append(raw_array_value[i][1])
-            elif dbrtype[i] in self.epicsString:
-                # string value
-                array_value.append(raw_array_value[i][0])
-            elif dbrtype[i] in self.epicsNoAccess:
-                # when the value is no_access, use the double value no matter what it is
-                array_value.append(raw_array_value[i][1])
+            # if dbrtype[i] in self.epicsLong:
+            #     array_value.append(raw_array_value[i][2])
+            # elif dbrtype[i] in self.epicsDouble:
+            #     array_value.append(raw_array_value[i][1])
+            # elif dbrtype[i] in self.epicsString:
+            #     # string value
+            #     array_value.append(raw_array_value[i][0])
+            # elif dbrtype[i] in self.epicsNoAccess:
+            #     # when the value is no_access, use the double value no matter what it is
+            #     array_value.append(raw_array_value[i][1])
         
         data = odict()
         data['PV Name'] = pvnames
@@ -566,61 +578,72 @@ Click Continue... if you are satisfied, Otherwise click Ignore"%len(disConnected
         data['Time stamp'] = ts
         data['Time stamp (nano)'] = ts_nano
         data['DBR'] = dbrtype
-        data['S_value'] = s_value
-        data['I_value'] = i_value
-        data['D_value'] = d_value
+        data['value'] = value
         data['isConnected'] = isConnected
-        data['isArray'] = is_array
-        data['arrayValue'] = array_value
 
         return (eventid, data)
-    
-    def ignore(self):
-        pass
 
+    def createLog4InvisibleSnapshot(self):
+        self.saveMachineSnapshotButton.setEnabled(True)
+        logText="saved an invisible snapshot %s using Conifg %s"%(self.previewId, self.previewConfName)
+        #self.createLogEntry(logText,logbookName='Controls Commissoning')
+    
     def saveMachinePreviewAction(self):
         #if self.previewId == None or self.previewConfName == None:
         if self.previewConfName == None:
             QMessageBox.warning(self, "Warning",
                                 'No preview to save. Please click "Preview Machine" first')
+            self.saveMachineSnapshotButton.setEnabled(True)
             return
         elif self.isPreviewSaved:
             QMessageBox.warning(self, "Warning",
 "Preview (id: %s) for config (%s) has already been saved" %(self.previewId, self.previewConfName))
+            self.saveMachineSnapshotButton.setEnabled(True)
             return
-        # who is int object
-        #who = str(os.system("whoami"))
-        #author = os.popen('whoami').read()
-        #print(author)
+
         comment = self.__getComment()
-        #else:
-            #return
-        # comment result always returns a tuple
-        # it return like (user, comment note)
         if comment and isinstance(comment, tuple):
             if comment[0] and comment[1]: 
-                #result = self.getMachinePreviewData(self.previewConfName)
-                #if result == None:
-                    #QMessageBox.warning(self,"Error",
-                     #                   "can't get machine preview data from MASAR server")
-                    #return
-                #self.previewId = result[0]
-                #print(self.previewId)
-                self.saveMachinePreviewData(self.previewId, self.previewConfName, comment)
-            else:
-                QMessageBox.warning(self,
-                    "Warning",
-                    "Either user name or comment is empty.")
+                commentDetail = ''
+                if pyOlogExisting: 
+                    commentDetail = self.__getCommentDetail()
+                if self.saveMachinePreviewData(self.previewId, self.previewConfName, comment):
+                    if commentDetail: 
+                        logText="Succeed to save a snapshot #%s to MASAR database using Conifg %s  \
+with description: %s.\nComment: %s"%(self.previewId,self.previewConfName,comment[1],commentDetail)
+                    else:
+                        logText="Succeed to save a snapshot #%s to MASAR database using Conifg %s  \
+with description: %s"%(self.previewId, self.previewConfName, comment[1])
+                    self.createLogEntry(logText)
+                    self.saveMachineSnapshotButton.setEnabled(True)
+                else:
+                    self.createLog4InvisibleSnapshot()
+                    self.saveMachineSnapshotButton.setEnabled(True)
+                    return
+                    
+            else:#if comment[0] and comment[1]: 
+                QMessageBox.warning(self,"Warning","Either user name or comment is empty.")
+                self.createLog4InvisibleSnapshot()
+                self.saveMachineSnapshotButton.setEnabled(True)
                 return
-        else:
-            #QMessageBox.warning(self,
-                #"Warning",
-                #"Comment is cancelled.")
+        else:#if comment and isinstance(comment, tuple):
+            self.createLog4InvisibleSnapshot()
+            self.saveMachineSnapshotButton.setEnabled(True)
             return
+        
         self.isPreviewSaved = True
 
     def __getComment(self):
         cdlg = commentdlg.CommentDlg()
+        cdlg.exec_()
+        if cdlg.isAccepted:
+            return (cdlg.result())
+        else:
+            return None
+
+    def __getCommentDetail(self):
+        import commentdetail
+        cdlg = commentdetail.CommentDetail()
         cdlg.exec_()
         if cdlg.isAccepted:
             return (cdlg.result())
@@ -632,7 +655,7 @@ Click Continue... if you are satisfied, Otherwise click Ignore"%len(disConnected
             QMessageBox.warning(self,
                         "Warning",
                         "Unknown event.")
-            return
+            return False
 
         params = {'eventid':    str(eventid),
                   'configname': str(confname),
@@ -647,11 +670,13 @@ Click Continue... if you are satisfied, Otherwise click Ignore"%len(disConnected
             return False
         if result:
             QMessageBox.information(self,"Successful", 
-                        " Succeed to save the preview as a snapshot to the database\n\n \
-You may re-select the Config (click 'Select Snapshots(s)') to verify this new saved snapshot")
+                        " Succeed to save a snapshot %s to MASAR database using Conifg %s\n\n \
+You may re-select the Config (click 'Select Snapshots(s)') to verify this new saved snapshot"\
+                                    %(self.previewId,self.previewConfName))
+            return True
         else:
-            QMessageBox.information(self, "Failures",
-                                    "Failed to save preview.")
+            QMessageBox.information(self, "Failures", "Failed to save preview.")
+            return False
 #********* End of Save machine snapshot ********************************************************* 
 
 
@@ -689,9 +714,15 @@ You may re-select the Config (click 'Select Snapshots(s)') to verify this new sa
     
     def fetchEventAction(self):
         """
+        click the button 'Select Snapshot(s)'
+        
         see ui_masar.py(.ui)
         QtCore.QObject.connect(self.fetchEventButton,  
                     QtCore.SIGNAL(_fromUtf8("clicked(void)")), masar.fetchEventAction)
+                    
+         also in setConfigTable(): 
+         QObject.connect(self.configTableWidget, 
+                            SIGNAL(_fromUtf8("itemSelectionChanged()")),self.fetchEventAction)
         """
         selectedConfigs = self.configTableWidget.selectionModel().selectedRows()
         if len(selectedConfigs) <= 0:
@@ -707,7 +738,6 @@ You may re-select the Config (click 'Select Snapshots(s)') to verify this new sa
             configIds.append(str(self.configTableWidget.item(idx.row(), 1).text()))
             configNames.append(str(self.configTableWidget.item(idx.row(), 0).text()))
         
-        #print(configIds)
         data = self.retrieveEventData(configids=configIds, confignames=configNames)
         reorderedData = odict() 
         if data:
@@ -717,14 +747,18 @@ You may re-select the Config (click 'Select Snapshots(s)') to verify this new sa
             reorderedData['Description'] = data['Description']
             reorderedData['Time stamp'] = data['Time stamp']
             reorderedData['Author'] = data['Author']
-            #print(reorderedData)
-            data = reorderedData  
+            data = reorderedData
             self.setEventTable(data)
             self.eventTableWidget.resizeColumnsToContents()
         else:
             QMessageBox.warning(self, "warning","Can't retrieve event list")
 
     def retrieveEventData(self,configids=None,confignames=None):
+        """
+        only called by fetchEventAction(): EventData here doesn't inlcude epics PV data, it only gives event header
+        information for given / selected Config -- how many events/snapshots have been taken 
+        retrieveMasarData(eventId) returns PV data
+        """
         start = None
         end = None
         if self.timeRangeCheckBox.isChecked():
@@ -741,7 +775,6 @@ You may re-select the Config (click 'Select Snapshots(s)') to verify this new sa
         event_desc = []
         c_names = []
         event_author = []
-        self.e2cDict.clear()
 
         if configids:
             for i in range(len(configids)):
@@ -798,16 +831,80 @@ You may re-select the Config (click 'Select Snapshots(s)') to verify this new sa
         #tableId = 1
         #the following have the same function
         self.eventTableWidget.doubleClicked.connect(self.retrieveSnapshot)
+        #QApplication.processEvents(QEventLoop.AllEvents)
         #self.eventTableWidget.cellDoubleClicked.connect(self.retrieveSnapshot)
         #self.eventTableWidget.itemDoubleClicked.connect(self.retrieveSnapshot)
         #QObject.connect(self.eventTableWidget, 
                             #SIGNAL(_fromUtf8("cellDoubleClicked (int,int)")),self.retrieveSnapshot)    
-     
+
+    def snapshotIdChanged(self):
+        """
+        see ui_masar.py(.ui)
+        QtCore.QObject.connect(self.snapshotIdLineEdit, 
+                QtCore.SIGNAL(_fromUtf8("textChanged(QString)")), masar.snapshotIdChanged)
+        """
+        id = self.snapshotIdLineEdit.text()
+
+    def retrieveSnapshotById(self):
+        """
+        see ui_masar.py(.ui)
+        QtCore.QObject.connect(self.searchSnapshotButton, 
+                QtCore.SIGNAL(_fromUtf8("clicked()")), masar.retrieveSnapshotById)
+        """
+        eventId = str(self.snapshotIdLineEdit.text())
+        if not eventId.isdigit():
+            QMessageBox.warning(self, 'Error', 'You have to enter one integer number and only one \
+in the left box. Try again if you want')
+            return
+        
+        eventIds = []
+        eventIds.append(eventId)
+        try:
+            params = {'eventid': eventId}
+            #retrieveService(Configs/Events) returns a list of tuples
+            (configID, configName, configDesc, date, version, status) = self.mc.retrieveServiceConfigs(params)
+            (snapshotID, snapshotDesc, ts, author) = self.mc.retrieveServiceEvents(params)#snapshotDesc is tuple
+            self.e2cDict[eventId] = [configID[0], snapshotDesc[0],configName[0]]#this is required for searchPV()
+            eventNames = []
+            eventTs = []
+            for i in range(len(configName)):
+                eventNames.append(configName[i])
+                eventTs.append(ts[i])       
+        except:
+            traceback.print_exc()
+            QMessageBox.warning(self, "Error", "Can't get Config information related to eventId:%s.\
+You may have typed one invalid ID"%eventId)
+            return
+            
+        self.setSnapshotTabWindow(eventNames, eventTs, eventIds)
+        #highlight / select the Config and Event 
+        self.findConfigAndEvent(configName[0], eventId)
+    
+    def findConfigAndEvent(self, configName, eventId):
+        configTable = self.configTableWidget
+        for i in range(configTable.rowCount()):
+            if configName == configTable.item(i, 0).text():
+                configTable.setCurrentCell(i, 0)
+                break
+                #time.sleep(1.0) 
+        eventTable = self.eventTableWidget
+        for j in range(eventTable.rowCount()):
+            if eventId == eventTable.item(j, 1).text():
+                eventTable.setCurrentCell(j, 0)
+                break
+                
     def retrieveSnapshot(self):
         """
+        Click the button 'Display Snapshot(s)'
+        self.retrieveSnapshot() --> self.setSnapshotTabWindow() --> self.retrieveMasarData() -->
+            --> self.mc.retrieveSnapshot
+        
         see ui_masar.py(.ui)
         QtCore.QObject.connect(self.fetchSnapshotButton, 
                                 QtCore.SIGNAL(_fromUtf8("clicked(void)")), masar.retrieveSnapshot)
+         
+        also in setEventTable():                       
+        self.eventTableWidget.doubleClicked.connect(self.retrieveSnapshot)
         """
         selectedItems = self.eventTableWidget.selectionModel().selectedRows()
         if len(selectedItems) <= 0:
@@ -824,12 +921,12 @@ You may re-select the Config (click 'Select Snapshots(s)') to verify this new sa
             eventTs.append(str(self.eventTableWidget.item(idx.row(), 3).text()))
             eventIds.append(str(self.eventTableWidget.item(idx.row(), 1).text()))
             
-        #print(eventNames)
-        self.setSnapshotTabWindow(eventNames, eventTs, eventIds)
-        #this doesn't work well: wait for seconds, then get the Live Machine data
-        #QThread.sleep(2)
-        #self.getLiveMachineAction()   
-        
+        self.timeAtRetrieveSnapshot = time.time()
+        loopTime = self.timeAtRetrieveSnapshot - self.timeAtSetSnapshotTabWindow
+        if loopTime > 1.0: #fix the problem: double-click triggers multiple-retrieve-requests     
+            #print(datetime.datetime.now())
+            self.setSnapshotTabWindow(eventNames, eventTs, eventIds)
+
     def setSnapshotTabWindow(self, eventNames, eventTs, eventIds):
         """
         ideally, this method only sets snapshot table. 
@@ -840,33 +937,29 @@ You may re-select the Config (click 'Select Snapshots(s)') to verify this new sa
         tableWidget = None
         isNew = True
         
-        #print(eventIds)
         for i in range(len(eventIds)):
             data = self.retrieveMasarData(eventid=eventIds[i])
-            if None == data:
+            if data == None or not isinstance(data, odict):
                 QMessageBox.warning(self, "Warning", 
                                     "Can't get snapshot data for eventId:%s"%eventIds[i])
-                return
             
             ts = eventTs[i].split('.')[0] 
             label = QString.fromUtf8((eventNames[i]+': ' +eventIds[i]+": "+ ts))            
             tableWidget = self.createNewTableWidget(eventIds[i], label)        
             self.setSnapshotTable(data, tableWidget, eventIds[i])
-            
+
             self.pv4cDict[str(eventIds[i])] = data['PV Name']
-            self.data4eid[str(eventIds[i])] = data         
+            self.data4eid[str(eventIds[i])] = data
             tableWidget.setStatusTip("Snapshot data of " + eventNames[i] + " saved at " + ts)
             tableWidget.setToolTip("Sort the table by column \n Ctrl + C to copy \n \
 Double click to view waveform data")
             self.resizeSplitter(1)
-                          
-        #self.snapshotTabWidget.setCurrentIndex(1)
-        #print("total tabs:%d"%self.snapshotTabWidget.count())
+
         self.snapshotTabWidget.setCurrentIndex(self.snapshotTabWidget.count())
         self.snapshotTabWidget.setCurrentWidget(tableWidget)
+        self.timeAtSetSnapshotTabWindow = time.time()
 
     def __showArrayData(self, row, column):
-        #if column != 5 and column != 6: # display the array value only
         curWidget = self.snapshotTabWidget.currentWidget()
         if not isinstance(curWidget, QTableWidget):
             QMessageBox.warning(self, 'Warning', 'No snapshot is selected yet.')
@@ -875,35 +968,29 @@ Double click to view waveform data")
         pvname = str(curWidget.item(row, 0).text())
         eid = self.__find_key(self.tabWindowDict, curWidget)
         eid_ = eid
-        #print(eid)
         if eid == 'comment':
             QMessageBox.warning(self, 'Warning', 'It is comment panel.')
             return
         #in non-compare tab, saved value / live value  is in column 3 / 4
         if eid != "compare": 
             if column != 3 and column != 4: 
-                #print(column)
-                return       
+                return
         if eid == "compare":
             if column < 1 or column > 1 + len(self.eventIds):
-                #print("compare: %d"%column)
                 return
         
         if eid == 'preview':
             eid_ = self.previewId
-        #print("pv / eid_: %s / %s"%(pvname, eid_))
         if eid == "compare":
             if column == 1 + len(self.eventIds):#live value column: use the Ref. snapshot
                 eid_ = str(self.eventIds[0])+'_compare'
             else:
                 eid_ = str(self.eventIds[column-1])+'_compare'
-            #print("pv / eid_: %s / %s"%(pvname, eid_))
         try:
             arraySaved = self.arrayData[pvname+'_'+str(eid_)]
         except:
             QMessageBox.warning(self, 'Warning', 'No saved array data for the PV %s'%pvname)
             return
-        #print("eid / eid_: %s / %s"%(eid, eid_))
         if eid != 'preview':
             try:
                 arrayLive = self.arrayData[pvname+"_"+str(eid)+'_live']
@@ -913,10 +1000,7 @@ Double click to view waveform data")
         else:
             arrardlg = ShowArrayValueDlg(pvname, arraySaved)
         arrardlg.exec_()
-        #arrardlg.show()
-        #arrardlg.raise_()
-        #arrardlg.activateWindow()
-        
+
     def __find_key(self, dic, val):
         """return the key of dictionary dic given the value"""
         return [k for k, v in dic.iteritems() if v == val][0]
@@ -929,29 +1013,21 @@ Double click to view waveform data")
         data = odict()
 
         params = {'eventid': eventid}
-        
         try:
             rpcResult = self.mc.retrieveSnapshot(params)
         except:
-            QMessageBox.warning(self,
-                                "Warning",
-                                "Except happened during retrieving snapshot data.")
-            return False
+            return rpcResult
         if not rpcResult:
             return False
         pvnames = rpcResult[0]
-        s_value = rpcResult[1]
-        d_value = rpcResult[2]
-        i_value = rpcResult[3]
-        dbrtype = rpcResult[4]
-        isConnected = rpcResult[5]
-        ts = rpcResult[6]
-        ts_nano = rpcResult[7]
-        severity = list(rpcResult[8])
-        status = list(rpcResult[9])
-        is_array = rpcResult[10]
-        raw_array_value  = rpcResult[11]
-        array_value = []
+        value = rpcResult[1]
+        dbrtype = rpcResult[2]
+        isConnected = rpcResult[3]
+        ts = rpcResult[4]
+        ts_nano = rpcResult[5]
+        severity = list(rpcResult[6])
+        status = list(rpcResult[7])
+
         for i in range(len(severity)):
             try:
                 severity[i] = self.severityDict[severity[i]]
@@ -962,28 +1038,16 @@ Double click to view waveform data")
             except:
                 status[i] = 'N/A'
 
-            if dbrtype[i] in self.epicsLong:
-                if isinstance(raw_array_value[i], dict):
-                    array_value.append(raw_array_value[i]['intVal'])
-                else:
-                    array_value.append(raw_array_value[i][2])
-            elif dbrtype[i] in self.epicsDouble:
-                if isinstance(raw_array_value[i], dict):
-                    array_value.append(raw_array_value[i]['doubleVal'])
-                else:
-                    array_value.append(raw_array_value[i][1])
-            elif dbrtype[i] in self.epicsString:
-                if isinstance(raw_array_value[i], dict):
-                    array_value.append(raw_array_value[i]['stringVal'])
-                else:
-                    array_value.append(raw_array_value[i][0])
-                # string value
-            elif dbrtype[i] in self.epicsNoAccess:
-                # when the value is no_access, use the double value no matter what it is
-                if isinstance(raw_array_value[i], dict):
-                    array_value.append(raw_array_value[i]['doubleVal'])
-                else:
-                    array_value.append(raw_array_value[i][1])
+            # if dbrtype[i] in self.epicsLong:
+            #     array_value.append(raw_array_value[i][2])
+            # elif dbrtype[i] in self.epicsDouble:
+            #     array_value.append(raw_array_value[i][1])
+            # elif dbrtype[i] in self.epicsString:
+            #     # string value
+            #     array_value.append(raw_array_value[i][0])
+            # elif dbrtype[i] in self.epicsNoAccess:
+            #     # when the value is no_access, use the double value no matter what it is
+            #     array_value.append(raw_array_value[i][1])
 
         data['PV Name'] = pvnames
         data['Status'] = status
@@ -991,13 +1055,9 @@ Double click to view waveform data")
         data['Time stamp'] = ts
         data['Time stamp (nano)'] = ts_nano
         data['DBR'] = dbrtype
-        data['S_value'] = s_value
-        data['I_value'] = i_value
-        data['D_value'] = d_value
+        data['value'] = value
         data['isConnected'] = isConnected
-        data['isArray'] = is_array
-        data['arrayValue'] = array_value
-        
+
         return data
                 
     def setSnapshotTable(self, data, table, eventid):
@@ -1023,13 +1083,9 @@ Double click to view waveform data")
             table.clear()
         
             nrows = len(data.values()[0])
-            keys = ['PV Name', 'Saved Connection', 'Not Restore','Saved Value','Live Value','Diff', 
-                    'Saved Timestamp', 'Saved Status','Saved Severity',
+            keys = ['PV Name', 'Saved Connection', 'Not Restore', 'Saved Value', 'Live Value', 'Diff',
+                    'Saved Timestamp', 'Saved Status', 'Saved Severity',
                     'Live Connection', 'Live Timestamp', 'Live Status', 'Live Severity']
-            #keys = ['PV Name', 'Description', 'Not Restore', 'Saved Value', 'Live Value', 'Diff', 
-                    #'Saved Connection', 'Saved Timestamp', 'Saved Status','Saved Severity',
-                    #'Live Connection', 'Live Timestamp', 'Live Status', 'Live Severity']
-            #ncols = len(data) - 3
             ncols = len(keys)
             table.setRowCount(nrows)
             table.setColumnCount(ncols)
@@ -1040,71 +1096,39 @@ Double click to view waveform data")
             severity = data['Severity']
             ts = data['Time stamp']
             ts_nano = data['Time stamp (nano)']
-            dbrtype = data['DBR']
-            s_value = data['S_value']
-            i_value = data['I_value']
-            d_value = data['D_value']
+            #dbrtype = data['DBR']
+            value = data['value']
             isConnected = data['isConnected']
-            is_array = data['isArray'] 
-            array_value = data['arrayValue']
-            
-            #pvs = [pvnames[m]+'.DESC' for m in range(len(pvnames))]
-            #v3Results = cav3.caget(pvs, timeout=2, throw=False)
-            #for n in range(len(pvs)):
-                #print("%s    %s"%(pvs[n], v3Results[n]))
-            
+
             for i in range(nrows):
-                #item = table.item(i, 8)
                 item = table.item(i, 2)
                 if item:
                     item.setCheckState(False)
                 else:
                     item = QTableWidgetItem()
                     item.setFlags(Qt.ItemIsEnabled|Qt.ItemIsUserCheckable)
-                    #table.setItem(i, 8, item)
                     table.setItem(i, 2, item)
                     item.setCheckState(False)
 
                 if pvnames[i]:
                     self.__setTableItem(table, i, 0, pvnames[i])
                 if status[i]:
-                    #self.__setTableItem(table, i, 1, str(status[i]))
                     self.__setTableItem(table, i, 7, str(status[i]))
                 if severity[i]:
-                    #self.__setTableItem(table, i, 2, str(severity[i]))
                     self.__setTableItem(table, i, 8, str(severity[i]))
                 if ts[i]:
                     dt = str(datetime.datetime.fromtimestamp(ts[i]+ts_nano[i]*1.0e-9))
-                    #self.__setTableItem(table, i, 3, dt)
                     self.__setTableItem(table, i, 6, dt)
-                        
-                if is_array[i]:
-                    self.__setTableItem(table, i, 3, self.__arrayTextFormat(array_value[i]))
-                    #self.__setTableItem(table, i, 5, self.__arrayTextFormat(array_value[i]))
-                    self.arrayData[pvnames[i]+'_'+str(eventid)] = array_value[i]
+
+                if isinstance(value[i], (list, tuple)):
+                    self.__setTableItem(table, i, 3, self.__arrayTextFormat(value[i]))
+                    self.arrayData[pvnames[i]+'_'+str(eventid)] = value[i]
                 else:
-                    if dbrtype[i] in self.epicsDouble:
-                        #self.__setTableItem(table, i, 5, str(d_value[i]))
-                        self.__setTableItem(table, i, 3, str(d_value[i]))
-                    elif dbrtype[i] in self.epicsLong:
-                        #self.__setTableItem(table, i, 5, str(i_value[i]))
-                        self.__setTableItem(table, i, 3, str(i_value[i]))
-                    elif dbrtype[i] in self.epicsString:
-                        #self.__setTableItem(table, i, 5, str(s_value[i]))
-                        self.__setTableItem(table, i, 3, str(s_value[i]))
-                    elif dbrtype[i] in self.epicsNoAccess:
-                        # channel are not connected.
-                        pass
-                    else:
-                        print('invalid dbr type (code = %s)'%(dbrtype[i]))
-                
+                    self.__setTableItem(table, i, 3, str(value[i]))
                 if isConnected[i]:
-                    #self.__setTableItem(table, i, 4, str(bool(isConnected[i])))
                     self.__setTableItem(table, i, 1, "Connected")
-                    #self.__setTableItem(table, i, 1, "Restorable")
                     item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
                 else:
-                    #self.__setTableItem(table, i, 4, 'False')
                     self.__setTableItem(table, i, 1, 'Disconnected')
                     item.setCheckState(True)
                     item.setSelected(True)
@@ -1117,13 +1141,10 @@ Double click to view waveform data")
                             table.setItem(i, item_idx, itemtmp)
                         itemtmp.setBackground(self.brushbadpv)
                 
-                #if v3Results[i]:
-                    #self.__setTableItem(table, i, 1, str(v3Results[i]))
-
             table.setSortingEnabled(True)
             #be careful of this sorting action 
             #sort by "Connection"  
-            table.sortItems(1,1)
+            table.sortItems(1, 1)
             table.resizeColumnsToContents()
         else:
             raise "Error occurred in setSnapshotTable(self, data, table, eventid)"
@@ -1151,17 +1172,16 @@ Double click to view waveform data")
 
 
 #************************** Start of config snapShotTab *******************************************  
-    def closeTab(self):
+    def closeTab(self, index):
         """
         snapshotTab is closable, movable
         See ui_masar.py(.ui):
         QtCore.QObject.connect(self.snapshotTabWidget, 
                     QtCore.SIGNAL(_fromUtf8("tabCloseRequested(int)")), masar.closeTab)
         """
-        index = self.snapshotTabWidget.currentIndex()
+        #index = self.snapshotTabWidget.currentIndex()
         if index != 0:
             self.snapshotTabWidget.removeTab(index)
-            #print("the selected tab is closed")
         else:
             QMessageBox.warning(self, "Waring", 
                                 "Please don't close this page since it has all instructions")
@@ -1169,6 +1189,7 @@ Double click to view waveform data")
     def configTab(self):
         """
         Highligt the tabBar of the active/selected snapshotTab
+        and highlight snapshot related Config / Event  
         See ui_masar.py(.ui):
         QtCore.QObject.connect(self.snapshotTabWidget, 
                     QtCore.SIGNAL(_fromUtf8("currentChanged(int)")), masar.configTab)
@@ -1176,9 +1197,7 @@ Double click to view waveform data")
         # this won't work: 
         ##AttributeError: 'builtin_function_or_method' object has no attribute 'setTabTextColor'
         #self.snapshotTabWidget.tabBar.setTabTextColor(0, Qt.blue)
-        
         bar = self.snapshotTabWidget.tabBar()
-        #bar.setTabTextColor(0, Qt.blue) // for quick test
         totalTabs = self.snapshotTabWidget.count()
         curIndex = self.snapshotTabWidget.currentIndex()
         for i in range(totalTabs):
@@ -1186,22 +1205,61 @@ Double click to view waveform data")
                 bar.setTabTextColor(i, Qt.blue)
             else:
                 bar.setTabTextColor(i, Qt.gray)
-        #print("total tabs / current tab index: %s / %s" %(totalTabs, curIndex))
-#************************** End of config snapShotTab ********************************************* 
+        
+        #automatically update Config & Event table:         
+        try:
+            curWidget = self.snapshotTabWidget.currentWidget()
+            if not isinstance(curWidget, QTableWidget):
+                self.fetchConfigAction() # update / un-highlight Configtable
+                self.eventTableWidget.clearContents()
+                return
+            eid = self.__find_key(self.tabWindowDict, curWidget)
+            if eid == 'comment' or eid == 'compare':
+                self.fetchConfigAction() # update / un-highlight Configtable
+                self.eventTableWidget.clear()
+                return
+            if eid == 'preview':
+                eid = self.previewId
+            if eid == 'filter':
+                eid = self.origID
+            [cid, desc, configName] = self.e2cDict[str(eid)]
+            self.findConfigAndEvent(configName, str(eid))
+        except:
+            traceback.print_exc()
+#************************** End of config snapShotTab *********************************************
  
- 
-    def restoreSnapshotAction(self):
+#************************ Start of machine restore: simple put or ramping *************************     
+    def ignore4RestoreMachine(self):
+        self.restoreMachineButton.setEnabled(True)
+        self.rampingMachineButton.setEnabled(True)
+        return
+    
+    def getRestoreInfo(self):
         curWidget = self.snapshotTabWidget.currentWidget()
         if not isinstance(curWidget, QTableWidget):
             QMessageBox.warning(self, 'Warning', 
                         'No snapshot is selected yet. Please refer Welcome to MASAR for help')
+            self.restoreMachineButton.setEnabled(True)  
+            self.rampingMachineButton.setEnabled(True)
             return
         
         eid = self.__find_key(self.tabWindowDict, curWidget)
         if eid == 'comment' or eid == 'preview' or eid == 'compare':
             QMessageBox.warning(self, 'Warning', 
                         'No restore, %s tab is selected. Please select other Non-%s Tab'%(eid,eid))
+            self.restoreMachineButton.setEnabled(True)  
+            self.rampingMachineButton.setEnabled(True)
             return
+        if eid == 'filter':
+            eid4Log = self.origID + '(filtered)'
+        else:
+            eid4Log = eid                      
+ 
+        if not self.getAuthentication():
+            self.restoreMachineButton.setEnabled(True)  
+            self.rampingMachineButton.setEnabled(True)
+            return
+        
         selectedNoRestorePv = {}
 
         # get table rows
@@ -1212,29 +1270,26 @@ Double click to view waveform data")
         #                            but not all, of their children are checked.
         #Qt.Checked             2    The item is checked.
         for row in range(rowCount):
-            #selectedNoRestorePv[str(curWidget.item(row, 0).text())] =
-                                                # bool(curWidget.item(row, 8).checkState())
-            selectedNoRestorePv[str(curWidget.item(row, 0).text())]= \
-                                                bool(curWidget.item(row, 2).checkState())
+            selectedNoRestorePv[str(curWidget.item(row, 0).text())] = bool(curWidget.item(row, 2).checkState())
         pvlist = list(self.pv4cDict[str(eid)])
+
         data = self.data4eid[str(eid)]
-        s_val = data['S_value']
-        d_val = data['D_value']
-        i_val = data['I_value']
+        value = data['value']
         dbrtype = data['DBR']
-        is_array = data['isArray']
         # is_connected = data['isConnected']
         # data['PV Name']
-        array_value = data['arrayValue']
-        
-        disConnectedPVs = []
+
         liveData = self.getLiveMachineData(pvlist)
         if not liveData:
+            self.restoreMachineButton.setEnabled(True)  
+            self.rampingMachineButton.setEnabled(True)
             return
-        disConnectedPVs = liveData[8]
         
+        disConnectedPVs = liveData[4]
+
         r_pvlist = [] # restore all pv value in this list
         r_data = []   # value to be restored.
+        r_dbrtype = []
         no_restorepvs = []  # no restore from those pvs
         ignoreall = False # Ignore all pv those do not have any value.
         for index in range(len(pvlist)):
@@ -1242,15 +1297,8 @@ Double click to view waveform data")
                 # pv is unchecked, which means restore this pv
                 if not selectedNoRestorePv[pvlist[index]]:
                     r_pvlist.append(pvlist[index])
-                    if is_array[index]:
-                        r_data.append(array_value[index])
-                    elif dbrtype[index] in self.epicsDouble:
-                        r_data.append(d_val[index])
-                    elif dbrtype[index] in self.epicsLong:
-                        r_data.append(i_val[index])
-                    elif dbrtype[index] in self.epicsString:
-                        r_data.append(s_val[index])
-                    elif dbrtype[index] in self.epicsNoAccess:
+                    r_dbrtype.append(dbrtype[index])
+                    if dbrtype[index] in self.epicsNoAccess:
                         if not ignoreall:
                             reply = QMessageBox.warning(self, 'Warning', 
 'Cannot restore pv: %s\nValue is invalid.\nDo you want to ignore it and continue?'%(pvlist[index]),
@@ -1261,62 +1309,32 @@ Double click to view waveform data")
                                 no_restorepvs.append(pvlist[index])
                                 ignoreall = True
                             elif reply == QMessageBox.Cancel:
+                                self.restoreMachineButton.setEnabled(True)
+                                self.rampingMachineButton.setEnabled(True)
                                 return
                         else:
                             no_restorepvs.append(pvlist[index])
+                    else:
+                        r_data.append(value[index])
                 else:
                     no_restorepvs.append(pvlist[index])
             except:
                 print (type(pvlist[index]), pvlist[index])
                 QMessageBox.warning(self, 'Warning', 'PV name (%s) is invalid.'%(pvlist[index]))
+                self.restoreMachineButton.setEnabled(True)
+                self.rampingMachineButton.setEnabled(True)
                 return
     
         if len(no_restorepvs) == rowCount:
             QMessageBox.warning(self, 'Warning', 'All pvs are checked, and not restoring.')
+            self.restoreMachineButton.setEnabled(True)
+            self.rampingMachineButton.setEnabled(True)
             return
         
-        #cagetres = cav3.caget(r_pvlist, throw=False)
-        #problempvlist=[]
-        #for rtmp in cagetres:
-        #    if not rtmp.ok:
-        #        problempvlist.append(rtmp)
-        #ignoreallconnection = False
-        #forceall = False
-        #if len(problempvlist) > 0:
-        #    for problempv in problempvlist:
-        #        if not ignoreall and not forceall:
-        #            reply = QMessageBox.warning(self, 'Warning', 'There are a problem to connect pv %s. \nDo you want to ignore it and continue?'%(problempv),
-        #                                        QMessageBox.Yes | QMessageBox.YesToAll | QMessageBox.No | QMessageBox.NoToAll | QMessageBox.Cancel, QMessageBox.Cancel)
-        #            if reply == QMessageBox.Yes:
-        #                # ignore this pv only
-        #                no_restorepvs.append(problempv.name)
-        #            elif reply == QMessageBox.No:
-        #                # not ignore this pv
-        #                pass
-        #            elif reply == QMessageBox.YesToAll:
-        #                # ignore all pvs that there might have potential connection problem
-        #                # this does not overwrite all previous decisions
-        #                no_restorepvs.append(problempv.name)
-        #                ignoreallconnection = True
-        #            elif reply == QMessageBox.NoToAll:
-        #                # force restore pvs althouth there might have potential connection problem
-        #                # this does not overwrites all previous decisions
-        #                forceall = True
-        #            elif reply == QMessageBox.Cancel:
-        #                # cancel this operation
-        #                return
-        #        elif ignoreallconnection:
-        #            no_restorepvs.append(problempv.name)
-        #if ignoreall or ignoreallconnection:
-        
-        #merge the disconnected PVs to no_restorepvs, but no duplicated PVs in no_restorepvs
-        #no_restorepvs.append(disConnectedPVs)
-        #no_restorepvs = no_restorepvs + disConnectedPVs
         for i in range(len(disConnectedPVs)):
             if disConnectedPVs[i] not in no_restorepvs:
                 no_restorepvs.append(disConnectedPVs[i])
-        #print(no_restorepvs)
-        
+
         if ignoreall:
             str_no_restore = "\n"
             for no_restorepv in no_restorepvs:
@@ -1326,21 +1344,25 @@ Double click to view waveform data")
             str_no_restore = "\n"
             for no_restorepv in no_restorepvs:
                 str_no_restore += ' - %s' %no_restorepv + '\n'
-            #reply = QMessageBox.question(self, 'Message',
-                                 #"Partial pv will not be restored. Do you want to continue?\n(Please check terminal for a full list.)",                                          
-                                 #QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                
             msg = QMessageBox(self, windowTitle='Warning', 
-text="%d PVs will not be restored. Click Show Details... to see the disconnected Pvs.\n\
+text="%d PVs will not be restored. Click Show Details... to see the disconnected / no-restore Pvs.\n\
 It may take a while to restore the machine. Do you want to continue?" 
                               %len(no_restorepvs))
+            msg.setModal(False)
             msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
             msg.setDefaultButton(QMessageBox.No)
             msg.setDetailedText(str_no_restore)
             reply = msg.exec_()
             if reply == QMessageBox.No:
+                self.restoreMachineButton.setEnabled(True)
+                self.rampingMachineButton.setEnabled(True)
                 return
             print("No restore for the following pvs:\n"+str_no_restore+"\nlist end (no-restore)")
         
+        return (eid, eid4Log, r_pvlist, r_data, r_dbrtype, no_restorepvs, rowCount)
+ 
+    def simplePut(self, eid, eid4Log, r_pvlist, r_data, no_restorepvs, rowCount):
         bad_pvs = []
         try:
             final_restorepv = []
@@ -1366,33 +1388,95 @@ It may take a while to restore the machine. Do you want to continue?"
                             bad_pvs.append(res)
         except:
             QMessageBox.warning(self, 'Warning', 'Error during restoring machine.')
+            self.restoreMachineButton.setEnabled(True)
+            self.rampingMachineButton.setEnabled(True)
             return
-        #bad_pvs == [ca_nothing(), ca_nothing() ...]
-        #bad_pvs = bad_pvs + no_restorepvs
-        #print(bad_pvs)
+
         if len(bad_pvs) > 0:
-            #message = "Failed to restore some pvs. PLease check the terminal for a full list."
-            #QMessageBox.warning(self, 'Warning', message)
             output = ""
             for bad_pv in bad_pvs:
                 output += "\n  "+bad_pv.name + ": "+cav3.cadef.ca_message(bad_pv.errorcode)
             for no_restorepv in no_restorepvs:
                 output += "\n  "+no_restorepv + ": Disconnected" 
-            print ("Failed to restore the following pvs which is caused by:"+output+"\n\
-========list end (failed to restore pv)========")  
+
+            logText = "Snapshot #%s was restored with Config %s, but failed to restore the following \
+pvs which is caused by:\n"%(eid4Log,self.e2cDict[eid][2])+output+"\n"
+            print (logText)  
+            
             totalBadPVs = len(bad_pvs)+len(no_restorepvs)     
             msg = QMessageBox(self, windowTitle='Warning', 
                               text="Not Very Successful: failed to restore %s PVs.\
-Click Show Details... to see the failure details"
+Click Show Details... to see the failure details\n\You may take a moment to review \
+the restored PV values by clicking the button Compare Live Machine"
                                %totalBadPVs)
-            #msg.setStandardButtons(QMessageBox.Ok)
             msg.setDetailedText(output)
-            msg.exec_()
+            msg.setModal(False)
+            continueButton = msg.addButton("Ok", QMessageBox.ActionRole)
+            quitButton = msg.addButton(QMessageBox.Ignore)
+            msg.setAttribute(Qt.WA_DeleteOnClose)
+            msg.show()
+            continueButton.clicked.connect(self.ignore4RestoreMachine) 
+            quitButton.clicked.connect(self.ignore4RestoreMachine) 
         else:
+            self.restoreMachineButton.setEnabled(True)
+            self.rampingMachineButton.setEnabled(True)
             QMessageBox.information(self, "Congratulation", 
-                            "Cheers: successfully restore machine with selected snapshot.")
-
-#************************** End of restoreSnapshotAction(self) ********************************************* 
+                            "Bingo! Restoring machine is done. You may take a moment to \
+review the restored PV values by clicking the button Compare Live Machine")
+            logText = "successfully restore machine with the snapshot #%s and Conifg %s" \
+                        %(eid4Log, self.e2cDict[eid][2])
+        
+        self.createLogEntry(logText)
+        
+        dirPath = os.path.dirname(os.path.abspath(__file__))
+        configFile = dirPath + '/configure/' + self.e2cDict[eid][2] + '.cfg'
+        if not os.path.isfile(configFile):
+            return
+        if not self.verifyWindowDict.has_key(configFile):
+            verifyWin = VerifySetpoint(configFile, rowCount, self.verifyWindowDict, self)
+            verifyWin.show()
+            self.verifyWindowDict[configFile] = verifyWin  
+              
+    def restoreSnapshotAction(self):
+        """
+         QtCore.QObject.connect(self.restoreMachineButton, 
+                 QtCore.SIGNAL(_fromUtf8("clicked(void)")), masar.restoreSnapshotAction)
+        """    
+        self.restoreMachineButton.setEnabled(False)  
+        QApplication.processEvents(QEventLoop.ExcludeUserInputEvents) 
+        
+        restoreInfo = self.getRestoreInfo()
+        if restoreInfo is None:
+            return
+        (eid, eid4Log, r_pvlist, r_data, r_dbrtype, no_restorepvs, rowCount) = restoreInfo
+        
+        self.simplePut(eid, eid4Log, r_pvlist, r_data, no_restorepvs, rowCount)    
+                
+    def rampingMachine(self):
+        """
+        See ui_masar.py (.ui):
+QtCore.QObject.connect(self.rampingMachineButton, QtCore.SIGNAL(_fromUtf8("clicked()")), masar.rampingMachine)
+        """
+        #print("ramping machine")
+        self.rampingMachineButton.setEnabled(False)  
+        QApplication.processEvents(QEventLoop.ExcludeUserInputEvents)
+        restoreInfo = self.getRestoreInfo()
+        if None == restoreInfo:
+            return
+        (eid, eid4Log, r_pvlist, r_data, r_dbrtype, no_restorepvs, rowCount) = restoreInfo
+        gradualPutDlg = GradualPut(r_pvlist, r_data, r_dbrtype, no_restorepvs, self)
+        reply = gradualPutDlg.exec_()  
+        if reply == 1:#1 means clicked QDialogButtonBox.Yes
+            rampingPutResult = gradualPutDlg.rampingPut()
+            if None == rampingPutResult:
+                self.rampingMachineButton.setEnabled(True)
+                return
+            
+            self.simplePut(eid, eid4Log, r_pvlist, r_data, no_restorepvs, rowCount)
+        else:   
+            self.rampingMachineButton.setEnabled(True)
+            
+#************************** End of machine restore ********************************************* 
  
     def getLiveMachineAction(self):
         """
@@ -1409,42 +1493,45 @@ Click Show Details... to see the failure details"
             if eid == 'preview':
                 eid = self.previewId # get event id for preview snapshot
             elif eid == 'comment':
+                self.getLiveMachineButton.setEnabled(True)
                 return # nothing should do here
             elif eid == 'compare':
                 #self.beCompared = True
+                self.getLiveMachineButton.setEnabled(False)
+                QApplication.processEvents(QEventLoop.ExcludeUserInputEvents)
                 data_ = self.data4eid['compare']
                 pvlist_ = self.pv4cDict['compare']
                 eventIds_ = self.eventIds 
                 #print(pvlist_)
                 self.compareLiveWithMultiSnapshots = True
                 self.setCompareSnapshotsTable(data_, curWidget, pvlist_, eventIds_)
-                #curWidget.setSortingEnabled(True) 
                 #since compareSnapshotsTable is so different from singleSnapshotTable, 
                 ## don't continue and just return
+                self.getLiveMachineButton.setEnabled(True)
                 return
+            
+            self.getLiveMachineButton.setEnabled(False)
+            QApplication.processEvents(QEventLoop.ExcludeUserInputEvents)
             #catch KeyError: 'None'
             pvlist = self.pv4cDict[str(eid)]
             
             data = self.getLiveMachineData(pvlist)
+            # returned data format
+            # (channelName, value, dbrtype, isConnected,
+            #  disConnectedPVs, status, severity, ts, ts_nano)
             if data:
                 channelName = data[0]
-                s_value = data[1]
-                d_value = data[2]
-                i_value = data[3]
-                dbrtype = data[4]
-                #isConnected = data[5]
-                is_array = data[6]
-                array_value = data[7]
-                disConnectedPVs = data[8]
-                alarm_status = data[9]
-                alarm_severity = data[10]
-                ts = data[11]
-                ts_nano = data[12]
-                #print(array_value)
+                value = data[1]
+                dbrtype = data[2]
+                #isConnected = data[3]
+                disConnectedPVs = data[4]
+                alarm_status = data[5]
+                alarm_severity = data[6]
+                ts = data[7]
+                ts_nano = data[8]
                 dd = {}
                 noMatchedPv = []
-                #disConnectedPv = []
-                
+
                 # put channel name and its order into a dictionary
                 for i in range(len(channelName)):
                     dd[str(channelName[i])] = i
@@ -1459,93 +1546,55 @@ Click Show Details... to see the failure details"
                             self.__setTableItem(curWidget, i, 9, "Disconnected") 
                         else:
                             self.__setTableItem(curWidget, i, 9, "Connected")              
-                            #continue 
-                        #reset the Connection status
-                        #if str(curWidget.item(i, 1).text()) == "Disconnected":
-                            #self.__setTableItem(curWidget, i, 1, "Reconnected")  
-                            #curWidget.item(i, 2).setCheckState(False)  
-                            #curWidget.item(i, 2).setSelected(False)  
-                        #self.__setTableItem(curWidget, i, 9, str(d_value[index])) 
-                        #dt=str(datetime.datetime.fromtimestamp(timestamp[index])) 
+             
                         dt=str(datetime.datetime.fromtimestamp(ts[index]+ts_nano[index]*1.0e-9)) 
                         self.__setTableItem(curWidget, i, 10, dt)
                         self.__setTableItem(curWidget, i, 11, str(alarm_status[index]))
                         self.__setTableItem(curWidget, i, 12, str(alarm_severity[index]))
                                     
-                        if is_array[index]:
-                            #self.__setTableItem(curWidget, i, 6, self.__arrayTextFormat(array_value[index]))
+                        if isinstance(value[index], (list, tuple)):
                             self.__setTableItem(curWidget, i, 4, \
-                                                self.__arrayTextFormat(array_value[index]))
+                                                self.__arrayTextFormat(value[index]))
                             self.arrayData[channelName[index]+"_"+str(eid)+'_live'] \
-                                                = array_value[index]
+                                                = value[index]
                             try:
                                 saved_array = self.arrayData[channelName[index]+"_"+str(eid)]
-                                #print("recrod %s is array:"%channelName[index])
-                                #print(saved_array)
-                                #print(array_value[index])
-                                if str(saved_array) != str(array_value[index]):
-                                    delta_ =[m - n for m, n in zip(array_value[index],saved_array)]
+                                if str(saved_array) != str(value[index]):
+                                    delta_ = [m - n for m, n in zip(value[index], saved_array)]
                                     delta_array = tuple(delta_)
                                     self.__setTableItem(curWidget, i, 5,
                                                         self.__arrayTextFormat(delta_array))
-                                #print(delta)     
+                                else:
+                                    self.__setTableItem(curWidget, i, 5, "")    
                             except:
-                                #print("something wrong with array data")
-                                #delta = 'N/A'
                                 self.__setTableItem(curWidget, i, 5, "N/A")
                         else:
-                            if dbrtype[index] in self.epicsDouble:
-                                #self.__setTableItem(curWidget, i, 6, str(d_value[index]))
-                                self.__setTableItem(curWidget, i, 4, str(d_value[index]))
-            
-                                try:
-                                    #saved_val = float(str(curWidget.item(i, 5).text()))
-                                    saved_val = float(str(curWidget.item(i, 3).text()))
-                                    #if d_value[index] != None:
-                                    if str(d_value[index]) != str(saved_val):
-                                        delta = d_value[index] - saved_val
-                                        self.__setTableItem(curWidget, i, 5, str(delta))
-                                        #if abs(delta) < 1.0e-9:
-                                            #delta = 'O'
-                                            #delta = 'Equal'
-                                        #else:
-                                            #delta = 'NotEqual(%.6f)'%delta
-                                            #delta = '%g'%delta
-                                    #else:
-                                        #delta = 'N/A'
-                                except:
-                                    #self.__setTableItem(curWidget, i, 7, str(delta))
-                                    self.__setTableItem(curWidget, i, 5, "N/A")
-                            elif dbrtype[index] in self.epicsLong:
-                                #self.__setTableItem(curWidget, i, 6, str(i_value[index]))
-                                self.__setTableItem(curWidget, i, 4, str(i_value[index]))
-            
+                            if dbrtype[index] in self.epicsDouble or dbrtype[index] in self.epicsLong:
+                                self.__setTableItem(curWidget, i, 4, str(value[index]))
                                 if dbrtype[index] in self.epicsNoAccess:
                                     pass
                                 else:
                                     try:
-                                        #saved_val = int(float(str(curWidget.item(i, 5).text())))
-                                        saved_val = int(float(str(curWidget.item(i, 3).text())))
-                                        #if i_value[index] != None:
-                                        if str(i_value[index]) != str(saved_val):
-                                            delta = i_value[index] - saved_val     
-                                            self.__setTableItem(curWidget, i, 5, str(delta))                                   
+                                        saved_val = float(str(curWidget.item(i, 3).text()))
+                                        if str(float(value[index])) != str(saved_val):
+                                            delta = value[index] - saved_val
+                                            self.__setTableItem(curWidget, i, 5, str(delta))
+                                        else:
+                                            self.__setTableItem(curWidget, i, 5, "")
                                     except:
                                         #self.__setTableItem(curWidget, i, 7, str(delta))
                                         self.__setTableItem(curWidget, i, 5, "N/A")
                             elif dbrtype[index] in self.epicsString:
-                                #self.__setTableItem(curWidget, i, 6, str(s_value[index]))   
-                                #print(saved_val)  
-                                self.__setTableItem(curWidget, i, 4, str(s_value[index]))
+                                self.__setTableItem(curWidget, i, 4, str(value[index]))
                                 try:
                                     saved_val = str(curWidget.item(i, 3).text())
-                                    if s_value[index] != saved_val:
+                                    if str(value[index]) != saved_val:
                                         self.__setTableItem(curWidget, i, 5, "NotEqual")
-                                        #delta = 'O'
-                                        #delta = 0
+                                    else:
+                                        self.__setTableItem(curWidget, i, 5, "")
                                 except:
                                     self.__setTableItem(curWidget, i, 5, "N/A")
-                            else:           
+                            else: #if dbrtype[index] in self.epicsDouble:
                                 self.__setTableItem(curWidget, i, 5, "N/A")
                     except:
                         self.__setTableItem(curWidget, i, 5, "N/A")
@@ -1569,12 +1618,9 @@ Click Show Details... to see the failure details"
                                 itemtmp.setBackground(self.brushdisconnectedpv)
                     except:
                         pass
-                #sort by "Connection"  
-                #curWidget.sortItems(1,0)
-                #sort by "delta"  
-                curWidget.sortItems(5,0)
+                curWidget.sortItems(5, 1)
                 curWidget.resizeColumnsToContents() 
-                curWidget.sortItems(9,1)
+                curWidget.sortItems(9, 1)
                 detailedText = ""
                 for i in range(len(disConnectedPVs)):
                     detailedText += '\n' + disConnectedPVs[i] 
@@ -1584,12 +1630,15 @@ text="There are %s PVs disconnected. Click Show Details ... below for more info\
 Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
                     msg.setModal(False)
                     msg.setDetailedText(detailedText)
-                    msg.show()
+                    msg.exec_()
                      
         else:# end of if isinstance(curWidget, QTableWidget):
             QMessageBox.warning(self, "Warning", 
                                 "No snapshot is displayed. Please refer Welcome to MASAR for help")
+            self.getLiveMachineButton.setEnabled(True)
             return
+        
+        self.getLiveMachineButton.setEnabled(True)
 #************************** End of getLiveMachineAction(self) ********************************************* 
         
     def getLiveMachineData(self, pvlist):
@@ -1620,18 +1669,13 @@ Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
             "Exception occurred when retieving live data, please check network or IOC status")
             return False
         channelName = rpcResult[0]
-        stringValue = rpcResult[1]
-        doubleValue = rpcResult[2]
-        longValue = rpcResult[3]
-        dbrtype = rpcResult[4]
-        isConnected = rpcResult[5]
-        #timestamp = rpcResult[6]
-        ts = rpcResult[6]
-        ts_nano = rpcResult[7]  
-        severity = list(rpcResult[8])
-        status = list(rpcResult[9])
-        is_array = rpcResult[10]
-        raw_array_value  = rpcResult[11]
+        value = rpcResult[1]
+        dbrtype = rpcResult[2]
+        isConnected = rpcResult[4]
+        ts = rpcResult[5]
+        ts_nano = rpcResult[6]
+        severity = list(rpcResult[7])
+        status = list(rpcResult[8])
         #=======================================================================
         # is_array = rpcResult[6]
         # raw_array_value = rpcResult[7]  
@@ -1640,7 +1684,7 @@ Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
         # timestamp = [0]*len(channelName)
         #=======================================================================
         
-        for i in range(len(is_array)):
+        for i in range(len(channelName)):
             try:
                 severity[i] = self.severityDict[severity[i]]
             except:
@@ -1649,48 +1693,24 @@ Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
                 status[i] = self.alarmDict[status[i]]
             except:
                 status[i] = 'N/A'
-            if dbrtype[i] in self.epicsLong:
-                array_value.append(raw_array_value[i][2])
-            elif dbrtype[i] in self.epicsDouble:
-                array_value.append(raw_array_value[i][1])
-            elif dbrtype[i] in self.epicsString:
-                # string value
-                array_value.append(raw_array_value[i][0])
-            elif dbrtype[i] in self.epicsNoAccess:
-                # when the value is no_access, use the double value no matter what it is
-                array_value.append(raw_array_value[i][1])
+            # if dbrtype[i] in self.epicsLong:
+            #     array_value.append(raw_array_value[i][2])
+            # elif dbrtype[i] in self.epicsDouble:
+            #     array_value.append(raw_array_value[i][1])
+            # elif dbrtype[i] in self.epicsString:
+            #     # string value
+            #     array_value.append(raw_array_value[i][0])
+            # elif dbrtype[i] in self.epicsNoAccess:
+            #     # when the value is no_access, use the double value no matter what it is
+            #     array_value.append(raw_array_value[i][1])
                 
         # if dbrtype is NoAccess, it means that the PV is disconnected at the moment       
         for i in range(len(dbrtype)):
             if dbrtype[i] in self.epicsNoAccess:    
                 disConnectedPVs.append(channelName[i])
-        #=======================================================================
-        #        status[i] = 'UDF_ALARM'
-        #        severity[i] = 'INVALID_ALARM'
-        #        timestamp[i] = 0
-        #        
-        # connectedPVs = list(set(channelName)-set(disConnectedPVs))
-        # v3Results = cav3.caget(connectedPVs, timeout=2,format=cav3.FORMAT_TIME, throw=False)
-        # for v3Result in v3Results:
-        #    if v3Result.name not in channelName:
-        #        QMessageBox.warning(self,"Waring",
-        #                            "Exception happened in getLiveMachineData() by cav3.caget")
-        #        return False
-        #    pvIndex = channelName.index(v3Result.name)
-        #    if v3Result.ok == True:
-        #        status[pvIndex] = self.alarmDict[v3Result.status]
-        #        severity[pvIndex] = self.severityDict[v3Result.severity] 
-        #        timestamp[pvIndex] = v3Result.timestamp  
-        #    else:
-        #        status[pvIndex] = 'UDF_ALARM'
-        #        severity[pvIndex] = 'INVALID_ALARM'
-        #        timestamp[pvIndex] = 0
-        #=======================================================================
 
-        return (channelName,stringValue,doubleValue,longValue,dbrtype,isConnected,is_array,
-                array_value,disConnectedPVs,status, severity, ts, ts_nano)
-                #array_value,disConnectedPVs,status, severity, timestamp)
-
+        return (channelName, value, dbrtype, isConnected,
+                disConnectedPVs, status, severity, ts, ts_nano)
 
     def saveDataFileAction(self):
         """
@@ -1723,9 +1743,9 @@ Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
         is_array = data['isArray'] 
         array_value = data['arrayValue']
         
-        head = '# pv name, status, severity, time stamp, epics dbr, is connected, is array, value'
+        head = '# pv name, elem location, elem type, status, severity, time stamp, epics dbr, is connected, is array, value'
 
-        filename = QFileDialog.getSaveFileName(self, 'Save File', '.')
+        filename = QFileDialog.getSaveFileName(self, 'Save File as .csv', '.')
         if not filename:
             return
         try:
@@ -1733,6 +1753,25 @@ Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
             fname.write(head+'\n')
             for i in range(len(pvnames)):
                 line = pvnames[i]
+                # a quick, urgly solution for NSLS II naming conversion only
+                # to be replaced by information from other service like channel finder
+                if pvnames[i].startswith("SR:C"):
+                    line += ','+pvnames[i][3:6]
+                else:
+                    line += ','
+
+                if 'MG' in pvnames[i]:
+                    loc1 = pvnames[i].find("{PS:")
+                    loc2 =  pvnames[i][loc1:].find("}")
+                    if loc1 != -1 and loc2 != 0 and loc1+4<loc1+loc2:
+                        line += ','+pvnames[i][loc1+4:loc1+loc2]
+                    else:
+                        line += ','
+                else:
+                    line += ','
+
+                # need to make above pretty and general    
+
                 line += ','+str(status[i])
                 line += ','+str(severity[i])
                 line += ','+str(datetime.datetime.fromtimestamp(ts[i]+ts_nano[i]*1.0e-9))
@@ -1750,6 +1789,7 @@ Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
                         line += ','+str(s_value[i])
                     else:
                         line += ''
+
                 fname.write(line+'\n')
             fname.close()
         except:
@@ -1759,6 +1799,10 @@ Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
 
 
 #************************** Start of comparing multiple snapshots ********************************* 
+    def ignoreCompare(self):
+        self.compareSnapshotsButton.setEnabled(True)
+        pass
+    
     def openMsgBox(self):  
         """
         Dialog for comparing multiple snapshots
@@ -1766,6 +1810,9 @@ Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
         QtCore.QObject.connect(self.compareSnapshotsButton, 
                     QtCore.SIGNAL(_fromUtf8("clicked()")), masar.openMsgBox) 
         """ 
+        self.compareSnapshotsButton.setEnabled(False)
+        QApplication.processEvents(QEventLoop.ExcludeUserInputEvents)
+        
         selectedEvents = self.eventTableWidget.selectionModel().selectedRows()
         ln = len(selectedEvents) 
         #print(selectedEvents)
@@ -1784,7 +1831,7 @@ Click Ignore if you don't want to continue")
             #msg.open(self, SLOT(msgBoxClosed()))
             #msg.open.connect(self.msgBoxClosed)
             okButton.clicked.connect(self.compareSnapshots) 
-            quitButton.clicked.connect(self.ignore) 
+            quitButton.clicked.connect(self.ignoreCompare) 
             #msg.buttonClicked.connect(self.compareSnapshots)    
             #print("QMessageBox is closed")        
         elif ln >=2 and ln <= 9:
@@ -1793,6 +1840,7 @@ Click Ignore if you don't want to continue")
         elif ln >0 and ln <2 or ln > 9:
             QMessageBox.warning(self,"Waring", 
                                 "Please select 2 ~ 9 snapshots for comparison,not %d snapshots"%ln) 
+            self.compareSnapshotsButton.setEnabled(True)
             return       
  
     
@@ -1800,11 +1848,13 @@ Click Ignore if you don't want to continue")
         selectedEvents = self.eventTableWidget.selectionModel().selectedRows()
         ln = len(selectedEvents) 
         if ln == 0:
+            self.compareSnapshotsButton.setEnabled(True)
             return
         #print(selectedEvents)
         elif ln < 2 or ln > 9:
             QMessageBox.warning(self,"Waring", 
                                 "Please select 2 ~ 9 snapshots for comparison,not %d snapshots"%ln) 
+            self.compareSnapshotsButton.setEnabled(True)
             return
         #print("compare %d snapshots" %ln)
         #eventTs=[]
@@ -1840,6 +1890,7 @@ Otherwise click Change the ref. snapshot ..."%eventIds[0])
             if result == None or not isinstance(result, odict) :
                 QMessageBox.warning(self,"Warning",
                                     "Failed to retrieve data for snapshot %s"%eventIds[i])
+                self.compareSnapshotsButton.setEnabled(True)
                 return
             else:
                 data.append(result) 
@@ -1923,6 +1974,7 @@ delta01: live value - value in 1st snapshot")
         #tabWidget.resizeRowsToContents()  
         #self.compareId = eid    
         #self.compareConfName =  None
+        self.compareSnapshotsButton.setEnabled(True)
 
     def selectRefSnapshot(self, eventIDs):
         #print(eventIDs)
@@ -2020,96 +2072,66 @@ delta01: live value - value in 1st snapshot")
                     self.__setTableItem(table, i,nEvents+1+j,"N/A")  
                 #print(pvIndex,data[j]['D_value'][pvIndex])   
                 
-        #have to wait 2 seconds before calling getLiveMachineData() if the snapshot has big data set 
-        #QThread.sleep(2)
-        #QThread.usleep(10000)
-        #Sleep(1)
-        #self.compareLiveWithMultiSnapshots is set to True in getLiveMachineAction()
         if self.compareLiveWithMultiSnapshots:
             self.compareLiveWithMultiSnapshots = False                                 
             liveData = self.getLiveMachineData(pvList)
             if liveData:
-                #print(liveData)
+                # returned data format
+                # (channelName, value, dbrtype, isConnected,
+                #  disConnectedPVs, status, severity, ts, ts_nano)
                 channelName = liveData[0]
-                s_value = liveData[1]
-                d_value = liveData[2]
-                i_value = liveData[3]
-                dbrtype = liveData[4]
-    #           isConnected = data[5]
-                is_array = liveData[6]
-                array_value = liveData[7]
-                #print(pvList)
-                #print(channelName)
+                value = liveData[1]
+                dbrtype = liveData[2]
+                #isConnected = data[3]
                 for i in range(nRows):
                     if pvList[i] in channelName:
                         liveIndex = channelName.index(pvList[i])
-                        if is_array[liveIndex]:
-                            #self.__setTableItem(table, i, 2*nEvents+1, self.__arrayTextFormat(array_value[liveIndex]))
-                            self.__setTableItem(table, i, nEvents+1, \
-                                                self.__arrayTextFormat(array_value[liveIndex]))
-                            self.arrayData[pvList[i]+'_compare'+'_live']=array_value[liveIndex]
+                        if isinstance(value[liveIndex], (list, tuple)):
+                            self.__setTableItem(table, i, nEvents+1,\
+                                                self.__arrayTextFormat(value[liveIndex]))
+                            self.arrayData[pvList[i]+'_compare'+'_live']=value[liveIndex]
                             try:
                                 pvIndex = data[0]['PV Name'].index(pvList[i])
                                 ref_wf = data[0]['arrayValue'][pvIndex]
-                                if str(ref_wf) != str(array_value[liveIndex]):
-                                    delta=[m-n for m,n in zip(ref_wf,array_value[liveIndex])]
+                                if str(ref_wf) != str(value[liveIndex]):
+                                    delta = [m-n for m, n in zip(ref_wf, value[liveIndex])]
                                     delta_array = tuple(delta)
-                                    self.__setTableItem(table,i,2*nEvents+1, \
+                                    self.__setTableItem(table, i, 2*nEvents+1, \
                                                         self.__arrayTextFormat(delta_array))
                             except:
-                                self.__setTableItem(table, i,2*nEvents+1,str("N/A")) 
-                                
-                        elif dbrtype[liveIndex] in self.epicsDouble:
-                            #self.__setTableItem(table, i, 2*nEvents+1, str(d_value[liveIndex]))
-                            self.__setTableItem(table, i, nEvents+1, str(d_value[liveIndex]))
+                                self.__setTableItem(table, i, 2*nEvents+1, str("N/A"))
+                        elif dbrtype[liveIndex] in self.epicsDouble or dbrtype[liveIndex] in self.epicsLong:
+                            self.__setTableItem(table, i, nEvents+1, str(value[liveIndex]))
                             try:
-                                if str(table.item(i,1).text()) != str(d_value[liveIndex]):
-                                    delta = d_value[liveIndex] - float(str(table.item(i,1).text()))
-                                    self.__setTableItem(table, i,2*nEvents+1,str(delta))  
+                                if str(table.item(i, 1).text()) != str(value[liveIndex]):
+                                    delta = value[liveIndex] - float(str(table.item(i, 1).text()))
+                                    self.__setTableItem(table, i, 2*nEvents+1, str(delta))
                             except:
-                                self.__setTableItem(table, i,2*nEvents+1,str("N/A"))
-                                       
-                        elif dbrtype[liveIndex] in self.epicsLong:
-                            #self.__setTableItem(table, i, 2*nEvents+1, str(i_value[liveIndex]))
-                            self.__setTableItem(table, i, nEvents+1, str(i_value[liveIndex]))
-                            try:
-                                if str(table.item(i,1).text()) != str(i_value[liveIndex]):
-                                    delta = i_value[liveIndex] - int(str(table.item(i,1).text()))   
-                                    self.__setTableItem(table, i,2*nEvents+1,str(delta)) 
-                            except:
-                                self.__setTableItem(table, i,2*nEvents+1,str("N/A"))
-                                
+                                self.__setTableItem(table, i, 2*nEvents+1, str("N/A"))
                         elif dbrtype[liveIndex] in self.epicsString:
-                            #self.__setTableItem(table, i, 2*nEvents+1, str(s_value[liveIndex]))
-                            self.__setTableItem(table, i, nEvents+1, str(s_value[liveIndex]))
+                            self.__setTableItem(table, i, nEvents+1, str(value[liveIndex]))
                             try:
-                                if str(table.item(i,1).text()) != str(s_value[liveIndex]):    
-                                    self.__setTableItem(table, i,2*nEvents+1,str("NotEqual"))
+                                if str(table.item(i, 1).text()) != str(value[liveIndex]):
+                                    self.__setTableItem(table, i, 2*nEvents+1, str("NotEqual"))
                             except:
-                                self.__setTableItem(table, i,2*nEvents+1,str("N/A"))
+                                self.__setTableItem(table, i, 2*nEvents+1, str("N/A"))
                         elif dbrtype[liveIndex] in self.epicsNoAccess:
-                            self.__setTableItem(table, i,2*nEvents+1,str("N/A"))
+                            self.__setTableItem(table, i, 2*nEvents+1, str("N/A"))
                         else:
-                            self.__setTableItem(table, i,2*nEvents+1,str("N/A"))
-                            
-                    else:#if pvList[i] in channelName:
-                        self.__setTableItem(table, i,2*nEvents+1,str("N/A"))
+                            self.__setTableItem(table, i, 2*nEvents+1, str("N/A"))
+                    else: #if pvList[i] in channelName:
+                        self.__setTableItem(table, i, 2*nEvents+1, str("N/A"))
             table.setSortingEnabled(True)
             table.sortItems(2*nEvents+1, 0)
-        else:#if self.compareLiveWithMultiSnapshots:
+        else: #if self.compareLiveWithMultiSnapshots:
             table.setSortingEnabled(True)      
             #table.sortItems(3*nEvents+1, 1)
             table.sortItems(nEvents+2, 0)
 #************************** End of comparing multiple snapshots *********************************** 
 
-    #def restoreFilterChanged(self):
-        #self.currentRestoreFilter = str(self.restoreFilterLineEdit.text())
-        
-    #def partialRestoreMachine(self):
-        #print("restore filter: %s"%(self.currentRestoreFilter))
-
     def pvFilterChanged(self):
         self.currentPvFilter = str(self.pvFilterLineEdit.text())
+        #self.pvFilterLineEdit.returnPressed.connect(self.searchPV)
  
     def getInfoFromTableWidget(self):
         curWidget = self.snapshotTabWidget.currentWidget()
@@ -2123,11 +2145,16 @@ delta01: live value - value in 1st snapshot")
             return
         if eid == 'preview':
             eid = self.previewId 
+        if eid == 'compare':
+            QMessageBox.warning(self, "Warning", 
+                                "Sorry, pv searching on compareSnapshotTab is not supported yet")    
+            return            
             
-        data_ = self.data4eid[str(eid)]
+        data_ = self.data4eid[str(eid)]#'filter' is an eid
         pvlist_ = self.pv4cDict[str(eid)]  
         eventIds_ = self.eventIds 
-        return(data_, pvlist_, eid, eventIds_)        
+        config_ = self.e2cDict[eid]
+        return(data_, pvlist_, eid, eventIds_, config_)        
                
     def searchPV(self):
         data = odict()
@@ -2142,13 +2169,9 @@ delta01: live value - value in 1st snapshot")
         info = self.getInfoFromTableWidget()
         if info == None:
             return 
-        if str(info[2]) == 'compare':
-            QMessageBox.warning(self, "Warning", 
-                                "pv searching on compareSnapshotTab is not supported yet")    
-            return
         if str(info[2]).isdigit():
             self.origID = str(info[2])
-                
+            self.e2cDict['filter'] = info[4]              
         pvList = info[1]
         #print(pvList) 
         #print("info[0]")
@@ -2159,7 +2182,8 @@ delta01: live value - value in 1st snapshot")
         #print(filteredPVs) 
         if 0 == len(filteredPVs):
             QMessageBox.warning(self, "Warning", 
-                                "No matching pv, please re-enter your search pattern")
+"No matching pv. Did you forget to use * at the beginning / the end of your search characters?\n\n\
+Please refer Welcome to MASAR tab for help, then re-enter your search pattern.")
             return          
         
         #print(str(info[2])) 
@@ -2198,16 +2222,19 @@ delta01: live value - value in 1st snapshot")
         data['isArray'] = isArr
         data['arrayValue'] = arr 
         
-        self.pv4cDict['filter'] = data['PV Name']    
-        self.data4eid['filter'] = data     
+        self.pv4cDict['filter'] = data['PV Name']#eventID: numbers, 'filter'    
+        self.data4eid['filter'] = data#'filter' is an eventID     
         
         tableWidget.clear()
         self.setSnapshotTable(data, tableWidget, 'filter')
         #tableWidget.resizeColumnsToContents()
+ #end of class masarUI       
         
         
 def main(channelname = None):
+    #print("%s: after main()"%datetime.datetime.now())
     app = QApplication(sys.argv)
+    #app = cothread.iqt() 
     app.setOrganizationName("NSLS II")
     app.setOrganizationDomain("BNL")
     app.setApplicationName("MASAR Viewer")
@@ -2215,9 +2242,15 @@ def main(channelname = None):
         form = masarUI(channelname=channelname)
     else:
         form = masarUI()
+    #print("%s: after form=masarUI()"%datetime.datetime.now())
+    hostname = platform.node()
+    title = "MASAR Viewer on " + str(hostname) + " for MASAR Server " + str(channelname)
+    form.setWindowTitle(title)
     form.show()
+    #print("%s: after form.show()"%datetime.datetime.now())
     #form.showMaximized()
     app.exec_()
+    #print("%s: after app.exec_()"%datetime.datetime.now())
     
     import atexit
     # clean Python local objects first, especially the cothread stuff.
@@ -2235,6 +2268,7 @@ def main(channelname = None):
     # however, os._exit() does nothing when exiting.
     # It would be better to call sys.exit
     sys.exit()
+    #print("%s: after sys.exit()"%datetime.datetime.now())
 
 if __name__ == '__main__':
     args = sys.argv[1:]
