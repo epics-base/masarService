@@ -307,7 +307,7 @@ static NTMultiChannelPtr retrieveSnapshot(PyObject * list)
                 channelValue[index]->set(pvStringArray);
                 continue;
             }
-            if(dbr_type[index]==DBR_LONG) {
+            if(dbr_type[index]==DBR_LONG || dbr_type[index]==DBR_INT || dbr_type[index]==DBR_CHAR) {
                 shared_vector<int> values;
                 if (PyList_Check(arrayValueList)) {
                     size_t array_len = (size_t)PyList_Size(arrayValueList);
@@ -327,7 +327,7 @@ static NTMultiChannelPtr retrieveSnapshot(PyObject * list)
                 channelValue[index]->set(pvIntArray);
                 continue;
             }
-            if(dbr_type[index]==DBR_DOUBLE) {
+            if(dbr_type[index]==DBR_DOUBLE || dbr_type[index]==DBR_FLOAT) {
                 shared_vector<double> values;
                 if (PyList_Check(arrayValueList)) {
                     size_t array_len = (size_t)PyList_Size(arrayValueList);

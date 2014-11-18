@@ -27,12 +27,12 @@ class DSL(object):
         #define    DBF_CHAR    4
         #define    DBF_LONG    5
         #define    DBF_DOUBLE  6
-        self.epicsInt    = [1, 4, 5]
+        self.epicsInt = [1, 4, 5]
         self.epicsString = [0, 3]
         self.epicsDouble = [2, 6]
         self.epicsNoAccess = [7]
         
-    def __del__(self) :
+    def __del__(self):
         """destructor"""
         print ('close SQLite3 connection.')
 #        pymasar.utils.close(conn)
@@ -114,11 +114,12 @@ class DSL(object):
         eid, start, end, comment = self._parseParams(params, key)
         conn = pymasar.utils.connect()
         result = pymasar.masardata.retrieveSnapshot(conn, eventid=eid, start=start, end=end, comment=comment)
+        print (result[1][-10:])
         pymasar.utils.close(conn)
         return result
     
     def saveSnapshot(self, params):
-        key = ['servicename','configname','comment']
+        key = ['servicename', 'configname', 'comment']
         service, config, comment = self._parseParams(params[1], key)
         if not service:
             service = self.__servicename
@@ -129,9 +130,9 @@ class DSL(object):
             raise RuntimeError("No available snapshot data.")
         
         # values format: the value is raw data from IOC
-        # [(pv name), (value),
+        # [(pv name), (value), (dbr type),
         #  (isConnected), (secondsPastEpoch), (nanoSeconds), (timeStampTag),
-        #  (alarmSeverity), (alarmStatu)s, (alarmMessage)]
+        #  (alarmSeverity), (alarmStatus), (alarmMessage)]
         pvnames = result.getChannelName()
         values = result.getValue()
         dbrtype = result.getDbrType()
@@ -161,12 +162,12 @@ class DSL(object):
             else:
                 if dbrtype[i] in self.epicsString:
                      tmp = [pvnames[i], values[i], None, None, dbrtype[i], isconnected[i],
-                           sec[i], nanosec[i], usertag[i], severity[i], status[i], message[i],
-                           0, None]
+                            sec[i], nanosec[i], usertag[i], severity[i], status[i], message[i],
+                            0, None]
                 else:
                      tmp = [pvnames[i], str(values[i]), values[i], values[i], dbrtype[i], isconnected[i],
-                           sec[i], nanosec[i], usertag[i], severity[i], status[i], message[i],
-                           0, None]
+                            sec[i], nanosec[i], usertag[i], severity[i], status[i], message[i],
+                            0, None]
             datas.append(tmp)
 
         # save into database
