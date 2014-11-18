@@ -59,20 +59,10 @@ def getLiveMachine(mc):
     params = {}
     # get a live machine with given pv list
     print '==== get live machine ===='
-    pvlist = ['LTB-BI{BPM:1}LTB:MbAvgX-I',
-              'LTB-BI{BPM:1}LTB:MbStdX-I',
-              'LTB-BI{BPM:1}LTB:MbAvgY-I',
-              'LTB-BI{BPM:1}LTB:MbStdY-I',
-              'LTB-BI{BPM:1}LTB:Iavg-Calc',
-              'LTB-BI{BPM:1}LTB:Istd-Calc',
-              'LTB-BI{BPM:1}Rate:Update-SP',
-              'LTB-BI{BPM:2}LTB:MbAvgX-I',
-              'LTB-BI{BPM:2}LTB:MbStdX-I',
-              'LTB-BI{BPM:2}LTB:MbAvgY-I',
-              'LTB-BI{BPM:2}LTB:MbStdY-I',
-              'LTB-BI{BPM:2}LTB:Iavg-Calc',
-              'LTB-BI{BPM:2}LTB:Istd-Calc',
-              'LTB-BI{BPM:2}Rate:Update-SP']
+    pvlist = ["masarExampleCharArray",
+              "masarExampleFloatArray",
+              "masarExampleShortArray",
+              "masarExampleUCharArray"]
     for pv in pvlist:
         params[pv] = pv
     result = mc.getLiveMachine(params)
@@ -83,12 +73,17 @@ if __name__ == "__main__":
     channel='masarService'
     mc = masarClient.client(channelname=channel)
 
-    res1 = saveMasarSnapshot(mc)
-    print "event id:", res1[0]
-    print "value:", res1[2]
+    #res1 = saveMasarSnapshot(mc)
+    #print res1
+    #print "event id:", res1[0]
+    #print "value:", res1[2]
 
-    res2 = retrieveMasarSnapshot(mc, res1[0])
-    print "value:", res2[1]
+    #res2 = retrieveMasarSnapshot(mc, res1[0])
+    #res2 = retrieveMasarSnapshot(mc, 17)
+    #print "name:", res2[0][-10:]
+    #print "value:", res2[1][-10:]
 
+    print "((pv name),(value),(isConnected),(secondsPastEpoch),(nanoSeconds),(timeStampTag),(alarmSeverity),(alarmStatus),(alarmMessage))"
+    print getLiveMachine(mc)
     # Call this function before exit.
     sys.exit(epicsExit())
