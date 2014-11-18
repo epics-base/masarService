@@ -702,9 +702,8 @@ PVStructurePtr DSL_RDB::request(
                     pvReturn = noDataMultiChannel("Failed to save snapshot.");
                 } else {
                     pvReturn = saveSnapshot(result, data);
-                    //Py_DECREF(result);
+                    Py_DECREF(result);
                 }
-                Py_DECREF(result);
                 Py_DECREF(pyTuple2);
             }
         }
