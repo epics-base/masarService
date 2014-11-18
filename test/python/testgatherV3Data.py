@@ -14,8 +14,11 @@ if __name__ == '__main__':
         'masarExample0001',
         'masarExample0004',
         'masarExampleCharArray',
+        'masarExampleUCharArray',
         'masarExampleStringArray',
+        'masarExampleShortArray',
         'masarExampleLongArray',
+        'masarExampleFloatArray',
         'masarExampleDoubleArray',
         )
     gatherV3Data = GatherV3Data(names)
@@ -59,4 +62,9 @@ if __name__ == '__main__':
         value = ntmultiChannel.getChannelValue(i)
         print "index ", i, value
         i += 1
+    print "call gatherV3Data.get() second time"
+    gatherV3Data.get()
+    pvStructure = gatherV3Data.getPVStructure()
+    ntmultiChannel = NTMultiChannel(pvStructure)
+    print ntmultiChannel
     print "all done"
