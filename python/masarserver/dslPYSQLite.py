@@ -114,7 +114,6 @@ class DSL(object):
         eid, start, end, comment = self._parseParams(params, key)
         conn = pymasar.utils.connect()
         result = pymasar.masardata.retrieveSnapshot(conn, eventid=eid, start=start, end=end, comment=comment)
-        print (result[1][-10:])
         pymasar.utils.close(conn)
         return result
     
