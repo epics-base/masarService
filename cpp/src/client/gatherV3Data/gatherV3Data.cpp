@@ -107,15 +107,15 @@ void GatherV3DataChannel::channelCreated(
         const Status& status,
         Channel::shared_pointer const & channel)
 {
-//cout << "GatherV3DataChannel::channelCreated " << offset << endl;
-//cout << "state " << channel->getConnectionState() << endl;
+cout << "GatherV3DataChannel::channelCreated " << offset << endl;
+cout << "state " << channel->getConnectionState() << endl;
 }
 
 void GatherV3DataChannel::channelStateChange(
     Channel::shared_pointer const & channel,
     Channel::ConnectionState connectionState)
 {
-//cout << "GatherV3DataChannel::channelStateChange " << offset << " state " << gatherV3Data->state << endl;
+cout << "GatherV3DataChannel::channelStateChange " << offset << " state " << gatherV3Data->state << endl;
     if(gatherV3Data->state==destroying) return;
     bool isConnected = false;
     if(connectionState==Channel::CONNECTED) isConnected = true;
@@ -240,6 +240,8 @@ void GatherV3DataChannel::getDone(
     PVStringPtr pvMess = pvStructure->getSubField<PVString>("alarm.message");
     gatherV3Data->alarmMessage[offset] = pvMess->get();
     ++gatherV3Data->numberCallback;
+//cout << "GatherV3DataChannel::getDone numberCallback ";
+//cout << gatherV3Data->numberCallback << " numberChannel " << gatherV3Data->numberChannel << endl;
     if(gatherV3Data->numberCallback==gatherV3Data->numberChannel) {
         gatherV3Data->event.signal();
     }
@@ -338,10 +340,13 @@ void GatherV3DataChannel::put()
 GatherV3DataPtr GatherV3Data::create(
     shared_vector<const std::string> const & channelNames)
 {
+cout << "GatherV3Data::create\n";
     if(!getChannelProviderRegistry()->getProvider("pva")) {
+//cout << "ClientFactory::start()\n";
        ClientFactory::start();
     }
-    if(!getChannelProviderRegistry()->getProvider("caa")) {
+    if(!getChannelProviderRegistry()->getProvider("ca")) {
+//cout << "CAClientFactory::start()\n";
        ::epics::pvAccess::ca::CAClientFactory::start();
     }
     NTMultiChannelBuilderPtr builder = NTMultiChannel::createBuilder();
@@ -377,7 +382,7 @@ GatherV3Data::GatherV3Data(
 void GatherV3Data::init()
 {
 //cout << "GatherV3Data::init\n";
-ChannelProvider::shared_pointer  xxx = getChannelProviderRegistry()->getProvider("ca");
+    ChannelProvider::shared_pointer  xxx = getChannelProviderRegistry()->getProvider("ca");
     CreateRequest::shared_pointer createRequest = CreateRequest::create();
     pvGetRequest = createRequest->createRequest("value,alarm,timeStamp");
     pvPutRequest = createRequest->createRequest("value");
@@ -424,7 +429,7 @@ GatherV3Data::~GatherV3Data()
 
 bool GatherV3Data::connect(double timeOut)
 {
-//cout << "GatherV3Data::connect() numberChannel " << numberChannel << endl;
+cout << "GatherV3Data::connect() numberChannel " << numberChannel << endl;
 //cout << *multiChannel->getPVStructure() << endl;
     if(state!=idle) {
         throw std::logic_error(

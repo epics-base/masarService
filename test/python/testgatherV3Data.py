@@ -63,6 +63,8 @@ if __name__ == '__main__':
         print "index ", i, value
         i += 1
     print "call gatherV3Data.get() second time"
+    gatherV3Data = GatherV3Data(names)
+    gatherV3Data.connect(2.0)
     gatherV3Data.get()
     pvStructure = gatherV3Data.getPVStructure()
     ntmultiChannel = NTMultiChannel(pvStructure)

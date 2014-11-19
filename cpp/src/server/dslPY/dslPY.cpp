@@ -173,16 +173,19 @@ static NTMultiChannelPtr noDataMultiChannel(std::string message) {
 
 static NTMultiChannelPtr getLiveMachine(shared_vector<const string> const & channelName)
 {
+cout << "getLiveMachine\n";
     GatherV3DataPtr gather = GatherV3Data::create(channelName);
 
     // wait one second, which is a magic number for now.
     // The waiting time might be removed later after stability test.
     bool result = gather->connect(1.0);
     if(!result) {
+cout << "getLiveMachine connect failed\n";
         return noDataMultiChannel("connect failed");
     }
     result = gather->get();
     if(!result) {
+cout << "getLiveMachine get failed\n";
         return noDataMultiChannel("get failed");
     }
     NTMultiChannelPtr ntmultiChannel = gather->getNTMultiChannel();
@@ -194,6 +197,7 @@ static NTMultiChannelPtr getLiveMachine(shared_vector<const string> const & chan
     //timeStamp.setUserTag(0);
     //pvTimeStamp.set(timeStamp);
     gather->destroy();
+cout << "getLiveMachine success\n";
     return ntmultiChannel;
 }
 
