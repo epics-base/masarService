@@ -173,31 +173,21 @@ static NTMultiChannelPtr noDataMultiChannel(std::string message) {
 
 static NTMultiChannelPtr getLiveMachine(shared_vector<const string> const & channelName)
 {
-cout << "getLiveMachine\n";
     GatherV3DataPtr gather = GatherV3Data::create(channelName);
 
     // wait one second, which is a magic number for now.
     // The waiting time might be removed later after stability test.
     bool result = gather->connect(1.0);
     if(!result) {
-cout << "getLiveMachine connect failed\n";
         return noDataMultiChannel("connect failed");
     }
     result = gather->get();
     if(!result) {
-cout << "getLiveMachine get failed\n";
         return noDataMultiChannel("get failed");
     }
     NTMultiChannelPtr ntmultiChannel = gather->getNTMultiChannel();
-    // set time stamp, no need anymore since gather put time stamp on it
-    //PVTimeStamp pvTimeStamp;
-    //ntmultiChannel->attachTimeStamp(pvTimeStamp);
-    //TimeStamp timeStamp;
-    //timeStamp.getCurrent();
-    //timeStamp.setUserTag(0);
-    //pvTimeStamp.set(timeStamp);
+
     gather->destroy();
-cout << "getLiveMachine success\n";
     return ntmultiChannel;
 }
 
@@ -241,9 +231,6 @@ static NTMultiChannelPtr retrieveSnapshot(PyObject * list)
     for(size_t index = 0; index < (size_t)numberChannels; index++ ){
         channelValue[index] = pvDataCreate->createPVVariantUnion();
         sublist = PyList_GetItem(data_array, index+1);
-        // ('pv name', 'string value', 'double value', 'long value', 'dbr type', 'isConnected',
-        //  'secondsPastEpoch', 'nanoSeconds', 'timeStampTag', 'alarmSeverity', 'alarmStatus', 'alarmMessage'
-        //  'is_array', 'array_value')
         PyObject * temp = PyTuple_GetItem(sublist,0);
         channelName[index] = (PyString_AsString(temp)==NULL) ? "" : PyString_AsString (temp);
         temp = PyTuple_GetItem(sublist,4);
@@ -262,7 +249,6 @@ static NTMultiChannelPtr retrieveSnapshot(PyObject * list)
         status[index] = PyLong_AsLong(temp);
         temp = PyTuple_GetItem(sublist,11);
         message[index] = PyString_AsString(temp);
-        //int32 dbr_type = PyLong_AsLong(PyTuple_GetItem(sublist,4));
         int32 is_array = PyLong_AsLong(PyTuple_GetItem(sublist,12));
         bool isArray = (is_array==0) ? false : true;
         if(!isArray) {
