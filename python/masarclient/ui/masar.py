@@ -1652,8 +1652,7 @@ Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
         params = {}
         for pv in pvlist:
             params[pv] = pv
-        # channelName,stringValue,doubleValue,longValue,dbrType,isConnected, is_array, array_value
-        array_value = []
+        # channelName, value, dbrType,isConnected
         disConnectedPVs = []
         try:
             rpcResult = self.mc.getLiveMachine(params)
@@ -1677,12 +1676,6 @@ Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
         severity = list(rpcResult[7])
         status = list(rpcResult[8])
         #=======================================================================
-        # is_array = rpcResult[6]
-        # raw_array_value = rpcResult[7]  
-        # status = [""]*len(channelName)
-        # severity = [""]*len(channelName)
-        # timestamp = [0]*len(channelName)
-        #=======================================================================
         
         for i in range(len(channelName)):
             try:
@@ -1693,17 +1686,7 @@ Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
                 status[i] = self.alarmDict[status[i]]
             except:
                 status[i] = 'N/A'
-            # if dbrtype[i] in self.epicsLong:
-            #     array_value.append(raw_array_value[i][2])
-            # elif dbrtype[i] in self.epicsDouble:
-            #     array_value.append(raw_array_value[i][1])
-            # elif dbrtype[i] in self.epicsString:
-            #     # string value
-            #     array_value.append(raw_array_value[i][0])
-            # elif dbrtype[i] in self.epicsNoAccess:
-            #     # when the value is no_access, use the double value no matter what it is
-            #     array_value.append(raw_array_value[i][1])
-                
+
         # if dbrtype is NoAccess, it means that the PV is disconnected at the moment       
         for i in range(len(dbrtype)):
             if dbrtype[i] in self.epicsNoAccess:    
@@ -1729,20 +1712,19 @@ Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
             #QMessageBox.warning(self, 'Warning', 'No data to be saved, Please select non-%s tab.'%eid)
             #return
         data = self.data4eid[str(eid)]
-        
+        if isinstance(data, (list, tuple)):
+            QMessageBox.warning(self, 'Warning',
+                                'Multiple snapshots are selected. Please select a single snapshot data set.')
+            return
         pvnames = data['PV Name']
         status = data['Status']
         severity = data['Severity']
         ts = data['Time stamp']
         ts_nano = data['Time stamp (nano)']
         dbrtype = data['DBR']
-        s_value = data['S_value']
-        i_value = data['I_value']
-        d_value = data['D_value']
+        value = data['value']
         isConnected = data['isConnected']
-        is_array = data['isArray'] 
-        array_value = data['arrayValue']
-        
+
         head = '# pv name, elem location, elem type, status, severity, time stamp, epics dbr, is connected, is array, value'
 
         filename = QFileDialog.getSaveFileName(self, 'Save File as .csv', '.')
@@ -1762,7 +1744,7 @@ Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
 
                 if 'MG' in pvnames[i]:
                     loc1 = pvnames[i].find("{PS:")
-                    loc2 =  pvnames[i][loc1:].find("}")
+                    loc2 = pvnames[i][loc1:].find("}")
                     if loc1 != -1 and loc2 != 0 and loc1+4<loc1+loc2:
                         line += ','+pvnames[i][loc1+4:loc1+loc2]
                     else:
@@ -1771,22 +1753,18 @@ Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
                     line += ','
 
                 # need to make above pretty and general    
-
                 line += ','+str(status[i])
                 line += ','+str(severity[i])
                 line += ','+str(datetime.datetime.fromtimestamp(ts[i]+ts_nano[i]*1.0e-9))
                 line += ','+str(dbrtype[i])
                 line += ','+str(bool(isConnected[i]))
-                line += ','+str(bool(is_array[i]))
-                if is_array[i]:
-                    line += ','+str(array_value[i])
+                if isinstance(value[i], (list, tuple)):
+                    line += ', True'
+                    line += ','+str(value[i])
                 else:
-                    if dbrtype[i] in self.epicsDouble:
-                        line += ','+str(d_value[i])
-                    elif dbrtype[i] in self.epicsLong:
-                        line += ','+str(i_value[i])
-                    elif dbrtype[i] in self.epicsString:
-                        line += ','+str(s_value[i])
+                    line += ', False'
+                    if dbrtype[i] in self.epicsDouble or dbrtype[i] in self.epicsLong or dbrtype[i] in self.epicsString:
+                        line += ','+str(value[i])
                     else:
                         line += ''
 
@@ -1815,8 +1793,6 @@ Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
         
         selectedEvents = self.eventTableWidget.selectionModel().selectedRows()
         ln = len(selectedEvents) 
-        #print(selectedEvents)
-        #print("%s events selected" %ln)
         if ln == 0:
             msg = QMessageBox(self, windowTitle="Snapshot Selection", 
                           text="Don't click OK until you have done the following:\n\n\
@@ -1828,12 +1804,8 @@ Click Ignore if you don't want to continue")
             msg.setAttribute(Qt.WA_DeleteOnClose)
             msg.setModal(False)
             msg.show()
-            #msg.open(self, SLOT(msgBoxClosed()))
-            #msg.open.connect(self.msgBoxClosed)
-            okButton.clicked.connect(self.compareSnapshots) 
+            okButton.clicked.connect(self.compareSnapshots)
             quitButton.clicked.connect(self.ignoreCompare) 
-            #msg.buttonClicked.connect(self.compareSnapshots)    
-            #print("QMessageBox is closed")        
         elif ln >=2 and ln <= 9:
             self.compareSnapshots()
         
@@ -1856,8 +1828,6 @@ Click Ignore if you don't want to continue")
                                 "Please select 2 ~ 9 snapshots for comparison,not %d snapshots"%ln) 
             self.compareSnapshotsButton.setEnabled(True)
             return
-        #print("compare %d snapshots" %ln)
-        #eventTs=[]
         eventNames=[]
         eventIds = []
         data = []
@@ -1865,25 +1835,18 @@ Click Ignore if you don't want to continue")
         self.compareConfName =  None        
         for idx in selectedEvents: 
             eventNames.append(str(self.eventTableWidget.item(idx.row(), 0).text()))
-            #eventTs.append(str(self.eventTableWidget.item(idx.row(), 3).text()))
-            eventIds.append(str(self.eventTableWidget.item(idx.row(), 1).text()))  
-        #print(eventNames)
-        #print(eventIds)    
-        #for eventId in eventIds:
-        msg = QMessageBox(self, windowTitle="Select one reference snapshot", 
+            eventIds.append(str(self.eventTableWidget.item(idx.row(), 1).text()))
+        msg = QMessageBox(self, windowTitle="Select one reference snapshot",
 text="Snapshots comparison is made between the reference snapshot and other snapshots:\n\n\
 Snapshot %s is the reference since you clicked it first, click OK to keep it as it\n\n\
 Otherwise click Change the ref. snapshot ..."%eventIds[0])
         msg.addButton("Change the ref. snapshot ...",QMessageBox.AcceptRole)
         msg.addButton("OK", QMessageBox.RejectRole) 
         ret = msg.exec_()
-        #print(ret)
         if ret == 0:
             reorderedIDs = self.selectRefSnapshot(eventIds)
-            #print("reorderedIDs: %s"%reorderedIDs)
             if reorderedIDs:
                 eventIds = reorderedIDs
-        #print("eventIds: %s"%eventIds)    
         self.eventIds = eventIds
         for i in range(len(eventIds)):
             result = self.retrieveMasarData(eventid = eventIds[i])
@@ -1898,17 +1861,12 @@ Otherwise click Change the ref. snapshot ..."%eventIds[0])
         self.data4eid['compare'] = data
         #data is a list with odict elements; data[i] is an odict;
         #data[i]['keyword'] is a tuple; data[i]['keyword'][index] is the element value in the tuple                   
-        #print (data)
-        #print(data[0]['PV Name'])
-        
+
         #try:
         if self.tabWindowDict.has_key('compare'):
             tableWidget = self.tabWindowDict['compare']
-            #index = self.snapshotTabWidget.indexOf(tableWidget)  
-        #except:
         else:
             tableWidget = QTableWidget()
-            #index = self.snapshotTabWidget.count()
             self.tabWindowDict['compare'] = tableWidget
             QObject.connect(tableWidget, SIGNAL(_fromUtf8("cellDoubleClicked (int,int)")), 
                             self.__showArrayData)
@@ -1917,29 +1875,14 @@ Otherwise click Change the ref. snapshot ..."%eventIds[0])
             labelText += '_' + eventId
         label = QString.fromUtf8("Compare Snapshots: IDs" + labelText)
         self.snapshotTabWidget.addTab(tableWidget, label)
-        #self.snapshotTabWidget.setTabText(index, label)
         self.snapshotTabWidget.setTabText(self.snapshotTabWidget.count(), label)
         self.snapshotTabWidget.setCurrentIndex(self.snapshotTabWidget.count())
         self.snapshotTabWidget.setCurrentWidget(tableWidget)
-        #print("%d tabs when compareSnapshots"%self.snapshotTabWidget.count())
         self.resizeSplitter(1)
-        #assert(data != None and isinstance(tabWidget, QTableWidget))
-        #print("configure the table for comparing multiple snapshots")
-        #tabWidget.setSortingEnabled(False)
-        #tabWidget.clear()
         keys = ['PV name']
-        #pvList = odict()
-        pvList = []
-        #pvList = list(data[0]['PV Name'])
         nEvents = len(data)
-        #print("compare %d event data"%nEvents)
         for i in range(nEvents):
-            #keys.append("Saved Value in Snapshot"+str(i+1)+"\n"+"("+str(eventNames[i][0:18])+"...:"+str(eventIds[i])+")")
-            #keys.append("Timestamp in Snapshot"+str(i+1)+"\n"+"("+str(eventNames[i][0:18])+"...:"+str(eventIds[i])+")")
             keys.append("Saved Value "+str(i+1)+"\n"+"(" + "in snapshot "+str(eventIds[i])+")")
-            #keys.append("Timestamp "+str(i+1)+"\n"+"(" + "in Event "+str(eventIds[i])+")")
-            #use .extend instead of .append here
-            #pvList.extend(list(data[i]['PV Name']))
         keys.append('Live Value 0')
         nDelta = nEvents - 1
         for i in range(nDelta):
@@ -1948,47 +1891,28 @@ Otherwise click Change the ref. snapshot ..."%eventIds[0])
         for i in range(nEvents):
             keys.append("Timestamp "+str(i+1)+"\n"+"(" + "in snapshot "+str(eventIds[i])+")")
         self.compareSnapshotsTableKeys  = keys
-        #print(keys)
-        #print("%d PVs after merging without removing duplicates"%len(pvList))
-        #pvSet = set(pvList)
-        #pvList = list(pvSet)
         pvList = list(data[0]['PV Name'])
         self.pv4cDict['compare'] = pvList
-        #print("%d PVs after removing duplicates"%len(pvList))
-        #print("data in compareSnapshots: ")
-        #print(data   
         nRows = len(pvList)
         nCols = len(keys) 
         tableWidget.setRowCount(nRows)
         tableWidget.setColumnCount(nCols)
-        #tabWidget.setHorizontalHeaderLabels(keys)  
-        #self.setCompareSnapshotsTable(data, tabWidget, eventNames[0])    
-        #self.setCompareSnapshotsTable(data, tabWidget, eventNames, eventIds)
-        self.setCompareSnapshotsTable(data, tableWidget, pvList, eventIds)  
+        self.setCompareSnapshotsTable(data, tableWidget, pvList, eventIds)
         tableWidget.resizeColumnsToContents()  
         tableWidget.setStatusTip("compare %d snapshots with snapshotIds:%s"%(nEvents,eventIds))
         tableWidget.setToolTip("delta21: value in 2nd snapshot - value in 1st snapshot\n\
 delta01: live value - value in 1st snapshot")
-        #tabWidget.setSortingEnabled(True)   
-        #tabWidget.setColumnWidth(1, 80)
-        #tabWidget.resizeRowsToContents()  
-        #self.compareId = eid    
-        #self.compareConfName =  None
         self.compareSnapshotsButton.setEnabled(True)
 
     def selectRefSnapshot(self, eventIDs):
-        #print(eventIDs)
         dlg = ShowSelectRefDlg(eventIDs)
         dlg.exec_()
         if dlg.isAccepted:
-            #print(dlg.result())
             return(dlg.result())
 
     def setCompareSnapshotsTable(self, data, table, pvlist, eventIds):
-        assert(data!=None and isinstance(table,QTableWidget) and pvlist!=None and len(eventIds)>=2)
+        assert((data is not None) and isinstance(table, QTableWidget) and (pvlist is not None) and len(eventIds) >= 2)
         pvList = pvlist
-        #print("data in setCompareSnapshotsTable: ")
-        #print(data)
         nRows = len(pvList)
         nEvents = len(data) 
         #must have the following two lines, otherwise the sorting will make data messed up
@@ -1997,81 +1921,48 @@ delta01: live value - value in 1st snapshot")
         keys = self.compareSnapshotsTableKeys
         table.setHorizontalHeaderLabels(keys) 
          
-        #for i,j in range(nRows), range(nEvents):
         for i in range(nRows):
             self.__setTableItem(table, i, 0, pvList[i])
             #print(i,    pvList[i])
             for j in range(nEvents):
                 if pvList[i] in data[j]['PV Name']:  
                     pvIndex = data[j]['PV Name'].index(pvList[i])
-                    #if pvIndex: 
                     #data is a list with odict elements; data[j] is an odict;
                     #data[j]['keyword'] is a tuple; data[j]['keyword'][index] is a single item/value  
                     if data[j]['Time stamp'][pvIndex]:
-                        dt = str(datetime.datetime.fromtimestamp(data[j]['Time stamp'][pvIndex] + \
-                                                    data[j]['Time stamp (nano)'][pvIndex]*1.0e-9))
-                        #self.__setTableItem(table, i, 2*(j+1), dt)
+                        dt = str(datetime.datetime.fromtimestamp(data[j]['Time stamp'][pvIndex] +
+                                                                 data[j]['Time stamp (nano)'][pvIndex]*1.0e-9))
                         self.__setTableItem(table, i, 2*(nEvents+1)+j, dt)
-                    if data[j]['isArray'][pvIndex]:
-                        #self.__setTableItem(table, i, 2*j+1, self.__arrayTextFormat(data[j]['arrayValue'][pvIndex]))   
-                        self.__setTableItem(table, i, j+1, \
-                                        self.__arrayTextFormat(data[j]['arrayValue'][pvIndex]))
-                        #print(table.item(i,j+1).text())
-                        self.arrayData[pvList[i]+'_'+str(eventIds[j])+'_compare'] \
-                                                                  =data[j]['arrayValue'][pvIndex] 
-                        #print(self.arrayData)
+                    if isinstance(data[j]['value'][pvIndex], (list, tuple)):
+                        self.__setTableItem(table, i, j+1,
+                                            self.__arrayTextFormat(data[j]['value'][pvIndex]))
+                        self.arrayData[pvList[i]+'_'+str(eventIds[j])+'_compare'] = data[j]['value'][pvIndex]
                         try:
-                            ref_wf = data[0]['arrayValue'][pvIndex] 
-                            if j >0 and str(data[j]['arrayValue'][pvIndex])!=str(ref_wf):
-                                delta = [m-n for m,n in zip(data[j]['arrayValue'][pvIndex],ref_wf)]
+                            ref_wf = data[0]['value'][pvIndex]
+                            if j > 0 and str(data[j]['value'][pvIndex]) != str(ref_wf):
+                                delta = [m-n for m, n in zip(data[j]['value'][pvIndex], ref_wf)]
                                 delta_array = tuple(delta)
-                                self.__setTableItem(table, i,nEvents+1+j, \
+                                self.__setTableItem(table, i, nEvents+1+j,
                                                     self.__arrayTextFormat(delta_array)) 
                         except:
-                            self.__setTableItem(table, i,nEvents+1+j,"N/A")
+                            self.__setTableItem(table, i, nEvents+1+j, "N/A")
                                 
-                    elif data[j]['DBR'][pvIndex] in self.epicsDouble:
-                        #self.__setTableItem(table, i, 2*j+1, str(data[j]['D_value'][pvIndex]))
-                        self.__setTableItem(table, i, j+1, str(data[j]['D_value'][pvIndex]))
+                    elif data[j]['DBR'][pvIndex] in self.epicsDouble \
+                            or data[j]['DBR'][pvIndex] in self.epicsLong \
+                            or data[j]['DBR'][pvIndex] in self.epicsString:
+                        self.__setTableItem(table, i, j+1, str(data[j]['value'][pvIndex]))
                         try:
-                            if j>0 and str(table.item(i,1).text())!=str(data[j]['D_value'][pvIndex]):
-                                delta=data[j]['D_value'][pvIndex]-float(str(table.item(i,1).text())) 
-                                #self.__setTableItem(table, i,2*(nEvents+1)+j-1,str(delta))
-                                self.__setTableItem(table, i,nEvents+1+j,str(delta))
+                            if j > 0 and str(table.item(i, 1).text()) != str(data[j]['value'][pvIndex]):
+                                delta = data[j]['value'][pvIndex]-float(str(table.item(i, 1).text()))
+                                self.__setTableItem(table, i, nEvents+1+j, str(delta))
                         except:
-                            self.__setTableItem(table, i,nEvents+1+j,"N/A")
-                            
-                    elif data[j]['DBR'][pvIndex] in self.epicsLong:
-                        #self.__setTableItem(table, i, 2*j+1, str(data[j]['I_value'][pvIndex]))
-                        self.__setTableItem(table, i, j+1, str(data[j]['I_value'][pvIndex]))
-                        try:
-                            if j>0 and str(table.item(i,1).text())!=str(data[j]['I_value'][pvIndex]):
-                                delta=data[j]['I_value'][pvIndex] - int(str(table.item(i,1).text())) 
-                                #self.__setTableItem(table, i,2*(nEvents+1)+j-1,str(delta))
-                                self.__setTableItem(table, i,nEvents+1+j,str(delta))
-                        except:
-                            self.__setTableItem(table, i,nEvents+1+j,"N/A")
-                            
-                    elif data[j]['DBR'][pvIndex] in self.epicsString:
-                        #self.__setTableItem(table, i, 2*j+1, str(data[j]['S_value'][pvIndex]))
-                        self.__setTableItem(table, i, j+1, str(data[j]['S_value'][pvIndex]))
-                        try:
-                            if j>0 and str(table.item(i,1).text())!=str(data[j]['S_value'][pvIndex]):
-                                #self.__setTableItem(table, i,2*(nEvents+1)+j-1,str(delta))
-                                self.__setTableItem(table, i,nEvents+1+j,str("NotEqual"))
-                        except:
-                            self.__setTableItem(table, i,nEvents+1+j,"N/A")
-                    #elif data[j]['DBR'][pvIndex] in self.epicsNoAccess:
-                        #self.__setTableItem(table, i,nEvents+2+j,"N/A")
+                            self.__setTableItem(table, i, nEvents+1+j, "N/A")
                     elif j > 0:
-                        self.__setTableItem(table, i,nEvents+1+j,"N/A")
+                        self.__setTableItem(table, i, nEvents+1+j, "N/A")
                     else:
-                        self.__setTableItem(table, i,nEvents+2+j,"N/A")
-                 
-                else:#if pvList[i] in data[j]['PV Name']:
-                    self.__setTableItem(table, i,nEvents+1+j,"N/A")  
-                #print(pvIndex,data[j]['D_value'][pvIndex])   
-                
+                        self.__setTableItem(table, i, nEvents+2+j, "N/A")
+                else:
+                    self.__setTableItem(table, i, nEvents+1+j, "N/A")
         if self.compareLiveWithMultiSnapshots:
             self.compareLiveWithMultiSnapshots = False                                 
             liveData = self.getLiveMachineData(pvList)
@@ -2082,21 +1973,20 @@ delta01: live value - value in 1st snapshot")
                 channelName = liveData[0]
                 value = liveData[1]
                 dbrtype = liveData[2]
-                #isConnected = data[3]
                 for i in range(nRows):
                     if pvList[i] in channelName:
                         liveIndex = channelName.index(pvList[i])
                         if isinstance(value[liveIndex], (list, tuple)):
-                            self.__setTableItem(table, i, nEvents+1,\
+                            self.__setTableItem(table, i, nEvents+1,
                                                 self.__arrayTextFormat(value[liveIndex]))
-                            self.arrayData[pvList[i]+'_compare'+'_live']=value[liveIndex]
+                            self.arrayData[pvList[i]+'_compare'+'_live'] = value[liveIndex]
                             try:
                                 pvIndex = data[0]['PV Name'].index(pvList[i])
-                                ref_wf = data[0]['arrayValue'][pvIndex]
+                                ref_wf = data[0]['value'][pvIndex]
                                 if str(ref_wf) != str(value[liveIndex]):
                                     delta = [m-n for m, n in zip(ref_wf, value[liveIndex])]
                                     delta_array = tuple(delta)
-                                    self.__setTableItem(table, i, 2*nEvents+1, \
+                                    self.__setTableItem(table, i, 2*nEvents+1,
                                                         self.__arrayTextFormat(delta_array))
                             except:
                                 self.__setTableItem(table, i, 2*nEvents+1, str("N/A"))
@@ -2119,19 +2009,17 @@ delta01: live value - value in 1st snapshot")
                             self.__setTableItem(table, i, 2*nEvents+1, str("N/A"))
                         else:
                             self.__setTableItem(table, i, 2*nEvents+1, str("N/A"))
-                    else: #if pvList[i] in channelName:
+                    else:
                         self.__setTableItem(table, i, 2*nEvents+1, str("N/A"))
             table.setSortingEnabled(True)
             table.sortItems(2*nEvents+1, 0)
-        else: #if self.compareLiveWithMultiSnapshots:
+        else:
             table.setSortingEnabled(True)      
-            #table.sortItems(3*nEvents+1, 1)
             table.sortItems(nEvents+2, 0)
 #************************** End of comparing multiple snapshots *********************************** 
 
     def pvFilterChanged(self):
         self.currentPvFilter = str(self.pvFilterLineEdit.text())
-        #self.pvFilterLineEdit.returnPressed.connect(self.searchPV)
  
     def getInfoFromTableWidget(self):
         curWidget = self.snapshotTabWidget.currentWidget()
@@ -2150,7 +2038,7 @@ delta01: live value - value in 1st snapshot")
                                 "Sorry, pv searching on compareSnapshotTab is not supported yet")    
             return            
             
-        data_ = self.data4eid[str(eid)]#'filter' is an eid
+        data_ = self.data4eid[str(eid)]
         pvlist_ = self.pv4cDict[str(eid)]  
         eventIds_ = self.eventIds 
         config_ = self.e2cDict[eid]
@@ -2158,14 +2046,9 @@ delta01: live value - value in 1st snapshot")
                
     def searchPV(self):
         data = odict()
-        #print("pv filter: %s"%(self.currentPvFilter))
         pattern_ = self.currentPvFilter
         pattern = fnmatch.translate(pattern_)
-        #pattern = 'r'+`pattern_` 
-        #print("pattern: %s"%(pattern))
-        #if pattern == '*':
-            #pattern = ""   
-             
+
         info = self.getInfoFromTableWidget()
         if info == None:
             return 
@@ -2173,28 +2056,22 @@ delta01: live value - value in 1st snapshot")
             self.origID = str(info[2])
             self.e2cDict['filter'] = info[4]              
         pvList = info[1]
-        #print(pvList) 
-        #print("info[0]")
-        #print(info[0]['PV Name'])
-        #print("%d PVs in the orignal tab \n"%(len(pvList)))
         regex = re.compile(pattern, re.IGNORECASE)
         filteredPVs = [pv for pv in pvList for m in [regex.search(pv)] if m]
-        #print(filteredPVs) 
         if 0 == len(filteredPVs):
             QMessageBox.warning(self, "Warning", 
 "No matching pv. Did you forget to use * at the beginning / the end of your search characters?\n\n\
 Please refer Welcome to MASAR tab for help, then re-enter your search pattern.")
             return          
         
-        #print(str(info[2])) 
-        if str(info[2]) == 'filter':   
+        if str(info[2]) == 'filter':
             label = "filtered snapshot(ID_" + self.origID + "_filter)" 
         else:
             label = "filtered snapshot(ID_" + str(info[2]) + ")" 
             
         tableWidget = self.createNewTableWidget("filter", label)
         
-        status,severity,ts,ts_nano,dbr,sval,ival,dval,isCon,isArr,arr = [],[],[],[],[],[],[],[],[],[],[]
+        status, severity, ts, ts_nano, dbr, val, isCon = [], [], [], [], [], [], []
         for i in range(len(filteredPVs)):
             index = info[0]['PV Name'].index(filteredPVs[i])
             status.append(info[0]['Status'][index])
@@ -2202,39 +2079,28 @@ Please refer Welcome to MASAR tab for help, then re-enter your search pattern.")
             ts.append(info[0]['Time stamp'][index])
             ts_nano.append(info[0]['Time stamp (nano)'][index])
             dbr.append(info[0]['DBR'][index])
-            sval.append(info[0]['S_value'][index])
-            ival.append(info[0]['I_value'][index])
-            dval.append(info[0]['D_value'][index])
+            val.append(info[0]['value'][index])
             isCon.append(info[0]['isConnected'][index])
-            isArr.append(info[0]['isArray'][index])
-            arr.append(info[0]['arrayValue'][index])
-            
+
         data['PV Name'] = filteredPVs
         data['Status'] = status
         data['Severity'] = severity
         data['Time stamp'] = ts
         data['Time stamp (nano)'] = ts_nano
         data['DBR'] = dbr
-        data['S_value'] = sval
-        data['I_value'] = ival
-        data['D_value'] = dval
+        data['value'] = val
         data['isConnected'] = isCon
-        data['isArray'] = isArr
-        data['arrayValue'] = arr 
-        
-        self.pv4cDict['filter'] = data['PV Name']#eventID: numbers, 'filter'    
-        self.data4eid['filter'] = data#'filter' is an eventID     
+
+        self.pv4cDict['filter'] = data['PV Name']
+        self.data4eid['filter'] = data
         
         tableWidget.clear()
         self.setSnapshotTable(data, tableWidget, 'filter')
-        #tableWidget.resizeColumnsToContents()
- #end of class masarUI       
-        
-        
-def main(channelname = None):
-    #print("%s: after main()"%datetime.datetime.now())
+ #end of class masarUI
+
+
+def main(channelname=None):
     app = QApplication(sys.argv)
-    #app = cothread.iqt() 
     app.setOrganizationName("NSLS II")
     app.setOrganizationDomain("BNL")
     app.setApplicationName("MASAR Viewer")
@@ -2242,16 +2108,12 @@ def main(channelname = None):
         form = masarUI(channelname=channelname)
     else:
         form = masarUI()
-    #print("%s: after form=masarUI()"%datetime.datetime.now())
     hostname = platform.node()
     title = "MASAR Viewer on " + str(hostname) + " for MASAR Server " + str(channelname)
     form.setWindowTitle(title)
     form.show()
-    #print("%s: after form.show()"%datetime.datetime.now())
-    #form.showMaximized()
     app.exec_()
-    #print("%s: after app.exec_()"%datetime.datetime.now())
-    
+
     import atexit
     # clean Python local objects first, especially the cothread stuff.
     # Cothread adds a new function in catools._catools_atexit(), ca_flush_io(), since version 2.8
@@ -2268,7 +2130,6 @@ def main(channelname = None):
     # however, os._exit() does nothing when exiting.
     # It would be better to call sys.exit
     sys.exit()
-    #print("%s: after sys.exit()"%datetime.datetime.now())
 
 if __name__ == '__main__':
     args = sys.argv[1:]

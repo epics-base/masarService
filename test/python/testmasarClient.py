@@ -55,14 +55,10 @@ def approveMasarSnapshot(mc, eid):
     return result
 
 
-def getLiveMachine(mc):
+def getLiveMachine(mc, pvlist):
     params = {}
     # get a live machine with given pv list
     print '==== get live machine ===='
-    pvlist = ["masarExampleCharArray",
-              "masarExampleFloatArray",
-              "masarExampleShortArray",
-              "masarExampleUCharArray"]
     for pv in pvlist:
         params[pv] = pv
     result = mc.getLiveMachine(params)
@@ -70,20 +66,25 @@ def getLiveMachine(mc):
 
 
 if __name__ == "__main__":
-    channel='masarService'
+    channel = 'masarService'
     mc = masarClient.client(channelname=channel)
 
-    #res1 = saveMasarSnapshot(mc)
-    #print res1
-    #print "event id:", res1[0]
-    #print "value:", res1[2]
+    res1 = saveMasarSnapshot(mc)
+    print res1
+    print "event id:", res1[0]
+    print "value:", res1[2]
 
-    #res2 = retrieveMasarSnapshot(mc, res1[0])
-    #res2 = retrieveMasarSnapshot(mc, 17)
-    #print "name:", res2[0][-10:]
-    #print "value:", res2[1][-10:]
+    res2 = retrieveMasarSnapshot(mc, res1[0])
+    res2 = retrieveMasarSnapshot(mc, 17)
+    print "name:", res2[0][-10:]
+    print "value:", res2[1][-10:]
 
+    pvlist = ["masarExampleCharArray",
+              "masarExampleFloatArray",
+              "masarExampleShortArray",
+              "masarExampleUCharArray"]
     print "((pv name),(value),(isConnected),(secondsPastEpoch),(nanoSeconds),(timeStampTag),(alarmSeverity),(alarmStatus),(alarmMessage))"
-    print getLiveMachine(mc)
+    for i in range(len(pvlist)):
+        print getLiveMachine(mc, pvlist[i:])
     # Call this function before exit.
     sys.exit(epicsExit())
