@@ -325,10 +325,10 @@ GatherV3DataPtr GatherV3Data::create(
     shared_vector<const std::string> const & channelNames)
 {
     if(!getChannelProviderRegistry()->getProvider("pva")) {
-       ClientFactory::start();
+        ClientFactory::start();
     }
     if(!getChannelProviderRegistry()->getProvider("ca")) {
-       ::epics::pvAccess::ca::CAClientFactory::start();
+        ::epics::pvAccess::ca::CAClientFactory::start();
     }
     NTMultiChannelBuilderPtr builder = NTMultiChannel::createBuilder();
     NTMultiChannelPtr multiChannel = builder->
@@ -475,7 +475,7 @@ void GatherV3Data::destroy()
     putBitSet.clear();
     state = idle;
     if(getChannelProviderRegistry()->getProvider("pva")) {
-        CAClientFactory::stop();
+        ClientFactory::stop();
     }
     if(getChannelProviderRegistry()->getProvider("ca")) {
         ::epics::pvAccess::ca::CAClientFactory::stop();
