@@ -473,8 +473,10 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
                 return
 
             if cfgdata[2][i] is not None and os.path.isfile(cfgdata[2][i]):
-                pvs = list(np.loadtxt(cfgdata[2][i], dtype=str, delimiter="#"))
+                pvs = list(np.loadtxt(cfgdata[2][i], dtype=str, comments="#"))
                 if len(pvs) > 0:
+                    for i, pv in enumerate(pvs):
+                        pvs[i] = pv.strip()
                     pymasarsqlite.pvgroup.savePvGroup(conn, cfgdata[0][i], func=cfgdata[1][i])
                     pymasarsqlite.pvgroup.saveGroupPvs(conn, cfgdata[0][i], pvs)
 
@@ -526,8 +528,10 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
         pvs = []
         for pvf in cfgdata[2]:
             if pvf is not None and os.path.isfile(pvf):
-                pvs += list(np.loadtxt(pvf, dtype=str, delimiter="#"))
+                pvs += list(np.loadtxt(pvf, dtype=str, comments="#"))
         if pvs:
+            for i, pv in enumerate(pvs):
+                pvs[i] = pv.strip()
             pymasarmongo.pymasarmongo.pymasar.saveconfig(mongoconn, collection, newcfgname,
                                                          desc=desc,
                                                          system=msystem,
