@@ -474,12 +474,6 @@ void GatherV3Data::destroy()
     putPVStructure.clear();
     putBitSet.clear();
     state = idle;
-    if(getChannelProviderRegistry()->getProvider("pva")) {
-        ClientFactory::stop();
-    }
-    if(getChannelProviderRegistry()->getProvider("ca")) {
-        ::epics::pvAccess::ca::CAClientFactory::stop();
-    }
 }
 
 bool GatherV3Data::createGet()
