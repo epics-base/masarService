@@ -114,20 +114,20 @@ void GatherV3DataChannel::channelStateChange(
     bool isConnected = false;
     if(connectionState==Channel::CONNECTED) isConnected = true;
     Lock xx(gatherV3Data->mutex);
-    if(isConnected==gatherV3Data->isConnected[offset]) {
-        return;
-    }
-    gatherV3Data->isConnected[offset] = isConnected;;
-    if(isConnected) {
-         ++gatherV3Data->numberConnected;
-        if(gatherV3Data->state==connecting
-        && gatherV3Data->numberConnected==gatherV3Data->numberChannel)
-        {
-            gatherV3Data->event.signal();
+    if(!isConnected==gatherV3Data->isConnected[offset]) {
+        gatherV3Data->isConnected[offset] = isConnected;;
+        if(isConnected) {
+             ++gatherV3Data->numberConnected;
+        } else {
+             --gatherV3Data->numberConnected;
         }
-    } else {
-         --gatherV3Data->numberConnected;
     }
+    if(gatherV3Data->state==connecting
+    && gatherV3Data->numberConnected==gatherV3Data->numberChannel)
+    {
+                gatherV3Data->event.signal();
+    }
+    ++gatherV3Data->numberCallback;
     return;
 }
 
@@ -191,7 +191,7 @@ void GatherV3DataChannel::channelGetConnect(
          gatherV3Data->requestOK = false;
     }
     ++gatherV3Data->numberCallback;
-    if(gatherV3Data->numberCallback==gatherV3Data->numberChannel) {
+    if(gatherV3Data->numberCallback==gatherV3Data->numberConnected) {
         gatherV3Data->event.signal();
     }
 }
@@ -231,7 +231,7 @@ void GatherV3DataChannel::getDone(
     PVStringPtr pvMess = pvStructure->getSubField<PVString>("alarm.message");
     gatherV3Data->alarmMessage[offset] = pvMess->get();
     ++gatherV3Data->numberCallback;
-    if(gatherV3Data->numberCallback==gatherV3Data->numberChannel) {
+    if(gatherV3Data->numberCallback==gatherV3Data->numberConnected) {
         gatherV3Data->event.signal();
     }
 }
@@ -247,7 +247,7 @@ void GatherV3DataChannel::channelPutConnect(
     gatherV3Data->putBitSet[offset] = BitSetPtr(
          new BitSet(gatherV3Data->putPVStructure[offset]->getNumberFields()));
     ++gatherV3Data->numberCallback;
-    if(gatherV3Data->numberCallback==gatherV3Data->numberChannel) {
+    if(gatherV3Data->numberCallback==gatherV3Data->numberConnected) {
         gatherV3Data->event.signal();
     }
 }
@@ -258,7 +258,7 @@ void GatherV3DataChannel::putDone(
 {
     Lock xx(gatherV3Data->mutex);
     ++gatherV3Data->numberCallback;
-    if(gatherV3Data->numberCallback==gatherV3Data->numberChannel) {
+    if(gatherV3Data->numberCallback==gatherV3Data->numberConnected) {
         gatherV3Data->event.signal();
     }
 }
@@ -418,7 +418,6 @@ bool GatherV3Data::connect(double timeOut)
     state = connecting;
     numberConnected = 0;
     numberCallback = 0;
-    requestOK = true;
     getCreated = false;
     putCreated = false;
     atLeastOneGet = false;
@@ -427,35 +426,47 @@ bool GatherV3Data::connect(double timeOut)
         isConnected[i] = false;
         channel[i]->connect();
     }
-    std::stringstream ss;
     while(true) {
-        size_t oldNumber = numberConnected;
+        size_t oldNumber = numberCallback;
         bool result = event.wait(timeOut);
-        if(result && requestOK) {
-            state = connected;
-            return requestOK;
-        }
-        if(numberConnected!=numberChannel) {
-            ss.str("");
-            ss << (numberChannel - numberConnected);
-            std::string buf = ss.str();
-            buf += " channels of ";
-            ss.str("");
-            ss << numberChannel;
-            buf += ss.str();
-            buf += " are not connected.";
-            message = buf;
-            alarm.setMessage(message);
-            alarm.setSeverity(invalidAlarm);
-            alarm.setStatus(clientStatus);
-        }
-        if(oldNumber==numberConnected) {
-            state = connected;
-            return false;
-        }
+        if(result) break;
+        if(oldNumber==numberCallback) break;
         timeOut = 1.0;
     }
-    return false;
+    state = connected;
+    multiChannel->attachTimeStamp(pvtimeStamp);
+    timeStamp.getCurrent();
+    timeStamp.setUserTag(0);
+    pvtimeStamp.set(timeStamp);
+    multiChannel->attachAlarm(pvalarm);
+    if(numberConnected!=numberChannel) {
+        std::stringstream ss;
+        ss.str("");
+        ss << (numberChannel - numberConnected);
+        std::string buf = ss.str();
+        buf += " channels of ";
+        ss.str("");
+        ss << numberChannel;
+        buf += ss.str();
+        buf += " are not connected.";
+        message = buf;
+        alarm.setMessage(message);
+        alarm.setSeverity(invalidAlarm);
+        alarm.setStatus(clientStatus);
+    } else {
+        alarm.setMessage("all channels connected");
+        alarm.setSeverity(noAlarm);
+        alarm.setStatus(noStatus);
+    }
+    pvalarm.set(alarm);
+    shared_vector<boolean> xisConnected(numberChannel);
+    for(size_t i=0; i< numberChannel; i++) {
+        xisConnected[i] = isConnected[i];
+    }
+    PVBooleanArrayPtr pvIsConnected = multiChannel->getIsConnected();
+    pvIsConnected->replace(freeze(xisConnected));
+    bool result = (numberConnected>0) ? true : false;
+    return result;
 }
 
 void GatherV3Data::destroy()
@@ -487,7 +498,9 @@ bool GatherV3Data::createGet()
     message = std::string();
     event.tryWait();
     for(size_t i=0; i< numberChannel; i++) {
-        channel[i]->createGet();
+        if(isConnected[i]) {
+            channel[i]->createGet();
+        }
     }
     channelProvider->flush();
     event.wait();
@@ -508,7 +521,9 @@ bool GatherV3Data::get()
     message = std::string();
     event.tryWait();
     for(size_t i=0; i< numberChannel; i++) {
-        channel[i]->get();
+        if(isConnected[i]) {
+            channel[i]->get();
+        }
     }
     channelProvider->flush();
     event.wait();
@@ -598,7 +613,9 @@ bool GatherV3Data::createPut()
     message = std::string();
     event.tryWait();
     for(size_t i=0; i< numberChannel; i++) {
-        channel[i]->createPut();
+        if(isConnected[i]) {
+            channel[i]->createPut();
+        }
     }
     channelProvider->flush();
     event.wait();
@@ -619,7 +636,9 @@ bool GatherV3Data::put()
     message = std::string();
     event.tryWait();
     for(size_t i=0; i< numberChannel; i++) {
-        channel[i]->put();
+        if(isConnected[i]) {
+            channel[i]->put();
+        }
     }
     channelProvider->flush();
     event.wait();

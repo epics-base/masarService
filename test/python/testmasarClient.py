@@ -75,7 +75,7 @@ if __name__ == "__main__":
     print "value:", res1[2]
 
     res2 = retrieveMasarSnapshot(mc, res1[0])
-    res2 = retrieveMasarSnapshot(mc, 17)
+    #res2 = retrieveMasarSnapshot(mc, 17)
     print "name:", res2[0][-10:]
     print "value:", res2[1][-10:]
 

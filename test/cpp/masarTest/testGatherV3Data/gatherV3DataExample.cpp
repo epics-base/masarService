@@ -27,19 +27,27 @@ NTMultiChannelPtr getLiveMachine(
         cout << "This test requires the test V3 database of the gather service.\n";
         cout << "It must be started before running this test\n";
     }
-    result = gather->get();
-
     NTMultiChannelPtr ntmultiChannel = gather->getNTMultiChannel();
+    Alarm alarm;
+    PVAlarm pvalarm;
+    ntmultiChannel->attachAlarm(pvalarm);
+    pvalarm.get(alarm);
+    AlarmSeverity severity = alarm.getSeverity();
+    if(severity!=noAlarm) {
+         cout << "connection problem\n";
+         cout << *ntmultiChannel->getPVStructure() << endl;
+    }
+    result = gather->get();
     cout << *ntmultiChannel->getPVStructure() << endl;
-
     cout << "isConnected " << *ntmultiChannel->getIsConnected() << endl;
     gather->destroy();
     return ntmultiChannel;
 }
 
 
-void test()
+void testAllConnected()
 {
+    cout << "testAllConnected\n";
     size_t n = 11;
     shared_vector<string> channelName(n);
     channelName[0] = "masarExample0000";
@@ -57,16 +65,30 @@ void test()
     shared_vector<const string> xxx(freeze(channelName));
 
     NTMultiChannelPtr pvt = getLiveMachine(xxx);
-    pvt = getLiveMachine(xxx);
+}
+
+void testNotAllConnected()
+{
+    cout << "testNotAllConnected\n";
+    size_t n = 2;
+    shared_vector<string> channelName(n);
+    channelName[0] = "masarExample0000";
+    channelName[1] = "JUNKDOESNOTEXIST";
+
+    shared_vector<const string> xxx(freeze(channelName));
+
+    NTMultiChannelPtr pvt = getLiveMachine(xxx);
 }
 
 int main(int argc,char *argv[])
 {
     ClientFactory::start();
     ::epics::pvAccess::ca::CAClientFactory::start();
-    test();
+    testAllConnected();
+    testNotAllConnected();
     ::epics::pvAccess::ca::CAClientFactory::stop();
     ClientFactory::stop();
+    cout << "all done\n";
     return 0;
 }
 

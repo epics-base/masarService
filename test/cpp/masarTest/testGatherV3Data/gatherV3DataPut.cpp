@@ -16,7 +16,7 @@ using std::tr1::static_pointer_cast;
 
 void test()
 {
-    size_t n = 11;
+    size_t n = 12;
     shared_vector<string> names(n);
     names[0] = "masarExample0000";
     names[1] = "masarExample0001";
@@ -29,6 +29,7 @@ void test()
     names[8] = "masarExampleDoubleArray";
     names[9] = "masarExampleBoUninit";
     names[10] = "masarExampleMbboUninit";
+    names[11] = "DOESNOTEXIST";
     shared_vector<const string> channelName(freeze(names));
     GatherV3DataPtr gather = GatherV3Data::create(channelName);
     bool result = gather->connect(5.0);
@@ -49,6 +50,7 @@ void test()
    for(size_t i=0; i<n; i++) {
         const PVUnionPtr pvUnion = pvUnions[i];
         PVFieldPtr pvField = pvUnion->get();
+        if(!pvField) continue;
         Type type = pvField->getField()->getType();
         if(type==scalar) {
              PVScalarPtr pvScalar = static_pointer_cast<PVScalar>(pvField);
