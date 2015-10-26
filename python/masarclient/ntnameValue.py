@@ -24,12 +24,16 @@ class NTNameValue(object) :
         ntnameValuePy._destroy(self.cppPvt)
     def __str__(self) :
         """Get a string value for the NTNameValue."""
-        return ntnameValuePy.__str__(self.cppPvt)
+        return ntnameValuePy._str(self.cppPvt)
     def getNTNameValue(self) :
         """Get a python object that can be passed to
         another python method that is a wrapper to a C++ method
         that expects a PVStructure object."""
         return ntnameValuePy._getNTNameValuePy(self.cppPvt);
+    def getPVStructure(self) :
+        """The data is saved as a PVStructure Get it.
+        returns the PVStructure"""
+        return ntnameValuePy._getPVStructure(self.cppPvt)
     def getTimeStamp(self,timeStamp) :
         """Get the timeStamp from the NTTable
         timeStamp must be timeStamp.getTimeStampPy()
@@ -40,9 +44,9 @@ class NTNameValue(object) :
         alarm must be alarm.getAlarmPy()
         """
         return ntnameValuePy._getAlarm(self.cppPvt,alarm);
-    def getNames(self) :
+    def getName(self) :
         """get the names"""
-        return ntnameValuePy._getNames(self.cppPvt);
-    def getValues(self) :
+        return ntnameValuePy._getName(self.cppPvt);
+    def getValue(self) :
         """get the values"""
-        return ntnameValuePy._getValues(self.cppPvt);
+        return ntnameValuePy._getValue(self.cppPvt);

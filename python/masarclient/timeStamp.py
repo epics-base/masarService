@@ -10,7 +10,7 @@ import time
 import timeStampPy
 
 class TimeStamp(object) :
-    """A timeStamp has secondsPastEpoch and nanoSeconds within the second.
+    """A timeStamp has secondsPastEpoch and nanoseconds within the second.
 
     The Epoch is the posix Epoch, i. e. 1970.1.1 00:00:00 UTC.
     """
@@ -18,21 +18,21 @@ class TimeStamp(object) :
     microSecPerSec = milliSecPerSec*milliSecPerSec
     nanoSecPerSec = milliSecPerSec*microSecPerSec
     posixEpochAtEpicsEpoch = 631152000
-    def __init__(self,secondsPastEpoch = 0,nanoSeconds = 0) :
+    def __init__(self,secondsPastEpoch = 0,nanoseconds = 0) :
         """constructor
 
         secondsPastEpoch The number of seconds since
                          Jan 1, 1970 00:00:00 UTC.
-        nanoSeconds      The number of nanoSeconds within current second."""
+        nanoseconds      The number of nanoseconds within current second."""
         if (not isinstance(secondsPastEpoch,int)) and (not isinstance(secondsPastEpoch,long)) :
             raise TypeError("secondsPastEpoch is not an integer")
             return
-        if (not isinstance(nanoSeconds,int)) and (not isinstance(nanoSeconds,long)) :
-            raise TypeError("nanoSeconds is not an integer")
+        if (not isinstance(nanoseconds,int)) and (not isinstance(nanoseconds,long)) :
+            raise TypeError("nanoseconds is not an integer")
             return
         self.cppPvt = timeStampPy._init()
         timeStampPy._setSeconds(self.cppPvt,secondsPastEpoch)
-        timeStampPy._setNano(self.cppPvt,nanoSeconds)
+        timeStampPy._setNano(self.cppPvt,nanoseconds)
         self.normalize()
     def __del__(self) :
         """destructor"""
@@ -50,7 +50,7 @@ class TimeStamp(object) :
         tm = self.toSeconds()
         tupletime = time.localtime(tm)
         string = time.strftime("%Y.%m.%d %H:%M:%S",tupletime)
-        milliSeconds = int(self.getNanoSeconds()/TimeStamp.microSecPerSec)
+        milliSeconds = int(self.getNanoseconds()/TimeStamp.microSecPerSec)
         string += ".%03i" % milliSeconds
         return string
     def getTimeStampPy(self) :
@@ -60,12 +60,12 @@ class TimeStamp(object) :
         """private method."""
         sdiff = self.getSecondsPastEpoch() - right.getSecondsPastEpoch()
         sdiff *= TimeStamp.nanoSecPerSec
-        sdiff += self.getNanoSeconds() - right.getNanoSeconds()
+        sdiff += self.getNanoseconds() - right.getNanoseconds()
         return long(sdiff)
     def normalize(self) :
-        """Adjust secondsPastEpoch and nanoSeconds so that
-            0<=nanoSeconds<nanoSecPerSec."""
-        nano = self.getNanoSeconds()
+        """Adjust secondsPastEpoch and nanoseconds so that
+            0<=nanoseconds<nanoSecPerSec."""
+        nano = self.getNanoseconds()
         if nano>=0 and nano<TimeStamp.nanoSecPerSec :
             return
         secs = self.getSecondsPastEpoch()
@@ -95,20 +95,20 @@ class TimeStamp(object) :
 
         The EPICS Epoch is 1990.1.1 00:00:00 UTC."""
         return timeStampPy._getSeconds(self.cppPvt) - TimeStamp.posixEpochAtEpicsEpoch
-    def getNanoSeconds(self) :
-        """Get the number of nanoSeconds within the second as an int."""
+    def getNanoseconds(self) :
+        """Get the number of nanoseconds within the second as an int."""
         return timeStampPy._getNano(self.cppPvt)
     def getUserTag(self) :
         """Get the number of user tag as an int."""
         return timeStampPy._getUserTag(self.cppPvt)
-    def put(self,secondsPastEpoch,nanoSeconds = 0) :
+    def put(self,secondsPastEpoch,nanoseconds = 0) :
         """Set the time.
 
         secondsPastEpoch The number of seconds since the Epoch.
-        nanoSeconds      The number of nano seconds within the second."""
+        nanoseconds      The number of nano seconds within the second."""
         
         timeStampPy._setSeconds(self.cppPvt,long(secondsPastEpoch))
-        timeStampPy._setNano(self.cppPvt,int(nanoSeconds))
+        timeStampPy._setNano(self.cppPvt,int(nanoseconds))
         self.normalize()
     def putMilliseconds(self,milliSeconds) :
         """Set the time given the number of milliseconds since the Epoch.
@@ -168,7 +168,7 @@ class TimeStamp(object) :
 
         seconds The number of seconds to add."""
         newsecs = self.getSecondsPastEpoch()
-        newnano = self.getNanoSeconds()
+        newnano = self.getNanoseconds()
         if isinstance(seconds,int) or isinstance(seconds,long) :
             newsecs += seconds
         else :
@@ -191,4 +191,4 @@ class TimeStamp(object) :
         return self.add(-other)
     def getMilliseconds(self) :
         """Get the number of milli seconds since the epoch as a long."""
-        return long(self.getSecondsPastEpoch()*1000 + self.getNanoSeconds()/1000000)
+        return long(self.getSecondsPastEpoch()*1000 + self.getNanoseconds()/1000000)

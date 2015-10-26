@@ -8,7 +8,7 @@
 
 import re
 
-from masarclient.nttable import NTTable
+from masarclient.ntmultiChannel import NTMultiChannel
 import pymasarsqlite as pymasar
 
 __all__=['DSL']
@@ -27,12 +27,12 @@ class DSL(object):
         #define    DBF_CHAR    4
         #define    DBF_LONG    5
         #define    DBF_DOUBLE  6
-        self.epicsInt    = [1, 4, 5]
+        self.epicsInt = [1, 4, 5]
         self.epicsString = [0, 3]
         self.epicsDouble = [2, 6]
         self.epicsNoAccess = [7]
         
-    def __del__(self) :
+    def __del__(self):
         """destructor"""
         print ('close SQLite3 connection.')
 #        pymasar.utils.close(conn)
@@ -58,6 +58,7 @@ class DSL(object):
             func = argument[1]
             func = func['function']
             result = self.dispatch(func, argument)
+
         return (result, )
 
     def _parseParams(self, params, key):
@@ -112,71 +113,62 @@ class DSL(object):
         key = ['eventid', 'start', 'end', 'comment']
         eid, start, end, comment = self._parseParams(params, key)
         conn = pymasar.utils.connect()
-        result = pymasar.masardata.retrieveSnapshot(conn, eventid=eid,start=start,end=end,comment=comment)
+        result = pymasar.masardata.retrieveSnapshot(conn, eventid=eid, start=start, end=end, comment=comment)
         pymasar.utils.close(conn)
         return result
     
     def saveSnapshot(self, params):
-        key = ['servicename','configname','comment']
+        key = ['servicename', 'configname', 'comment']
         service, config, comment = self._parseParams(params[1], key)
         if not service:
             service = self.__servicename
         
-        rawdata = params[0]
-        nttable = NTTable(rawdata, True)
-        numberValueCount = nttable.getNumberValues()
-        if numberValueCount == 1 and 'status' == nttable.getLabel()[0] and not nttable.getValue(0)[0]:
-            raise
+        result = NTMultiChannel(params[0])
+        dataLen = result.getNumberChannel() 
+        if dataLen == 0:
+            raise RuntimeError("No available snapshot data.")
         
-        # values format: the value is raw data from IOC 
-        # [(channel name,), (string value,),(double value,),(long value,),(dbr type),(is connected),
-        #  (second past epoch,),(nano seconds,),(time stamp tag,),(alarm severity,),(alarm status,),(alarm message,), (is_array), (array_value)]
-        values = []
+        # values format: the value is raw data from IOC
+        # [(pv name), (value), (dbr type),
+        #  (isConnected), (secondsPastEpoch), (nanoSeconds), (timeStampTag),
+        #  (alarmSeverity), (alarmStatus), (alarmMessage)]
+        pvnames = result.getChannelName()
+        values = result.getValue()
+        dbrtype = result.getDbrType()
+        isconnected = result.getIsConnected()
+        severity = result.getSeverity()
+        status = result.getStatus()
+        message = result.getMessage()
+        sec = result.getSecondsPastEpoch()
+        nanosec = result.getNanoseconds()
+        usertag = result.getUserTag()
 
         # data format: the data is prepared to save into rdb
         # rawdata format
         # [('channel name', 'string value', 'double value', 'long value', 'dbr type', 'is connected', 
-        #  'seconds past epoch', 'nano seconds', 'time stamp tag', 'alarm severity', 'alarm status', 'alarm message', 'is_array', 'array_value'),
+        #  'seconds past epoch', 'nano seconds', 'time stamp tag', 'alarm severity', 'alarm status', 'alarm message',
+        #  'is_array', 'array_value'),
         #  ...
         # ]
         datas = []
-        dataLen = len(nttable.getValue(0))
-        
-        dbrtype = nttable.getValue(4)
-        is_array = nttable.getValue(12)
-        # get IOC raw data
-        for i in range(numberValueCount):
-            if i == 13:
-                raw_array_value = nttable.getValue(i)
-                array_value = []
-                for j in range(len(is_array)):
-                    if dbrtype[j] in self.epicsDouble:
-                        array_value.append(raw_array_value[j][1])
-                    elif dbrtype[j] in self.epicsInt:
-                        array_value.append(raw_array_value[j][2])
-                    elif dbrtype[j] in self.epicsString:
-                        array_value.append(raw_array_value[j][0])
-                    elif dbrtype[j] in self.epicsNoAccess:
-                        array_value.append(raw_array_value[j][0])
-                values.append(array_value)
-            else:
-                values.append(list(nttable.getValue(i)))
-        # problem when a negative value is passed from C++
-        #define DBF_FLOAT   2
-        #define DBF_DOUBLE  6
-        for i in range(len(values[2])):
-            if values[4][i] in [2, 6] and values[2][i] < 0:
-                values[3][i] = int(values[2][i])
 
-        # initialize data for rdb
-        for j in range(dataLen):
-            datas.append(())
-        
-        # convert data format values ==> datas
-        for i in range(numberValueCount):
-            for j in range(dataLen):
-                datas[j] = datas[j] + (values[i][j],)
-        
+        for i in range(dataLen):
+            tmp = []
+            if isinstance(values[i], (list, tuple)):
+                tmp = [pvnames[i], "", None, None, dbrtype[i], isconnected[i],
+                       sec[i], nanosec[i], usertag[i], severity[i], status[i], message[i],
+                       1, values[i]]
+            else:
+                if dbrtype[i] in self.epicsString:
+                     tmp = [pvnames[i], values[i], None, None, dbrtype[i], isconnected[i],
+                            sec[i], nanosec[i], usertag[i], severity[i], status[i], message[i],
+                            0, None]
+                else:
+                     tmp = [pvnames[i], str(values[i]), values[i], values[i], dbrtype[i], isconnected[i],
+                            sec[i], nanosec[i], usertag[i], severity[i], status[i], message[i],
+                            0, None]
+            datas.append(tmp)
+
         # save into database
         try:
             conn = pymasar.utils.connect()
@@ -190,7 +182,6 @@ class DSL(object):
             return [-1]
     
     def retrieveChannelNames(self, params):
-        #key = ['servicename','configname','comment']
         key = ['servicename','configname']
         service, config = self._parseParams(params, key)
         if not service:
@@ -202,7 +193,6 @@ class DSL(object):
         return result
     
     def updateSnapshotEvent(self, params):
-        #key = ['eventid', 'user', 'desc', 'configname']
         key = ['eventid', 'user', 'desc']
         eid, user, desc = self._parseParams(params, key)
         try:

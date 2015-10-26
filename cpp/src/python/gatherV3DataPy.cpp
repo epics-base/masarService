@@ -13,25 +13,26 @@
 #include <pv/gatherV3Data.h>
 #include <stdexcept>
 
-using namespace epics::pvData;
+namespace epics { namespace masar {
 
-namespace epics { namespace pvAccess {
+using namespace epics::pvData;
+using namespace epics::nt;
+using namespace std;
+typedef std::tr1::shared_ptr<NTMultiChannel> NTMultiChannelPtr;
 
 class GatherV3DataPyPvt {
 public:
     GatherV3DataPyPvt(
-        StringArray const & channelNames,int numberChannels);
+        shared_vector<const std::string> const & channelNames);
     ~GatherV3DataPyPvt();
 public:
     GatherV3DataPtr gatherV3Data;
-    NTTablePtr nttable;
-    PVStructurePtr nttableStructure;
+    PVStructurePtr pvStructure;
 };
 
 GatherV3DataPyPvt::GatherV3DataPyPvt(
-    StringArray const & channelNames, int numberChannels)
-
-: gatherV3Data(new GatherV3Data(channelNames,numberChannels))
+    shared_vector<const std::string> const & channelNames)
+: gatherV3Data(GatherV3Data::create(channelNames))
 {
 }
 
@@ -56,7 +57,7 @@ static PyObject * _init(PyObject *willBeNull, PyObject *args)
         return NULL;
     }
     Py_ssize_t num = PyTuple_GET_SIZE(pytuple);
-    StringArray names(num);
+    shared_vector<string> names(num);
     for(Py_ssize_t i=0; i<num; i++) {
         PyObject *pyobject = PyTuple_GetItem(pytuple,i);
         if(pyobject==NULL) {
@@ -70,10 +71,11 @@ static PyObject * _init(PyObject *willBeNull, PyObject *args)
                "a channelName is not a string");
             return NULL;
         }
-        names[i] = String(sval);
+        names[i] = string(sval);
     }
-    GatherV3DataPyPvt *pvt = new GatherV3DataPyPvt(names,num);
-    return PyCapsule_New(pvt,"gatherV3DataPy",0);
+    shared_vector<const string> name(freeze(names));
+    GatherV3DataPyPvt *pvt = new GatherV3DataPyPvt(name);
+    return PyCapsule_New(pvt,"gatherV3DataPvt",0);
 }
 
 
@@ -87,15 +89,17 @@ static PyObject * _destroy(PyObject *willBeNull, PyObject *args)
            "Bad argument. Expected (pvt)");
         return NULL;
     }
-    void *pvoid = PyCapsule_GetPointer(pcapsule,"gatherV3DataPy");
+    void *pvoid = PyCapsule_GetPointer(pcapsule,"gatherV3DataPvt");
     if(pvoid==0) {
         PyErr_SetString(PyExc_SyntaxError,
            "first arg must be return from _init");
         return NULL;
     }
     GatherV3DataPyPvt *pvt = static_cast<GatherV3DataPyPvt *>(pvoid);
+    GatherV3DataPtr const & gatherV3Data = pvt->gatherV3Data;
     Py_BEGIN_ALLOW_THREADS
-         delete pvt;
+        gatherV3Data->destroy();
+        delete pvt;
     Py_END_ALLOW_THREADS
     Py_RETURN_NONE;
 }
@@ -112,7 +116,7 @@ static PyObject * _connect(PyObject *willBeNull, PyObject *args)
            "Bad argument. Expected (pvt,timeout)");
         return NULL;
     }
-    void *pvoid = PyCapsule_GetPointer(pcapsule,"gatherV3DataPy");
+    void *pvoid = PyCapsule_GetPointer(pcapsule,"gatherV3DataPvt");
     if(pvoid==0) {
         PyErr_SetString(PyExc_SyntaxError,
            "first arg must be return from _init");
@@ -130,32 +134,6 @@ static PyObject * _connect(PyObject *willBeNull, PyObject *args)
     Py_RETURN_FALSE;
 }
 
-static PyObject * _disconnect(PyObject *willBeNull, PyObject *args)
-{
-    PyObject *pcapsule = 0;
-    if(!PyArg_ParseTuple(args,"O:gatherV3DataPy",
-        &pcapsule))
-    {
-        PyErr_SetString(PyExc_SyntaxError,
-           "Bad argument. Expected (pvt)");
-        return NULL;
-    }
-    void *pvoid = PyCapsule_GetPointer(pcapsule,"gatherV3DataPy");
-    if(pvoid==0) {
-        PyErr_SetString(PyExc_SyntaxError,
-           "first arg must be return from _init");
-        return NULL;
-    }
-    GatherV3DataPyPvt *pvt = static_cast<GatherV3DataPyPvt *>(pvoid);
-    GatherV3DataPtr const & gatherV3Data = pvt->gatherV3Data;
-    Py_BEGIN_ALLOW_THREADS
-        gatherV3Data->disconnect();
-    Py_END_ALLOW_THREADS
-    Py_INCREF(Py_None);
-    return Py_None;
-}
-
-
 static PyObject * _get(PyObject *willBeNull, PyObject *args)
 {
     PyObject *pcapsule = 0;
@@ -166,7 +144,7 @@ static PyObject * _get(PyObject *willBeNull, PyObject *args)
            "Bad argument. Expected (pvt)");
         return NULL;
     }
-    void *pvoid = PyCapsule_GetPointer(pcapsule,"gatherV3DataPy");
+    void *pvoid = PyCapsule_GetPointer(pcapsule,"gatherV3DataPvt");
     if(pvoid==0) {
         PyErr_SetString(PyExc_SyntaxError,
            "arg must be return from _init");
@@ -194,7 +172,7 @@ static PyObject * _put(PyObject *willBeNull, PyObject *args)
            "Bad argument. Expected (pvt)");
         return NULL;
     }
-    void *pvoid = PyCapsule_GetPointer(pcapsule,"gatherV3DataPy");
+    void *pvoid = PyCapsule_GetPointer(pcapsule,"gatherV3DataPvt");
     if(pvoid==0) {
         PyErr_SetString(PyExc_SyntaxError,
            "arg must be return from _init");
@@ -222,19 +200,19 @@ static PyObject * _getMessage(PyObject *willBeNull, PyObject *args)
            "Bad argument. Expected (pvt)");
         return NULL;
     }
-    void *pvoid = PyCapsule_GetPointer(pcapsule,"gatherV3DataPy");
+    void *pvoid = PyCapsule_GetPointer(pcapsule,"gatherV3DataPvt");
     if(pvoid==0) {
         PyErr_SetString(PyExc_SyntaxError,
            "first arg must be return from _init");
         return NULL;
     }
     GatherV3DataPyPvt *pvt = static_cast<GatherV3DataPyPvt *>(pvoid);
-    String message = pvt->gatherV3Data->getMessage();
+    string message = pvt->gatherV3Data->getMessage();
     PyObject *pyObject = Py_BuildValue("s",message.c_str());
     return pyObject;
 }
 
-static PyObject * _getNTtable(PyObject *willBeNull, PyObject *args)
+static PyObject * _getPVStructure(PyObject *willBeNull, PyObject *args)
 {
     PyObject *pcapsule = 0;
     if(!PyArg_ParseTuple(args,"O:gatherV3DataPy",
@@ -242,35 +220,33 @@ static PyObject * _getNTtable(PyObject *willBeNull, PyObject *args)
     {
         return NULL;
     }
-    void *pvoid = PyCapsule_GetPointer(pcapsule,"gatherV3DataPy");
+    void *pvoid = PyCapsule_GetPointer(pcapsule,"gatherV3DataPvt");
     if(pvoid==0) {
         PyErr_SetString(PyExc_SyntaxError,
            "first arg must be return from _init");
         return NULL;
     }
     GatherV3DataPyPvt *pvt = static_cast<GatherV3DataPyPvt *>(pvoid);
-    pvt->nttable = pvt->gatherV3Data->getNTTable();
-    return PyCapsule_New(&pvt->nttable,"pvStructure",0);
+    pvt->pvStructure = pvt->gatherV3Data->getNTMultiChannel()->getPVStructure();
+    return PyCapsule_New(&pvt->pvStructure,"pvStructure",0);
 }
 
 static char _initDoc[] = "_init gatherV3DataPy.";
 static char _destroyDoc[] = "_destroy gatherV3DataPy.";
 static char _connectDoc[] = "_connect.";
-static char _disconnectDoc[] = "_disconnect.";
 static char _getDoc[] = "_get.";
 static char _putDoc[] = "_put.";
 static char _getMessageDoc[] = "_getMessage.";
-static char _getNTtableDoc[] = "_getNTtable.";
+static char _getPVStructureDoc[] = "_getPVStructure.";
 
 static PyMethodDef methods[] = {
     {"_init",_init,METH_VARARGS,_initDoc},
     {"_destroy",_destroy,METH_VARARGS,_destroyDoc},
     {"_connect",_connect,METH_VARARGS,_connectDoc},
-    {"_disconnect",_disconnect,METH_VARARGS,_disconnectDoc},
     {"_get",_get,METH_VARARGS,_getDoc},
     {"_put",_put,METH_VARARGS,_putDoc},
     {"_getMessage",_getMessage,METH_VARARGS,_getMessageDoc},
-    {"_getNTTable",_getNTtable,METH_VARARGS,_getNTtableDoc},
+    {"_getPVStructure",_getPVStructure,METH_VARARGS,_getPVStructureDoc},
     {NULL,NULL,0,NULL}
 };
 

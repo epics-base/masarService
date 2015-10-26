@@ -17,8 +17,8 @@ SRC_DIRS += $(SERVER)/dslPY
 INC += dslPY.h
 LIBSRCS += dslPY.cpp
 
-masarService_LIBS += gather nt pvAccess pvData Com
-masarService_LIBS += $(PYTHON)
+masarServer_LIBS += gather nt pvAccess pvData Com
+#masarService_LIBS += $(PYTHON)
 
 
 $(PYTHON)_DIR = $(PYTHON_BASE)/lib/$(PYTHON)/config

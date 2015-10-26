@@ -2,52 +2,54 @@
 
 /* Author: Marty Kraimer */
 
-#include <epicsExit.h>
+#include <sstream>
 
 #include <pv/gatherV3Data.h>
+#include <pv/clientFactory.h>
+#include <pv/caProvider.h>
 
 using namespace std;
 using namespace epics::pvData;
 using namespace epics::pvAccess;
-using std::tr1::static_pointer_cast;
+using namespace epics::masar;
+using namespace epics::nt;
 
-NTTablePtr getLiveMachine(
-        StringArray const & channelName,int numberChannels )
+NTMultiChannelPtr getLiveMachine(
+        shared_vector<const string> const & channelName )
 {
-    GatherV3DataPtr gather(new GatherV3Data(channelName,numberChannels));
+    GatherV3DataPtr gather = GatherV3Data::create(channelName);
 
     // wait one second, which is a magic number for now.
     // The waiting time might be removed later after stability test.
     bool result = gather->connect(1.0);
     if(!result) {
-        printf("connect failed\n%s\n",gather->getMessage().c_str());
-        printf("This test requires the test V3 database"
-           " of the gather service.\n");
-        printf("It must be started before running this test\n");
+        cout << "connect failed\n";
+        cout << "This test requires the test V3 database of the gather service.\n";
+        cout << "It must be started before running this test\n";
+    }
+    NTMultiChannelPtr ntmultiChannel = gather->getNTMultiChannel();
+    Alarm alarm;
+    PVAlarm pvalarm;
+    ntmultiChannel->attachAlarm(pvalarm);
+    pvalarm.get(alarm);
+    AlarmSeverity severity = alarm.getSeverity();
+    if(severity!=noAlarm) {
+         cout << "connection problem\n";
+         cout << *ntmultiChannel->getPVStructure() << endl;
     }
     result = gather->get();
-
-    NTTablePtr nttable = gather->getNTTable();
-    String builder;
-    nttable->getPVStructure()->toString(&builder);
-    printf("%s\n", builder.c_str());
-
-    // First place to show the data
-//    String builder;
-    PVBooleanArrayPtr isConnected = static_pointer_cast<PVBooleanArray>(nttable->getPVField(5));
-    builder.clear();
-    isConnected->toString(&builder);
-    printf("%s\n", builder.c_str());
-
-    return nttable;
+    cout << *ntmultiChannel->getPVStructure() << endl;
+    cout << "isConnected " << *ntmultiChannel->getIsConnected() << endl;
+    gather->destroy();
+    return ntmultiChannel;
 }
 
 
-void test()
+void testAllConnected()
 {
-    String builder;
-    int n = 11;
-    StringArray channelName(n);
+    cout << "testAllConnected\n";
+    size_t n = 11;
+    shared_vector<string> channelName(n);
     channelName[0] = "masarExample0000";
     channelName[1] = "masarExample0001";
     channelName[2] = "masarExample0002";
@@ -60,19 +62,33 @@ void test()
     channelName[9] = "masarExampleBoUninit";
     channelName[10] = "masarExampleMbboUninit";
 
-    NTTablePtr pvt = getLiveMachine(channelName,n);
-    PVBooleanArrayPtr isConnected = static_pointer_cast<PVBooleanArray>(pvt->getPVField(5));
-    builder.clear();
-    isConnected->toString(&builder);
-    printf("%s\n", builder.c_str());
+    shared_vector<const string> xxx(freeze(channelName));
+
+    NTMultiChannelPtr pvt = getLiveMachine(xxx);
+}
+
+void testNotAllConnected()
+{
+    cout << "testNotAllConnected\n";
+    size_t n = 2;
+    shared_vector<string> channelName(n);
+    channelName[0] = "masarExample0000";
+    channelName[1] = "JUNKDOESNOTEXIST";
+
+    shared_vector<const string> xxx(freeze(channelName));
+
+    NTMultiChannelPtr pvt = getLiveMachine(xxx);
 }
 
 int main(int argc,char *argv[])
 {
-    test();
-    epicsThreadSleep(.5);
-    epicsExitCallAtExits();
-    epicsThreadSleep(1.0);
+    ClientFactory::start();
+    ::epics::pvAccess::ca::CAClientFactory::start();
+    testAllConnected();
+    testNotAllConnected();
+    ::epics::pvAccess::ca::CAClientFactory::stop();
+    ClientFactory::stop();
+    cout << "all done\n";
     return 0;
 }
 

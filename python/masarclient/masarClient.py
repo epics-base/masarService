@@ -19,6 +19,9 @@ from ntnameValue import NTNameValue
 from nttable import NTTable
 from alarm import Alarm
 from timeStamp import TimeStamp
+from ntscalar import NTScalar
+from ntmultiChannel import NTMultiChannel
+
 
 class client():
     def __init__(self, channelname = 'masarService'):
@@ -33,27 +36,32 @@ class client():
         """
         alarm = Alarm()
         timeStamp = TimeStamp()
-    
-        ntnv = NTNameValue(function,params)
+
+        ntnv = NTNameValue(function, params)
         
         # now do issue + wait
-        channelRPC = ChannelRPC(self.channelname,"record[process=true]field()")
+        channelRPC = ChannelRPC(self.channelname)
         channelRPC.issueConnect()
-        if not channelRPC.waitConnect(1.0) :
+        if not channelRPC.waitConnect(1.0):
             print channelRPC.getMessage()
             raise Exception(channelRPC.getMessage())
-        channelRPC.issueRequest(ntnv.getNTNameValue(),False)
-        result = channelRPC.waitRequest()
-        if(result==None) :
+        channelRPC.issueRequest(ntnv.getNTNameValue(), False)
+        result = channelRPC.waitResponse()
+        if result is None:
             print channelRPC.getMessage()
             raise Exception(channelRPC.getMessage())
-        nttable = NTTable(result)
-        nttable.getAlarm(alarm.getAlarmPy())    
-        nttable.getTimeStamp(timeStamp.getTimeStampPy())
-        return nttable
+        if function in ["retrieveSnapshot", "getLiveMachine", "saveSnapshot"]:
+            result = NTMultiChannel(result)
+        elif function in ["retrieveServiceEvents", "retrieveServiceConfigs", "retrieveServiceConfigProps"]:
+            result = NTTable(result)
+        elif function == "updateSnapshotEvent":
+            result = NTScalar(result)
+        result.getAlarm(alarm)
+        result.getTimeStamp(timeStamp)
+        return result
     
     def __isFault(self, nttable):        
-        label = nttable.getLabel()
+        label = nttable.getLabels()
         if label[0] == 'status' and not nttable.getValue(0)[0]:
             return True
         return False
@@ -69,11 +77,12 @@ class client():
         params = {}
         nttable = self.__clientRPC(function, params)
 
+        if not isinstance(nttable, NTTable):
+            raise RuntimeError("Wrong returned data type")
         if self.__isFault(nttable):
             return False
-        
-        valueCounts = nttable.getNumberValues()
-        results = nttable.getValue(valueCounts-1)
+        results = nttable.getColumn(nttable.getLabels()[-1])
+
         return (sorted(set(results)))
     
     def retrieveServiceConfigs(self, params):
@@ -100,16 +109,19 @@ class client():
         """
         function = 'retrieveServiceConfigs'
         nttable = self.__clientRPC(function, params)
-        
+        labels = nttable.getLabels()
+
+        if not isinstance(nttable, NTTable):
+            raise RuntimeError("Wrong returned data type")
         if self.__isFault(nttable):
             return False
 
-        return (nttable.getValue(0),
-                nttable.getValue(1),
-                nttable.getValue(2),
-                nttable.getValue(3),
-                nttable.getValue(4),
-                nttable.getValue(5))
+        return (nttable.getColumn(labels[0]),
+                nttable.getColumn(labels[1]),
+                nttable.getColumn(labels[2]),
+                nttable.getColumn(labels[3]),
+                nttable.getColumn(labels[4]),
+                nttable.getColumn(labels[5]))
     
     def retrieveServiceEvents(self, params):
         """
@@ -138,6 +150,8 @@ class client():
         function = 'retrieveServiceEvents'
         nttable = self.__clientRPC(function, params)
 
+        if not isinstance(nttable, NTTable):
+            raise RuntimeError("Wrong returned data type")
         if self.__isFault(nttable):
             return False
         
@@ -146,10 +160,12 @@ class client():
         # 2: service_event_user_tag,
         # 3: service_event_UTC_time,
         # 4: service_event_user_name
-        return (nttable.getValue(0), 
-                nttable.getValue(2),
-                nttable.getValue(3),
-                nttable.getValue(4))
+        labels = nttable.getLabels()
+
+        return (nttable.getColumn(labels[0]),
+                nttable.getColumn(labels[2]),
+                nttable.getColumn(labels[3]),
+                nttable.getColumn(labels[4]))
     
     def retrieveSnapshot(self, params):
         """
@@ -185,42 +201,45 @@ class client():
 
         result:     list of list with the following format:
                     pv name []:          pv name list
-                    string value []:     value list in string format
-                    double value []      value list in double format
-                    long value []        value list in long format
-                    dbr_type []:         EPICS DBR types
+                    value []             value list
+                    dbrTypee []          EPICS V3 DBR type for each channel
                     isConnected []:      connection status, either True or False
                     secondsPastEpoch []: seconds after EPOCH time
                     nanoSeconds []:      nano-seconds
+                    userTags []:
                     alarmSeverity []:    EPICS IOC severity
                     alarmStatus []:      EPICS IOC status
-                    is_array []:         whether value is array, either True or False
-                    array_value [[]]:    if it is array, the value is stored here.
+                    alarmMessage []:     EPICS IOC pv status message
                             
                     otherwise, False if nothing is found.
         """
         function = 'retrieveSnapshot'
-        # [pv name,string value,double value,long value,
-        #  dbr type,isConnected,secondsPastEpoch,nanoSeconds,timeStampTag,
-        #  alarmSeverity,alarmStatus,alarmMessage, is_array, array_value]
-        nttable = self.__clientRPC(function, params)
-
-        if self.__isFault(nttable):
+        ntmultichannels = self.__clientRPC(function, params)
+        # check fault
+        if not isinstance(ntmultichannels, NTMultiChannel):
+            raise RuntimeError("Wrong returned data type")
+        if ntmultichannels.getNumberChannel() == 0:
+            # No returned value. 
             return False
+
+        # alarm and timestamp is not needed for now
+        # alarm = Alarm()
+        # ntmultichannels.getAlarm(alarm)
+        # [pv name, value,
+        #  isConnected, secondsPastEpoch, nanoSeconds, timeStampTag,
+        #  alarmSeverity, alarmStatus, alarmMessage]
+
+        return (ntmultichannels.getChannelName(),
+                ntmultichannels.getValue(),
+                ntmultichannels.getDbrType(),
+                ntmultichannels.getIsConnected(),
+                ntmultichannels.getSecondsPastEpoch(),
+                ntmultichannels.getNanoseconds(),
+                ntmultichannels.getUserTag(),
+                ntmultichannels.getSeverity(),
+                ntmultichannels.getStatus(),
+                ntmultichannels.getMessage())
         
-        return (nttable.getValue(0), 
-                nttable.getValue(1), 
-                nttable.getValue(2),
-                nttable.getValue(3),
-                nttable.getValue(4),
-                nttable.getValue(5),
-                nttable.getValue(6),
-                nttable.getValue(7),
-                nttable.getValue(9),
-                nttable.getValue(10),
-                nttable.getValue(12),
-                nttable.getValue(13))
-    
     def saveSnapshot(self, params):
         """
         This function is to take a machine snapshot data and send data to client for preview . 
@@ -236,46 +255,46 @@ class client():
                     'comment':     [optional] exact comment. 
 
         result:     list of list with the following format:
-                    id: id of this new event
+                    id:                  id of this new event
                     pv name []:          pv name list
-                    string value []:     value list in string format
-                    double value []      value list in double format
-                    long value []        value list in long format
-                    dbr_type []:         EPICS DBR types
+                    value []             value list
+                    dbrTypee []          EPICS V3 DBR type for each channel
                     isConnected []:      connection status, either True or False
                     secondsPastEpoch []: seconds after EPOCH time
                     nanoSeconds []:      nano-seconds
+                    userTags []:
                     alarmSeverity []:    EPICS IOC severity
                     alarmStatus []:      EPICS IOC status
-                    is_array []:         whether value is array, either True or False
-                    array_value [[]]:    if it is array, the value is stored here.
-                            
-                    otherwise, False if operation failed.
+                    alarmMessage []:     EPICS IOC pv status message
+
+                    otherwise, False if nothing is found.
         """
         function = 'saveSnapshot'
-        nttable = self.__clientRPC(function, params)
+        ntmultichannels = self.__clientRPC(function, params)
 
-        if self.__isFault(nttable):
+        # check fault
+        if not isinstance(ntmultichannels, NTMultiChannel):
+            raise RuntimeError("Wrong returned data type")
+        if ntmultichannels.getNumberChannel() == 0:
+            # No returned value. 
             return False
 
         ts = TimeStamp()
-        # [pv name,string value,double value,long value,
-        #  dbr type,isConnected,secondsPastEpoch,nanoSeconds,timeStampTag,
-        #  alarmSeverity,alarmStatus,alarmMessage, is_array, array_value]
-        nttable.getTimeStamp(ts.getTimeStampPy())
+        ntmultichannels.getTimeStamp(ts)
+        # [pv name, value,
+        #  isConnected, secondsPastEpoch, nanoSeconds, timeStampTag,
+        #  alarmSeverity, alarmStatus, alarmMessage]
         return (ts.getUserTag(),
-                nttable.getValue(0), 
-                nttable.getValue(1), 
-                nttable.getValue(2),
-                nttable.getValue(3),
-                nttable.getValue(4),
-                nttable.getValue(5),
-                nttable.getValue(6),
-                nttable.getValue(7),
-                nttable.getValue(9),
-                nttable.getValue(10),
-                nttable.getValue(12),
-                nttable.getValue(13))
+                ntmultichannels.getChannelName(),
+                ntmultichannels.getValue(),
+                ntmultichannels.getDbrType(),
+                ntmultichannels.getIsConnected(),
+                ntmultichannels.getSecondsPastEpoch(),
+                ntmultichannels.getNanoseconds(),
+                ntmultichannels.getUserTag(),
+                ntmultichannels.getSeverity(),
+                ntmultichannels.getStatus(),
+                ntmultichannels.getMessage())
 
     def updateSnapshotEvent(self, params):
         """
@@ -289,12 +308,11 @@ class client():
         result:     True, otherwise, False if operation failed.
         """
         function = 'updateSnapshotEvent'
-        nttable = self.__clientRPC(function, params)
-#
-#        if self.__isFault(nttable):
-#            return False
-        
-        return nttable.getValue(0)[0]
+        result = self.__clientRPC(function, params)
+        if not isinstance(result, NTScalar):
+            raise RuntimeError("Wrong returned data type.")
+
+        return bool(result.getValue())
     
     def getLiveMachine(self, params):
         """
@@ -310,36 +328,37 @@ class client():
 
         result:     list of list with the following format:
                     pv name []:          pv name list
-                    string value []:     value list in string format
-                    double value []      value list in double format
-                    long value []        value list in long format
-                    dbr_type []:         EPICS DBR types
+                    value []             value list
+                    dbrTypee []          EPICS V3 DBR type for each channel
                     isConnected []:      connection status, either True or False
                     secondsPastEpoch []: seconds after EPOCH time
                     nanoSeconds []:      nano-seconds
+                    userTags []:
                     alarmSeverity []:    EPICS IOC severity
                     alarmStatus []:      EPICS IOC status
-                    is_array []:         whether value is array, either True or False
-                    array_value [[]]:    if it is array, the value is stored here.
-                            
+                    alarmMessage []:     EPICS IOC pv status message
+
                     otherwise, False if operation failed.
         """        
         function = 'getLiveMachine'
-        nttable = self.__clientRPC(function, params)
+        ntmultichannels = self.__clientRPC(function, params)
 
-        if self.__isFault(nttable):
-            return False
+        # check fault
+        if not isinstance(ntmultichannels, NTMultiChannel):
+            raise RuntimeError("Wrong returned data type")
+        if ntmultichannels.getNumberChannel() == 0:
+             return False
         
-        # channelName,stringValue,doubleValue,longValue,dbrType,isConnected, is_array, array_value
-        return (nttable.getValue(0),
-                nttable.getValue(1),
-                nttable.getValue(2),
-                nttable.getValue(3),
-                nttable.getValue(4),
-                nttable.getValue(5),
-                nttable.getValue(6),
-                nttable.getValue(7),
-                nttable.getValue(9),
-                nttable.getValue(10),
-                nttable.getValue(12),
-                nttable.getValue(13))
+        # [pv name, value,
+        #  isConnected, secondsPastEpoch, nanoSeconds, timeStampTag,
+        #  alarmSeverity, alarmStatus, alarmMessage]
+        return (ntmultichannels.getChannelName(),
+                ntmultichannels.getValue(),
+                ntmultichannels.getDbrType(),
+                ntmultichannels.getIsConnected(),
+                ntmultichannels.getSecondsPastEpoch(),
+                ntmultichannels.getNanoseconds(),
+                ntmultichannels.getUserTag(),
+                ntmultichannels.getSeverity(),
+                ntmultichannels.getStatus(),
+                ntmultichannels.getMessage())
