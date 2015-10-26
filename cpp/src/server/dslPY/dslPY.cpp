@@ -210,6 +210,7 @@ static NTMultiChannelPtr retrieveSnapshot(PyObject * list)
             addAlarm()->
             addTimeStamp()->
             addSeverity() ->
+            addIsConnected() ->
             addStatus() ->
             addMessage() ->
             addSecondsPastEpoch() ->
