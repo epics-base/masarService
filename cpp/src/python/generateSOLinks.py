@@ -42,7 +42,9 @@ soLib = "../../lib/" + hostArch + "/" + soLib
 
 fileList = os.listdir(".")
 
-outList = ["channelRPCPy","ntnameValuePy","nttablePy","alarmPy","timeStampPy","gatherV3DataPy"]
+outList = ["channelRPCPy", "gatherV3DataPy",
+     "alarmPy","timeStampPy","controlPy","displayPy",
+    "ntnameValuePy","nttablePy","ntmultiChannelPy","ntscalarPy"]
 soList = []
 for element in outList :
     value = "/bin/ln -s%s " + soLib + " " + element + '.so'

@@ -3,69 +3,88 @@ import sys
 from masarclient import masarClient
 from masarclient.channelRPC import epicsExit
 
-channel='masarService'
 
-mc = masarClient.client( channelname = channel)
+def getSystemList(mc):
+    # retrieve all system defined in masar configuration
+    print '==== retrieve system list ===='
+    result = mc.retrieveSystemList()
+    return result
 
-# retrieve all system defined in masar configuration
-print '==== retrieve system list ===='
-result = mc.retrieveSystemList()
-print result
 
-# retrieve all configuration with given constrains
-print '==== retrieve service config ===='
-params = {'system': 'LTD2'}
-result = mc.retrieveServiceConfigs(params)
-print result
+def getMasarConfigs(mc):
+    # retrieve all configuration with given constrains
+    print '==== retrieve service config ===='
+    params = {'system': 'LTD2'}
+    result = mc.retrieveServiceConfigs(params)
+    return result
 
-# retrieve all events list with given constrains
-print '==== retrieve service event list ===='
-params = {'configid': '1'}
-result = mc.retrieveServiceEvents(params)
-print result
 
-# retrieve snapshot data with event_id = 1
-print '==== retrieve snapshot ===='
-params = {'eventid': '1'}
-result = mc.retrieveSnapshot(params)
-print result
+def getMasarEvent(mc):
+    # retrieve all events list with given constrains
+    print '==== retrieve service event list ===='
+    params = {'configid': '1'}
+    result = mc.retrieveServiceEvents(params)
+    return result
 
-# get a machine preview and save it into database
-print '==== machine preview snapshot ===='
-params = {'configname': 'LTD2_SC_Daily_All',
-          'servicename': 'masar'}
-result = mc.saveSnapshot(params)
-print result
 
-# approve a machine preview
-print '==== approve machine preview snapshot ===='
-params = {'eventid':    '1',
-          'configname': 'LTD2_SC_Daily_All',
-          'user':       'test',
-          'desc':       'this is a good snapshot, and I approved it.'}
-result = mc.updateSnapshotEvent(params)
-print result
+def retrieveMasarSnapshot(mc, eid):
+    # retrieve snapshot data with event_id = 1
+    print '==== retrieve snapshot ===='
+    params = {'eventid': str(eid)}
+    result = mc.retrieveSnapshot(params)
+    return result
 
-# get a live machine with given pv list
-print '==== get live machine ===='
-pvlist = ['LTB-BI{BPM:1}LTB:MbAvgX-I',
-          'LTB-BI{BPM:1}LTB:MbStdX-I',
-          'LTB-BI{BPM:1}LTB:MbAvgY-I',
-          'LTB-BI{BPM:1}LTB:MbStdY-I',
-          'LTB-BI{BPM:1}LTB:Iavg-Calc',
-          'LTB-BI{BPM:1}LTB:Istd-Calc',
-          'LTB-BI{BPM:1}Rate:Update-SP',
-          'LTB-BI{BPM:2}LTB:MbAvgX-I',
-          'LTB-BI{BPM:2}LTB:MbStdX-I',
-          'LTB-BI{BPM:2}LTB:MbAvgY-I',
-          'LTB-BI{BPM:2}LTB:MbStdY-I',
-          'LTB-BI{BPM:2}LTB:Iavg-Calc',
-          'LTB-BI{BPM:2}LTB:Istd-Calc',
-          'LTB-BI{BPM:2}Rate:Update-SP']
-for pv in pvlist:
-    params[pv] = pv
-result = mc.getLiveMachine(params)
-print result
 
-# Call this function before exit.
-sys.exit(epicsExit())
+def saveMasarSnapshot(mc):
+    # get a machine preview and save it into database
+    print '==== machine preview snapshot ===='
+    params = {'configname': 'test',
+              'servicename': 'masar'}
+    result = mc.saveSnapshot(params)
+    return result
+
+
+def approveMasarSnapshot(mc, eid):
+    # approve a machine preview
+    print '==== approve machine preview snapshot ===='
+    params = {'eventid':    str(eid),
+              'configname': 'test',
+              'user':       'test',
+              'desc':       'this is a good snapshot, and I approved it.'}
+    result = mc.updateSnapshotEvent(params)
+    return result
+
+
+def getLiveMachine(mc, pvlist):
+    params = {}
+    # get a live machine with given pv list
+    print '==== get live machine ===='
+    for pv in pvlist:
+        params[pv] = pv
+    result = mc.getLiveMachine(params)
+    return result
+
+
+if __name__ == "__main__":
+    channel = 'masarService'
+    mc = masarClient.client(channelname=channel)
+
+    res1 = saveMasarSnapshot(mc)
+    print res1
+    print "event id:", res1[0]
+    print "value:", res1[2]
+
+    res2 = retrieveMasarSnapshot(mc, res1[0])
+    #res2 = retrieveMasarSnapshot(mc, 17)
+    print "name:", res2[0][-10:]
+    print "value:", res2[1][-10:]
+
+    pvlist = ["masarExampleCharArray",
+              "masarExampleFloatArray",
+              "masarExampleShortArray",
+              "masarExampleUCharArray"]
+    print "((pv name),(value),(isConnected),(secondsPastEpoch),(nanoSeconds),(timeStampTag),(alarmSeverity),(alarmStatus),(alarmMessage))"
+    for i in range(len(pvlist)):
+        print getLiveMachine(mc, pvlist[i:])
+    # Call this function before exit.
+    sys.exit(epicsExit())

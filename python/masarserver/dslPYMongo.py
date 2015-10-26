@@ -9,7 +9,7 @@ import os
 import re
 import json
 
-from masarclient.nttable import NTTable
+from masarclient.ntmultiChannel import NTMultiChannel
 
 from pymasarmongo.db import utils
 from pymasarmongo.pymasarmongo import pymasar
@@ -37,7 +37,7 @@ class DSL(object):
     def __del__(self):
         """destructor"""
         print ('close MongoDB connection.')
-        # utils.close(self.mongoconn)
+        #utils.close(self.mongoconn)
 
     def dispatch(self, fname, fargs):
         """Dispatch a request"""
@@ -280,17 +280,26 @@ class DSL(object):
             approval = False
         else:
             approval = bool(json.loads(str(approval).lower()))
-        rawdata = params[0]
-        nttable = NTTable(rawdata, True)
-        numberValueCount = nttable.getNumberValues()
-        if numberValueCount == 1 and 'status' == nttable.getLabel()[0] and not nttable.getValue(0)[0]:
-            raise ValueError("Got empty data set")
+
+        result = NTMultiChannel(params[0])
+        dataLen = result.getNumberChannel()
+        if dataLen == 0:
+            raise RuntimeError("No available snapshot data.")
 
         # values format: the value is raw data from IOC
-        # [(channel name,), (string value,),(double value,),(long value,),(dbr type),(is connected),
-        #  (second past epoch,),(nano seconds,),(time stamp tag,),(alarm severity,),(alarm status,),(alarm message,),
-        # (is_array), (array_value)]
-        values = []
+        # [(channel name,), (value,), (dbr type), (is connected),
+        #  (second past epoch,), (nano seconds,), (time stamp tag,),
+        # (alarm severity,), (alarm status,), (alarm message,)]
+        pvnames = result.getChannelName()
+        values = result.getValue()
+        dbrtype = result.getDbrType()
+        isconnected = result.getIsConnected()
+        severity = result.getSeverity()
+        status = result.getStatus()
+        message = result.getMessage()
+        sec = result.getSecondsPastEpoch()
+        nanosec = result.getNanoseconds()
+        usertag = result.getUserTag()
 
         # data format: the data is prepared to save into rdb
         # rawdata format
@@ -300,42 +309,24 @@ class DSL(object):
         #  ...
         # ]
         datas = []
-        dataLen = len(nttable.getValue(0))
 
-        dbrtype = nttable.getValue(4)
-        is_array = nttable.getValue(12)
         # get IOC raw data
-        for i in range(numberValueCount):
-            if i == 13:
-                raw_array_value = nttable.getValue(i)
-                array_value = []
-                for j in range(len(is_array)):
-                    if dbrtype[j] in self.epicsDouble:
-                        array_value.append(raw_array_value[j][1])
-                    elif dbrtype[j] in self.epicsInt:
-                        array_value.append(raw_array_value[j][2])
-                    elif dbrtype[j] in self.epicsString:
-                        array_value.append(raw_array_value[j][0])
-                    elif dbrtype[j] in self.epicsNoAccess:
-                        array_value.append(raw_array_value[j][0])
-                values.append(array_value)
+        for i in range(dataLen):
+            tmp = []
+            if isinstance(values[i], (list, tuple)):
+                tmp = [pvnames[i], "", None, None, dbrtype[i], isconnected[i],
+                       sec[i], nanosec[i], usertag[i], severity[i], status[i], message[i],
+                       1, values[i]]
             else:
-                values.append(list(nttable.getValue(i)))
-        # problem when a negative value is passed from C++
-        #define DBF_FLOAT   2
-        #define DBF_DOUBLE  6
-        for i in range(len(values[2])):
-            if values[4][i] in [2, 6] and values[2][i] < 0:
-                values[3][i] = int(values[2][i])
-
-        # initialize data for rdb
-        for j in range(dataLen):
-            datas.append(())
-
-        # convert data format values ==> datas
-        for i in range(numberValueCount):
-            for j in range(dataLen):
-                datas[j] = datas[j] + (values[i][j],)
+                if dbrtype[i] in self.epicsString:
+                     tmp = [pvnames[i], values[i], None, None, dbrtype[i], isconnected[i],
+                            sec[i], nanosec[i], usertag[i], severity[i], status[i], message[i],
+                            0, None]
+                else:
+                     tmp = [pvnames[i], str(values[i]), values[i], values[i], dbrtype[i], isconnected[i],
+                            sec[i], nanosec[i], usertag[i], severity[i], status[i], message[i],
+                            0, None]
+            datas.append(tmp)
 
         # save into database
         try:

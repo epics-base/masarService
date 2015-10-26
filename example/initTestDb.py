@@ -7,13 +7,13 @@ Created on Jan 3, 2012
 import os
 
 import sqlite3
-from pymasar.pvgroup.pvgroup import (savePvGroup)
-from pymasar.pvgroup.pv import (saveGroupPvs)
-from pymasar.service.service import (saveService)
-from pymasar.service.serviceconfig import (saveServiceConfig, saveServicePvGroup, retrieveServiceConfigPVs)
-from pymasar.service.serviceevent import (saveServiceEvent, updateServiceEvent)
-from pymasar.utils import (save)
-from pymasar.masardata.masardata import (saveSnapshot)
+from pymasarsqlite.pvgroup.pvgroup import (savePvGroup)
+from pymasarsqlite.pvgroup.pv import (saveGroupPvs)
+from pymasarsqlite.service.service import (saveService)
+from pymasarsqlite.service.serviceconfig import (saveServiceConfig, saveServicePvGroup, retrieveServiceConfigPVs)
+from pymasarsqlite.service.serviceevent import (saveServiceEvent, updateServiceEvent)
+from pymasarsqlite.utils import (save)
+from pymasarsqlite.masardata.masardata import (saveSnapshot)
 
 conn = sqlite3.connect('masar.db')
 
@@ -186,9 +186,9 @@ def dummyServiceEventData():
         
 if __name__ == '__main__':
     try:
-        initPvGroups()
+        #initPvGroups()
         initService()
-        initServiceConfig()
+        #initServiceConfig()
     except:
         pass
 

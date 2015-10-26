@@ -16,7 +16,10 @@
 #include <pv/pvAlarm.h>
 #include <stdexcept>
 
-namespace epics { namespace pvData {
+namespace epics { namespace masar {
+
+using namespace epics::pvData;
+using namespace std;
 
 class AlarmPvt {
 public:
@@ -94,9 +97,9 @@ static PyObject * _str(PyObject *willBeNull, PyObject *args)
     }
     AlarmPvt *pvt = static_cast<AlarmPvt *>(pvoid);
     char buffer[256];
-    String message = pvt->alarm.getMessage();
-    String severity = (*AlarmSeverityFunc::getSeverityNames())[pvt->alarm.getSeverity()];
-    String status = (*AlarmStatusFunc::getStatusNames())[pvt->alarm.getStatus()];
+    string message = pvt->alarm.getMessage();
+    string severity = (*AlarmSeverityFunc::getSeverityNames())[pvt->alarm.getSeverity()];
+    string status = (*AlarmStatusFunc::getStatusNames())[pvt->alarm.getStatus()];
 
     sprintf(buffer,"message %s severity %s status %s",
         message.c_str(),severity.c_str(),status.c_str());
@@ -184,7 +187,7 @@ static PyObject * _getSeverity(PyObject *willBeNull, PyObject *args)
         return NULL;
     }
     AlarmPvt *pvt = static_cast<AlarmPvt *>(pvoid);
-    String severity = (*AlarmSeverityFunc::getSeverityNames())[pvt->alarm.getSeverity()];
+    string severity = (*AlarmSeverityFunc::getSeverityNames())[pvt->alarm.getSeverity()];
     return Py_BuildValue("s",severity.c_str());
 }
 
@@ -210,7 +213,7 @@ static PyObject * _setSeverity(PyObject *willBeNull, PyObject *args)
     size_t nchoices = choiceArrayPtr.get()->size();
     AlarmPvt *pvt = static_cast<AlarmPvt *>(pvoid);
     for(size_t i=0;i<nchoices; i++) {
-        String choice = (*choiceArrayPtr)[i];
+        string choice = (*choiceArrayPtr)[i];
         if(choice.compare(buffer)==0) {
             pvt->alarm.setSeverity(AlarmSeverityFunc::getSeverity(i));
             Py_INCREF(Py_None);
@@ -238,7 +241,7 @@ static PyObject * _getStatus(PyObject *willBeNull, PyObject *args)
         return NULL;
     }
     AlarmPvt *pvt = static_cast<AlarmPvt *>(pvoid);
-    String severity = (*AlarmStatusFunc::getStatusNames())[pvt->alarm.getStatus()];
+    string severity = (*AlarmStatusFunc::getStatusNames())[pvt->alarm.getStatus()];
     return Py_BuildValue("s",severity.c_str());
 }
 
@@ -264,7 +267,7 @@ static PyObject * _setStatus(PyObject *willBeNull, PyObject *args)
     size_t nchoices = choiceArrayPtr.get()->size();
     AlarmPvt *pvt = static_cast<AlarmPvt *>(pvoid);
     for(size_t i=0;i<nchoices; i++) {
-        String choice = (*choiceArrayPtr)[i];
+        string choice = (*choiceArrayPtr)[i];
         if(choice.compare(buffer)==0) {
             pvt->alarm.setStatus(AlarmStatusFunc::getStatus(i));
             Py_INCREF(Py_None);

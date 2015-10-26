@@ -14,41 +14,51 @@
 using namespace std;
 using namespace epics::pvData;
 using namespace epics::pvAccess;
+using namespace epics::nt;
 
-static String channelName("masarService");
+FieldCreatePtr fieldCreate = getFieldCreate();
 
-static void dump(RPCClientPtr const & channelRPC)
-{
-    cout << channelRPC->getMessage() << endl;
-}
+typedef std::tr1::shared_ptr<RPCClient> RPCClientPtr;
+
+static string channelName("masarService");
 
 void test()
 {
     RPCClientPtr channelRPC = 
-        RPCClientPtr(RPCClient::create(channelName,PVStructurePtr()));
+        RPCClientPtr(RPCClient::create(channelName));
     bool result = channelRPC->connect(1.0);
-    if(!result) {dump(channelRPC); return;}
-    NTNameValuePtr ntNameValue
-        = NTNameValue::create(true,false,false);
-    PVStringPtr pvFunction = ntNameValue->getFunction();
-    PVStringArrayPtr pvNames = ntNameValue->getNames();
-    PVStringArrayPtr pvValues = ntNameValue->getValues();
-    int n = 1;
-//    String name[] = {String("system")};
-//    String value[] = {String("sr")};
-    String name[] = {String("eventid")};
-    String value[] = {String("19")};
-//    int n = 2;
-//    String name[] = {String("configname"), String("servicename")};
-//    String value[] = {String("sr_test"), String("masar")};
-    pvNames->put(0,n,name,0);
-    pvValues->put(0,n,value,0);
-//    pvFunction->put("retrieveServiceConfigs");
-//    pvFunction->put("saveMasar");
+    if(!result) {
+        cout<< "connect failed\n";
+        return;
+    }
+    NTNameValueBuilderPtr builder = NTNameValue::createBuilder();
+    NTNameValuePtr ntnamevalue = builder ->
+         value(pvString) ->
+         add("function",fieldCreate->createScalar(pvString)) ->
+         create();
+    PVStructurePtr pv = ntnamevalue->getPVStructure();
+    PVStringPtr pvFunction = pv->getSubField<PVString>("function");
+    PVStringArrayPtr pvNames = pv->getSubField<PVStringArray>("names");
+    PVStringArrayPtr pvValues = pv->getSubField<PVStringArray>("values");
+    size_t n = 2;
+    shared_vector<string> name(n);
+    shared_vector<string> value(n);
+    name[0] = string("configname");
+    name[1] = string("servicename");
+    value[0] = string("test");
+    value[1] = string("masar");
+    pvNames->replace(freeze(name));
+    pvValues->replace(freeze(value));
     pvFunction->put("retrieveSnapshot");
-    PVStructurePtr pvResponse = channelRPC->request(ntNameValue->getPVStructure(),false);
-    if(pvResponse==NULL) {dump(channelRPC); return;}
-    cout << "response\n" << pvResponse->dumpValue(cout) << endl;
+    try {
+cout << *ntnamevalue->getPVStructure() << endl;
+        PVStructurePtr pvResponse = channelRPC->request(ntnamevalue->getPVStructure());
+        cout << *pvResponse << endl;
+    } catch (std::exception &e)
+    {
+        cout << e.what() << endl;
+        return;
+    }
     channelRPC->destroy();
 }
 

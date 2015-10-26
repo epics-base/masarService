@@ -7,7 +7,7 @@
 #          Marty Kraimer 2011.07
 
 import gatherV3DataPy
-from nttable import NTTable as NTTable
+from ntmultiChannel import NTMultiChannel as NTMultiChannel
 
 class GatherV3Data(object) :
     """Create a GatherV3Data
@@ -30,11 +30,9 @@ class GatherV3Data(object) :
 
         channelNames A sequence of V3 channel names."""
         self.cppPvt = gatherV3DataPy._init(channelNames)
-        self.ntTable = None
     def __del__(self) :
         """Destructor Destroys the connection to the server"""
         gatherV3DataPy._destroy(self.cppPvt)
-        self.ntTable = None
     def connect(self,timeout) :
         """Connect to the V3 channels
 
@@ -58,7 +56,7 @@ class GatherV3Data(object) :
         returns true if (all, not all) gets were successful.
         If false getMessage can be called to get the reason.
         If any channel is disconnected then false is returned.
-        The data is in the NTTable returned by getNTTable.
+        The data is in the NTMultiChannel returned by getNTMultiChannel.
         """
         return gatherV3DataPy._get(self.cppPvt)
     def put(self) :
@@ -67,17 +65,13 @@ class GatherV3Data(object) :
         returns true if (all, not all) gets were successful.
         If false getMessage can be called to get the reason.
         If any channel is disconnected then false is returned.
-        The data must be put into the NTTable returned by getNTTable.
+        The data must be put into the NTMultiChannel returned by getNTMultiChannel.
         """
         return gatherV3DataPy._put(self.cppPvt)
     def getMessage(self) :
         """Get a message for a connect or request failure"""
         return gatherV3DataPy._getMessage(self.cppPvt);
-    def getNTTable(self) :
-        """The data is saved as an NTTable with alarm and timeStamp. Get it.
-        returns the NTTable"""
-        if self.ntTable != None :
-            return self.ntTable
-        self.xxx = gatherV3DataPy._getNTTable(self.cppPvt)
-        self.ntTable = NTTable(self.xxx,True)
-        return self.ntTable
+    def getPVStructure(self) :
+        """The data is saved as a PVStructure Get it.
+        returns the PVStructure"""
+        return gatherV3DataPy._getPVStructure(self.cppPvt)

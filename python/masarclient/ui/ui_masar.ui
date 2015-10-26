@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1197</width>
-    <height>971</height>
+    <width>1199</width>
+    <height>1265</height>
    </rect>
   </property>
   <property name="palette">
@@ -145,7 +145,7 @@
            <item row="0" column="1">
             <widget class="QComboBox" name="systemCombox">
              <property name="cursor">
-              <cursorShape>SizeVerCursor</cursorShape>
+              <cursorShape>ArrowCursor</cursorShape>
              </property>
              <property name="mouseTracking">
               <bool>true</bool>
@@ -371,8 +371,8 @@
           </widget>
          </item>
          <item>
-          <layout class="QHBoxLayout" name="snapshotHorizontalLayout">
-           <item>
+          <layout class="QGridLayout" name="snapshotGridLayout">
+           <item row="3" column="0" colspan="2">
             <widget class="QPushButton" name="fetchSnapshotButton">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -385,6 +385,32 @@
              </property>
              <property name="text">
               <string>Display Snapshot(s)</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLineEdit" name="snapshotIdLineEdit">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Please enter one integer number and only one, then press Enter key or click the right-side button&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QPushButton" name="searchSnapshotButton">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;please enter a snapshot ID (one integer number, and only one) in the left box, then click this button&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="statusTip">
+              <string/>
+             </property>
+             <property name="text">
+              <string>search a snapshot by its ID</string>
              </property>
             </widget>
            </item>
@@ -529,7 +555,7 @@ Quick Start ...
 
     3. To compare multiple saved snapshots: click on one row in the left-top Config table --&gt; Ctrl + mouse click to select multiple rows in the left-bottom Snapshot table --&gt; click &quot;Compare Snapshots...&quot;;
 
-    4. To search / filter PVs: the searching supports wildcard pattern matching -- use * to match multiple characters, use ? to match single character, and use [m-n] to match the range from m to n; *BPM:[1-3]* means searching any PV name which contains BPM:1, BPM:2 and BPM:3; the searching can be nested -- you may search the filtered snapshot again and again using different search pattern to refine your search result 
+    4. To search / filter PVs by clicking the button &quot;PV search&quot; or using the keyboard 'Ctrl + F': use * to match multiple characters, use ? to match single character, use [m-n] to match the range from m to n, and use [!character-set] to exclude PVs which contain any character in the 'character-set', i.e. *BPM:[1-3]* means searching any PV name which contains BPM:1, BPM:2 and BPM:3, *[!SP] means searching PV which doesn't have 'SP' at the end. The searching can be nested -- you may search the filtered snapshot again and again using different search pattern to refine your search result; 
 
     5. To partially restore snapshot (don't restore some PVs): click 'Not Restore' in the snapshot Tab for the PV you don't want to restore; better way: firstly filter PVs as #4 instruction, then only restore the filtered PVs by clicking &quot;Restore Machine&quot;.
 
@@ -593,7 +619,7 @@ More Info ...
              </sizepolicy>
             </property>
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;*BPM:[1-3]* to search any pv containing BPM:1, BPM:2, and BPM:3&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;*BPM:[1-3]* to search any pv containing BPM:1, BPM:2, and BPM:3; press Enter key  or click the button 'PV Search' when you are done with the search pattern&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="layoutDirection">
              <enum>Qt::RightToLeft</enum>
@@ -623,7 +649,7 @@ More Info ...
           <item row="0" column="0" rowspan="2">
            <widget class="QPushButton" name="restoreMachineButton">
             <property name="toolTip">
-             <string/>
+             <string>one-step simple put</string>
             </property>
             <property name="text">
              <string>Restore Machine</string>
@@ -646,10 +672,20 @@ More Info ...
              </sizepolicy>
             </property>
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;search/filter pvs in the active snapshot Tab (the one you are watching) &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;search/filter pvs in the active snapshot Tab (the one you are watching. You can use Ctrl + F to search) &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
              <string>PV Search</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QPushButton" name="rampingMachineButton">
+            <property name="toolTip">
+             <string>multiple-step grdual put</string>
+            </property>
+            <property name="text">
+             <string>Ramping Machine...</string>
             </property>
            </widget>
           </item>
@@ -666,7 +702,7 @@ More Info ...
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1197</width>
+     <width>1199</width>
      <height>19</height>
     </rect>
    </property>
@@ -685,7 +721,6 @@ More Info ...
   <tabstop>eventEndDateTime</tabstop>
   <tabstop>fetchEventButton</tabstop>
   <tabstop>eventTableWidget</tabstop>
-  <tabstop>fetchSnapshotButton</tabstop>
   <tabstop>snapshotTabWidget</tabstop>
   <tabstop>currentCommentText</tabstop>
  </tabstops>
@@ -700,8 +735,8 @@ More Info ...
    <slot>eventFilterChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>290</x>
-     <y>434</y>
+     <x>364</x>
+     <y>535</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -716,8 +751,8 @@ More Info ...
    <slot>authorTextChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>290</x>
-     <y>460</y>
+     <x>364</x>
+     <y>561</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -732,8 +767,8 @@ More Info ...
    <slot>useTimeRange()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>42</x>
-     <y>469</y>
+     <x>64</x>
+     <y>575</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -748,8 +783,8 @@ More Info ...
    <slot>fetchEventAction()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>42</x>
-     <y>562</y>
+     <x>53</x>
+     <y>657</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -764,8 +799,8 @@ More Info ...
    <slot>retrieveSnapshot()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>64</x>
-     <y>940</y>
+     <x>86</x>
+     <y>1234</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -780,8 +815,8 @@ More Info ...
    <slot>restoreSnapshotAction()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>516</x>
-     <y>910</y>
+     <x>518</x>
+     <y>1204</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -796,8 +831,8 @@ More Info ...
    <slot>getLiveMachineAction()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>671</x>
-     <y>910</y>
+     <x>673</x>
+     <y>1204</y>
     </hint>
     <hint type="destinationlabel">
      <x>603</x>
@@ -812,8 +847,8 @@ More Info ...
    <slot>saveDataFileAction()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1185</x>
-     <y>910</y>
+     <x>1187</x>
+     <y>1204</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -828,8 +863,8 @@ More Info ...
    <slot>systemComboxChanged(QString)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>368</x>
-     <y>45</y>
+     <x>364</x>
+     <y>49</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -844,8 +879,8 @@ More Info ...
    <slot>configFilterChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>426</x>
-     <y>71</y>
+     <x>364</x>
+     <y>75</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -892,8 +927,8 @@ More Info ...
    <slot>configTab()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>674</x>
-     <y>31</y>
+     <x>1053</x>
+     <y>63</y>
     </hint>
     <hint type="destinationlabel">
      <x>682</x>
@@ -908,8 +943,8 @@ More Info ...
    <slot>openMsgBox()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1008</x>
-     <y>910</y>
+     <x>1010</x>
+     <y>1204</y>
     </hint>
     <hint type="destinationlabel">
      <x>755</x>
@@ -924,8 +959,8 @@ More Info ...
    <slot>saveMachineSnapshot()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>853</x>
-     <y>910</y>
+     <x>855</x>
+     <y>1204</y>
     </hint>
     <hint type="destinationlabel">
      <x>804</x>
@@ -940,8 +975,8 @@ More Info ...
    <slot>pvFilterChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1034</x>
-     <y>939</y>
+     <x>1010</x>
+     <y>1232</y>
     </hint>
     <hint type="destinationlabel">
      <x>816</x>
@@ -956,12 +991,60 @@ More Info ...
    <slot>searchPV()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1115</x>
-     <y>941</y>
+     <x>1091</x>
+     <y>1234</y>
     </hint>
     <hint type="destinationlabel">
      <x>990</x>
      <y>946</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rampingMachineButton</sender>
+   <signal>clicked()</signal>
+   <receiver>masar</receiver>
+   <slot>rampingMachine()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>518</x>
+     <y>1234</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>449</x>
+     <y>973</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>snapshotIdLineEdit</sender>
+   <signal>textChanged(QString)</signal>
+   <receiver>masar</receiver>
+   <slot>snapshotIdChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>120</x>
+     <y>1202</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>292</x>
+     <y>1244</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>searchSnapshotButton</sender>
+   <signal>clicked()</signal>
+   <receiver>masar</receiver>
+   <slot>retrieveSnapshotById()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>286</x>
+     <y>1197</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>214</x>
+     <y>1238</y>
     </hint>
    </hints>
   </connection>
@@ -989,5 +1072,8 @@ More Info ...
   <slot>partialRestoreMachine()</slot>
   <slot>pvFilterChanged()</slot>
   <slot>searchPV()</slot>
+  <slot>rampingMachine()</slot>
+  <slot>snapshotIdChanged()</slot>
+  <slot>retrieveSnapshotById()</slot>
  </slots>
 </ui>
