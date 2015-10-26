@@ -67,7 +67,7 @@ PVStructurePtr MasarService::request(
         for (size_t i = 0; i < fieldcounts; i ++) {
             if(fieldNames[i].compare("function")!=0) {
                 names[counts] = fieldNames[i];
-                values[counts] = pvArgument->getStringField(fieldNames[i])->get();
+                values[counts] = pvArgument->getSubField<PVString>(fieldNames[i])->get();
                 counts += 1;
             }
         }

@@ -79,7 +79,7 @@ int main(int argc,char *argv[])
     setenv("IOCSH_PS1", "masarService> ", 1);
     RPCServer::shared_pointer rpcServer(new RPCServer());
     MasarService::shared_pointer service(MasarService::shared_pointer(new MasarService()));
-    rpcServer->registerService(name, service);
+    rpcServer->registerService(name, RPCService::shared_pointer(service));
     rpcServer->printInfo();
 
     cout << "===Starting channel RPC server: " << name << endl;

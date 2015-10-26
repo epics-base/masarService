@@ -481,7 +481,7 @@ static NTTablePtr noDataTable(string message)
 {
     NTTableBuilderPtr builder = NTTable::createBuilder();
     NTTablePtr ntTable = builder->
-            add("status", pvBoolean)->
+            addColumn("status", pvBoolean)->
             addAlarm()->
             addTimeStamp()->
             create();
@@ -532,7 +532,7 @@ static NTTablePtr retrieveServiceConfigEvents(PyObject * list, long numeric)
     NTTableBuilderPtr builder = NTTable::createBuilder();
     for(int i=0 ; i< tuple_size; ++i) {
         ScalarType scalarType = (i<numeric) ? pvLong : pvString;
-        builder->add(label[i],scalarType);
+        builder->addColumn(label[i],scalarType);
     }
     NTTablePtr ntTable = builder->
             addAlarm()->

@@ -131,7 +131,7 @@ static PyObject * _create(PyObject *willbenull, PyObject *args)
                "Bad argument. Illegal scalarType");
             return NULL;
         }
-        builder->add(name,scalarType);
+        builder->addColumn(name,scalarType);
     }
     
     NTTablePtr nttable =  builder ->
