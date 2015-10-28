@@ -11,6 +11,9 @@
 #include <iostream>
 #include <signal.h>
 
+#include <pv/clientFactory.h>
+#include <pv/caProvider.h>
+
 #include <cantProceed.h>
 #include <epicsStdio.h>
 #include <epicsMutex.h>
@@ -29,6 +32,7 @@ using namespace std;
 using namespace epics::pvData;
 using namespace epics::pvAccess;
 using namespace epics::masar;
+
 
 void sighandler(int sig)
 {
@@ -62,7 +66,8 @@ static void threadRunner(void* usr)
 
 int main(int argc,char *argv[])
 {
-    //SET_LOG_LEVEL(logLevelDebug);
+    ClientFactory::start();
+    ::epics::pvAccess::ca::CAClientFactory::start();
     const char *name = "masarService";
     if(argc>1) name = argv[1];
 
@@ -70,13 +75,11 @@ int main(int argc,char *argv[])
     signal(SIGABRT, &sighandler);
     signal(SIGTERM, &sighandler);
     signal(SIGINT,  &sighandler);
-
     // set the prompt to the service name
     setenv("IOCSH_PS1", "masarService> ", 1);
-
     RPCServer::shared_pointer rpcServer(new RPCServer());
     MasarService::shared_pointer service(MasarService::shared_pointer(new MasarService()));
-    rpcServer->registerService(name, service);
+    rpcServer->registerService(name, RPCService::shared_pointer(service));
     rpcServer->printInfo();
 
     cout << "===Starting channel RPC server: " << name << endl;
@@ -97,9 +100,24 @@ int main(int argc,char *argv[])
     }
 
     iocsh(NULL);
-
-    epicsExitCallAtExits();
     rpcServer->destroy();
-    epicsThreadSleep(1.0);
     return (0);
 }
+
+#ifdef XXXXX
+int main(int argc,char *argv[])
+{
+    ClientFactory::start();
+    ::epics::pvAccess::ca::CAClientFactory::start();
+    const char *name = "masarService";
+    if(argc>1) name = argv[1];
+    RPCServer server;
+    MasarService::shared_pointer service(MasarService::shared_pointer(new MasarService()));
+    server.registerService(name,service);
+    service.reset();
+    server.printInfo();
+    server.run();
+    return 0;
+}
+#endif
+

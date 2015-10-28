@@ -19,8 +19,8 @@ print ntnv
 
 newntnv = ntnv.getNTNameValue()
 print newntnv
-print ntnv.getNames()
-print ntnv.getValues()
+print ntnv.getName()
+print ntnv.getValue()
 
 print ntnv.getTimeStamp(timeStamp)
 print ntnv.getAlarm(alarm)

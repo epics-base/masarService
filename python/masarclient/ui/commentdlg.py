@@ -16,7 +16,7 @@ class CommentDlg(QDialog,
     def __init__(self, parent=None):
         super(CommentDlg, self).__init__(parent)
         self.setupUi(self)
-        self.userID = os.popen('whoami').read()
+        self.userID = os.popen('whoami').read()[:-1]#username without \n
         self.authorInfo.setText("Author: "+self.userID)
         self.updateUi()
         #self.authorLineEdit.setFocus()

@@ -39,19 +39,19 @@ class client():
         Parameters: None
         Result:     list with all system name, otherwise, False if nothing is found.
         """
-        request = pvaccess.PvObject({'system' : pvaccess.STRING, 'function' : pvaccess.STRING})
-        request.set({'system' : '*', 'function' : 'retrieveServiceConfigProps' })
-        nttable = self.rpc.invoke(request)
+        request = pvaccess.PvObject({'system': pvaccess.STRING, 'function': pvaccess.STRING})
+        request.set({'system': '*', 'function': 'retrieveServiceConfigProps'})
+        result = self.rpc.invoke(request)
 
-        label = nttable.getScalarArray('label')
-        if self.__isFault(label, nttable):
+        label = result.getScalarArray('labels')
+        if self.__isFault(label, result):
             return False
 
         expectedlabel = ['config_prop_id', 'config_idx', 'system_key', 'system_val']
         if label != expectedlabel:
             raise RuntimeError("Data structure not as expected for retrieveSystemList().")
 
-        return (sorted(set(nttable.getScalarArray(label[-1]))))
+        return (sorted(set(result.getStructure("value")[label[-1]])))
 
     def retrieveServiceConfigs(self, params):
         """
@@ -96,10 +96,10 @@ class client():
         request = pvaccess.PvObject(pvobj)
         request.set(params)
 
-        nttable = self.rpc.invoke(request)
+        result = self.rpc.invoke(request)
 
-        label = nttable.getScalarArray('label')
-        if self.__isFault(label, nttable):
+        label = result.getScalarArray('labels')
+        if self.__isFault(label, result):
             return False
 
         expectedlabel=['config_idx', 'config_name', 'config_desc', 'config_create_date',
@@ -107,12 +107,12 @@ class client():
         if label != expectedlabel:
             raise RuntimeError("Data structure not as expected for retrieveServiceConfigs().")
 
-        return (nttable.getScalarArray(label[0]),
-                nttable.getScalarArray(label[1]),
-                nttable.getScalarArray(label[2]),
-                nttable.getScalarArray(label[3]),
-                nttable.getScalarArray(label[4]),
-                nttable.getScalarArray(label[5]))
+        return (result.getStructure("value")[label[0]],
+                result.getStructure("value")[label[1]],
+                result.getStructure("value")[label[2]],
+                result.getStructure("value")[label[3]],
+                result.getStructure("value")[label[4]],
+                result.getStructure("value")[label[5]])
 
     def retrieveServiceEvents(self, params):
         """
@@ -154,7 +154,7 @@ class client():
 
         nttable = self.rpc.invoke(request)
 
-        label = nttable.getScalarArray('label')
+        label = nttable.getScalarArray('labels')
         expectedlabel = ["event_id", "config_id", "comments", "event_time", "user_name"]
         if label != expectedlabel:
             raise RuntimeError("Data structure not as expected for retrieveServiceEvents().")
@@ -166,10 +166,10 @@ class client():
         # 2: service_event_user_tag,
         # 3: service_event_UTC_time,
         # 4: service_event_user_name
-        return (nttable.getScalarArray(label[0]),
-                nttable.getScalarArray(label[2]),
-                nttable.getScalarArray(label[3]),
-                nttable.getScalarArray(label[4]))
+        return (nttable.getStructure("value")[label[0]],
+                nttable.getStructure("value")[label[2]],
+                nttable.getStructure("value")[label[3]],
+                nttable.getStructure("value")[label[4]])
 
     def retrieveSnapshot(self, params):
         """
@@ -411,7 +411,7 @@ class client():
 
         nttable = self.rpc.invoke(request)
 
-        label = nttable.getScalarArray('label')
+        label = nttable.getScalarArray('labels')
         expectedlabel = ['pv name', 'string value', 'double value', 'long value', 'dbr type', 
                          'isConnected', 'secondsPastEpoch', 'nanoSeconds', 'timeStampTag', 
                          'alarmSeverity', 'alarmStatus', 'alarmMessage', 'is_array', 'array_value']
