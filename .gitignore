@@ -7,7 +7,7 @@ dbd/
 documentation/html
 documentation/*.tag
 envPaths
-configure/*.local
-!configure/ExampleRELEASE.local
-**/O.*
+*configure/*.local
+!*configure/ExampleRELEASE.local
+*/**/O.*
 QtC-*

@@ -3,18 +3,9 @@
 # Copy this file to RELEASE.local
 # Change the definitions below
 
-TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
-
-# If using the sequencer, point SNCSEQ at its top directory:
-#SNCSEQ=$(EPICS_BASE)/../modules/soft/seq
-
-PYTHON=python2.7
-PYTHON_BASE=/usr
-$(PYTHON)_DIR = $(PYTHON_BASE)/lib64/$(PYTHON)/config
-
-REPBASE=/home/hg
-PVDATA=${REPBASE}/pvDataCPP
-PVACCESS=${REPBASE}/pvAccessCPP
-NT=${REPBASE}/normativeTypesCPP
-
 EPICS_BASE=/home/install/epics/base
+EPICS4_DIR=/home/epicsv4/master
+PVCOMMON=${EPICS4_DIR}/pvCommonCPP
+PVDATA=${EPICS4_DIR}/pvDataCPP
+PVACCESS=${EPICS4_DIR}/pvAccessCPP
+NORMATIVETYPES=${EPICS4_DIR}/normativeTypesCPP
