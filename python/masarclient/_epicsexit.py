@@ -27,11 +27,11 @@ load_library = ctypes.cdll.LoadLibrary
 system = platform.system()
 if system == 'Windows':
     load_library = ctypes.windll.LoadLibrary
-    lib_files = ['miscIoc.dll', 'ca.dll']
+    lib_files = ['Com.dll', 'ca.dll']
 elif system == 'Darwin':
-    lib_files = ['libmiscIoc.dylib']
+    lib_files = ['libCom.dylib']
 else:
-    lib_files = ['libmiscIoc.so']
+    lib_files = ['libCom.so']
 
 epics_base = os.environ['EPICS_BASE']
 
@@ -48,8 +48,8 @@ epics_host_arch = system_map[(system, bits)]
 
 libpath = os.path.join(epics_base, 'lib', epics_host_arch)
 for lib in lib_files:
-    libmiscIoc = load_library("/".join((libpath, lib)))
+    libCom = load_library("/".join((libpath, lib)))
 
 #libmiscIoc = ctypes.CDLL("path/to/libmiscIoc.so")
-epicsExit = libmiscIoc.epicsExit
-epicsExitCallAtExits = libmiscIoc.epicsExitCallAtExits
+epicsExit = libCom.epicsExit
+epicsExitCallAtExits = libCom.epicsExitCallAtExits
