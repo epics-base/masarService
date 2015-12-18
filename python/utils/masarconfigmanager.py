@@ -450,22 +450,28 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
         else:
             QMessageBox.warning(self, "Warning",
                                 "Cannot find MASAR SQLite Database")
+            return
 
         import pymasarsqlite
-
         conn = pymasarsqlite.utils.connect()
         existedresult = pymasarsqlite.service.retrieveServiceConfigs(conn, servicename="masar")
+
         newcfgdata = self._getnewconfigurationdata(existedresult)
-
         if newcfgdata is None:
-            # Nothing to be added.
-            raise ValueError("Empty configuration.")
-
+            QMessageBox.warning(self, "Warning",
+                                "Not enough information for a new configuration.")
+            return
         newcfgname = newcfgdata[0]
         desc = newcfgdata[1]
         msystem = newcfgdata[2]
         # config data format: [[name], [desc], [pv files]]
         cfgdata = newcfgdata[3]
+
+        if newcfgname is None or msystem is None or newcfgdata is None:
+            # Nothing to be added.
+            QMessageBox.warning(self, "Warning",
+                                "No name or system is given, or empty configuration data.")
+            return
 
         for i in range(len(cfgdata[0])):
             if cfgdata[0][i] is None:
