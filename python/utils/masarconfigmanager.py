@@ -756,6 +756,8 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
             import pymasarmongo
 
     def showpvsinpvgroup(self, point):
+        if point.model().itemFromIndex(point).child(0) is None:
+            return
         reply = QMessageBox.question(self, 'Message',
                                      "show all pvs belong to group {} ?".format(point.model().
                                                                                 itemFromIndex(point).
