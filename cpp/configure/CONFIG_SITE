@@ -14,7 +14,7 @@
 # Set CHECK_RELEASE to NO to disable checking completely.
 # Set CHECK_RELEASE to WARN to perform consistency checking but
 #   continue building anyway if conflicts are found.
-CHECK_RELEASE = YES
+# CHECK_RELEASE = YES
 
 # Set this when you only want to compile this application
 #   for a subset of the cross-compiled target architectures
@@ -32,16 +32,14 @@ CROSS_COMPILER_TARGET_ARCHS =
 #   take effect.
 #IOCS_APPL_TOP = </IOC/path/to/application/top>
 
-PYTHON=python2.7
-PYTHON_BASE=/usr
-$(PYTHON)_DIR = $(PYTHON_BASE)/lib64/$(PYTHON)/config
-
 
 INSTALL_INCLUDE = $(INSTALL_LOCATION)/include/pv
 USR_INCLUDES += -I $(INSTALL_LOCATION)/include
 
+-include $(TOP)/configure/CONFIG_SITE.local
 
 -include $(TOP)/../CONFIG_SITE.local
 -include $(TOP)/../CONFIG.local
 
--include $(TOP)/configure/CONFIG_SITE.local
+
+
