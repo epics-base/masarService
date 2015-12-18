@@ -13,6 +13,8 @@
 #  RELEASE.Common.$(T_A)
 #  RELEASE.$(EPICS_HOST_ARCH).$(T_A)
 
+TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
+
 # EPICS V4 Developers: Do not edit the locations in this file!
 #
 # To create a file RELEASE.local in this directory
