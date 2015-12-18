@@ -32,11 +32,6 @@ CROSS_COMPILER_TARGET_ARCHS =
 #   take effect.
 #IOCS_APPL_TOP = </IOC/path/to/application/top>
 
-PYTHON=python2.7
-PYTHON_BASE=/usr
-$(PYTHON)_DIR = $(PYTHON_BASE)/lib64/$(PYTHON)/config
-
-
 INSTALL_INCLUDE = $(INSTALL_LOCATION)/include/pv
 USR_INCLUDES += -I $(INSTALL_LOCATION)/include
 

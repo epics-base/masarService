@@ -1,6 +1,4 @@
 # RELEASE - Location of external support modules
 
--include $(TOP)/../../../RELEASE.local
--include $(TOP)/../../cpp/configure/RELEASE.local
--include $(TOP)/configure/RELEASE.local
+include $(TOP)/../../RELEASE.local
 MASAR=$(TOP)/../../cpp

@@ -40,6 +40,8 @@ $(PYTHON)_DIR = $(PYTHON_BASE)/lib64/$(PYTHON)/config
 INSTALL_INCLUDE = $(INSTALL_LOCATION)/include/pv
 USR_INCLUDES += -I $(INSTALL_LOCATION)/include
 
--include $(TOP)/../../CONFIG_SITE.local
+
 -include $(TOP)/../CONFIG_SITE.local
+-include $(TOP)/../CONFIG.local
+
 -include $(TOP)/configure/CONFIG_SITE.local

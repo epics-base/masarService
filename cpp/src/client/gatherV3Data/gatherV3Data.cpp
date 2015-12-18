@@ -336,6 +336,7 @@ GatherV3DataPtr GatherV3Data::create(
             addAlarm()->
             addTimeStamp()->
             addSeverity() ->
+            addIsConnected() ->
             addStatus() ->
             addMessage() ->
             addSecondsPastEpoch() ->
