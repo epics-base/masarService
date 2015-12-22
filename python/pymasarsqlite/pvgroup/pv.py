@@ -95,7 +95,7 @@ def savePvs(conn, pvlist, pvdesc=None, update = False):
     cur = conn.cursor()
     pv_ids = []
     for i in range(len(pvlist)):
-        pv_name = pvlist[i]
+        pv_name = pvlist[i].strip()
         cur.execute('select pv_id from pv where pv_name = ?', (pv_name,))
         pv_id = cur.fetchone()
         
