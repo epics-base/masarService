@@ -655,13 +655,13 @@ static PyObject * _getIsConnected(PyObject *willbenull, PyObject *args)
     PyObject *result = PyTuple_New(num);
     for(int i=0; i<num; ++i) {
         boolean boolval = data[i];
-        string value;
+        int value;
         if(boolval) {
-           value = "true";
+           value = 1;
         } else {
-           value = "false";
+           value = 0;
         }
-        PyObject *elem = Py_BuildValue("s",value.c_str());
+        PyObject *elem = Py_BuildValue("i",value);
         PyTuple_SetItem(result, i, elem);
     }
     return result;

@@ -253,21 +253,19 @@ static NTMultiChannelPtr retrieveSnapshot(PyObject * list)
         int32 is_array = PyLong_AsLong(PyTuple_GetItem(sublist,12));
         bool isArray = (is_array==0) ? false : true;
         if(!isArray) {
-            if(dbr_type[index]==DBR_STRING) {
+            if(dbr_type[index]==DBR_STRING || dbr_type[index]==DBR_ENUM) {
                 char * str = PyString_AsString(PyTuple_GetItem(sublist,1));
                 PVStringPtr pvString = pvDataCreate->createPVScalar<PVString>();
                 pvString->put(str);
                 channelValue[index]->set(pvString);
                 continue;
-            }
-            if(dbr_type[index]==DBR_LONG) {
+            } else if (dbr_type[index]==DBR_LONG) {
                 int32 val = PyLong_AsLong(PyTuple_GetItem(sublist,3));
                 PVIntPtr pvInt = pvDataCreate->createPVScalar<PVInt>();
                 pvInt->put(val);
                 channelValue[index]->set(pvInt);
                 continue;
-            }
-            if(dbr_type[index]==DBR_DOUBLE) {
+            } else if(dbr_type[index]==DBR_DOUBLE) {
                 double val = PyFloat_AsDouble(PyTuple_GetItem(sublist,2));
                 PVDoublePtr pvDouble = pvDataCreate->createPVScalar<PVDouble>();
                 pvDouble->put(val);
