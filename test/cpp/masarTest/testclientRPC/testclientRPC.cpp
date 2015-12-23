@@ -38,8 +38,8 @@ void test()
          create();
     PVStructurePtr pv = ntnamevalue->getPVStructure();
     PVStringPtr pvFunction = pv->getSubField<PVString>("function");
-    PVStringArrayPtr pvNames = pv->getSubField<PVStringArray>("names");
-    PVStringArrayPtr pvValues = pv->getSubField<PVStringArray>("values");
+    PVStringArrayPtr pvNames = pv->getSubField<PVStringArray>("name");
+    PVStringArrayPtr pvValues = pv->getSubField<PVStringArray>("value");
     size_t n = 2;
     shared_vector<string> name(n);
     shared_vector<string> value(n);
