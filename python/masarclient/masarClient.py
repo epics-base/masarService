@@ -43,12 +43,12 @@ class client():
         channelRPC = ChannelRPC(self.channelname)
         channelRPC.issueConnect()
         if not channelRPC.waitConnect(1.0):
-            print channelRPC.getMessage()
+            #print channelRPC.getMessage()
             raise Exception(channelRPC.getMessage())
         channelRPC.issueRequest(ntnv.getNTNameValue(), False)
         result = channelRPC.waitResponse()
         if result is None:
-            print channelRPC.getMessage()
+            #print channelRPC.getMessage()
             raise Exception(channelRPC.getMessage())
         if function in ["retrieveSnapshot", "getLiveMachine", "saveSnapshot"]:
             result = NTMultiChannel(result)

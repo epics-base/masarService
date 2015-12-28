@@ -11,3 +11,5 @@ envPaths
 !*configure/ExampleRELEASE.local
 */**/O.*
 QtC-*
+*.so
+*.pyc
