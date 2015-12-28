@@ -260,8 +260,10 @@ static PyObject * _issueRequest(PyObject *willBeNull, PyObject *args)
 static PyObject * _waitResponse(PyObject *willBeNull, PyObject *args)
 {
     PyObject *pcapsule = 0;
-    if(!PyArg_ParseTuple(args,"O:channelRPCPy",
-        &pcapsule))
+    double timeout = 1.0;
+    if(!PyArg_ParseTuple(args,"Od:channelRPCPy",
+        &pcapsule,
+        &timeout))
     {
         PyErr_SetString(PyExc_SyntaxError,
            "Bad argument. Expected (pvt)");
@@ -276,7 +278,7 @@ static PyObject * _waitResponse(PyObject *willBeNull, PyObject *args)
     ChannelRPCPyPvt *pvt = static_cast<ChannelRPCPyPvt *>(pvoid);
     RPCClientPtr const & channelRPC = pvt->getChannelRPC();
     Py_BEGIN_ALLOW_THREADS
-        pvt->pvResponse = channelRPC->waitResponse();
+        pvt->pvResponse = channelRPC->waitResponse(timeout);
     Py_END_ALLOW_THREADS
     if(pvt->pvResponse.get()==0) {
         //ExceptionMixin ss(__FILE__, __LINE__);
