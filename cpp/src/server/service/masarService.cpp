@@ -46,10 +46,12 @@ void MasarService::destroy()
 PVStructurePtr MasarService::request(
     PVStructurePtr const & pvArgument) throw (epics::pvAccess::RPCRequestException)
 {
+    assert(dslRdb.get() != NULL);
+
     if(!NTNameValue::is_a(pvArgument->getStructure())) {
         // support non NTNameValue Pair for some general purpose client, for example command line tools
         string functionName;
-        PVStringPtr pvFunction = pvArgument->getSubField<PVString>("function");
+        PVStringPtr pvFunction = pvArgument->getSubFieldT<PVString>("function");
         if (!pvFunction) {
             throw epics::pvAccess::RPCRequestException(
                 Status::STATUSTYPE_ERROR,"unknown MASAR function");
@@ -62,17 +64,18 @@ PVStructurePtr MasarService::request(
         StringArray fieldNames = pvArgument->getStructure()->getFieldNames();
         size_t fieldcounts = (size_t) fieldNames.size();
         shared_vector<string> names  (fieldcounts-1);
-        shared_vector< string> values (fieldcounts-1);
+        shared_vector<string> values (fieldcounts-1);
         size_t counts = 0;
         for (size_t i = 0; i < fieldcounts; i ++) {
             if(fieldNames[i].compare("function")!=0) {
                 names[counts] = fieldNames[i];
-                values[counts] = pvArgument->getSubField<PVString>(fieldNames[i])->get();
+                values[counts] = pvArgument->getSubFieldT<PVString>(fieldNames[i])->get();
                 counts += 1;
             }
         }
         try {
-            return dslRdb->request(functionName, freeze(names), freeze(values));
+            PVStructurePtr result = dslRdb->request(functionName, freeze(names), freeze(values));
+            return result;
         } catch (std::exception &e) {
             throw RPCRequestException(Status::STATUSTYPE_ERROR,
                 std::string("request failed ") + e.what());
@@ -91,9 +94,9 @@ PVStructurePtr MasarService::request(
         }
         try {
 
-            const shared_vector<const string> name = pvArgument->getSubField<PVStringArray>("name")->view();
-            const shared_vector<const string> value = pvArgument->getSubField<PVStringArray>("value")->view();
-            PVStructurePtr result = dslRdb->request(functionName,name,value);
+            const shared_vector<const string> name = pvArgument->getSubFieldT<PVStringArray>("name")->view();
+            const shared_vector<const string> value = pvArgument->getSubFieldT<PVStringArray>("value")->view();
+            PVStructurePtr result = dslRdb->request(functionName, name, value);
             return result;
         } catch (std::exception &e) {
             throw RPCRequestException(Status::STATUSTYPE_ERROR,
