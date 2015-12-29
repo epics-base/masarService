@@ -30,9 +30,12 @@ class client():
         """
         self.channelname = channelname
 
-    def __clientRPC(self, function, params):
+    def __clientRPC(self, function, params, conn_time=1.0, resp_time=5.0):
         """
         internal library for pvAccess channel RPC.
+        
+        conn_time: waiting time for connection, 1.0 by default;
+        resp_time: waiting time for response, 5.0 by default
         """
         alarm = Alarm()
         timeStamp = TimeStamp()
@@ -42,11 +45,11 @@ class client():
         # now do issue + wait
         channelRPC = ChannelRPC(self.channelname)
         channelRPC.issueConnect()
-        if not channelRPC.waitConnect(1.0):
+        if not channelRPC.waitConnect(conn_time):
             #print channelRPC.getMessage()
             raise Exception(channelRPC.getMessage())
         channelRPC.issueRequest(ntnv.getNTNameValue(), False)
-        result = channelRPC.waitResponse()
+        result = channelRPC.waitResponse(resp_time)
         if result is None:
             #print channelRPC.getMessage()
             raise Exception(channelRPC.getMessage())
@@ -314,17 +317,19 @@ class client():
 
         return bool(result.getValue())
     
-    def getLiveMachine(self, params):
+    def getLiveMachine(self, params, conn_time=1.0, resp_time=5.0):
         """
         Get live data with given pv list, and uses pv name as both key and value. 
         Same as retrieveSnapshot function, for a scalar pv, its value is carried in string, double and long. For a waveform/array, 
         its value is carried in array_value. Client needs to check the pv is an array by checking is_array, and check its data type 
         by checking dbr_type.
 
-        Parameters: a dictionary which can have any combination of the following predefined keys:
-                    'servicename': [optional] exact service name if given
-                    'configname':  exact configuration name
-                    'comment':     [optional] exact comment. 
+        Parameters: param: a dictionary which can have any combination of the following predefined keys:
+                              'servicename': [optional] exact service name if given
+                              'configname':  exact configuration name
+                              'comment':     [optional] exact comment. 
+                    conn_time: waiting time for connection, 1.0 by default;
+                    resp_time: waiting time for response, 5.0 by default;
 
         result:     list of list with the following format:
                     pv name []:          pv name list
@@ -341,7 +346,7 @@ class client():
                     otherwise, False if operation failed.
         """        
         function = 'getLiveMachine'
-        ntmultichannels = self.__clientRPC(function, params)
+        ntmultichannels = self.__clientRPC(function, params, conn_time=conn_time, resp_time=resp_time)
 
         # check fault
         if not isinstance(ntmultichannels, NTMultiChannel):
