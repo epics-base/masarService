@@ -735,7 +735,7 @@ PVStructurePtr DSL_RDB::request(
 DSLPtr createDSL_RDB()
 {
    DSL_RDBPtr dsl = DSL_RDBPtr(new DSL_RDB());
-   if(!dsl->init()) return DSL_RDBPtr();
+   if(!dsl->init()) throw (std::runtime_error("createDSL_RDB"));
    return DSL_RDBPtr(dsl);
 }
 

@@ -1655,7 +1655,7 @@ Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
         # channelName, value, dbrType,isConnected
         disConnectedPVs = []
         try:
-            rpcResult = self.mc.getLiveMachine(params)
+            rpcResult = self.mc.getLiveMachine(params, resp_time=30.0) # timeout after 30 seconds
         except:
             QMessageBox.warning(self,
                                 "Warning",
