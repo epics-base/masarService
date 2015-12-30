@@ -26,6 +26,11 @@ using namespace epics::pvData;
 using namespace epics::pvAccess;
 using namespace std;
 
+struct PyAllowThreads {
+   PyThreadState *save;
+   PyAllowThreads() :save(PyEval_SaveThread()) {}
+   ~PyAllowThreads() { PyEval_RestoreThread(save); }
+};
 
 typedef std::tr1::shared_ptr<RPCClient> RPCClientPtr;
 class ChannelRPCPyPvt {
@@ -120,9 +125,17 @@ static PyObject * _connect(PyObject *willBeNull, PyObject *args)
     ChannelRPCPyPvt *pvt = static_cast<ChannelRPCPyPvt *>(pvoid);
     RPCClientPtr const & channelRPC = pvt->getChannelRPC();
     bool result = false;
-    Py_BEGIN_ALLOW_THREADS
+    try {
+        PyAllowThreads x;
         result = channelRPC->connect(timeout);
-    Py_END_ALLOW_THREADS
+    } catch (epics::pvAccess::RPCRequestException & e) {
+        PyErr_SetString(PyExc_RuntimeError, e.what());
+        return NULL;
+    } catch (std::runtime_error & e) {
+        PyErr_SetString(PyExc_RuntimeError, e.what());
+        return NULL;
+    }
+
     if(result) {
         Py_INCREF(Py_None);
         return Py_None;
@@ -149,9 +162,14 @@ static PyObject * _issueConnect(PyObject *willBeNull, PyObject *args)
     }
     ChannelRPCPyPvt *pvt = static_cast<ChannelRPCPyPvt *>(pvoid);
     RPCClientPtr const & channelRPC = pvt->getChannelRPC();
-    Py_BEGIN_ALLOW_THREADS
+
+    try {
+        PyAllowThreads x;
         channelRPC->issueConnect();
-    Py_END_ALLOW_THREADS
+    } catch (std::runtime_error & e) {
+        PyErr_SetString(PyExc_RuntimeError, e.what());
+        return NULL;
+    }
     Py_INCREF(Py_None);
     return Py_None;
 }
@@ -177,9 +195,17 @@ static PyObject * _waitConnect(PyObject *willBeNull, PyObject *args)
     ChannelRPCPyPvt *pvt = static_cast<ChannelRPCPyPvt *>(pvoid);
     RPCClientPtr const & channelRPC = pvt->getChannelRPC();
     bool result = false;
-    Py_BEGIN_ALLOW_THREADS
+    try {
+        PyAllowThreads x;
         result = channelRPC->waitConnect(timeout);
-    Py_END_ALLOW_THREADS
+    } catch (epics::pvAccess::RPCRequestException & e) {
+        PyErr_SetString(PyExc_RuntimeError, e.what());
+        return NULL;
+    } catch (std::runtime_error & e) {
+        PyErr_SetString(PyExc_RuntimeError, e.what());
+        return NULL;
+    }
+
     if(result) {
         Py_INCREF(Py_None);
         return Py_None;
@@ -213,9 +239,17 @@ static PyObject * _request(PyObject *willBeNull, PyObject *args)
     PVStructure::shared_pointer *pvStructure =
         static_cast<PVStructure::shared_pointer *>(pvoid);
     bool last = (lastRequest==0) ? false : true ;
-    Py_BEGIN_ALLOW_THREADS
+    try {
+        PyAllowThreads x;
         pvt->pvResponse = channelRPC->request(*pvStructure,last);
-    Py_END_ALLOW_THREADS
+    } catch (epics::pvAccess::RPCRequestException & e) {
+        PyErr_SetString(PyExc_RuntimeError, e.what());
+        return NULL;
+    } catch (std::runtime_error & e) {
+        PyErr_SetString(PyExc_RuntimeError, e.what());
+        return NULL;
+    }
+
     if(pvt->pvResponse.get()==0) {
         Py_INCREF(Py_None);
         return Py_None;
@@ -250,9 +284,17 @@ static PyObject * _issueRequest(PyObject *willBeNull, PyObject *args)
     PVStructure::shared_pointer *pvStructure =
         static_cast<PVStructure::shared_pointer *>(pvoid);
     bool last = (lastRequest==0) ? false : true ;
-    Py_BEGIN_ALLOW_THREADS
+    try {
+        PyAllowThreads x;
         channelRPC->issueRequest(*pvStructure,last);
-    Py_END_ALLOW_THREADS
+    } catch (epics::pvAccess::RPCRequestException & e) {
+        PyErr_SetString(PyExc_RuntimeError, e.what());
+        return NULL;
+    } catch (std::runtime_error & e) {
+        PyErr_SetString(PyExc_RuntimeError, e.what());
+        return NULL;
+    }
+
     Py_INCREF(Py_None);
     return Py_None;
 }
@@ -277,12 +319,18 @@ static PyObject * _waitResponse(PyObject *willBeNull, PyObject *args)
     }
     ChannelRPCPyPvt *pvt = static_cast<ChannelRPCPyPvt *>(pvoid);
     RPCClientPtr const & channelRPC = pvt->getChannelRPC();
-    Py_BEGIN_ALLOW_THREADS
+    try {
+        PyAllowThreads x;
         pvt->pvResponse = channelRPC->waitResponse(timeout);
-    Py_END_ALLOW_THREADS
+    } catch (epics::pvAccess::RPCRequestException & e) {
+        PyErr_SetString(PyExc_RuntimeError, e.what());
+        return NULL;
+    } catch (std::runtime_error & e) {
+        PyErr_SetString(PyExc_RuntimeError, e.what());
+        return NULL;
+    }
+
     if(pvt->pvResponse.get()==0) {
-        //ExceptionMixin ss(__FILE__, __LINE__);
-        //ss.print(stdout);
         Py_INCREF(Py_None);
         return Py_None;
     }

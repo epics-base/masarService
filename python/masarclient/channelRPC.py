@@ -9,22 +9,6 @@ from _epicsexit import (epicsExit, epicsExitCallAtExits)
 
 import channelRPCPy
 
-#def epicsExit() :
-#    """unregister ClientFactory::start().
-#    This function should only be called right before Python exit.
-#    It will make sure epicsExitCallAtExits() be called if there is any registered.
-#    Python will crash without this call but there is any registered.
-#    
-#    epicsExit() will completely shut down the EPICS library silently. It should be called after Python
-#    exit handler if there is any epics related stuff reqistered as Python atexit function to make
-#    sure the right clean up order, for example is cothread. 
-#    Otherwise, it could cause an exception if allowing normal Python exist processing after calling 
-#    epicsExit().
-#    
-#    Planning: it would be better to call epicsExit() function instead of epicsExitCallAtExits(). 
-#    """
-#    channelRPCPy._epicsExitCallAtExits()
-
 class ChannelRPC(object) :
     """Create a ChannelRPC
 
@@ -41,20 +25,16 @@ class ChannelRPC(object) :
     if result==None
         #take some action
     """
-    #def __init__(self,channelName,request=None) :
     def __init__(self,channelName) :
         """Constructor
 
         channelName The pvName of the channelRPC record for the service.
         request  A string to turn into a pvRequest"""
-        #if(request==None) :
-        #    self.cppPvt = channelRPCPy._init1(channelName)
-        #else :
-        #    self.cppPvt = channelRPCPy._init2(channelName,request)
         self.cppPvt = channelRPCPy._init(channelName)
+
     def __del__(self) :
         """Destructor Destroys the connection to the server"""
-        #channelRPCPy._destroy(self.cppPvt)
+
     def connect(self,timeout=5.0) :
         """Connect to the channelRPC service
 
@@ -63,22 +43,25 @@ class ChannelRPC(object) :
         if result==None :
             return True
         return False
+
     def issueConnect(self) :
         """issueConnect to the channelRPC servicei.i
           This does not block.
           waitConnect must be called to complete the request"""
-        channelRPCPy._issueConnect(self.cppPvt);
+        channelRPCPy._issueConnect(self.cppPvt)
         return
+
     def waitConnect(self,timeout=5.0) :
         """Wait until connect or timeout
 
         timeOut The timeout in seconds
 
         returns true or false"""
-        result = channelRPCPy._waitConnect(self.cppPvt,timeout);
+        result = channelRPCPy._waitConnect(self.cppPvt,timeout)
         if result==None :
             return True
         return False
+
     def request(self,argument,lastRequest) :
         """Send a channelRPC request
 
@@ -87,6 +70,7 @@ class ChannelRPC(object) :
         lastRequest  Either True or False
         returns the result on None if the request failed"""
         return channelRPCPy._request(self.cppPvt,argument,lastRequest)
+
     def issueRequest(self,argument,lastRequest) :
         """issue a channelRPC request.
         This does not block.
@@ -97,6 +81,7 @@ class ChannelRPC(object) :
         lastRequest  Either True or False"""
         channelRPCPy._issueRequest(self.cppPvt,argument,lastRequest)
         return True
+
     def waitResponse(self, timeout=5.0) :
         """Wait for the request to finish
 
@@ -104,6 +89,7 @@ class ChannelRPC(object) :
 
         """
         return channelRPCPy._waitResponse(self.cppPvt, timeout)
+
     def getMessage(self) :
         """Get a message for a connect or request failure"""
-        return channelRPCPy._getMessage(self.cppPvt);
+        return channelRPCPy._getMessage(self.cppPvt)
