@@ -1,38 +1,47 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html><head>
+<html>
+<head>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  <meta name="keywords" content="EPICS, EPICSv4"><!-- Include the epicsv4 base.css, and the css for epics v4 documents -->
-  
-  <link rel="stylesheet" type="text/css" href="http://epics-pvdata.sourceforge.net/base.css">
-  <link rel="stylesheet" type="text/css" href="http://epics-pvdata.sourceforge.net/epicsv4.css"><title>MASAR User Manual</title>
-  
+  <meta name="keywords" content="EPICS, EPICSv4">
+  <!-- Include the epicsv4 base.css, and the css for epics v4 documents -->
+  <link rel="stylesheet" type="text/css"
+  href="http://epics-pvdata.sourceforge.net/base.css">
+  <link rel="stylesheet" type="text/css"
+  href="http://epics-pvdata.sourceforge.net/epicsv4.css">
+  <title>MASAR User Manual</title>
   <style type="text/css">
 /*<![CDATA[*/
 
 
-/*]]>*/</style></head><body>
+/*]]>*/</style>
+</head>
+
+<body>
 
 <div class="head">
 <h1>MASAR USER MANUAL<br>
 </h1>
-<!-- Maturity: Working Draft or Request for Comments, or Recommendation, and date. -->
- display how many points in saved data
-<h2 class="nocount">MASAR User Manual, Editors Draft, 26-Oct-2012</h2>
+
+<h2 class="nocount">MASAR User Manual, Editors Draft, 04-Jan-2016</h2>
 <dl>
   <dt>This version:</dt>
-    <dd><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/userManual.html">userManual_20121026.html</a></dd>
+    <dd><a
+      href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/userManual.html">userManual_20160104.html</a></dd>
   <dt>Latest version:</dt>
-    <dd><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/userManual.html">userManual.html</a></dd>
+    <dd><a
+      href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/userManual.html">userManual.html</a></dd>
   <dt>Editors:</dt>
-    <dd>Guobao Shen, BNL<br>
-      Marty Kraimer, BNL<span style="font-weight: bold;"></span></dd>
+    <dd>Guobao Shen, FRIB<br>
+      Marty Kraimer<span style="font-weight: bold;"></span></dd>
 </dl>
 <dl>
 </dl>
 <hr>
 </div>
 <!-- Header material -->
+
 <h2 class="nocount" id="contents">Table of Contents</h2>
+
 <div class="toc">
 <ul>
   <li><a href="#abstract">Abstract</a></li>
@@ -42,41 +51,42 @@
   <li><a href="#requirement">System Requirement</a></li>
   <li><a href="#terminology">Terminology</a></li>
   <li><a href="#architecture">System Architecture</a></li>
-  <li><a href="#server">MASAR Server</a></li>
-  <ul>
-    <li><a href="#functions">Functions</a></li>
-    <li><a href="#dataformat">Data Format</a></li>
-  </ul>
-  <li><a href="#database">Relational Database</a></li>
-  <ul>
-    <li><a href="#sqlite3">SQLite3 Schema</a></li>
-    <li><a href="#irmis">IRMIS Schema</a></li>
-    <li><a href="#createdb">Create Database</a></li>
-    <li><a href="#configdb">Database configuration</a></li>
-  </ul>
-  <li><a href="#installation">Install from source</a></li>
-  <ul>
-    <li><a href="#prepareinstall">Preparation</a></li>
-    <li><a href="#pvdatainstall">Install pvDataCPP</a></li>
-    <li><a href="#pvaccessinstall">Install pvAccessCPP</a></li>
-    <li><a href="#pviocinstall">Install pvIOCCPP</a></li>
-    <li><a href="#ntinstall">Install normativeTypes</a></li>
-    <li><a href="#masarinstall">Install masarService</a></li>
-  </ul>
-  <li><a href="#runserver">Run MASAR Server</a></li>
-  <ul>
-    <li><a href="#pythonc">Python/C module</a></li>
-    <li><a href="#pythonpath">PYTHONPATH</a></li>
-    <li><a href="#masardb">MASAR SQLite database</a></li>
-    <li><a href="#launchserver">Launch MASAR service</a></li>
-    <li><a href="#launchserver2">Launch MASAR with other name</a></li>
-    <li><a href="#stopserver">Stop MASAR service</a></li>
-  </ul>
-  <li><a href="#masarclient">MASAR Client</a></li>
-  <ul>
-    <li><a href="#pythonapi">Python API</a></li>
-    <li><a href="#clientgui">Default GUI</a></li>
-  </ul>
+  <li><a href="#server">MASAR Server</a>
+    <ul>
+      <li><a href="#functions">Functions</a></li>
+      <li><a href="#dataformat">Data Format</a></li>
+    </ul>
+  </li>
+  <li><a href="#database">Relational Database</a>
+    <ul>
+      <li><a href="#sqlite3">SQLite3 Schema</a></li>
+      <li><a href="#createdb">Create Database</a></li>
+      <li><a href="#configdb">Database configuration</a></li>
+    </ul>
+  </li>
+  <li><a href="#installation">Install from source</a>
+    <ul>
+      <li><a href="#prepareinstall">Preparation</a></li>
+      <li><a href="#v4install">Install V4</a></li>
+      <li><a href="#masarinstall">Install masarService</a></li>
+    </ul>
+  </li>
+  <li><a href="#runserver">Run MASAR Server</a>
+    <ul>
+      <li><a href="#pythonc">Python/C module</a></li>
+      <li><a href="#pythonpath">PYTHONPATH</a></li>
+      <li><a href="#masardb">MASAR SQLite database</a></li>
+      <li><a href="#launchserver">Launch MASAR service</a></li>
+      <li><a href="#launchserver2">Launch MASAR with other name</a></li>
+      <li><a href="#stopserver">Stop MASAR service</a></li>
+    </ul>
+  </li>
+  <li><a href="#masarclient">MASAR Client</a>
+    <ul>
+      <li><a href="#pythonapi">Python API</a></li>
+      <li><a href="#clientgui">Default GUI</a></li>
+    </ul>
+  </li>
 </ul>
 </div>
 
@@ -99,94 +109,84 @@ channels from V3 IOC, and saves the data as a snapshot event into the database.
 
 <h2 class="nocount" id="status">Status of this Document</h2>
 
-<p>This is the 26-Mar-2012 version of the MASAR User Manual. </p>
+<p>This is the 2015-12-21 version of the MASAR User Manual. </p>
 
 <h2 id="introduction">Introduction</h2>
 
 <p>MASAR is implemented in C++ and Python. Network communication is implemented
-via the EPICS V4 channelRPC mechanism . The current implementation uses SQLite3
-for the relational database. A Python module PYMASAR provides access to
-SQLite3. </p>
+via the EPICS V4 channelRPC mechanism. </p>
+
+<p>It currently supports SQLite3 and MongoDB as its database backend. A Python
+module called PYMASAR provides access to backend database </p>
 
 <p>Since EPICS V4 channelRPC server is implemented in C++, the interface
 between the masar server and PYMASAR is implemented using Python/C. A Python
 API is provided for the client user, and a default PyQt4 GUI is developed for
 end user.</p>
 
-<p>The products are all part of the <a href="http://epics-pvdata.sourceforge.net">V4</a> implementation of <a href="http://www.aps.anl.gov/epics">Experimental Physics and Industrial Control
-System</a>, which are available via an <a href="http://epics-pvdata.sourceforge.net/LICENSE.html">open source
+<p>The products are all part of the <a
+href="http://epics-pvdata.sourceforge.net">V4</a> implementation of <a
+href="http://www.aps.anl.gov/epics">Experimental Physics and Industrial Control
+System</a>, which are available via an <a
+href="http://epics-pvdata.sourceforge.net/LICENSE.html">open source
 license</a>. </p>
 
-<p>For now the only way to obtain the MASAR service is from the sourceforge
-mercurial repository. Binary packages are available for Debian 7.0 (Wheezy).
-</p>
+<p>The source code is available for free from github.</p>
 
-<h2 id="note">NOTE
-</h2>
-<b>
-<ol>
-  <li>In the database, time is stored as UTC/POSIX time started from Jan, 1st, 1970. 
-    There is a constant time shift in second since the seconds past EPOCH used by
-    EPICS V3 starts from Jan 1st, 1990.
-  </li>
-  <li> Since all time stored in the RDB is in the UTC time format, the client
-    Python API returns all raw data, which means time is in UTC format. This 
-    impacts the API user.
-  </li>
-  <li> For the human being reading convenience, the default PyQt4 GUI displays
-    it in local time.
-  </li>
-  <li>All timestamps in service_event, service_config, and pv_group tables are
-    the time when inserting data into database. This means that the time stamp
-    for a particular snapshot is the time when the data is inserted into
-    database.</li>
-  <li>Since the enum is converted to a string, it captures its label (display
-    value) instead of its real value(0, 1, ...). Advantage doing that is if
-    there is any changes on enum label, it probably means some V3 IOC database
-    logic has changed. It is better to throw a message to show that explicitly.
-  </li>
-  <li> The compare and restore functions are provided only in PyQt4 GUI. Client
-    user needs to use Python Client API to compare any sets of snapshot data, and
-    manipulate the data.
-  </li>
-  <li> For restore function, instead of slowly and synchronously ramping 
-    the value to given setting point, the MASAR GUI sets the value whatever
-    it is to the IOC directly. It might be dangerous if IOC or other gateway does 
-    not protect it. The restore function sets only the stored value back to IOC.
-  </li>
-  <li> The restore function does not verify a pv is a read-back or set-point.
-  </li>
+<h2 id="note">NOTE </h2>
+
+<p><ol>
+  <li><b>In the database, time is stored as UTC/POSIX time started from Jan,
+    1st, 1970. There is a constant time shift in second since the seconds past
+    EPOCH used by EPICS V3 starts from Jan 1st, 1990. </b></li>
+  <li><b>Since all time stored in the RDB is in the UTC time format, the client
+    Python API returns all raw data, which means time is in UTC format. This
+    impacts the API user. </b></li>
+  <li><b>For the human being reading convenience, the default PyQt4 GUI
+    displays it in local time. </b></li>
+  <li><b>All timestamps in service_event, service_config, and pv_group tables
+    are the time when inserting data into database. This means that the time
+    stamp for a particular snapshot is the time when the data is inserted into
+    database.</b></li>
+  <li><b>Since the enum is converted to a string, it captures its label
+    (display value) instead of its real value(0, 1, ...). Advantage doing that
+    is if there is any changes on enum label, it probably means some V3 IOC
+    database logic has changed. It is better to throw a message to show that
+    explicitly. </b></li>
+  <li><b>The compare and restore functions are provided only in PyQt4 GUI.
+    Client user needs to use Python Client API to compare any sets of snapshot
+    data, and manipulate the data. </b></li>
+  <li><b>For restore function, instead of slowly and synchronously ramping the
+    value to given setting point, the MASAR GUI sets the value whatever it is
+    to the IOC directly. It might be dangerous if IOC or other gateway does not
+    protect it. The restore function sets only the stored value back to IOC.
+    </b></li>
+  <li><b>The restore function does not verify a pv is a read-back or set-point.
+    </b></li>
 </ol>
-</b>
+ </p>
+
 <h2 id="requirement">System Requirement</h2>
 
 <p>To run MASAR on you machine, Python and various EPICS V3 and V4 run-time
 library are required for both client and server. </p>
 
 <p>Python: </p>
-<ul>
-  <li>Python 2.7 or above</li>
-</ul>
-
+<ul> <li>Python 2.7 or above</li> </ul>
+<b>Caveat:</b> Python 3.x has not been tested yet.
 <p>EPICS modules: </p>
 <ul>
-  <li>EPICS V3 base R3.14.11 or above. Current release is R3.14.2, which can be
-    downloaded from <a href="http://www.aps.anl.gov/epics/base/R3-14/12.php">here</a>.<br>
-  </li>
-  <li><a href="http://epics-pvdata.sourceforge.net/">EPICS V4</a> (managed by
-    mercurial on source forge)<br>
-
+  <li>EPICS Base: 3.14.x, and/or 3.15.x</li>
+  <li><a href="http://epics-pvdata.sourceforge.net/">EPICS V4: </a>(>=4.5.0)<br>
+ For R4.5.0, a patch is needed for pvDataCPP module as mentioned by 
+ <a href="https://github.com/epics-base/pvDataCPP/issues/20">  
+  issue #20 </a> of pvDataCPP repo. <br>
+  A minimum set of V4 modules is listed as below:
     <ul>
-      <li><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/pvDataCPP/raw-file/tip/documentation/pvDataCPP.html">pvDataCPP</a>
-      </li>
-      <li><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/pvAccessCPP/raw-file/tip/documentation/pvAccessCPP.html">pvAccessCPP</a>
-      </li>
-      <li><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/pvIOCCPP/raw-file/tip/documentation/pvIOCCPP.html">pIOCCPP</a></li>
-      <li><a href="http://epics-pvdata.sourceforge.net/alpha/normativeTypes/normativeTypes.html">normativeTypes</a><br>
-        The normative types implementation is under alpha version, which is
-        under alphaCPP module.</li>
-      <li><a href="http://epics-pvdata.hg.sourceforge.net/hgweb/epics-pvdata/masarService/raw-file/tip/documentation/userManual.html">masarService</a>
-      </li>
+      <li>pvDataCPP</li>
+      <li>pvAccessCPP</li>
+      <li>normativeTypes</li>
+      <li>pvCommonCPP</li>
     </ul>
   </li>
 </ul>
@@ -203,13 +203,12 @@ library are required for both client and server. </p>
 
 <p>Currently, MASAR has been installed on the following systems:</p>
 <ul>
-  <li>Ubuntu 11.04 (Natty Narwhal)<br>
-  </li>
+  <li>Debian 8.0 (Jessie)</li>
   <li>Debian 7.0 (Wheezy)</li>
+  <li>Ubuntu 11.04 (Natty Narwhal)</li>
   <li>Fedora 14</li>
   <li>Fedora 16</li>
-  <li>Mac OS-X 10.6.8 (Snow Leopard)<br>
-  </li>
+  <li>Mac OS-X 10.6.8 (Snow Leopard)</li>
 </ul>
 
 <p></p>
@@ -264,18 +263,14 @@ to a particular status using a snapshot. </p>
     returns the result to the client.</li>
   <li>Channel Access Client: For now the only usage to to get the current value
     of a set of V3 channels.</li>
-  <li>DSL (data source layer): This is the interface between C++ and Python.
+  <li>DSL (data source layer): This is the interface between C++ and Python. 
     <ul>
-      <li>PYMASAR: A Python module to access SQLite3 database, which is
-        supported by default currently;</li>
-      <li>PYIRMIS: A Python module to access IRMIS/MySQL database, which will
-        be supported in the future.</li>
+      <li>PYMASAR: A Python module to access SQLite3/MongoDB database.</li>
     </ul>
   </li>
   <li>Data layer. 
     <ul>
       <li>IOC: live machine data;</li>
-      <li>IRMIS: static data, which can have all machine configuration.</li>
       <li>MASAR: embedded inside PYMASAR, which is dedicated to MASAR
       service.</li>
     </ul>
@@ -287,7 +282,7 @@ The MASAR server can take a snapshot for any combination of EPICS channels,
 including scalar channels of type string, enum, byte (8-bit), short (16-bit),
 int (32-bit), long (which is same with integer in EPICS V3), float, and double,
 and/or waveform/array pv with any above types except enum. Since the data types
-supported by both Python and SQLite3/IRMIS are string, int, and real, the types
+supported by both Python and SQLite3/MongoDB are string, int, and real, the types
 are casted as below: 
 
 <table>
@@ -321,15 +316,16 @@ there is any performance issue.
 
 <p>The MASAR server side supports 6 fundamental functions to talk with RDB: </p>
 <ol>
-  <li><b>retrieveServiceConfigProps</b>: current MASAR database schema defines an 
-  associated property table, service_config_prop, to host some user defined properties.
-  One typical use is which sub-system one particular configuration belongs to. This function
-  is to get a full list of sub-system that are defined for MASAR service in database.
-  </li>
+  <li><b>retrieveServiceConfigProps</b>: current MASAR database schema defines
+    an associated property table, service_config_prop, to host some user
+    defined properties. One typical use is which sub-system one particular
+    configuration belongs to. This function is to get a full list of sub-system
+    that are defined for MASAR service in database. </li>
   <li><b>retrieveServiceConfigs</b>: get a list of the snapshot configurations
     with filter based on snapshot names.</li>
   <li><b>retrieveServiceEvents</b>: get a list how many snapshot events have
-    been taken with filters based on snapshot names, author, and time range.</li>
+    been taken with filters based on snapshot names, author, and time
+  range.</li>
   <li><b>retrieveSnapshot</b>: get real snapshot data;</li>
   <li><b>saveSnapshot</b>: save a snapshot into database;</li>
   <li><b>updateSnapshotEvent</b>: update a particular snapshot, for example
@@ -337,46 +333,44 @@ there is any performance issue.
 </ol>
 Function <b>NOT supported</b> by the server: 
 <ol>
-  <li>Comparing two different snapshots. This is a function inside client part, and user
-  can do it using Python interface.</li>
-  <li>Comparing an archived snapshot with current live machine. This is a function 
-  inside client part, and is supported in PyQt4 GUI by default.</li>
-  <li>Restoring machine to a particular snapshot status. The MASAR server has 
-  unidirectional access to EPICS V3 IOC, which means reads value only. Restoring is
-  a function inside client part, and is supported in PyQt4 GUI by default.</li>
-  <li>Change pv name. We thought about pv name changes, but do not support
-    this function at current release.</li>
+  <li>Comparing two different snapshots. This is a function inside client part,
+    and user can do it using Python interface.</li>
+  <li>Comparing an archived snapshot with current live machine. This is a
+    function inside client part, and is supported in PyQt4 GUI by default.</li>
+  <li>Restoring machine to a particular snapshot status. The MASAR server has
+    unidirectional access to EPICS V3 IOC, which means reads value only.
+    Restoring is a function inside client part, and is supported in PyQt4 GUI
+    by default.</li>
+  <li>Change pv name. We thought about pv name changes, but do not support this
+    function at current release.</li>
   <li>Add new pv name to existing configuration. We thought about adding a new
-    pv name to a group, but do not support it at current release. Since adding a new
-    pv is changing the configuration definition in fact, it is encouraged to create a new
-    configuration. Please refer 
-    "Database configuration" section about how to create a new configuration. User 
-    is encouraged to define a new configuration, then ask service manager or database 
+    pv name to a group, but do not support it at current release. Since adding
+    a new pv is changing the configuration definition in fact, it is encouraged
+    to create a new configuration. Please refer "Database configuration"
+    section about how to create a new configuration. User is encouraged to
+    define a new configuration, then ask service manager or database
     administrator to load the configuration into database. </li>
   <li>Reuse configuration name. We have a request that new group maintains old
-    group name and old group becomes deprecated. But this is not in the initial 
+    group name and old group becomes deprecated. But this is not in the initial
     implementation.</li>
   <li>Version control for configuration changes. We considered to adopt version
     control to tracking configuration changes, for example, adding a new pv to
-    existing pv_group, changing group name, and so on. But this is not in the initial 
-    implementation.</li>
+    existing pv_group, changing group name, and so on. But this is not in the
+    initial implementation.</li>
 </ol>
 
 <h3 id="dataformat">Data Format </h3>
 
 <p>When a MASAR request is sent from client to server, NTNameValue type is used
 to carry parameters, which is as below: </p>
-<pre>
-structure NTNameValue
+<pre>structure NTNameValue
    string[]    names
    string[]    values
-   string      function xxxxxx // function name as above
-</pre>
+   string      function xxxxxx // function name as above</pre>
 The name/value pair is converted into a Python dictionary inside service layer,
-and transferred to PYMASAR/PYIRMIS layer. Acceptable names for above 6
+and transferred to PYMASAR layer. Acceptable names for above 6
 functions are listed as below: 
-<pre>
-retrieveServiceConfigProps:
+<pre>retrieveServiceConfigProps:
         names = ["propname", "servicename", "configname"]
 retrieveServiceConfigs:
         names = ["servicename", "configname", "system"]
@@ -387,23 +381,9 @@ retrieveSnapshot:
 saveSnapshot:
         names = ["servicename","configname","comment"]
 updateSnapshotEvent:
-        names = ["eventid", "user", "desc"]
-</pre>
+        names = ["eventid", "user", "desc"]</pre>
 
-<p>The results from server are carried using a NTTable as below: </p>
-<pre>
-structure NTTable
-    structure timeStamp
-        long secondsPastEpoch 0
-        int nanoSeconds 0
-        int userTag 0
-    structure alarm
-        int severity 0
-        int status 0
-        string message
-    string[] label [...]
-    ... // value field
-</pre>
+<p>The server return either a NTTable, or NTMultiChannel. </p>
 
 <h2 id="database">Relational Database </h2>
 
@@ -422,28 +402,12 @@ original schema is inherited from IRMIS, and now is as below:
   </tbody>
 </table>
 
-<h3 id="irmis">IRMIS Schema </h3>
-When IRMIS support is implemented the DSL layer will make switching between the
-different relational database almost seamless. However the database schemas
-must be similar. For example to minimize the effort when switching from SQLite
-to IRMIS, the IRMIS schema will be similar to the SQLite3 schema. 
-
-<table>
-  <tbody>
-    <tr>
-      <td><img src="masar/masar-eer.png" height="480" width="480"></td>
-    </tr>
-    <tr>
-      <td style="text-align: center;">MASAR IRMIS Schema</td>
-    </tr>
-  </tbody>
-</table>
 
 <h3 id="createdb">Create Database </h3>
 
 <p>This section is for <b>SQLite3</b> database only. The files for SQL are
 located in directory:</p>
-<pre>masarService/python/pymasar/db</pre>
+<pre>masarService/python/pymasarsqlite/db</pre>
 
 <p>The generated data base will be stored in a place You specify. You also need
 to create a directory that holds text files that each has a list of V3 channel
@@ -452,63 +416,49 @@ names. There is an example directory located in:</p>
 
 <p>It has a subdictory pvs that has example channel list files. For example
 pvs/example.txt contains:</p>
-<pre>
-masarExample0000
+<pre>masarExample0000
 masarExample0001
  ...
-masarExample0999
-</pre>
+masarExample0999</pre>
 
-<p>The SQL file is masars-qlite.sql. File createmasardb.py is the Python
-script that create an SQLite3 database. An example of how to create a MASAR
-database is:</p>
-<pre>
-$cd masarService/example
-$python ../python/pymasar/db/createmasardb.py
-</pre>
+<p>The SQL file is masars-qlite.sql. File createmasardb.py is the Python script
+that create an SQLite3 database. An example of how to create a MASAR database
+is:</p>
+<pre>$cd masarService/example
+$python ../python/pymasarsqlite/db/createmasardb.py</pre>
 This creates a new MASAR database called "masar.db" that is located in the
 example directory. If there is an error like: 
-<pre>
-create a new SQLite db.
+<pre>create a new SQLite db.
 Traceback (most recent call last):
-  File "../python/pymasar/db/createmasardb.py", line 109, in &lt;module&gt;
+  File "../python/pymasarsqlite/db/createmasardb.py", line 109, in &lt;module&gt;
     createMasarDb()
-  File "../python/pymasar/db/createmasardb.py", line 59, in createmasardb
-    from pymasar.db.masarsqlite import SQL
-ImportError: No module named pymasar.db.masarsqlite
-</pre>
+  File "../python/pymasarsqlite/db/createmasardb.py", line 59, in createmasardb
+    from pymasarsqlite.db.masarsqlite import SQL
+ImportError: No module named pymasarsqlite.db.masarsqlite</pre>
 Check the PYTHONPATH setting. 
 
 <p>If the "masar.db" exists already, you will be asked </p>
-<pre>
-SQLite database masar.db exists already.
-Do you want to overwrite it? Yes, [N]o (default = No):
-</pre>
+<pre>SQLite database masar.db exists already.
+Do you want to overwrite it? Yes, [N]o (default = No):</pre>
 
 <p>Choose Yes to overwrite current masar.db file, otherwise No.</p>
 
-<p>If you want to give database file a name instead of using default "masar.db",
-you can do </p>
-<pre>
-$ python ../python/pymasar/db/createmasardb.py -db test.db
+<p>If you want to give database file a name instead of using default
+"masar.db", you can do </p>
+<pre>$ python ../python/pymasarsqlite/db/createmasardb.py -db test.db
 SQLite3 database:  test.db
-create a new SQLite db: test.db.
-</pre>
+create a new SQLite db: test.db.</pre>
 
 <p>After created MASAR database, an environment variable needs to be set as
 (BASH environment) </p>
-<pre>
-export MASAR_SQLITE_DB=~/V4/masarService/example/masar.db
-</pre>
+<pre>export MASAR_SQLITE_DB=/full/path/to/masar.db</pre>
 If the database is named differently, use right database file name. 
 
 <h3 id="configdb">Database configuration </h3>
 
 <p>This section is also only for an SQLite3 database and again the files
 described below are located in:</p>
-<pre>
-masarService/python/pymasar/db
-</pre>
+<pre>masarService/python/pymasarsqlite/db</pre>
 
 <p>After creating the SQLite3 database, it has to be initialized, and some
 information about service configuration have to be configured in advance before
@@ -516,17 +466,15 @@ allowing MASAR server uses it. </p>
 
 <p>The database configuration, which is an administrative work, is separated
 from MASR service, and could be done through calling PYMASAR API. A Python
-Script, configmasardb.py, initializes and configures the database. This is also located in:</p>
-<pre>
-masarService/python/pymasar/db
-</pre>
+Script, configmasardb.py, initializes and configures the database. This is also
+located in:</p>
+<pre>masarService/python/pymasarsqlite/db</pre>
 
 <p>The following is an example showing how to configure MASAR database.</p>
 
 <p>Site-specific information is configured in settings.py, which has format as
 below:</p>
-<pre>
-# pv group name: [pv list file, description]
+<pre># pv group name: [pv list file, description]
 pvgroups= {
     'test':         ['example.txt', 'server test'],
     'wftest':       ['exampleWf.txt', 'server test with waveform'],
@@ -545,8 +493,7 @@ pvg2config= {
     'sr_test':   ['test'],
     'wf_test':   ['wftest'],
     'bwf_test':  ['wftest', 'bigwftest']
-}
-</pre>
+}</pre>
 
 <p>There are 3 variables defined in settings.py </p>
 <ol>
@@ -565,173 +512,111 @@ pvg2config= {
 <p>After the settings.py is configured, configmasardb.py creates the database.
 Assume the database is called masar.db, and is located in
 masarService/example</p>
-<pre>
-$ python ../python/pymasar/db/configmasardb.py
-</pre>
+<pre>$ python ../python/pymasarsqlite/db/configmasardb.py</pre>
 it requests the absolute path of pv list file directory. 
-<pre>
-Please give absolute ROOT PATH of your pv list files
-[default: /home/xxxx/V4/masarService/python/pymasar/db/pvs]:
-</pre>
+<pre>Please give absolute ROOT PATH of your pv list files
+[default: /full/path/to/pvs]:</pre>
 here give the pv list directory PATH, for example
-/home/xxxx/V4/masarService/pvs: 
-<pre>
-<span style="color: rgb(204, 0, 0);">/home/xxxx/V4/masarService/example/pvs</span>
-Use new ROOT: /home/xxxx/V4/masarService/example/pvs
-</pre>
+/full/path/to/pvs: 
+<pre><span style="color: rgb(204, 0, 0);">/full/path/to/pvs</span>
+Use new ROOT: /full/path/to/pvs</pre>
 
 <p>If the path is wrong, it raises an exception. After loading pv names into
 database, it tries to save configuration. If a configuration exists already, it
 reports for example, and ignores that configuration:</p>
-<pre>
-configuration name (bwf_test) exists already.
+<pre>configuration name (bwf_test) exists already.
 configuration name (sr_test) exists already.
-configuration name (wf_test) exists already.
-</pre>
+configuration name (wf_test) exists already.</pre>
 
 <p>After finished the database configuration, it is ready to launch MASAR
 server.</p>
 
 <h2 id="installation">Install from source</h2>
+
 <p>At current stage, all EPICS V4 packages are available as source code, which
 can be checked out from by sourceforge mercurial repository. To compile all V4
 module Python 2.7 and EPICS V3 development packages must be installed. EPICS V3
-base is available as a Debian package from <a href="http://epics.nsls2.bnl.gov/debian/">NSLS-II Debian package server</a>.
-Here we assume EPICS V3 base is installed under <span style="color: rgb(0, 153, 0);">/usr/lib/epics</span>.</p>
+base is available as a Debian package from <a
+href="http://epics.nsls2.bnl.gov/debian/">NSLS-II Debian package server</a>.
+Here we assume EPICS V3 base is installed under <span
+style="color: rgb(0, 153, 0);">/usr/lib/epics</span>.</p>
 
-<p>
-A step-by-step installation is introduced here, and the example is to show how
-to install whole packages on Ubuntu 11.04 x86_64 system. You should be able to
-install all modules on other systems following the same procedure. You can
-check your system architecture using for example on linux: 
-</p>
-<pre>
-$ uname -m
-x86_64
-</pre>
+<p>A step-by-step installation is introduced here, and the example is to show
+how to install whole packages on Ubuntu 11.04 x86_64 system. You should be able
+to install all modules on other systems following the same procedure. You can
+check your system architecture using for example on linux: </p>
+<pre>$ uname -m
+x86_64</pre>
 
 <h3 id="prepareinstall">Preparation</h3>
-<p>Here we assume you want to install all modules under ~/V4</p>
+Here let's assume that the EPICS Base is installed under <strong>/usr/lib/epics</strong>,
+<br>
+and all V4 modules are under <strong>/usr/lib/epics/V4</strong>. 
 
-<pre>
-$ cd
-$ mkdir V4
-$ cd V4
-$ hg clone http://epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/pvDataCPP
-$ hg clone http://epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/pvAccessCPP
-$ hg clone http://epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/pvIOCCPP
-$ hg clone http://epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/normativeTypesCPP
-$ hg clone http://epics-pvdata.hg.sourceforge.net/hgroot/epics-pvdata/masarService
-</pre>
+<p>If you are inside an internal network, and have some proxy setting, you
+might hit a connection error during cloning a module like:</p>
+<pre>abort: error: Connection refused</pre>
 
-<p>If you are inside an internal network, and have some proxy setting, you might hit a
-connection error during cloning a module like:</p>
-<pre>
-abort: error: Connection refused
-</pre>
-<p>Please consulate your network manager, or you can try to set your
-http_proxy environment, for example, on BASH shell:</p>
-<pre>
-export http_proxy=http://your.proxy.server.name:port
-</pre>
-
+<p>Please consulate your network manager, or you can try to set your http_proxy
+environment, for example, on BASH shell:</p>
+<pre>export http_proxy=http://your.proxy.server.name:port</pre>
 NOTE: Make sure you have following line in each module in configure/RELEASE.
 Suggest to put it as the last line if it is not. 
-<pre>
--include $(TOP)/configure/RELEASE.local
-</pre>
+<pre>-include $(TOP)/configure/RELEASE.local</pre>
 
-<h3 id="pvdatainstall">Install pvDataCPP </h3>
-<pre>
-$ cd pvDataCPP
-</pre>
-Add the following to configure/RELEASE.local 
-<pre>
-EPICS_BASE=/usr/lib/epics
-</pre>
-Then 
-<pre>
-$ make
-</pre>
-
-<h3 id="pvaccessinstall">Install pvAccessCPP</h3>
-<pre>
-$ cd ../pvAccessCPP
-</pre>
-Add the following to configure/RELEASE.local 
-<pre>
-PVDATA=~/V4/pvDataCPP
-EPICS_BASE=/usr/lib/epics
-</pre>
-Then 
-<pre>
-$ make
-</pre>
-
-<h3 id="pviocinstall">Install pvIOCCPP</h3>
-<pre>
-$ cd ../pvIOCCPP
-</pre>
-Add the following to configure/RELEASE.local 
-<pre>
-PVDATA=~/V4/pvDataCPP
-PVACCESS=~/V4/pvAccessCPP
-EPICS_BASE=/usr/lib/epics
-</pre>
-Then 
-<pre>
-$ make
-</pre>
-
-<h3 id="ntinstall">Install normativeTypes</h3>
-<pre>
-$ cd ../normativeTypesCPP/
-</pre>
-Add the following to configure/RELEASE.local 
-<pre>
-PVDATA=~/V4/pvDataCPP<br>PVACCESS=~/V4/pvAccessCPP<br>EPICS_BASE=/usr/lib/epics
-</pre>
-Then 
-<pre>
-$ make
-</pre>
+<h3 id="pvdatainstall">Install EPICS V4 </h3>
+The latest MASAR needs EPICS V4 R4.5.0 and above. For R4.5.0, a patch is needed for
+pvDataCPP module as discussed in <a href="https://github.com/epics-base/pvDataCPP/issues/20">  
+  issue #20 </a> of pvDataCPP repo.
+<br>
+User can follow the instruction of <a href="http://epics-pvdata.sourceforge.net/gettingStarted.html">
+Getting Started</a> with EPICS V4 <a href="http://epics-pvdata.sourceforge.net/gettingStarted.html#c++_development">
+section 3</a> to compile the needed V4 modules.
 
 <h3 id="masarinstall">Install masarService</h3>
-<pre>
-$ cd ../../masarService/cpp
+
+Get latest from its github repo:
+<pre>$ hg clone https://github.com/epics-base/masarService.git
+$ cd masarService
 </pre>
-Add the following to configure/RELEASE.local 
-<pre>
-PYTHON=python2.7
+Verify the following to RELEASE.local (example for Debian 8 with above install assumption):
+
+<pre>PYTHON=python2.7
 PYTHON_BASE=/usr
-$(PYTHON)_DIR = $(PYTHON_BASE)/lib/$(PYTHON)/config
-NUMPY_CORE=${PYTHON_BASE}/lib/${PYTHON}/site-packages/numpy/core
+$(PYTHON)_DIR = $(PYTHON_BASE)/lib/$(PYTHON)/config-x86_64-linux-gnu
 
-PVDATA=~/V4/pvDataCPP
-PVACCESS=~/V4/pvAccessCPP
-PVIOC=~/V4/pvIOCCPP
-NTTYPE=~/V4/alphaCPP/normativeTypes
-
+EV4_BASE=/usr/lib/epics/V4
+PVACLIENT=$(EV4_BASE)/pvaClientCPP
+PVDATABASE=$(EV4_BASE)/pvDatabaseCPP
+PVASRV=$(EV4_BASE)/pvaSrv
+PVACCESS=$(EV4_BASE)/pvAccessCPP
+NORMATIVETYPES=$(EV4_BASE)/normativeTypesCPP
+PVDATA=$(EV4_BASE)/pvDataCPP
+PVCOMMON=$(EV4_BASE)/pvCommonCPP
 EPICS_BASE=/usr/lib/epics
 </pre>
-<p><b>Caveat:</b> On multi-arch systems, the <tt>/lib/</tt> directory part might have to be replaced
-with a different string, including the architecture name triplet.
-E.g., <tt>/lib/x86-linux-gnu/</tt>.</p>
 
-<p>Then</p>
-<pre>
-$ make
-</pre>
+<p><b>Caveat:</b> 
+<ol>
+  <li>On multi-arch systems, the <tt>/lib/</tt> directory part
+      might have to be replaced with a different string, including the architecture
+      name triplet. E.g., <tt>/lib/x86-linux-gnu/</tt>;</li>
+  <li>On different systems, <tt>/config-x86_64-linux-gnu</tt>  directory part might have 
+      to be replaced with a different string. E.g., <tt>/config</tt>.</li>
+</ol>
+
+</p>
+
+<p>After that, execute </p>
+<pre>$ make</pre>
+
 <p>The installation procedure is complete if the above is successful.</p>
 
 <p>If it hits a problem like</p>
-<pre>
- fatal error: Python.h: No such file or directory
-</pre>
-it means the python devel library is not installed. Please check your system, and install missing library. For example, on a debian dist:
-<pre>
-sudo apt-get install python2.7-dev
-</pre>
+<pre> fatal error: Python.h: No such file or directory</pre>
+it means the python devel library is not installed. Please check your system,
+and install missing library. For example, on a debian dist: 
+<pre>sudo apt-get install python2.7-dev</pre>
 
 <h2 id="runserver">Run MASAR Server</h2>
 
@@ -741,163 +626,129 @@ last step is to prepare and check the Python environment.</p>
 <h3 id="pythonc">Python/C module</h3>
 Python looks for the shared library to load modules. You need to create some
 symbol links if it is not done yet. 
-<pre>
-$ cd
-$ cd ~/V4/masarService/cpp/src/python
-$ python generateSOLinks.py
-</pre>
+<pre>$ cd
+$ cd /usr/lib/epics/V4/masarService/cpp/src/python
+$ python generateSOLinks.py</pre>
 If you did not set EPICS_HOST_ARCH environment, you will be promoted as below: 
-<pre>
-EPICS_HOST_ARCH is not setted.
-Please specify EPICS_HOST_ARCH:
-</pre>
+<pre>EPICS_HOST_ARCH is not setted.
+Please specify EPICS_HOST_ARCH:</pre>
 
 <p>You can specify your host architecture here, for example, linux-x86_64 if
 you are using a 64-bit linux machine. An error will occur as below if the
 EPICS_HOST_ARCH is wrong:</p>
-<pre>
-EPICS_HOST_ARCH is not setted.
+<pre>EPICS_HOST_ARCH is not setted.
 Please specify EPICS_HOST_ARCH:linux-x86
 Traceback (most recent call last):
   File "generateSOLinks.py", line 32, in &lt;module&gt;
     fileList = os.listdir(libDir)
-OSError: [Errno 2] No such file or directory: '../../lib/linux-x86'
-</pre>
+OSError: [Errno 2] No such file or directory: '../../lib/linux-x86'</pre>
 
 <p>An alternative solution is to set the environment before running
 generateSOLinks.py, for example:</p>
-<pre>
-$ export EPICS_HOST_ARCH=linux-x86_64
-</pre>
+<pre>$ export EPICS_HOST_ARCH=linux-x86_64</pre>
 
 <h3 id="pythonpath">PYTHONPATH</h3>
 The PYTHONPATH must be defined as follows. It could be defined in .bash_profile 
-<pre>
-$ export PYTHONPATH=~/V4/masarService/python
-$ export PYTHONPATH=${PYTHONPATH}:~/V4/masarService/cpp/src/python
-</pre>
+<pre>$ export PYTHONPATH=/usr/lib/epics/V4/masarService/python
+$ export PYTHONPATH=${PYTHONPATH}:/usr/lib/epics/V4/masarService/cpp/src/python</pre>
 
 <h3 id="masardb">MASAR SQLite database</h3>
 You also need to set the MASAR_SQLITE_DB to allow PYMASAR module to find the
-SQLite3 database. Here is an example. It can also be put in .bash_profile
-<pre>
-$ export MASAR_SQLITE_DB=~/V4/masarService/example/masar.db
-</pre>
+SQLite3 database. Here is an example. It can also be put in .bash_profile 
+<pre>$ export MASAR_SQLITE_DB=/usr/lib/epics/V4/masarService/example/masar.db</pre>
 
 <p>Now it is ready to go.</p>
 
 <h3 id="launchserver">Launch MASAR service</h3>
+
 <p>The following packages are needed to run MASAR server.</p>
 <ul>
   <li>Python 2.7 or above</li>
   <li>SQLite3 3.7 or above</li>
 </ul>
-<pre>
-$ cd ~/V4/masarService/cpp
-$ ./bin/linux-x86_64/masarServiceRun
-</pre>
+<pre>$ cd /usr/lib/epics/V4/masarService/cpp
+$ ./bin/linux-x86_64/masarServiceRun</pre>
 You will see the following output 
-<pre>
-ChannelBaseProvider::ChannelBaseProvider pvService
-VERSION : CA Server v0.9.0
-PROVIDER_NAMES : pvService
+<pre>Using SQLite as backend.
+DB file:  /usr/lib/epics/V4/masarService/example/masar.db
+pvAccess Server v4.1.2
+VERSION : pvAccess Server v4.1.2
+PROVIDER_NAMES : rpcService
 BEACON_ADDR_LIST :
 AUTO_BEACON_ADDR_LIST : 1
 BEACON_PERIOD : 15
-BROADCAST_PORT : 5067
-SERVER_PORT : 5066
+BROADCAST_PORT : 5076
+SERVER_PORT : 5075
 RCV_BUFFER_SIZE : 16384
 IGNORE_ADDR_LIST:
 STATE : INITIALIZED
-masarService
-Type exit to stop:
-</pre>
+===Starting channel RPC server: masarService
+===Use CTRl-D or exit() command to stop server.
+masarService></pre>
 
-<p>You have started the server now successfully. However, if you see this
-output:</p>
-<pre>
-ChannelBaseProvider::ChannelBaseProvider pvService
-VERSION : CA Server v0.9.0
-PROVIDER_NAMES : pvService
+You have started the server now successfully. You might see a slightly different output if you are using MongoDB as backend.
+<p> However, if you see this:</p>
+<pre><span style="color: rgb(204, 0, 0);">DSL_RDB::init dslPY does not exist or is not a python module</span>
+pvAccess Server v4.1.2
+VERSION : pvAccess Server v4.1.2
+PROVIDER_NAMES : rpcService
 BEACON_ADDR_LIST :
 AUTO_BEACON_ADDR_LIST : 1
 BEACON_PERIOD : 15
-BROADCAST_PORT : 5067
-SERVER_PORT : 5066
+BROADCAST_PORT : 5076
+SERVER_PORT : 5075
 RCV_BUFFER_SIZE : 16384
 IGNORE_ADDR_LIST:
 STATE : INITIALIZED
-<span style="color: rgb(204, 0, 0);">DSL_RDB::init dslPY does not exist or is not a python module</span>
-masarService
-Type exit to stop:
+===Starting channel RPC server: masarService
+===Use CTRl-D or exit() command to stop server.
+masarService>
 </pre>
 
-<p>which means either the PYTHONPATH is not set correctly, or MASAR can not
-find. Check the MASAR_SQLITE_DB and PYTHONPATH.</p>
+<p>which means either the PYTHONPATH is not set correctly, or MASAR database can not be found or
+not writable. Check PYTHONPATH, MASAR_SQLITE_DB and its permission.</p>
 
 <h3 id="launchserver2">Launch MASAR with other name</h3>
 Above description explains how to launch MASAR service with default name. Since
 a client uses the name to communicate with server, the server name can be given
 when launching it as below, for example to name the RPC channel as
 "MASARSERVICE:TEST:EXAMPLE": 
-<pre>
-$ cd ~/V4/masarService/cpp
-$ ./bin/linux-x86_64/masarServiceRun MASARSERVICE:TEST:EXAMPLE
-</pre>
+<pre>$ cd /usr/lib/epics/V4/masarService/cpp
+$ ./bin/linux-x86_64/masarServiceRun MASARSERVICE:TEST:EXAMPLE</pre>
 it will shows 
-<pre>
-ChannelBaseProvider::ChannelBaseProvider pvService
-VERSION : CA Server v0.9.0
-PROVIDER_NAMES : pvService
+<pre>Using SQLite as backend.
+DB file:  /Users/shen/Development/epics/masarService/example/masar.db
+pvAccess Server v4.1.2
+VERSION : pvAccess Server v4.1.2
+PROVIDER_NAMES : rpcService
 BEACON_ADDR_LIST :
 AUTO_BEACON_ADDR_LIST : 1
 BEACON_PERIOD : 15
-BROADCAST_PORT : 5067
-SERVER_PORT : 5066
+BROADCAST_PORT : 5076
+SERVER_PORT : 5075
 RCV_BUFFER_SIZE : 16384
 IGNORE_ADDR_LIST:
 STATE : INITIALIZED
-<span style="color: rgb(204, 0, 0);">MASARSERVICE:TEST:EXAMPLE</span>
-Type exit to stop:
-</pre>
-
-<h3 id="stopserver">Stop MASAR service</h3>
-
-<p>To stop server, type "exit" and you will get the following message:</p>
-<pre>
-Type exit to stop: 
-exit
-ServiceChannelRPC::~ServiceChannelRPC()
-MasarService::destroy()
-PVServiceProvider::unregister
-PVServiceProvider::~PVServiceProvider
-PVServiceProvider::destroy
-void PVTop::destroy()
-PVTop::~PVTop()
-MasarService::~MasarService()
-close SQLite3 connection.
-ChannelBaseProvider::~ChannelBaseProvider
-timerNode:  totalConstruct 1 totalDestruct 1
-blockingUDPTransport:  totalConstruct 1 totalDestruct 1
-timer:  totalConstruct 1 totalDestruct 1
-LinkedList:  totalConstruct 4 totalDestruct 4
-LinkedListNode:  totalConstruct 6 totalDestruct 6
-event:  totalConstruct 5 totalDestruct 5
+===Starting channel RPC server: <span style="color: rgb(204, 0, 0);">MASARSERVICE:TEST:EXAMPLE</span>
+===Use CTRl-D or exit() command to stop server.
+masarService>
 </pre>
 
 <h2 id="masarclient">MASAR Client</h2>
+
 <p>There are 2 ways to use MASAR client, using either the Python API or the
 default PyQt4 GUI.</p>
 
 <h3 id="pythonapi">Python API</h3>
 The client API is defined in masarClient.py. 
 <ol>
-<li>client.<b>retrieveSystemList</b>()</li>
-<p>Retrieve all system and return as a list, or False if failed. 
-An example:</p>
-<p>Example:</p>
-<pre>
-import sys
+  <li>client.<b>retrieveSystemList</b>()</li>
+
+  <p>Retrieve all system and return as a list, or False if failed. An
+  example:</p>
+
+  <p>Example:</p>
+  <pre>import sys
 
 from masarclient import masarClient
 from masarclient.channelRPC import epicsExit
@@ -915,32 +766,24 @@ result = mc.retrieveSystemList()
 print result
 
 # Call this function before exit.
-sys.exit(epicsExit())
-</pre>
+sys.exit(epicsExit())</pre>
+  <li>client.<b>retrieveServiceConfigs</b>(params) </li>
 
-<li>
-client.<b>retrieveServiceConfigs</b>(params)
-</li>
-<p>
-Retrieve all configuration information. The params is as a dictionary which can
-have any combination of the following keys:<br>
-key names: </p>
-<pre>
-["servicename", "configname", "system"]
-</pre>
-It returns all configurations that satisfies the search constrains, or False if
-failed:<br>
+  <p>Retrieve all configuration information. The params is as a dictionary
+  which can have any combination of the following keys:<br>
+  key names: </p>
+  <pre>["servicename", "configname", "system"]</pre>
+  It returns all configurations that satisfies the search constrains, or False
+  if failed:<br>
 
-<pre>
-config id []
+  <pre>config id []
 config name []
 config description []
-version []
-</pre>
-The version is a reserved function for future. 
-<p>Example:</p>
-<pre>
-import sys
+version []</pre>
+  The version is a reserved function for future. 
+
+  <p>Example:</p>
+  <pre>import sys
 
 from masarclient import masarClient
 from masarclient.channelRPC import epicsExit
@@ -958,32 +801,27 @@ result = mc.retrieveServiceConfigs(params)
 print result
 
 # Call this function before exit.
-sys.exit(epicsExit())
-</pre>
+sys.exit(epicsExit())</pre>
+  <li>client.<b>retrieveServiceEvents</b>(params)</li>
 
-<li>client.<b>retrieveServiceEvents</b>(params)</li>
-<p>Retrieve all events including event id, user comment, user name, and UTC
-time.<br>
-It retrieves all events without any V3 IOC data. The params is as a dictionary
-which can have any combination of the following keys:<br>
-key names:</p>
-<pre>
-["configid", "start", "end", "comment", "user"]
-</pre>
-<p>The value of each key needs to be a string. The "start" and "end" is for time
-range in UTC format.<br>
-It returns all event list that satisfies the search constrains, or False if
-failed:</p>
-<pre>
-event id []
+  <p>Retrieve all events including event id, user comment, user name, and UTC
+  time.<br>
+  It retrieves all events without any V3 IOC data. The params is as a
+  dictionary which can have any combination of the following keys:<br>
+  key names:</p>
+  <pre>["configid", "start", "end", "comment", "user"]</pre>
+
+  <p>The value of each key needs to be a string. The "start" and "end" is for
+  time range in UTC format.<br>
+  It returns all event list that satisfies the search constrains, or False if
+  failed:</p>
+  <pre>event id []
 event description []
 UTC date time  []
-author/user []
-</pre>
+author/user []</pre>
 
-<p>Example:</p>
-<pre>
-import sys
+  <p>Example:</p>
+  <pre>import sys
 
 from masarclient import masarClient
 from masarclient.channelRPC import epicsExit
@@ -1001,24 +839,21 @@ result = mc.retrieveServiceEvents(params)
 print result
 
 # Call this function before exit.
-sys.exit(epicsExit())
-</pre>
+sys.exit(epicsExit())</pre>
+  <li>client.<b>retrieveSnapshot</b>(params)</li>
 
-<li>client.<b>retrieveSnapshot</b>(params)</li>
-<p>Retrieve a particular snapshot, which is flagged to be an approved snapshot,
-with all pv data.<br>
-The params is as a dictionary which can have any combination of the following
-keys:<br>
-key names:</p>
-<pre>
-["eventid", "start", "end", "comment"]
-</pre>
+  <p>Retrieve a particular snapshot, which is flagged to be an approved
+  snapshot, with all pv data.<br>
+  The params is as a dictionary which can have any combination of the following
+  keys:<br>
+  key names:</p>
+  <pre>["eventid", "start", "end", "comment"]</pre>
 
-<p>The value of each key needs to be a string. The "start" and "end" is for time
-range in UTC format.<br>
-It returns snapshot that satisfies the search constrains, or False if failed:</p>
-<pre>
-pv name []
+  <p>The value of each key needs to be a string. The "start" and "end" is for
+  time range in UTC format.<br>
+  It returns snapshot that satisfies the search constrains, or False if
+  failed:</p>
+  <pre>pv name []
 string value []
 double value []
 long value []
@@ -1029,15 +864,13 @@ nanoSeconds []
 alarmSeverity []
 alarmStatus []
 is_array []
-array_value [[]]
-</pre>
+array_value [[]]</pre>
 
-<p>For a scalar pv, its value is carried in string, double and long. For a
-waveform/array, its value is carried in array_value. Client needs to check the
-pv is an array by checking is_array, and check its data type by checking
-dbr_type.</p>
-<pre>
-        # DBR_TYPE definition defined in db_access.h
+  <p>For a scalar pv, its value is carried in string, double and long. For a
+  waveform/array, its value is carried in array_value. Client needs to check
+  the pv is an array by checking is_array, and check its data type by checking
+  dbr_type.</p>
+  <pre>        # DBR_TYPE definition defined in db_access.h
         #define DBF_STRING      0
         #define DBF_INT         1
         #define DBF_SHORT       1
@@ -1052,12 +885,10 @@ dbr_type.</p>
         epicsLong   =   [1, 4, 5]
         epicsString =   [0, 3]
         epicsDouble =   [2, 6]
-        epicsNoAccess = [7]
-</pre>
+        epicsNoAccess = [7]</pre>
 
-<p>Example:</p>
-<pre>
-import sys
+  <p>Example:</p>
+  <pre>import sys
 
 from masarclient import masarClient
 from masarclient.channelRPC import epicsExit
@@ -1074,26 +905,22 @@ result = mc.retrieveSnapshot(params)
 print result
 
 # Call this function before exit.
-sys.exit(epicsExit())
-</pre>
+sys.exit(epicsExit())</pre>
+  <li>client.<b>saveSnapshot</b>(params)</li>
 
+  <p>This function is to take a machine preview. It gives user a opportunity to
+  confirm whether the snapshot is good or not. The data will be saved into
+  database with a default flag to identify that this preview is not approved by
+  the user yet. The params is as a dictionary which can have any combination of
+  the following keys:<br>
+  (key names):</p>
+  <pre>["servicename","configname","comment"]</pre>
+  The value of each key needs to be a string. It saves all data into database,
+  and returns the same data back to the client, which means the return data is
+  same the retrieveSnapshot function. 
 
-<li>client.<b>saveSnapshot</b>(params)</li>
-<p>This function is to take a machine preview. It gives user a opportunity to confirm
-whether the snapshot is good or not. The data will be saved into database with a default
-flag to identify that this preview is not approved by the user yet. 
-The params is as a dictionary which can have any combination of the following
-keys:<br>
-(key names):</p>
-<pre>
-["servicename","configname","comment"]
-</pre>
-The value of each key needs to be a string. It saves all data into database,
-and returns the same data back to the client, which means the return data is
-same the retrieveSnapshot function. 
-<p>Example:</p>
-<pre>
-import sys
+  <p>Example:</p>
+  <pre>import sys
 
 from masarclient import masarClient
 from masarclient.channelRPC import epicsExit
@@ -1111,22 +938,19 @@ result = mc.saveSnapshot(params)
 print result
 
 # Call this function before exit.
-sys.exit(epicsExit())
-</pre>
+sys.exit(epicsExit())</pre>
+  <li>client.<b>updateSnapshotEvent</b>(params)</li>
 
-<li>client.<b>updateSnapshotEvent</b>(params)</li>
-<p>Flag a particular snapshot to be approved..<br>
-The params is as a dictionary which can have any combination of the following
-keys:<br>
-key names:</p>
-<pre>
-["eventid", "user", "desc"]
-</pre>
-The value of each key needs to be a string. It returns True if succeeded,
-otherwise, false. 
-<p>Example:</p>
-<pre>
-import sys
+  <p>Flag a particular snapshot to be approved..<br>
+  The params is as a dictionary which can have any combination of the following
+  keys:<br>
+  key names:</p>
+  <pre>["eventid", "user", "desc"]</pre>
+  The value of each key needs to be a string. It returns True if succeeded,
+  otherwise, false. 
+
+  <p>Example:</p>
+  <pre>import sys
 
 from masarclient import masarClient
 from masarclient.channelRPC import epicsExit
@@ -1145,30 +969,26 @@ result = mc.updateSnapshotEvent(params)
 print result
 
 # Call this function before exit.
-sys.exit(epicsExit())
-</pre>
+sys.exit(epicsExit())</pre>
+  <li>client.<b>getLiveMachine</b>(params)</li>
 
-<li>client.<b>getLiveMachine</b>(params)</li>
-<p>
-Get live data with given pv list. Following the same params format, it uses pv
-name as both key and value. It returns</p>
-<pre>
-pv name []
+  <p>Get live data with given pv list. Following the same params format, it
+  uses pv name as both key and value. It returns</p>
+  <pre>pv name []
 string value []
 double value []
 long value []
 dbr_type []
 isConnected []
 is_array []
-array_value [[]]
-</pre>
-Same as retrieveSnapshot function, for a scalar pv, its value is carried in
-string, double and long. For a waveform/array, its value is carried in
-array_value. Client needs to check the pv is an array by checking is_array, and
-check its data type by checking dbr_type. 
-<p>Example:</p>
-<pre>
-import sys
+array_value [[]]</pre>
+  Same as retrieveSnapshot function, for a scalar pv, its value is carried in
+  string, double and long. For a waveform/array, its value is carried in
+  array_value. Client needs to check the pv is an array by checking is_array,
+  and check its data type by checking dbr_type. 
+
+  <p>Example:</p>
+  <pre>import sys
 
 from masarclient import masarClient
 from masarclient.channelRPC import epicsExit
@@ -1201,237 +1021,24 @@ result = mc.getLiveMachine(params)
 print result
 
 # Call this function before exit.
-sys.exit(epicsExit())
-</pre>
-
+sys.exit(epicsExit())</pre>
 </ol>
+
 <h3 id="clientgui">Default GUI</h3>
 A default GUI is developed using PyQt4. A start script can be found under
-masarService/cpp. Here assume the MASAR server has been started with the name
-"MASARSERVICE:TEST:EXAMPLE". Client GUI can be launched as below: 
-<pre>
-$ python masar MASARSERVICE:TEST:EXAMPLE
-</pre>
+masarService. By default, client GUI can be launched by:
+<pre>$ python masar</pre>
 
-<p>A GUI will be launched as:</p>
-<table>
-  <tbody>
-    <tr>
-      <td><img src="masar/MasarViewer.png" height="380" width="480"></td>
-    </tr>
-    <tr>
-      <td style="text-align: center;">MASAR Main Page</td>
-    </tr>
-  </tbody>
-</table>
-
-<p>If it can not connect to the MASAR server, a warning dialog will pop up as:</p>
-<table>
-  <tbody>
-    <tr>
-      <td><img src="masar/MasarNoService.png" height="166" width="420"></td>
-    </tr>
-    <tr>
-      <td style="text-align: center;">MASAR No Service Dialog</td>
-    </tr>
-  </tbody>
-</table>
-
-<p>If server is connected successfully, all systems are available as:</p>
-<table>
-  <tbody>
-    <tr>
-      <td><img src="masar/MASARSystem.png" height="375" width="480"></td>
-    </tr>
-    <tr>
-      <td style="text-align: center;">System selection</td>
-    </tr>
-  </tbody>
-</table>
-
-<p>After selected desired system, click on "Fetch Config(s)" button, all
-configurations for selected system are retrieved from database and shown in
-configure table as:</p>
-<table>
-  <tbody>
-    <tr>
-      <td><img src="masar/MASARConfig.png" height="375" width="480"></td>
-    </tr>
-    <tr>
-      <td style="text-align: center;">MASAR Configuration List</td>
-    </tr>
-  </tbody>
-</table>
-
-<p>To select a configuration, click on a row on the configure table, or hold Ctrl
-key if using for example Linux, or Command key for MAC OS-X + click on
-different row to select multiple configurations. User is able also to filter
-the event description, author/user name, and time range.<br>
-After selected configure(s), click on "Fetch Event(s)" button to retrieve event
-list.</p>
-<table>
-  <tbody>
-    <tr>
-      <td><img src="masar/MASAREvent.png" height="375" width="480"></td>
-    </tr>
-    <tr>
-      <td style="text-align: center;">MASAR Event List</td>
-    </tr>
-  </tbody>
-</table>
-
-<p>If the event table shows nothing above, it means there is no qualified event
-snapshot for that configuration with given constrains.<br>
-<br>
-To take a machine snapshot, select one configuration, then click on "Preview
-Button". A machine preview will be taken, and get a result like:</p>
-<table>
-  <tbody>
-    <tr>
-      <td><img src="masar/MASARPreview.png" height="375" width="480"></td>
-    </tr>
-    <tr>
-      <td style="text-align: center;">MASAR Snapshot Preview</td>
-    </tr>
-  </tbody>
-</table>
-
-<p>If there is nothing showing up, it means probably no pv can be connected.<br>
-After verifying the preview, click "Save Current Preview" button to flag this
-preview approved. A dialog will pop up to confirm as below:</p>
-<table>
-  <tbody>
-    <tr>
-      <td><img src="masar/MASARSavePreviewDlg.png" height="243" width="500"></td>
-    </tr>
-    <tr>
-      <td style="text-align: center;">MASAR Approval Dialog</td>
-    </tr>
-  </tbody>
-</table>
-
-<p>By clicking "Yes", a comment dialog will pop up to ask for Author for who does
-this, and comment as:</p>
-<table>
-  <tbody>
-    <tr>
-      <td><img src="masar/MASARPreviewComment.png" height="316" width="496"></td>
-    </tr>
-    <tr>
-      <td style="text-align: center;">MASAR Snapshot Comment</td>
-    </tr>
-  </tbody>
-</table>
-
-<p>Click "OK" after done. A success message dialog will show up as:</p>
-<table>
-  <tbody>
-    <tr>
-      <td><img src="masar/MASARPreviewDone.png" height="243" width="382"></td>
-    </tr>
-    <tr>
-      <td style="text-align: center;">MASAR Snapshot Approved</td>
-    </tr>
-  </tbody>
-</table>
-
-<p>After saved it, it should appear in event table as follow if clicking "Fetch
-Snapshot(s)" and make sure correct time range if "Use time range" is checked.</p>
-<table>
-  <tbody>
-    <tr>
-      <td><img src="masar/MASARSnapshot.png" height="387" width="480"></td>
-    </tr>
-    <tr>
-      <td style="text-align: center;">MASAR Snapshot</td>
-    </tr>
-  </tbody>
-</table>
-
-<p>It can be selected, and appear on right side window by clicking "Fetch
-Snapshot".</p>
-
-<p>To compare a snapshot with live machine, just click "Compare Live Machine"
-button, and all live data will display on the same window for all available pv
-data as below:</p>
-<table>
-  <tbody>
-    <tr>
-      <td><img src="masar/MASARCompare.png" height="387" width="480"></td>
-    </tr>
-    <tr>
-      <td style="text-align: center;">MASAR Compare a Snapshot With Live
-      Machine</td>
-    </tr>
-  </tbody>
-</table>
-
-<p>The difference between snapshot and live machine will be calculated for a
-scalar pv. For an array pv, a pop-up dialog will be displayed by double
-clicking on either "Saved Value" cell or "Live value" cell as:</p>
-<table>
-  <tbody>
-    <tr>
-      <td><img src="masar/MASARArrayCompare.png" height="302" width="188"></td>
-    </tr>
-    <tr>
-      <td style="text-align: center;">MASAR Compare Array PV</td>
-    </tr>
-  </tbody>
-</table>
-
-<p>It will display how many points in saved data, and how many in live data, and
-detailed data value.<br>
-To restore the machine, select one snapshot, and click "Restore Machine"
-button.<br>
-If for any reasons, an operator does not want to restore all pvs, the
-operation can be done by checking some pv as below (the masarExample001
-will not be restored.):</p>
-<div style="text-align: center;">
-<img style="width: 600px; height: 432px;" alt="" src="masar/NoRestoreSelectedPv.png">
-</div>
-<p>A dialog will be poped up as below to confirm this operation since it might be dangerous.</p>
-<div style="text-align: center;">
-<img style="width: 500px; height: 243px;" alt="" src="masar/NoRestoreAll.png">
-</div>
-
-<p>After finished restoring, a dialog will pop up to show either succeed to restore machine or fail
-as:</p>
-<table>
-  <tbody>
-    <tr>
-      <td><img src="masar/MASARRestore.png" height="243" width="500"></td>
-    </tr>
-    <tr>
-      <td style="text-align: center;">MASAR Restore Confirmation</td>
-    </tr>
-  </tbody>
-</table>
-
-<p>The restore result can be confirmed by comparing the live machine again as:</p>
-<table>
-  <tbody>
-    <tr>
-      <td><img src="masar/MASARCompareAfterRestore.png" height="529" width="714"></td>
-    </tr>
-    <tr>
-      <td style="text-align: center;">MASAR Compare Restore Result</td>
-    </tr>
-  </tbody>
-</table>
-
-<p>The data can be saved into a local file by clicking "Save to File" button as below:</p>
-<div style="text-align: center;">
-<img style="width: 714px; height: 566px;" alt="" src="masar/SaveFile.png">
-</div>
-<p>A dialog window will pop up to ask where which file the data should be saved into.</p>
+If the server started with the name another name, MASARSERVICE:TEST:EXAMPLE for example, 
+client GUI can be launched as below: 
+<pre>$ python masar MASARSERVICE:TEST:EXAMPLE</pre>
 
 <hr>
 <address>
-  Guobao Shen, BNL 
+  Guobao Shen, FRIB 
 </address>
 <!-- hhmts start -->
-Last modified: Fri, 24 Jan 2014 22:19:50 +0100<!-- hhmts end -->
+Last modified: Mon, 04 Jan 2016 11:12:50 +0100<!-- hhmts end -->
 <hr>
 </body>
 </html>
