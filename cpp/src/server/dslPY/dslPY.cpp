@@ -22,6 +22,7 @@
 #include <pv/nt.h>
 
 #include <pv/gatherV3Data.h>
+#include <pv/pyhelper.h>
 
 namespace epics { namespace masar { 
 
@@ -598,6 +599,7 @@ static NTTablePtr retrieveServiceConfigEvents(PyObject * list, long numeric)
 PVStructurePtr DSL_RDB::request(
     string const & functionName,shared_vector<const string> const & names,shared_vector<const string> const &values)
 {
+try{
     if (functionName.compare("getLiveMachine")==0) {
         NTMultiChannelPtr ntmultiChannel = getLiveMachine(values);
         return ntmultiChannel->getPVStructure();
@@ -730,6 +732,11 @@ PVStructurePtr DSL_RDB::request(
         PyGILState_Release(gstate);
         return pvReturn->getPVStructure();
     }
+}catch(python_exception& e){
+    PyErr_Print(); // TODO: print exception message/stack to string and return
+    PyErr_Clear();
+    throw epics::pvAccess::RPCRequestException(Status::STATUSTYPE_ERROR,"Python exception, check server log");
+}
 }
 
 DSLPtr createDSL_RDB()
