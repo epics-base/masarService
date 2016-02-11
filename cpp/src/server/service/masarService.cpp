@@ -84,7 +84,7 @@ PVStructurePtr MasarService::request(
     }catch(epics::pvAccess::RPCRequestException&){
         throw;
     }catch(std::exception& e){
-        // since request(RPCRequestException) in our base class has a throw() specifier,
+        // since request() in our base class has a throw(RPCRequestException) specifier,
         // if anything else is thrown we abort() :P
         // so must translate all exceptions to RPCRequestException.
         throw epics::pvAccess::RPCRequestException(Status::STATUSTYPE_ERROR,
