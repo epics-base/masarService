@@ -20,6 +20,7 @@
 #include <pv/pvData.h>
 #include <pv/dsl.h>
 #include <pv/nt.h>
+#include <pv/rpcService.h>
 
 #include <pv/gatherV3Data.h>
 #include <pv/pyhelper.h>
