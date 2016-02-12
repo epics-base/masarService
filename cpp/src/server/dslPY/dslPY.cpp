@@ -600,7 +600,7 @@ static NTTablePtr retrieveServiceConfigEvents(PyObject * list, long numeric)
 PVStructurePtr DSL_RDB::request(
     string const & functionName,shared_vector<const string> const & names,shared_vector<const string> const &values)
 {
-try{
+//try{
     if (functionName.compare("getLiveMachine")==0) {
         NTMultiChannelPtr ntmultiChannel = getLiveMachine(values);
         return ntmultiChannel->getPVStructure();
@@ -663,7 +663,6 @@ try{
         PyObject *pchannelnames = PyEval_CallObject(pgetchannames, pyTuple);
         if(pchannelnames == NULL) {
             pvReturn = noDataMultiChannel("Failed to retrieve channel names.");
-            Py_DECREF(pchannelnames);
         } else {
             Py_ssize_t list_len = PyList_Size(pchannelnames);
 
@@ -673,9 +672,10 @@ try{
                 name = PyList_GetItem(pchannelnames, i);
                 channames[i] = PyString_AsString(name);
             }
-            if (channames.size() == 0)
+            if (channames.size() == 0) {
                 pvReturn = noDataMultiChannel("Failed to retrieve channel names.");
-            else {
+                Py_DECREF(pchannelnames);
+            } else {
                 shared_vector<const string> names(freeze(channames));
                 Py_DECREF(pchannelnames);
                 NTMultiChannelPtr data = getLiveMachine(names);
@@ -733,11 +733,11 @@ try{
         PyGILState_Release(gstate);
         return pvReturn->getPVStructure();
     }
-}catch(python_exception& e){
-    PyErr_Print(); // TODO: print exception message/stack to string and return
-    PyErr_Clear();
-    throw epics::pvAccess::RPCRequestException(Status::STATUSTYPE_ERROR,"Python exception, check server log");
-}
+//}catch(python_exception& e){
+//    PyErr_Print(); // TODO: print exception message/stack to string and return
+//    PyErr_Clear();
+//    throw epics::pvAccess::RPCRequestException(Status::STATUSTYPE_ERROR,"Python exception, check server log");
+//}
 }
 
 DSLPtr createDSL_RDB()
