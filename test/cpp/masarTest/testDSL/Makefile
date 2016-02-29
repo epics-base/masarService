@@ -21,6 +21,9 @@ testDSLRetrieveServiceConfigs_LIBS += gather nt pvAccess pvData Com
 testDSLRetrieveServiceConfigs_LIBS += masarPy masarServer
 testDSLRetrieveServiceConfigs_LIBS += $(PYTHON)
 
+# Needed on RHEL/CentOS
+USR_SYS_LIBS += util
+
 include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
