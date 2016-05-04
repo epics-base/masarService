@@ -8,6 +8,8 @@ from types import *
 Unittests for masarService/python/masarclient/alarm.py
 
 '''
+
+
 class unittestAlarm(unittest.TestCase):
 
     '''
@@ -15,8 +17,8 @@ class unittestAlarm(unittest.TestCase):
     '''
     def testStatusChoices(self):
         test_alarm = Alarm()
-        statusChoices = test_alarm.getStatusChoices()
-        for status in statusChoices:
+        status_choices = test_alarm.getStatusChoices()
+        for status in status_choices:
             assert type(status) is StringType, "non-string status found: %r" % status
 
     '''
@@ -24,8 +26,8 @@ class unittestAlarm(unittest.TestCase):
     '''
     def testSeverityChoices(self):
         test_alarm = Alarm()
-        severityChoices = test_alarm.getSeverityChoices()
-        for severity in severityChoices:
+        severity_choices = test_alarm.getSeverityChoices()
+        for severity in severity_choices:
             assert type(severity) is StringType, "non-string severity found: %r" % severity
 
     '''
@@ -54,22 +56,22 @@ class unittestAlarm(unittest.TestCase):
     '''
     def testSetStatus(self):
         test_alarm = Alarm()
-        statusChoices = test_alarm.getStatusChoices()
-        status_index = len(statusChoices)-1 # Test status will be the last in the list
+        status_choices = test_alarm.getStatusChoices()
+        status_index = len(status_choices)-1  # Test status will be the last in the list
         self.assertTrue(status_index >= 0, "No status choices available to perform test.")
-        test_alarm.setStatus(statusChoices[status_index]) # Index may need to be changed if choices change
-        self.assertEqual(test_alarm.getStatus(),statusChoices[status_index], "Status does not match test input")
+        test_alarm.setStatus(status_choices[status_index])  # Index may need to be changed if choices change
+        self.assertEqual(test_alarm.getStatus(),  status_choices[status_index], "Status does not match test input")
 
     '''
     Tests setter for severity, also requires at least 1 severity returned by getSeverityChoices
     '''
     def testSetSeverity(self):
         test_alarm = Alarm()
-        severityChoices = test_alarm.getSeverityChoices()
-        severity_index = len(severityChoices)-1 # Test severity will be the last in the list
+        severity_choices = test_alarm.getSeverityChoices()
+        severity_index = len(severity_choices)-1  # Test severity will be the last in the list
         self.assertTrue(severity_index >= 0, "No severity choices available to perform test.")
-        test_alarm.setSeverity(severityChoices[severity_index]) # Index may need to be changed if choices change
-        self.assertEqual(test_alarm.getSeverity(),severityChoices[severity_index], "Severity does not match test input")
+        test_alarm.setSeverity(severity_choices[severity_index])  # Index may need to be changed if choices change
+        self.assertEqual(test_alarm.getSeverity(), severity_choices[severity_index], "Severity does not match test input")
 
     '''
     Tests setter for message, requires getMessage
@@ -78,7 +80,7 @@ class unittestAlarm(unittest.TestCase):
         test_alarm = Alarm()
         test_message = "test message"
         test_alarm.setMessage(test_message)
-        self.assertEqual(test_alarm.getMessage(),test_message, "Message does not match test input")
+        self.assertEqual(test_alarm.getMessage(), test_message, "Message does not match test input")
     
     if __name__ == '__main__':
         unittest.main()
