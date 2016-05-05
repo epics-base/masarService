@@ -9,26 +9,6 @@ from masarclient.timeStamp import TimeStamp as TimeStamp
 from masarclient.control import Control as Control
 
 '''
-timeStamp = TimeStamp()
-alarm = Alarm()
-control = Control()
-display = Display()
-
-print "getTimeStamp"
-scalar.getTimeStamp(timeStamp)
-print timeStamp
-print "getAlarm"
-scalar.getAlarm(alarm)
-print alarm
-print "getControl"
-scalar.getControl(control)
-print control
-print "getDisplay"
-scalar.getDisplay(display)
-print display
-'''
-
-'''
 Unittests for masarService/python/masarclient/ntscalar.py
 '''
 
@@ -36,7 +16,7 @@ Unittests for masarService/python/masarclient/ntscalar.py
 class unittestntscalar(unittest.TestCase):
 
     '''
-    Receiving unexpected results from this test, "pvStructure" object
+    Not sure how to process "pvStructure" object
 
     def testGetLimitLow(self):
         scalar = NTScalar("double")
