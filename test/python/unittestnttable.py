@@ -62,6 +62,7 @@ class unittestnttable(unittest.TestCase):
 
     '''
     Tests function for retrieving columns based on a label
+    NOTE: Currently failing this test
     '''
     def testGetColumn(self):
         labels = self.test_nttable.getLabels()
@@ -69,7 +70,7 @@ class unittestnttable(unittest.TestCase):
         for i in range(len(labels)):
             print str(self.parameters[test_nttable_keys[i]])
             test_column = self.test_nttable.getColumn(labels[i])
-            self.assertEqual(self.parameters[test_nttable_keys[i]], self.test_nttable.getColumn(labels[i]), "Labels do not match given keys")
+            self.assertEqual(self.parameters[test_nttable_keys[i]], self.test_nttable.getColumn(labels[i]), "Columns do not match given test names")
 
     if __name__ == '__main__':
         unittest.main()

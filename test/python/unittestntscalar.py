@@ -56,7 +56,7 @@ class unittestntscalar(unittest.TestCase):
     '''
     Tests getter for Control
 
-    PLANNING: Not sure what to be testing for here, for now I'll just make sure the correct alarm is returned
+    PLANNING: Not sure what to be testing for here, for now I'll just make sure the correct control is returned
     '''
     def testGetControl(self):
         test_control = Control()
@@ -75,7 +75,7 @@ class unittestntscalar(unittest.TestCase):
     '''
     Tests getter for Display
 
-    PLANNING: Not sure what to be testing for here, for now I'll just make sure the correct alarm is returned
+    PLANNING: Not sure what to be testing for here, for now I'll just make sure the correct display is returned
     '''
     def testGetDisplay(self):
         test_display = Display()
