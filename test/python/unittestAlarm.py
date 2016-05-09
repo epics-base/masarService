@@ -13,11 +13,22 @@ Unittests for masarService/python/masarclient/alarm.py
 class unittestAlarm(unittest.TestCase):
 
     '''
+    Create test values for each test. Uses default constructor values.
+    '''
+    def setUp(self):
+        self.test_alarm = Alarm()
+
+    '''
+    Ensures test_alarm value is cleared after each test
+    '''
+    def tearDown(self):
+        self.test_alarm = 0
+
+    '''
     Test to confirm all of the status choices are of the string type.
     '''
     def testStatusChoices(self):
-        test_alarm = Alarm()
-        status_choices = test_alarm.getStatusChoices()
+        status_choices = self.test_alarm.getStatusChoices()
         for status in status_choices:
             assert type(status) is StringType, "non-string status found: %r" % status
 
@@ -25,8 +36,7 @@ class unittestAlarm(unittest.TestCase):
     Test to confirm all of the severity choices are of the string type
     '''
     def testSeverityChoices(self):
-        test_alarm = Alarm()
-        severity_choices = test_alarm.getSeverityChoices()
+        severity_choices = self.test_alarm.getSeverityChoices()
         for severity in severity_choices:
             assert type(severity) is StringType, "non-string severity found: %r" % severity
 
@@ -34,53 +44,66 @@ class unittestAlarm(unittest.TestCase):
     Tests both default value assignment and getter operation for Status
     '''
     def testGetStatus(self):
-        test_alarm = Alarm()
-        self.assertEqual(test_alarm.getStatus(), "NONE", "Default status did not return 'NONE'")
+        self.assertEqual(self.test_alarm.getStatus(), "NONE", "Default status did not return 'NONE'")
 
     '''
     Tests both default value assignment and getter operation for Severity
     '''
     def testGetSeverity(self):
-        test_alarm = Alarm()
-        self.assertEqual(test_alarm.getSeverity(), "NONE", "Default severity did not return 'NONE'")
+        self.assertEqual(self.test_alarm.getSeverity(), "NONE", "Default severity did not return 'NONE'")
 
     '''
     Tests both default value assignment and getter operation for Message
     '''
     def testGetMessage(self):
-        test_alarm = Alarm()
-        self.assertEqual(test_alarm.getMessage(), "", "Default message did not return empty string")
+        self.assertEqual(self.test_alarm.getMessage(), "", "Default message did not return empty string")
 
     '''
     Tests setter for status, also requires at least 1 status returned by getStatusChoices
     '''
     def testSetStatus(self):
-        test_alarm = Alarm()
-        status_choices = test_alarm.getStatusChoices()
+        status_choices = self.test_alarm.getStatusChoices()
         status_index = len(status_choices)-1  # Test status will be the last in the list
         self.assertTrue(status_index >= 0, "No status choices available to perform test.")
-        test_alarm.setStatus(status_choices[status_index])  # Index may need to be changed if choices change
-        self.assertEqual(test_alarm.getStatus(),  status_choices[status_index], "Status does not match test input")
+        self.test_alarm.setStatus(status_choices[status_index])  # Index may need to be changed if choices change
+        self.assertEqual(self.test_alarm.getStatus(),  status_choices[status_index], "Status does not match test input")
 
     '''
     Tests setter for severity, also requires at least 1 severity returned by getSeverityChoices
     '''
     def testSetSeverity(self):
-        test_alarm = Alarm()
-        severity_choices = test_alarm.getSeverityChoices()
+        severity_choices = self.test_alarm.getSeverityChoices()
         severity_index = len(severity_choices)-1  # Test severity will be the last in the list
         self.assertTrue(severity_index >= 0, "No severity choices available to perform test.")
-        test_alarm.setSeverity(severity_choices[severity_index])  # Index may need to be changed if choices change
-        self.assertEqual(test_alarm.getSeverity(), severity_choices[severity_index], "Severity does not match test input")
+        self.test_alarm.setSeverity(severity_choices[severity_index])  # Index may need to be changed if choices change
+        self.assertEqual(self.test_alarm.getSeverity(), severity_choices[severity_index], "Severity does not match test input")
 
     '''
     Tests setter for message, requires getMessage
     '''
     def testSetMessage(self):
-        test_alarm = Alarm()
         test_message = "test message"
-        test_alarm.setMessage(test_message)
-        self.assertEqual(test_alarm.getMessage(), test_message, "Message does not match test input")
-    
+        self.test_alarm.setMessage(test_message)
+        self.assertEqual(self.test_alarm.getMessage(), test_message, "Message does not match test input")
+
+    '''
+    Test non-default constructor value assignment. Full use test.
+    '''
+    def testNonDefaultConstructor(self):
+        severity_choices = self.test_alarm.getSeverityChoices()
+        test_severity = ""
+        status_choices = self.test_alarm.getStatusChoices()
+        test_status = ""
+        test_message = "test message"
+        if len(severity_choices) > 0:
+            test_severity = severity_choices[len(severity_choices)%3]
+        if len(status_choices) > 0:
+            test_status = status_choices[len(status_choices)%3]
+        self.test_alarm = Alarm(test_severity, test_status, test_message)
+        self.assertEqual(self.test_alarm.getMessage(), test_message, "test_message did not match assigned value")
+        self.assertEqual(self.test_alarm.getStatus(), test_status, "test_status did not match assigned value")
+        self.assertEqual(self.test_alarm.getSeverity(), test_severity, "test_severity did not match assigned value")
+
+
     if __name__ == '__main__':
         unittest.main()

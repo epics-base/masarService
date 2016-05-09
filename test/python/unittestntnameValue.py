@@ -54,20 +54,19 @@ class unittestNTNameValue(unittest.TestCase):
         self.assertEqual(test_ntnv_value_two, "sr_test", "ntnv value two returned incorrect default value")
 
     '''
-    NOTE: These are commented out because I need to confirm their responses "None" "None" are correct
+    NOTE: These are commented out because their responses "None" "None" appear to be incorrect
 
     Tests getter for TimeStamp, uses default TimeStamp
 
     def testGetTimeStamp(self):
         timeStamp = TimeStamp()
-        print self.test_ntnv.getTimeStamp(timeStamp)
+        print self.test_ntnv.getTimeStamp(timeStamp.getTimeStampPy())
 
 
-    Tests getter for Alarm, uses default alarm
+    #Tests getter for Alarm, uses default alarm
     def testGetAlarm(self):
         alarm = Alarm()
-        print self.test_ntnv.getAlarm(alarm)
+        print self.test_ntnv.getAlarm(alarm.getAlarmPy())
     '''
-
 if __name__ == '__main__':
     unittest.main()

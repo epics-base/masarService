@@ -59,13 +59,12 @@ class unittestntscalar(unittest.TestCase):
     PLANNING: Not sure what to be testing for here, for now I'll just make sure the correct control is returned
     '''
     def testGetControl(self):
-        test_control = Control()
-        test_min_step = 1
+        test_min_step = 1  # these are the same default values used in the Control.py test
         test_limit_high = 10.0
         test_limit_low = -10.0
-        test_control.setMinStep(test_min_step)
-        test_control.setLimitHigh(test_limit_high)
-        test_control.setLimitLow(test_limit_low)
+        test_control = Control(test_limit_low,
+                               test_limit_high,
+                               test_min_step)
         test_ntscalar = NTScalar("double")
         test_ntscalar.getControl(test_control)
         self.assertEqual(test_control.getMinStep(), test_min_step, "Control.minStep returned an unexpected value")
@@ -75,21 +74,32 @@ class unittestntscalar(unittest.TestCase):
     '''
     Tests getter for Display
 
-    PLANNING: Not sure what to be testing for here, for now I'll just make sure the correct display is returned
+    PLANNING: Not sure what to be testing for here,
+              for now I'll just make sure the same display is returned
     '''
     def testGetDisplay(self):
-        test_display = Display()
-        test_description = "test description"
+        test_description = "test description"  # these are the same default values used in the Display.py test
         test_limit_high = 10.0
         test_limit_low = -10.0
-        test_display.setDescription(test_description)
-        test_display.setLimitHigh(test_limit_high)
-        test_display.setLimitLow(test_limit_low)
+        test_format = "%f"
+        test_units = "voltage"
+        test_display = Display(test_limit_low,
+                               test_limit_high,
+                               test_description,
+                               test_format,
+                               test_units)
         test_ntscalar = NTScalar("double")
         test_ntscalar.getDisplay(test_display)
-        self.assertEqual(test_display.getDescription(), test_description, "Display.description returned an unexpected value")
-        self.assertEqual(test_display.getLimitLow(), test_limit_low, "Display.limitLow returned an unexpected value")
-        self.assertEqual(test_display.getLimitHigh(), test_limit_high, "Display.limitHigh returned an unexpected value")
+        self.assertEqual(test_display.getDescription(), test_description,
+                         "Display.description returned an unexpected value")
+        self.assertEqual(test_display.getLimitLow(), test_limit_low,
+                         "Display.limitLow returned an unexpected value")
+        self.assertEqual(test_display.getLimitHigh(), test_limit_high,
+                         "Display.limitHigh returned an unexpected value")
+        self.assertEqual(test_display.getFormat(), test_format,
+                         "Display.format returned an unexpected value")
+        self.assertEqual(test_display.getUnits(), test_units,
+                         "Display.units returned an unexpected value")
 
     '''
     Tests getter for Value, also tests default value assignment

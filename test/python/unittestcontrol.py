@@ -60,19 +60,16 @@ class unittestcontrol(unittest.TestCase):
         self.assertEqual(control.getMinStep(), minStepTestValue, "MinStep does not match test input")
 
     '''
-    Tests GetControlPy and Control constructor, checks for consistency, tests all values
+    Tests Control's non-default constructor. Full use test.
     '''
-   # def testGetControlPy(self):
-       # limitLowTestValue = -10.0  # Default test values may need to be changed
-       # limitHighTestValue = 10.0
-       # minStepTestValue = 1.0
-       # control = Control(limitLowTestValue, limitHighTestValue, minStepTestValue)
-       # print control
-       # control2 = control.getControlPy()
-       # print control2
-       # self.assertEqual(control2.getLimitLow(), limitLowTestValue, "LimitLow does not match test input")
-       # self.assertEqual(control2.getLimitHigh(), limitHighTestValue, "LimitHigh does not match test input")
-       # self.assertEqual(control2.getMinStep(), minStepTestValue, "MinStep does not match test input")
+    def testNonDefaultConstructor(self):
+        limitLowTestValue = -10.0  # Default test values may need to be changed
+        limitHighTestValue = 10.0
+        minStepTestValue = 1.0
+        control = Control(limitLowTestValue, limitHighTestValue, minStepTestValue)
+        self.assertEqual(control.getLimitLow(), limitLowTestValue, "LimitLow does not match test input")
+        self.assertEqual(control.getLimitHigh(), limitHighTestValue, "LimitHigh does not match test input")
+        self.assertEqual(control.getMinStep(), minStepTestValue, "MinStep does not match test input")
 
     if __name__ == '__main__':
         unittest.main()

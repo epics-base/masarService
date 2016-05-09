@@ -33,6 +33,7 @@ class unittestgatherV3Data(unittest.TestCase):
             )
         gatherV3Data = GatherV3Data(names)
         gatherV3Data.connect(2.0)
+        gatherV3Data.get()
 
     if __name__ == '__main__':
         unittest.main()
