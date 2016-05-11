@@ -23,10 +23,10 @@ class unittestchannelRPC(unittest.TestCase):
     '''
     Tests initial connection to channelRPC
     '''
-    def testGetLimitLow(self):
+    def testConnect(self):
         channelRPC = ChannelRPC("masarService")
         channelRPC.issueConnect()
-        if not channelRPC.waitConnect(1.0):
+        if not channelRPC.waitConnect(5.0):
             print "error when waiting connection.", channelRPC.getMessage()
             exit(1)
 
