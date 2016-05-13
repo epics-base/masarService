@@ -14,7 +14,7 @@ Unittests for masarService/python/masarclient/channelRPC.py
 '''
 
 
-class unittestchannelRPC(unittest.TestCase):
+class TestChannelRPC(unittest.TestCase):
 
     '''
     Tests initial connection to channelRPC and establishes connections for each test

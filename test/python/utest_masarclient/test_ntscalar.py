@@ -13,7 +13,7 @@ Unittests for masarService/python/masarclient/ntscalar.py
 '''
 
 
-class unittestntscalar(unittest.TestCase):
+class TestNTScalar(unittest.TestCase):
 
     '''
     Not sure how to process "pvStructure" object
@@ -30,7 +30,7 @@ class unittestntscalar(unittest.TestCase):
     Tests getter for TimeStamp
 
     PLANNING: Not sure what to be testing for here, for now I'll just make sure a TimeStamp is returned
-    that has the correct default value and leave the testing of TimeStamp itself to unittestTimeStamp.py
+    that has the correct default value and leave the testing of TimeStamp itself to test_timeStamp.py
     '''
     def testGetTimeStamp(self):
         test_timestamp = TimeStamp()

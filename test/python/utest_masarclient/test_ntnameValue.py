@@ -11,7 +11,7 @@ Unittests for masarService/python/masarclient/ntnameValue.py
 '''
 
 
-class unittestNTNameValue(unittest.TestCase):
+class TestNTNameValue(unittest.TestCase):
 
     '''
     Sets up default NTNameValue object to be used in each test

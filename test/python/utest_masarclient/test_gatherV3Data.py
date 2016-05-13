@@ -14,7 +14,7 @@ Unittests for masarService/python/masarclient/alarm.py
 '''
 
 
-class unittestgatherV3Data(unittest.TestCase):
+class TestGatherV3Data(unittest.TestCase):
 
     '''
     These names are meant to be used with the test database in its present state and may need to be changed.

@@ -13,7 +13,7 @@ Unittests for masarService/python/masarclient/timeStamp.py
 '''
 
 
-class unittestDisplay(unittest.TestCase):
+class TestTimeStamp(unittest.TestCase):
 
     '''
     Sets up test variable for each test.

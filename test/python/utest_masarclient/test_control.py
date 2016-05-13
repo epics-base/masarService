@@ -8,8 +8,9 @@ from masarclient.control import Control as Control
 Unittests for masarService/python/masarclient/control.py
 
 '''
-class unittestcontrol(unittest.TestCase):
 
+
+class TestControl(unittest.TestCase):
 
     '''
     Tests both default value assignment and getter operation for LimitLow

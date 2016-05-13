@@ -10,7 +10,7 @@ Unittests for masarService/python/masarclient/nttable.py
 '''
 
 
-class unittestnttable(unittest.TestCase):
+class TestNTTable(unittest.TestCase):
 
     '''
     Sets up new NTTable for each test with same initial parameters
@@ -30,7 +30,7 @@ class unittestnttable(unittest.TestCase):
     Tests getter for TimeStamp
 
     PLANNING: Not sure what to be testing for here, for now I'll just make sure a TimeStamp is returned
-    that has the correct default value and leave the testing of TimeStamp itself to unittestTimeStamp.py
+    that has the correct default value and leave the testing of TimeStamp itself to test_timeStamp.py
     '''
     def testGetTimeStamp(self):
         test_timestamp = TimeStamp()

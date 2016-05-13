@@ -9,7 +9,7 @@ Unittests for masarService/python/masarclient/display.py
 '''
 
 
-class unittestDisplay(unittest.TestCase):
+class TestDisplay(unittest.TestCase):
 
     '''
     Sets up test values for each test.

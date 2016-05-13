@@ -10,7 +10,7 @@ Unittests for masarService/python/masarclient/alarm.py
 '''
 
 
-class unittestAlarm(unittest.TestCase):
+class TestAlarm(unittest.TestCase):
 
     '''
     Create test values for each test. Uses default constructor values.
