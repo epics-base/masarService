@@ -26,14 +26,14 @@ class TestNTNameValue(unittest.TestCase):
     Cleans up test_ntnv variable after each test
     '''
     def tearDown(self):
-        self.test_ntnv = 0
+        self.test_ntnv = None
 
     '''
-    This tests is commented out because I need to confirm what result should be tested for
-    
-    def testGetPVStructure(self):
-        print str(self.test_ntnv.getPVStructure().)
+    This test just confirms that a PVStructure is returned and is not equal to none
     '''
+    def testGetPVStructure(self):
+        self.assertTrue(self.test_ntnv.getPVStructure() is not None)
+
 
     '''
     Tests getter for service and config name, also tests default value assignment
@@ -60,13 +60,13 @@ class TestNTNameValue(unittest.TestCase):
 
     def testGetTimeStamp(self):
         timeStamp = TimeStamp()
-        print self.test_ntnv.getTimeStamp(timeStamp.getTimeStampPy())
+        print self.test_ntnv.getTimeStamp(timeStamp)
 
 
     #Tests getter for Alarm, uses default alarm
     def testGetAlarm(self):
         alarm = Alarm()
-        print self.test_ntnv.getAlarm(alarm.getAlarmPy())
+        print self.test_ntnv.getAlarm(alarm)
     '''
 if __name__ == '__main__':
     unittest.main()

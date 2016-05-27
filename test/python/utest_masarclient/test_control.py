@@ -12,53 +12,50 @@ Unittests for masarService/python/masarclient/control.py
 
 class TestControl(unittest.TestCase):
 
+    def setUp(self):
+        self.control = Control()
+
     '''
     Tests both default value assignment and getter operation for LimitLow
     '''
     def testGetLimitLow(self):
-        control = Control()
-        self.assertEqual(0.0, control.getLimitLow(), "Default LimitLow did not return 0.0 ")
+        self.assertEqual(0.0, self.control.getLimitLow(), "Default LimitLow did not return 0.0 ")
 
     '''
     Tests both default value assignment and getter operation for LimitHigh
     '''
     def testGetLimitHigh(self):
-        control = Control()
-        self.assertEqual(0.0, control.getLimitHigh(), "Default LimitHigh did not return 0.0 ")
+        self.assertEqual(0.0, self.control.getLimitHigh(), "Default LimitHigh did not return 0.0 ")
 
     '''
     Tests both default value assignment and getter operation for MinStep
     '''
     def testGetMinStep(self):
-        control = Control()
-        self.assertEqual(0.0, control.getMinStep(), "Default MinStep did not return 0.0 ")
+        self.assertEqual(0.0, self.control.getMinStep(), "Default MinStep did not return 0.0 ")
 
     '''
     Tests setter for LimitLow, requires getLimitLow
     '''
     def testSetLimitLow(self):
-        control = Control()
         limitLowTestValue = -10.0  # Default test value can be changed here
-        control.setLimitLow(limitLowTestValue)
-        self.assertEqual(control.getLimitLow(), limitLowTestValue, "LimitLow does not match test input")
+        self.control.setLimitLow(limitLowTestValue)
+        self.assertEqual(self.control.getLimitLow(), limitLowTestValue, "LimitLow does not match test input")
 
     '''
     Tests setter for LimitHigh, requires getLimitHigh
     '''
     def testSetLimitHigh(self):
-        control = Control()
         limitHighTestValue = 10.0  # Default test value can be changed here
-        control.setLimitHigh(limitHighTestValue)
-        self.assertEqual(control.getLimitHigh(), limitHighTestValue, "LimitHigh does not match test input")
+        self.control.setLimitHigh(limitHighTestValue)
+        self.assertEqual(self.control.getLimitHigh(), limitHighTestValue, "LimitHigh does not match test input")
 
     '''
     Tests setter for MinStep, requires getMinStep
     '''
     def testSetMinStep(self):
-        control = Control()
         minStepTestValue = 1.0  # Default test value can be changed here
-        control.setMinStep(minStepTestValue)
-        self.assertEqual(control.getMinStep(), minStepTestValue, "MinStep does not match test input")
+        self.control.setMinStep(minStepTestValue)
+        self.assertEqual(self.control.getMinStep(), minStepTestValue, "MinStep does not match test input")
 
     '''
     Tests Control's non-default constructor. Full use test.

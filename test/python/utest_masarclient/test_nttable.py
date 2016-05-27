@@ -17,14 +17,14 @@ class TestNTTable(unittest.TestCase):
     '''
     def setUp(self):
         self.parameters = {'column_one': 'string',
-                       'column_two': 'double'}
+                           'column_two': 'double'}
         self.test_nttable = NTTable(self.parameters)
 
     '''
     Ensures global NTTable value is clear after each test
     '''
     def tearDown(self):
-        self.test_nttable = 0
+        self.test_nttable = None
 
     '''
     Tests getter for TimeStamp
@@ -35,8 +35,12 @@ class TestNTTable(unittest.TestCase):
     def testGetTimeStamp(self):
         test_timestamp = TimeStamp()
         self.test_nttable.getTimeStamp(test_timestamp)
-        self.assertEqual(str(test_timestamp), "1969.12.31 16:00:00.000", "TimeStamp returned an unexpected value")
-
+        test_stamp = TimeStamp()
+        self.assertTrue(test_timestamp._diffInt(test_stamp) >= 0, "Unexpected time stamp value, "
+                                                              "given time stamp is earlier than default time")
+        test_stamp.getCurrent()
+        self.assertTrue(test_timestamp._diffInt(test_stamp) <= 0, "Unexpected time stamp value, "
+                                                              "given time stamp is in the future")
     '''
     Tests getter for Alarm
 

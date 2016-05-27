@@ -17,14 +17,23 @@ class TestMasarClient(unittest.TestCase):
         channel = 'masarService'
         self.mc = masarClient.client(channelname=channel)
 
+    '''
+
+    '''
     def testRetrieveSystemList(self):
         result = self.mc.retrieveSystemList()
-        self.assertTrue(result is not None, "retrieveSystemList returned unexpected value")
+        self.assertTrue(result is not None, "expected non-None value")
+        self.assertTrue(len(result) == 1, "")
+        self.assertTrue(result[0] == 'test', "")
 
+    '''
+
+    '''
     def testRetrieveServiceConfigs(self):
         params = {'system': 'LTD2'}
         result = self.mc.retrieveServiceConfigs(params)
         self.assertTrue(result is not None, "retrieveServiceConfigs returned unexpected value")
+        self.assertTrue(len(result) == 6, "wrong number of configs returned")
 
     def testRetrieveServiceEvents(self):
         params = {'configid': '1'}
@@ -36,6 +45,7 @@ class TestMasarClient(unittest.TestCase):
                   'servicename': 'masar'}
         result = self.mc.saveSnapshot(params)
         self.assertTrue(result is not None, "saveSnapshot returned unexpected value")
+        print str(result)
 
     def testRetrieveSnapshot(self):
         save_params = {'configname': 'test',

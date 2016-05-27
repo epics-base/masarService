@@ -16,28 +16,29 @@ Unittests for masarService/python/masarclient/ntscalar.py
 class TestNTScalar(unittest.TestCase):
 
     '''
-    Not sure how to process "pvStructure" object
-
-    def testGetLimitLow(self):
-        scalar = NTScalar("double")
-        print scalar
-        newscalar = scalar.getNTScalar()
-        print "new%%%%%%%%%%%%%%%%%"
-        print str(newscalar)
+    Ensures that getNTScalar returns properly
     '''
+    def testGetNTScalar(self):
+        scalar = NTScalar("double")
+        newscalar = scalar.getNTScalar()
+        self.assertTrue(newscalar is not None, "getNTScalar returned unexpected value")
 
     '''
     Tests getter for TimeStamp
 
     PLANNING: Not sure what to be testing for here, for now I'll just make sure a TimeStamp is returned
-    that has the correct default value and leave the testing of TimeStamp itself to test_timeStamp.py
+    within an appropriate range of values
     '''
     def testGetTimeStamp(self):
         test_timestamp = TimeStamp()
         test_ntscalar = NTScalar("double")
         test_ntscalar.getTimeStamp(test_timestamp)
-        self.assertEqual(str(test_timestamp), "1969.12.31 16:00:00.000", "TimeStamp returned an unexpected value")
-
+        test_stamp = TimeStamp()
+        self.assertTrue(test_timestamp._diffInt(test_stamp) >= 0, "Unexpected time stamp value, "
+                                                                  "given time stamp is earlier than default time")
+        test_stamp.getCurrent()
+        self.assertTrue(test_timestamp._diffInt(test_stamp) <= 0, "Unexpected time stamp value, "
+                                                                  "given time stamp is in the future")
     '''
     Tests getter for Alarm
 

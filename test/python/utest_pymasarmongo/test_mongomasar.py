@@ -15,12 +15,12 @@ from pymasarmongo.pymasarmongo.pymasar import updateconfig
 class Test(unittest.TestCase):
 
     def setUp(self):
-        self.conn, self.collection = utils.conn()
+        self.conn, self.collection = utils.conn(host=masarconfig.get('mongodb','host'), port=masarconfig.get('mongodb','port'), db=masarconfig.get('mongodb','database'))
 
     def tearDown(self):
-#        print "database: ", self.conn.database_names()
-#        print "collections: ", self.conn[self.collection]
-#        print "collections: ", self.conn[self.collection].collection_names()
+        print "database: ", self.conn.database_names()
+        print "collections: ", self.conn[self.collection]
+        print "collections: ", self.conn[self.collection].collection_names()
         self.conn.drop_database(masarconfig.get('mongodb', 'database'))
         utils.close(self.conn)
 
@@ -122,6 +122,7 @@ class Test(unittest.TestCase):
         with self.assertRaises(RuntimeError) as context:
             updateconfig(self.conn, self.collection, None)
         self.assertEqual(context.exception.message, "Cannot identify configuration to update.")
+
         with self.assertRaises(RuntimeError) as context:
             updateconfig(self.conn, self.collection, name)
         self.assertEqual(context.exception.message, "Wrong Mongo document for %s" % name)

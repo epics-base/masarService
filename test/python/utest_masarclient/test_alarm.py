@@ -22,7 +22,7 @@ class TestAlarm(unittest.TestCase):
     Ensures test_alarm value is cleared after each test
     '''
     def tearDown(self):
-        self.test_alarm = 0
+        self.test_alarm = None
 
     '''
     Test to confirm all of the status choices are of the string type.

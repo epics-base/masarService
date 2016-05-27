@@ -51,7 +51,7 @@ class TestGatherV3Data(unittest.TestCase):
         gatherv3data.connect(2.0)
         gatherv3data.get()
         pvstructure = gatherv3data.getPVStructure()
-        self.assertTrue(pvstructure is not None, "")
+        self.assertTrue(pvstructure is not None, "No PVStructure returned")
 
     '''
     Tests all values in NTMultiChannel. Condensed test to reduce connection overhead of multiple tests.
