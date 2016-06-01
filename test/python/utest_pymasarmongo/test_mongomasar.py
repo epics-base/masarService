@@ -4,6 +4,7 @@ Created on Jul 28, 2014
 @author: shengb
 '''
 import unittest
+import time
 
 from pymasarmongo.db import utils
 from pymasarmongo.config._config import masarconfig
@@ -122,7 +123,7 @@ class Test(unittest.TestCase):
         with self.assertRaises(RuntimeError) as context:
             updateconfig(self.conn, self.collection, None)
         self.assertEqual(context.exception.message, "Cannot identify configuration to update.")
-
+        time.sleep(1)
         with self.assertRaises(RuntimeError) as context:
             updateconfig(self.conn, self.collection, name)
         self.assertEqual(context.exception.message, "Wrong Mongo document for %s" % name)
@@ -136,6 +137,7 @@ class Test(unittest.TestCase):
         self.assertEqual(res0[0]["status"], "active")
         self.assertEqual(res1[0]["status"], "inactive")
         self.assertEqual(res1[0]["created_on"], res0[0]["created_on"])
+        time.sleep(1)
         self.assertTrue(updateconfig(self.conn, self.collection, name, status="active"))
         res2 = retrieveconfig(self.conn, self.collection, name)
         self.assertEqual(res2[0]["status"], "active")
@@ -359,7 +361,7 @@ class Test(unittest.TestCase):
         self.assertEqual(context.exception.message, 'Cannot find key ("names") for pv names.')
         
         self.assertTrue(updateconfig(self.conn, self.collection, name, pvlist={"names": pvs}))
-        res3 = retrieveconfig(self.conn, self.collection, name)
+        res3 = retrieveconfig(self.conn, self.collection, name, withpvs=True)
         self.assertEqual(res3[0]["status"], "active")
         self.assertNotEqual(res1[0]["updated_on"], res2[0]["updated_on"])
         self.assertEqual(res3[0]["created_on"], res0[0]["created_on"])
