@@ -33,26 +33,26 @@ class TestTimeStamp(unittest.TestCase):
     '''
     def testGetCurrent(self):
         self.test_time_stamp.getCurrent()
-        self.assertTrue(self.test_time_stamp.toSeconds() > 0.0, "Unexpected time returned")
+        self.assertGreater(self.test_time_stamp.toSeconds(), 0.0, "Unexpected time returned")
         test_stamp_two = TimeStamp()
         test_stamp_two.getCurrent()
-        self.assertTrue(test_stamp_two >= self.test_time_stamp, "Unexpected error in time continuity")
+        self.assertGreaterEqual(test_stamp_two, self.test_time_stamp, "Unexpected error in time continuity")
 
     '''
     This test can not confirm time frame, so it will just ensure the function doesn't crash
     '''
     def testGetSecondsPastEpoch(self):
         self.test_time_stamp.getCurrent()
-        self.assertTrue(self.test_time_stamp.getSecondsPastEpoch() > 0.0,
-                        "TimeStamp returned unexpected value")
+        self.assertGreater(self.test_time_stamp.getSecondsPastEpoch(), 0.0,
+                           "TimeStamp returned unexpected value")
 
     '''
     This test can not confirm time frame, so it will just ensure the function doesn't crash
     '''
     def testGetEpicsSecondsPastEpoch(self):
         self.test_time_stamp.getCurrent()
-        self.assertTrue(self.test_time_stamp.getEpicsSecondsPastEpoch() > 0.0,
-                        "TimeStamp returned unexpected value")
+        self.assertGreater(self.test_time_stamp.getEpicsSecondsPastEpoch(), 0.0,
+                           "TimeStamp returned unexpected value")
 
     '''
     Test confirms operation of timeStamp.getNanoseconds() and performs logical test to ensure a reasonable result.
@@ -61,8 +61,8 @@ class TestTimeStamp(unittest.TestCase):
     def testGetNanoseconds(self):
         test_stamp_nanoseconds = self.test_time_stamp.getNanoseconds()
         self.test_time_stamp.getCurrent()
-        self.assertTrue(self.test_time_stamp.getNanoseconds() > test_stamp_nanoseconds,
-                        "TimeStamp returned unexpected value")
+        self.assertGreater(self.test_time_stamp.getNanoseconds(), test_stamp_nanoseconds,
+                           "TimeStamp returned unexpected value")
 
     '''
     Test confirms operation of timeStamp.toSeconds() and performs logical test to ensure a reasonable result.
@@ -70,20 +70,20 @@ class TestTimeStamp(unittest.TestCase):
     def testToSeconds(self):
         test_stamp_seconds = self.test_time_stamp.toSeconds()
         self.test_time_stamp.getCurrent()
-        self.assertTrue(self.test_time_stamp.toSeconds() >= test_stamp_seconds,
-                        "TimeStamp returned unexpected value")
+        self.assertGreaterEqual(self.test_time_stamp.toSeconds(), test_stamp_seconds,
+                                "TimeStamp returned unexpected value")
 
     '''
     Ensures toString does not fail and properly returns a string
     '''
     def testToString(self):
-        assert type(self.test_time_stamp.__str__()) is StringType
+        self.assertEqual(type(self.test_time_stamp.__str__()), StringType)
 
     '''
     This may be a bad test. This could result could be unintended.
     '''
     def testUserTag(self):
-        assert type(self.test_time_stamp.getUserTag()) is int
+        self.assertEqual(type(self.test_time_stamp.getUserTag()), int)
 
     '''
     Tests method to set current time. Test could be expanded but would cause delays in run time.

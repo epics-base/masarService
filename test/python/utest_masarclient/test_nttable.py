@@ -36,11 +36,11 @@ class TestNTTable(unittest.TestCase):
         test_timestamp = TimeStamp()
         self.test_nttable.getTimeStamp(test_timestamp)
         test_stamp = TimeStamp()
-        self.assertTrue(test_timestamp._diffInt(test_stamp) >= 0, "Unexpected time stamp value, "
-                                                              "given time stamp is earlier than default time")
+        self.assertGreaterEqual(test_timestamp._diffInt(test_stamp), 0, "Unexpected time stamp value, "
+                                                                        "given time stamp is earlier than default time")
         test_stamp.getCurrent()
-        self.assertTrue(test_timestamp._diffInt(test_stamp) <= 0, "Unexpected time stamp value, "
-                                                              "given time stamp is in the future")
+        self.assertLess(test_timestamp._diffInt(test_stamp), 0, "Unexpected time stamp value, "
+                                                                  "given time stamp is in the future")
     '''
     Tests getter for Alarm
 
@@ -51,9 +51,9 @@ class TestNTTable(unittest.TestCase):
         test_message = "test message"
         test_alarm.setMessage(test_message)
         self.test_nttable.getAlarm(test_alarm)
-        self.assertEqual(test_alarm.getMessage(), test_message, "Alarm.message returned an unexpected value")
-        self.assertEqual(test_alarm.getSeverity(), "NONE", "Alarm.severity returned an unexpected value")
-        self.assertEqual(test_alarm.getStatus(), "NONE", "Alarm.status returned an unexpected value")
+        self.assertEqual(test_alarm.getMessage(), test_message, "Alarm.message returned an unexpected value: %r" % test_alarm.getMessage() + " expected %r " % test_message)
+        self.assertEqual(test_alarm.getSeverity(), "NONE", "Alarm.severity returned an unexpected value: %r" % test_alarm.getSeverity() + " expected NONE ")
+        self.assertEqual(test_alarm.getStatus(), "NONE", "Alarm.status returned an unexpected value: %r" % test_alarm.getStatus() + " expected NONE ")
 
     '''
     Tests getter for Labels
@@ -62,7 +62,7 @@ class TestNTTable(unittest.TestCase):
         labels = self.test_nttable.getLabels()
         test_nttable_keys = self.parameters.keys()
         for i in range(len(labels)):
-            self.assertEqual(test_nttable_keys[i], labels[i], "Labels do not match given keys")
+            self.assertEqual(test_nttable_keys[i], labels[i], "Labels do not match given keys:  %r" % test_nttable_keys[i] + " != %r" % labels[i])
 
     '''
     Tests function for retrieving columns based on a label
@@ -72,11 +72,12 @@ class TestNTTable(unittest.TestCase):
         labels = self.test_nttable.getLabels()
         test_nttable_keys = self.parameters.keys()
         for i in range(len(labels)):
-            print str(self.parameters[test_nttable_keys[i]])
             test_column = self.test_nttable.getColumn(labels[i])
-            print str(test_column)
             self.assertEqual(self.parameters[test_nttable_keys[i]], test_column,
-                             "Columns do not match given test names")
+                             "Columns do not match given test names:  " +
+                             str(self.parameters[test_nttable_keys[i]]) +
+                             " != " +
+                             str(test_column))
 
     if __name__ == '__main__':
         unittest.main()
