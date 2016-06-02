@@ -137,7 +137,7 @@ class Test(unittest.TestCase):
         self.assertEqual(res0[0]["status"], "active")
         self.assertEqual(res1[0]["status"], "inactive")
         self.assertEqual(res1[0]["created_on"], res0[0]["created_on"])
-        time.sleep(1)
+        time.sleep(1)  # delay required for below updated_on inequality test
         self.assertTrue(updateconfig(self.conn, self.collection, name, status="active"))
         res2 = retrieveconfig(self.conn, self.collection, name)
         self.assertEqual(res2[0]["status"], "active")
