@@ -29,7 +29,6 @@ class TestGatherV3Data(unittest.TestCase):
             'masarExample0001',
             'masarExample0004',
             'masarExampleCharArray',
-            'masarExampleUCharArray',
             'masarExampleStringArray',
             'masarExampleShortArray',
             'masarExampleLongArray',
@@ -57,13 +56,12 @@ class TestGatherV3Data(unittest.TestCase):
         self.assertTrue(result, "Connection failed with message:  " + self.gatherv3data.getMessage())
 
         pvstructure = self.gatherv3data.getPVStructure()
-        self.assertTrue(pvstructure is not None, "No PVStructure returned")
+        self.assertNotEqual(pvstructure, None, "No PVStructure returned")
 
     '''
     Tests all values in NTMultiChannel. Condensed test to reduce connection overhead of multiple tests.
 
-    Note: These tests only confirm that the correct number of each thing are returned,
-          but it would be simple to add tests for types, or specific values or ranges
+    Note: These tests check for specific values that are present in the masarTestDB.db and will fail if that DB is not loaded
     '''
     def testNTMultiChannel(self):
         result = self.gatherv3data.get()
@@ -73,8 +71,12 @@ class TestGatherV3Data(unittest.TestCase):
 
         alarm = Alarm()
         ntmultichannel.getAlarm(alarm)
-        self.assertTrue(alarm.getStatus() in alarm.getStatusChoices(), "Invalid alarm status detected")
-        self.assertTrue(alarm.getSeverity() in alarm.getSeverityChoices(), "Invalid alarm severity detected")
+        self.assertTrue(alarm.getStatus() in alarm.getStatusChoices(),
+                        "Invalid alarm status detected, status " + str(alarm.getStatus()) +
+                        " not found in choices " + str(alarm.getStatusChoices()))
+        self.assertTrue(alarm.getSeverity() in alarm.getSeverityChoices(),
+                        "Invalid alarm severity detected, severity " + str(alarm.getSeverity()) +
+                        " not found in choices " + str(alarm.getSeverityChoices()))
 
         time_stamp = TimeStamp()
         test_stamp = TimeStamp()
@@ -86,28 +88,59 @@ class TestGatherV3Data(unittest.TestCase):
                                                                  "given time stamp is in the future")
 
         channel_count = ntmultichannel.getNumberChannel()
-        self.assertTrue(channel_count > 0, "Channel count of %r returned" % channel_count)
-        self.assertEqual(len(ntmultichannel.getValue()), channel_count,
-                         "Channel count does not match number of values")
-        self.assertEqual(len(ntmultichannel.getChannelName()), channel_count,
-                         "Channel count does not match number of channel names")
-        self.assertEqual(len(ntmultichannel.getIsConnected()), channel_count,
-                         "Channel count does not match number of monitered connections")
-        self.assertEqual(len(ntmultichannel.getSeverity()), channel_count,
-                         "Channel count does not match number of severities")
-        self.assertEqual(len(ntmultichannel.getStatus()), channel_count,
-                         "Channel count does not match number of statuses")
-        self.assertEqual(len(ntmultichannel.getMessage()), channel_count,
-                         "Channel count does not match number of messages")
-        self.assertEqual(len(ntmultichannel.getDbrType()), channel_count,
-                         "Channel count does not match number of dbr types")
-        self.assertEqual(len(ntmultichannel.getSecondsPastEpoch()), channel_count,
-                         "Channel count does not match number of times (seconds)")
-        self.assertEqual(len(ntmultichannel.getNanoseconds()), channel_count,
-                         "Channel count does not match number of times (nanoseconds)")
-        self.assertEqual(len(ntmultichannel.getUserTag()), channel_count,
-                         "Channel count does not match number of user tags")
-        self.assertEqual(type(ntmultichannel.getDescriptor()), StringType, "Non-String descriptor found:  %r" % ntmultichannel.getDescriptor() + " is of type %r" % type(ntmultichannel.getDescriptor()))
+
+        self.assertEqual(channel_count, 13, "Channel count of %r returned, expected 13" % channel_count)
+        test_val_list = (0, 1, 'zero', 'one', 10, 'string value', 1.9, (), (), (), (), (), ())
+
+        self.assertEqual(ntmultichannel.getValue(), test_val_list,
+                         "es do not match known test DB, received:  " + str(ntmultichannel.getValue()) +
+                         "  EXPECTED: " + str(test_val_list))
+
+        self.assertEqual(ntmultichannel.getChannelName(), self.names,
+                         "Names do not match known test DB, received:  " + str(ntmultichannel.getChannelName()) +
+                         "  EXPECTED: " + str(self.names))
+
+        test_connected_list = (1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+        self.assertEqual(ntmultichannel.getIsConnected(), test_connected_list,
+                         "es do not match known test DB, received:  " + str(ntmultichannel.getIsConnected()) +
+                         "  EXPECTED: " + str(test_connected_list))
+
+        test_severity_list = (3, 0, 3, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3)
+        self.assertEqual(ntmultichannel.getSeverity(), test_severity_list,
+                         "es do not match known test DB, received:  " + str(ntmultichannel.getSeverity()) +
+                         "  EXPECTED: " + str(test_severity_list))
+
+        test_status_list = (3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3)
+        self.assertEqual(ntmultichannel.getStatus(), test_status_list,
+                         "es do not match known test DB, received:  " + str(ntmultichannel.getStatus()) +
+                         "  EXPECTED: " + str(test_status_list))
+
+        test_message_list = ('UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM')
+        self.assertEqual(ntmultichannel.getMessage(), test_message_list,
+                         "es do not match known test DB, received:  " + str(ntmultichannel.getMessage()) +
+                         "  EXPECTED: " + str(test_message_list))
+
+        test_dbrtype_list = (0, 5, 0, 0, 5, 0, 6, 4, 0, 1, 5, 2, 6)
+        self.assertEqual(ntmultichannel.getDbrType(), test_dbrtype_list,
+                         "es do not match known test DB, received:  " + str(ntmultichannel.getDbrType()) +
+                         "  EXPECTED: " + str(test_dbrtype_list))
+
+        test_secondspastepoch_list = (631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000)
+        self.assertEqual(ntmultichannel.getSecondsPastEpoch(), test_secondspastepoch_list,
+                         "es do not match known test DB, received:  " + str(ntmultichannel.getSecondsPastEpoch()) +
+                         "  EXPECTED: " + str(test_secondspastepoch_list))
+
+        test_nanoseconds_list = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        self.assertEqual(ntmultichannel.getNanoseconds(), test_nanoseconds_list,
+                         "es do not match known test DB, received:  " + str(ntmultichannel.getNanoseconds()) +
+                         "  EXPECTED: " + str(test_nanoseconds_list))
+
+        test_usertag_list = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        self.assertEqual(ntmultichannel.getUserTag(), test_usertag_list,
+                         "es do not match known test DB, received:  " + str(ntmultichannel.getUserTag()) +
+                         "  EXPECTED: " + str(test_usertag_list))
+
+        self.assertEqual(type(ntmultichannel.getDescriptor()), StringType, "Non-String descriptor found:  " + str(ntmultichannel.getDescriptor()) + " is of type " + str(type(ntmultichannel.getDescriptor())))
 
     if __name__ == '__main__':
         unittest.main()
