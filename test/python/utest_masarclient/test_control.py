@@ -21,19 +21,19 @@ class TestControl(unittest.TestCase):
     Tests both default value assignment and getter operation for LimitLow
     '''
     def testGetLimitLow(self):
-        self.assertEqual(0.0, self.control.getLimitLow(), "Default LimitLow did not return 0.0 instead returned:  %r" % self.control.getLimitLow())
+        self.assertEqual(0.0, self.control.getLimitLow(), "Default LimitLow did not return 0.0 instead returned:  " + str(self.control.getLimitLow()))
 
     '''
     Tests both default value assignment and getter operation for LimitHigh
     '''
     def testGetLimitHigh(self):
-        self.assertEqual(0.0, self.control.getLimitHigh(), "Default LimitHigh did not return 0.0 instead returned:  %r"% self.control.getLimitHigh())
+        self.assertEqual(0.0, self.control.getLimitHigh(), "Default LimitHigh did not return 0.0 instead returned:  " + str(self.control.getLimitHigh()))
 
     '''
     Tests both default value assignment and getter operation for MinStep
     '''
     def testGetMinStep(self):
-        self.assertEqual(0.0, self.control.getMinStep(), "Default MinStep did not return 0.0 instead returned: %r" % self.control.getMinStep())
+        self.assertEqual(0.0, self.control.getMinStep(), "Default MinStep did not return 0.0 instead returned: " + str(self.control.getMinStep()))
 
     '''
     Tests setter for LimitLow, requires getLimitLow

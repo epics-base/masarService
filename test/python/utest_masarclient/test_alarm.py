@@ -30,7 +30,7 @@ class TestAlarm(unittest.TestCase):
     def testStatusChoices(self):
         status_choices = self.test_alarm.getStatusChoices()
         for status in status_choices:
-            self.assertEqual(type(status), StringType, "non-string status found: %r" % status)
+            self.assertEqual(type(status), StringType, "non-string status found: " + repr(status))
 
     '''
     Test to confirm all of the severity choices are of the string type
@@ -38,7 +38,7 @@ class TestAlarm(unittest.TestCase):
     def testSeverityChoices(self):
         severity_choices = self.test_alarm.getSeverityChoices()
         for severity in severity_choices:
-            self.assertEqual(type(severity), StringType, "non-string severity found: %r" % severity)
+            self.assertEqual(type(severity), StringType, "non-string severity found: " + repr(severity))
 
     '''
     Tests both default value assignment and getter operation for Status

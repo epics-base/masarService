@@ -114,15 +114,3 @@ record(waveform,"masarExampleDoubleArray") {
     field(NELM,"1000")
     field(FTVL,"DOUBLE")
 }
-
-record(waveform,"masarExampleCharScalar") {
-    field(DESC, "Soft Waveform")
-    field(NELM,"1")
-    field(FTVL,"CHAR")
-}
-
-record(waveform,"masarExampleShortScalar") {
-    field(DESC, "Soft Waveform")
-    field(NELM,"1")
-    field(FTVL,"SHORT")
-}

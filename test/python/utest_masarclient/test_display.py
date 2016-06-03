@@ -27,31 +27,31 @@ class TestDisplay(unittest.TestCase):
     Tests getter for Units, also tests default value assignment
     '''
     def testGetLimitLow(self):
-        self.assertEqual(self.test_display.getLimitLow(), 0.0, "LimitLow returned incorrect default value:  %r" % self.test_display.getLimitLow())
+        self.assertEqual(self.test_display.getLimitLow(), 0.0, "LimitLow returned incorrect default value:  " + str(self.test_display.getLimitLow()))
 
     '''
     Tests getter for Units, also tests default value assignment
     '''
     def testGetLimitHigh(self):
-        self.assertEqual(self.test_display.getLimitHigh(), 0.0, "LimitHigh returned incorrect default value:  %r" % self.test_display.getLimitHigh())
+        self.assertEqual(self.test_display.getLimitHigh(), 0.0, "LimitHigh returned incorrect default value:  " + str(self.test_display.getLimitHigh()))
 
     '''
     Tests getter for Units, also tests default value assignment
     '''
     def testGetLimitLow(self):
-        self.assertEqual(self.test_display.getDescription(), "", "Description returned incorrect default value:  %r" % self.test_display.getDescription())
+        self.assertEqual(self.test_display.getDescription(), "", "Description returned incorrect default value:  " + str(self.test_display.getDescription()))
 
     '''
     Tests getter for Units, also tests default value assignment
     '''
     def testGetFormat(self):
-        self.assertEqual(self.test_display.getFormat(), "", "Format returned incorrect default value:  %r" % self.test_display.getFormat())
+        self.assertEqual(self.test_display.getFormat(), "", "Format returned incorrect default value:  " + str(self.test_display.getFormat()))
 
     '''
     Tests getter for Units, also tests default value assignment
     '''
     def testGetUnits(self):
-        self.assertEqual(self.test_display.getUnits(), "", "Units returned incorrect default value:  %r" % self.test_display.getUnits())
+        self.assertEqual(self.test_display.getUnits(), "", "Units returned incorrect default value:  " + str(self.test_display.getUnits()))
 
     '''
     Tests setter for LimitLow, requires getLimitLow
