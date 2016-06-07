@@ -631,7 +631,7 @@ PVStructurePtr DSL_RDB::request(
             }
             pvReturn = updateSnapshotEvent(list);
         }
-        Py_DECREF(result);
+        Py_XDECREF(result);
         PyGILState_Release(gstate);
         return pvReturn->getPVStructure();
     } else if (functionName.compare("retrieveSnapshot")==0) {
@@ -651,7 +651,7 @@ PVStructurePtr DSL_RDB::request(
             }
             pvReturn = retrieveSnapshot(list);
         }
-        Py_DECREF(result);
+        Py_XDECREF(result);
         PyGILState_Release(gstate);
         return pvReturn->getPVStructure();
     } else if (functionName.compare("saveSnapshot")==0) {
