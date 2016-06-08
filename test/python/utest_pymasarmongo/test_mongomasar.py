@@ -12,6 +12,11 @@ from pymasarmongo.config._config import masarconfig
 from pymasarmongo.pymasarmongo.pymasar import saveconfig
 from pymasarmongo.pymasarmongo.pymasar import retrieveconfig
 from pymasarmongo.pymasarmongo.pymasar import updateconfig
+from pymasarmongo.pymasarmongo.pymasar import saveevent
+from pymasarmongo.pymasarmongo.pymasar import retrieveevents
+from pymasarmongo.pymasarmongo.pymasar import updateevent
+from pymasarmongo.pymasarmongo.pymasar import retrievesnapshot
+
 
 class Test(unittest.TestCase):
 
@@ -19,9 +24,9 @@ class Test(unittest.TestCase):
         self.conn, self.collection = utils.conn(host=masarconfig.get('mongodb','host'), port=masarconfig.get('mongodb','port'), db=masarconfig.get('mongodb','database'))
 
     def tearDown(self):
-        print "database: ", self.conn.database_names()
-        print "collections: ", self.conn[self.collection]
-        print "collections: ", self.conn[self.collection].collection_names()
+        #print "database: ", self.conn.database_names()
+        #print "collections: ", self.conn[self.collection]
+        #print "collections: ", self.conn[self.collection].collection_names()
         self.conn.drop_database(masarconfig.get('mongodb', 'database'))
         utils.close(self.conn)
 
@@ -373,6 +378,177 @@ class Test(unittest.TestCase):
         #print res3, 
         #print "server: ", res3[0]['_id'].generation_time 
         #print "client: ", res3[0]['created_on']
+
+    def testSaveEvents(self):
+        name = '"SR-All-20140326'
+        params = {"desc": "SR daily SCR setpoint: SR and IS PS, RF",
+                  "system": "SR",
+                  "status": "inactive",
+                  "version": 20140326,
+                  }
+        newid = saveconfig(self.conn, self.collection, name, **params)
+        new = retrieveconfig(self.conn, self.collection, name=name)
+        self.assertEqual(len(new), 1,
+                         "Should find only one entry instead of %s"%len(new))
+        configidx = new[0]["configidx"]
+
+        with self.assertRaises(RuntimeError) as context:
+            eventid = saveevent(self.conn,
+                                self.collection,
+                                configidx=configidx,
+                                comment="good snapshot",
+                                approval=True,
+                                masar_data=None,
+                                username="name")
+        self.assertEqual(context.exception.message, "Data set can not be empty.")
+
+        with self.assertRaises(RuntimeError) as context:
+            eventid = saveevent(self.conn,
+                                self.collection,
+                                configidx=None,
+                                comment="good snapshot",
+                                approval=True,
+                                masar_data=["element"],
+                                username="name")
+        self.assertEqual(context.exception.message, "Cannot identify configuration index number.")
+
+        with self.assertRaises(ValueError) as context:
+            eventid = saveevent(self.conn,
+                                self.collection,
+                                configidx=-1,
+                                comment="good snapshot",
+                                approval=True,
+                                masar_data=["element"],
+                                username="name")
+        self.assertEqual(context.exception.message, "Unknown configuration index number (%s)" % str(-1))
+
+        eventid = saveevent(self.conn,
+                            self.collection,
+                            configidx=configidx,
+                            comment="good snapshot",
+                            approval=True,
+                            masar_data=["element"],
+                            username="name")
+        self.assertNotEqual(eventid, None)
+
+    def testRetrieveEvents(self):
+        name = '"SR-All-20140326'
+        test_comment = "test"
+        test_approval = True
+        test_username = "name"
+        test_masar_data = [0]
+        params = {"desc": "SR daily SCR setpoint: SR and IS PS, RF",
+                  "system": "SR",
+                  "status": "inactive",
+                  "version": 20140326,
+                  }
+        newid = saveconfig(self.conn, self.collection, name, **params)
+        new = retrieveconfig(self.conn, self.collection, name=name)
+        self.assertEqual(len(new), 1,
+                         "Should find only one entry instead of %s" % len(new))
+        configidx = new[0]["configidx"]
+        eventid = saveevent(self.conn,
+                            self.collection,
+                            configidx=configidx,
+                            comment=test_comment,
+                            approval=test_approval,
+                            masar_data=test_masar_data,
+                            username=test_username)
+        self.assertNotEqual(eventid, None)
+        result = retrieveevents(self.conn,
+                                self.collection,
+                                configidx=configidx,
+                                eventidx=eventid,
+                                approval=test_approval,
+                                comment=test_comment,
+                                username=test_username)
+        self.assertEqual(result[0]["eventidx"], eventid)
+        self.assertEqual(result[0]["configidx"], configidx)
+        self.assertEqual(result[0]["comment"], test_comment)
+        self.assertEqual(result[0]["approval"], test_approval)
+        self.assertEqual(result[0]["username"], test_username)
+
+    def testUpdateEvents(self):
+        name = '"SR-All-20140326'
+        test_comment = "test"
+        updated_comment = "updated"
+        test_approval = True
+        updated_approval = False
+        test_username = "name"
+        updated_username = "newname"
+        test_masar_data = [0]
+        params = {"desc": "SR daily SCR setpoint: SR and IS PS, RF",
+                  "system": "SR",
+                  "status": "inactive",
+                  "version": 20140326,
+                  }
+        newid = saveconfig(self.conn, self.collection, name, **params)
+        new = retrieveconfig(self.conn, self.collection, name=name)
+        self.assertEqual(len(new), 1,
+                         "Should find only one entry instead of %s" % len(new))
+        configidx = new[0]["configidx"]
+        eventid = saveevent(self.conn,
+                            self.collection,
+                            configidx=configidx,
+                            comment=test_comment,
+                            approval=test_approval,
+                            masar_data=test_masar_data,
+                            username=test_username)
+        self.assertNotEqual(eventid, None)
+        with self.assertRaises(RuntimeError) as context:
+            result = updateevent(self.conn,
+                                self.collection,
+                                configidx=None,
+                                comment=updated_comment,
+                                approval=updated_approval,
+                                username=updated_username)
+        self.assertEqual(context.exception.message, "Unknown MASAR event to update.")
+        with self.assertRaises(RuntimeError) as context:
+            result = updateevent(self.conn,
+                                self.collection,
+                                eventidx=eventid)
+        self.assertEqual(context.exception.message, "No fields to update.")
+        result = updateevent(self.conn,
+                              self.collection,
+                              eventidx=eventid,
+                              comment=updated_comment,
+                              approval=updated_approval,
+                              username=updated_username)
+        self.assertTrue(result)
+
+    def testRetrieveSnapshot(self):
+        name = '"SR-All-20140326'
+        test_comment = "test"
+        test_approval = True
+        test_username = "name"
+        test_masar_data = [0]
+        params = {"desc": "SR daily SCR setpoint: SR and IS PS, RF",
+                  "system": "SR",
+                  "status": "inactive",
+                  "version": 20140326,
+                  }
+        newid = saveconfig(self.conn, self.collection, name, **params)
+        new = retrieveconfig(self.conn, self.collection, name=name)
+        self.assertEqual(len(new), 1,
+                         "Should find only one entry instead of %s" % len(new))
+        configidx = new[0]["configidx"]
+        eventid = saveevent(self.conn,
+                            self.collection,
+                            configidx=configidx,
+                            comment=test_comment,
+                            approval=test_approval,
+                            masar_data=test_masar_data,
+                            username=test_username)
+        self.assertNotEqual(eventid, None)
+        result = retrievesnapshot(self.conn,
+                                self.collection,
+                                eventidx=eventid)
+        self.assertEqual(result["eventidx"], eventid)
+        self.assertEqual(result["configidx"], configidx)
+        self.assertEqual(result["comment"], test_comment)
+        self.assertEqual(result["approval"], test_approval)
+        self.assertEqual(result["username"], test_username)
+        self.assertEqual(result["masar_data"], test_masar_data)
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
