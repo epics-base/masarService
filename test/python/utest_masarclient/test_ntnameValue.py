@@ -32,7 +32,7 @@ class TestNTNameValue(unittest.TestCase):
     This test just confirms that a PVStructure is returned and is not equal to none
     '''
     def testGetPVStructure(self):
-        self.assertTrue(self.test_ntnv.getPVStructure() is not None)
+        self.assertNotEqual(self.test_ntnv.getPVStructure(), None)
 
 
     '''

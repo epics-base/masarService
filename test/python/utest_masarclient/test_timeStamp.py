@@ -92,12 +92,10 @@ class TestTimeStamp(unittest.TestCase):
         for test_value_seconds in range(0, 100):
             for test_value_nanoseconds in range(0, 100):
                 self.test_time_stamp.put(test_value_seconds, test_value_nanoseconds)
-                self.assertTrue(self.test_time_stamp.getNanoseconds() == test_value_nanoseconds,
-                                "TimeStamp.getNanoseconds returned an unexpected value")
+                self.assertEqual(self.test_time_stamp.getNanoseconds(), test_value_nanoseconds)
                 # Some variance is applied to the following test
                 # it appears this variance does not typically exceed +/- .00000001
-                self.assertTrue(self.test_time_stamp.toSeconds()+.1 >= test_value_seconds >= self.test_time_stamp.toSeconds()-.1,
-                                "Timestamp.toSeconds returned an unexpected value")
+                self.assertGreaterEqual(self.test_time_stamp.toSeconds()+.1 >= test_value_seconds, self.test_time_stamp.toSeconds()-.1)
 
     '''
     Tests method to set current time in milliseconds, test range was chosen arbitrarily
@@ -105,8 +103,7 @@ class TestTimeStamp(unittest.TestCase):
     def testPutMilliseconds(self):
         for test_value_milliseconds in range(0, 1000):
             self.test_time_stamp.putMilliseconds(test_value_milliseconds)
-            self.assertTrue(test_value_milliseconds == self.test_time_stamp.getMilliseconds(),
-                            "TimeStamp.getMilliseconds returned an unexpected value")
+            self.assertEqual(test_value_milliseconds, self.test_time_stamp.getMilliseconds())
 
     '''
     Tests non-default constructor. Test ranges chosen arbitrarily, increasing scale slows test significantly
@@ -115,10 +112,9 @@ class TestTimeStamp(unittest.TestCase):
         for test_value_seconds in range(0, 100):
             for test_value_nanoseconds in range(0, 100):
                 self.test_time_stamp = TimeStamp(test_value_seconds, test_value_nanoseconds)
-                self.assertTrue(self.test_time_stamp.getNanoseconds() == test_value_nanoseconds,
-                                "TimeStamp.getNanoseconds returned an unexpected value")
-                self.assertTrue(self.test_time_stamp.toSeconds()+.1 >= test_value_seconds >= self.test_time_stamp.toSeconds()-.1,
-                                "Timestamp.toSeconds returned an unexpected value")
+                self.assertEqual(self.test_time_stamp.getNanoseconds(), test_value_nanoseconds)
+                self.assertGreaterEqual(self.test_time_stamp.toSeconds()+.1 >= test_value_seconds)
+                self.assertGreaterEqual(test_value_seconds >= self.test_time_stamp.toSeconds()-.1)
 
     if __name__ == '__main__':
         unittest.main()
