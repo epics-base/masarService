@@ -59,7 +59,7 @@ class TestDisplay(unittest.TestCase):
     def testSetLimitLow(self):
         test_limit_low = -10.0
         self.test_display.setLimitLow(test_limit_low)
-        self.assertEqual(self.test_display.getLimitLow(), test_limit_low, "LimitLow does not match test input:  " + repr(self.test_display.getLimitLow()) + " != " + repr(test_limit_low))
+        self.assertEqual(self.test_display.getLimitLow(), test_limit_low, "LimitLow does not match test input:  " + str(self.test_display.getLimitLow()) + " != " + str(test_limit_low))
 
     '''
     Tests setter for LimitHigh, requires getLimitHigh
@@ -67,7 +67,7 @@ class TestDisplay(unittest.TestCase):
     def testSetLimitHigh(self):
         test_limit_high = 10.0
         self.test_display.setLimitHigh(test_limit_high)
-        self.assertEqual(self.test_display.getLimitHigh(), test_limit_high, "LimitHigh does not match test input:  " + repr(self.test_display.getLimitHigh()) + " != " + repr(test_limit_high))
+        self.assertEqual(self.test_display.getLimitHigh(), test_limit_high, "LimitHigh does not match test input:  " + str(self.test_display.getLimitHigh()) + " != " + str(test_limit_high))
 
     '''
     Tests setter for Description, requires getDescription
@@ -75,7 +75,7 @@ class TestDisplay(unittest.TestCase):
     def testSetLimitLow(self):
         test_description = "test description"
         self.test_display.setDescription(test_description)
-        self.assertEqual(self.test_display.getDescription(), test_description, "Description does not match test input:  " + repr(self.test_display.getDescription()) + " != " + repr(test_description))
+        self.assertEqual(self.test_display.getDescription(), test_description, "Description does not match test input:  " + str(self.test_display.getDescription()) + " != " + str(test_description))
 
     '''
     Tests setter for Format, requires getFormat
@@ -83,7 +83,7 @@ class TestDisplay(unittest.TestCase):
     def testSetFormat(self):
         test_format = "%f"
         self.test_display.setFormat(test_format)
-        self.assertEqual(self.test_display.getFormat(), test_format, "Format does not match test input:  " + repr(self.test_display.getFormat()) + " != " + repr(test_format))
+        self.assertEqual(self.test_display.getFormat(), test_format, "Format does not match test input:  " + str(self.test_display.getFormat()) + " != " + str(test_format))
 
     '''
     Tests setter for Units, requires getUnits
@@ -91,7 +91,7 @@ class TestDisplay(unittest.TestCase):
     def testSetUnits(self):
         test_units = "volts"
         self.test_display.setUnits(test_units)
-        self.assertEqual(self.test_display.getUnits(), test_units, "Units do not match test input:  " + repr(self.test_display.getUnits()) + " != " + repr(test_units))
+        self.assertEqual(self.test_display.getUnits(), test_units, "Units do not match test input:  " + str(self.test_display.getUnits()) + " != " + str(test_units))
 
 
     '''
@@ -108,11 +108,11 @@ class TestDisplay(unittest.TestCase):
                                     test_description,
                                     test_format,
                                     test_units)
-        self.assertEqual(self.test_display.getLimitLow(), test_limit_low, "test_limit_low did not return given value:  " + repr(self.test_display.getLimitLow()) + " != " + repr(test_limit_low))
-        self.assertEqual(self.test_display.getLimitHigh(), test_limit_high, "test_limit_high did not return given value:  " + repr(self.test_display.getLimitHigh()) + " != " + repr(test_limit_high))
-        self.assertEqual(self.test_display.getDescription(), test_description, "test_description did not return given value:  " + repr(self.test_display.getDescription()) + " != " + repr(test_description))
-        self.assertEqual(self.test_display.getFormat(), test_format, "test_format did not return given value:  " + repr(self.test_display.getFormat()) + " != " + repr(test_format))
-        self.assertEqual(self.test_display.getUnits(), test_units, "test_units did not return given value:  " + repr(self.test_display.getUnits()) + " != " + repr(test_units))
+        self.assertEqual(self.test_display.getLimitLow(), test_limit_low, "test_limit_low did not return given value:  " + str(self.test_display.getLimitLow()) + " != " + str(test_limit_low))
+        self.assertEqual(self.test_display.getLimitHigh(), test_limit_high, "test_limit_high did not return given value:  " + str(self.test_display.getLimitHigh()) + " != " + str(test_limit_high))
+        self.assertEqual(self.test_display.getDescription(), test_description, "test_description did not return given value:  " + str(self.test_display.getDescription()) + " != " + str(test_description))
+        self.assertEqual(self.test_display.getFormat(), test_format, "test_format did not return given value:  " + str(self.test_display.getFormat()) + " != " + str(test_format))
+        self.assertEqual(self.test_display.getUnits(), test_units, "test_units did not return given value:  " + str(self.test_display.getUnits()) + " != " + str(test_units))
 
     if __name__ == '__main__':
         unittest.main()

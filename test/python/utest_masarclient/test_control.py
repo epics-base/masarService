@@ -41,7 +41,7 @@ class TestControl(unittest.TestCase):
     def testSetLimitLow(self):
         limitLowTestValue = -10.0  # Default test value can be changed here
         self.control.setLimitLow(limitLowTestValue)
-        self.assertEqual(self.control.getLimitLow(), limitLowTestValue, "LimitLow does not match test input:  " + repr(self.control.getLimitLow()) + " != " + repr(limitLowTestValue))
+        self.assertEqual(self.control.getLimitLow(), limitLowTestValue, "LimitLow does not match test input:  " + str(self.control.getLimitLow()) + " != " + str(limitLowTestValue))
 
     '''
     Tests setter for LimitHigh, requires getLimitHigh
@@ -49,7 +49,7 @@ class TestControl(unittest.TestCase):
     def testSetLimitHigh(self):
         limitHighTestValue = 10.0  # Default test value can be changed here
         self.control.setLimitHigh(limitHighTestValue)
-        self.assertEqual(self.control.getLimitHigh(), limitHighTestValue, "LimitHigh does not match test input:  " + repr(self.control.getLimitHigh()) + " != " + repr(limitHighTestValue))
+        self.assertEqual(self.control.getLimitHigh(), limitHighTestValue, "LimitHigh does not match test input:  " + str(self.control.getLimitHigh()) + " != " + str(limitHighTestValue))
 
     '''
     Tests setter for MinStep, requires getMinStep
@@ -57,7 +57,7 @@ class TestControl(unittest.TestCase):
     def testSetMinStep(self):
         minStepTestValue = 1.0  # Default test value can be changed here
         self.control.setMinStep(minStepTestValue)
-        self.assertEqual(self.control.getMinStep(), minStepTestValue, "MinStep does not match test input:  " + repr(self.control.getMinStep()) + " != " + repr(minStepTestValue))
+        self.assertEqual(self.control.getMinStep(), minStepTestValue, "MinStep does not match test input:  " + str(self.control.getMinStep()) + " != " + str(minStepTestValue))
 
     '''
     Tests Control's non-default constructor. Full use test.
@@ -67,9 +67,9 @@ class TestControl(unittest.TestCase):
         limitHighTestValue = 10.0
         minStepTestValue = 1.0
         control = Control(limitLowTestValue, limitHighTestValue, minStepTestValue)
-        self.assertEqual(control.getLimitLow(), limitLowTestValue, "LimitLow does not match test input:  " + repr(self.control.getLimitLow()) + " != " + repr(limitLowTestValue))
-        self.assertEqual(control.getLimitHigh(), limitHighTestValue, "LimitHigh does not match test input:  " + repr(self.control.getLimitHigh()) + " != " + repr(limitLowTestValue))
-        self.assertEqual(control.getMinStep(), minStepTestValue, "MinStep does not match test input:  " + repr(self.control.getMinStep()) + " != " + repr(minStepTestValue))
+        self.assertEqual(control.getLimitLow(), limitLowTestValue, "LimitLow does not match test input:  " + str(self.control.getLimitLow()) + " != " + str(limitLowTestValue))
+        self.assertEqual(control.getLimitHigh(), limitHighTestValue, "LimitHigh does not match test input:  " + str(self.control.getLimitHigh()) + " != " + str(limitLowTestValue))
+        self.assertEqual(control.getMinStep(), minStepTestValue, "MinStep does not match test input:  " + str(self.control.getMinStep()) + " != " + str(minStepTestValue))
 
     if __name__ == '__main__':
         unittest.main()

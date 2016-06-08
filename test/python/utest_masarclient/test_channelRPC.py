@@ -56,11 +56,11 @@ class TestChannelRPC(unittest.TestCase):
                                                                  "given time stamp is in the future")
 
         self.assertTrue(alarm.getStatus() in alarm.getStatusChoices(),
-                        "Invalid alarm status, status not in StatusChoices:  " + repr(
-                            alarm.getStatus()) + " not in " + repr(alarm.getStatusChoices()))
+                        "Invalid alarm status, status not in StatusChoices:  " + str(
+                            alarm.getStatus()) + " not in " + str(alarm.getStatusChoices()))
         self.assertTrue(alarm.getSeverity() in alarm.getSeverityChoices(),
-                        "Invalid alarm severity, severity not in SeverityChoices:  " + repr(
-                            alarm.getSeverity()) + " not in " + repr(alarm.getSeverityChoices()))
+                        "Invalid alarm severity, severity not in SeverityChoices:  " + str(
+                            alarm.getSeverity()) + " not in " + str(alarm.getSeverityChoices()))
 
     '''
     Tests saveSnapshot function, makes assertion for successful request and for correct results
@@ -86,11 +86,11 @@ class TestChannelRPC(unittest.TestCase):
                                                                  "given time stamp is in the future")
 
         self.assertTrue(alarm.getStatus() in alarm.getStatusChoices(),
-                        "Invalid alarm status, status not in StatusChoices:  " + repr(
-                            alarm.getStatus()) + " not in " + repr(alarm.getStatusChoices()))
+                        "Invalid alarm status, status not in StatusChoices:  " + str(
+                            alarm.getStatus()) + " not in " + str(alarm.getStatusChoices()))
         self.assertTrue(alarm.getSeverity() in alarm.getSeverityChoices(),
-                        "Invalid alarm severity, severity not in SeverityChoices:  " + repr(
-                            alarm.getSeverity()) + " not in " + repr(alarm.getSeverityChoices()))
+                        "Invalid alarm severity, severity not in SeverityChoices:  " + str(
+                            alarm.getSeverity()) + " not in " + str(alarm.getSeverityChoices()))
 
     '''
     Tests retrieveServiceEvents function, makes assertion for successful request and for correct results
@@ -118,11 +118,11 @@ class TestChannelRPC(unittest.TestCase):
                                                              "given time stamp is in the future")
 
         self.assertTrue(alarm.getStatus() in alarm.getStatusChoices(),
-                        "Invalid alarm status, status not in StatusChoices:  " + repr(
-                            alarm.getStatus()) + " not in " + repr(alarm.getStatusChoices()))
+                        "Invalid alarm status, status not in StatusChoices:  " + str(
+                            alarm.getStatus()) + " not in " + str(alarm.getStatusChoices()))
         self.assertTrue(alarm.getSeverity() in alarm.getSeverityChoices(),
-                        "Invalid alarm severity, severity not in SeverityChoices:  " + repr(
-                            alarm.getSeverity()) + " not in " + repr(alarm.getSeverityChoices()))
+                        "Invalid alarm severity, severity not in SeverityChoices:  " + str(
+                            alarm.getSeverity()) + " not in " + str(alarm.getSeverityChoices()))
 
     '''
     Tests retrieveServiceConfigProps function, makes assertion for successful request and for correct results
@@ -151,11 +151,11 @@ class TestChannelRPC(unittest.TestCase):
                                                                  "given time stamp is in the future")
 
         self.assertTrue(alarm.getStatus() in alarm.getStatusChoices(),
-                        "Invalid alarm status, status not in StatusChoices:  " + repr(
-                            alarm.getStatus()) + " not in " + repr(alarm.getStatusChoices()))
+                        "Invalid alarm status, status not in StatusChoices:  " + str(
+                            alarm.getStatus()) + " not in " + str(alarm.getStatusChoices()))
         self.assertTrue(alarm.getSeverity() in alarm.getSeverityChoices(),
-                        "Invalid alarm severity, severity not in SeverityChoices:  " + repr(
-                            alarm.getSeverity()) + " not in " + repr(alarm.getSeverityChoices()))
+                        "Invalid alarm severity, severity not in SeverityChoices:  " + str(
+                            alarm.getSeverity()) + " not in " + str(alarm.getSeverityChoices()))
 
     '''
     Tests retrieveServiceConfigs function, makes assertion for successful request and for correct results
@@ -183,11 +183,11 @@ class TestChannelRPC(unittest.TestCase):
                                                                  "given time stamp is in the future")
 
         self.assertTrue(alarm.getStatus() in alarm.getStatusChoices(),
-                        "Invalid alarm status, status not in StatusChoices:  " + repr(
-                            alarm.getStatus()) + " not in " + repr(alarm.getStatusChoices()))
+                        "Invalid alarm status, status not in StatusChoices:  " + str(
+                            alarm.getStatus()) + " not in " + str(alarm.getStatusChoices()))
         self.assertTrue(alarm.getSeverity() in alarm.getSeverityChoices(),
-                        "Invalid alarm severity, severity not in SeverityChoices:  " + repr(
-                            alarm.getSeverity()) + " not in " + repr(alarm.getSeverityChoices()))
+                        "Invalid alarm severity, severity not in SeverityChoices:  " + str(
+                            alarm.getSeverity()) + " not in " + str(alarm.getSeverityChoices()))
 
     if __name__ == '__main__':
         unittest.main()

@@ -22,9 +22,9 @@ class TestMasarClient(unittest.TestCase):
     '''
     def testRetrieveSystemList(self):
         result = self.mc.retrieveSystemList()
-        self.assertNotEqual(result, None, "expected non-None value")
-        self.assertEqual(len(result) == 1, "")
-        self.assertTrue(result[0] == 'test', "")
+        self.assertNotEqual(result, None)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0], 'test')
 
     '''
 
@@ -32,19 +32,19 @@ class TestMasarClient(unittest.TestCase):
     def testRetrieveServiceConfigs(self):
         params = {'system': 'LTD2'}
         result = self.mc.retrieveServiceConfigs(params)
-        self.assertNotEqual(result, None, "retrieveServiceConfigs returned unexpected value")
-        self.assertTrue(len(result) == 6, "wrong number of configs returned")
+        self.assertNotEqual(result, None)
+        self.assertEqual(len(result), 6)
 
     def testRetrieveServiceEvents(self):
         params = {'configid': '1'}
         result = self.mc.retrieveServiceEvents(params)
-        self.assertNotEqual(result, None, "retrieveServiceEvents returned unexpected value")
+        self.assertNotEqual(result, None)
 
     def testSaveSnapshot(self):
         params = {'configname': 'test',
                   'servicename': 'masar'}
         result = self.mc.saveSnapshot(params)
-        self.assertNotEqual(result, None, "saveSnapshot returned unexpected value")
+        self.assertNotEqual(result, None)
         print str(result)
 
     def testRetrieveSnapshot(self):
@@ -54,7 +54,7 @@ class TestMasarClient(unittest.TestCase):
         event_id = res1[0]
         retrieve_params = {'eventid': str(event_id)}
         result = self.mc.retrieveSnapshot(retrieve_params)
-        self.assertNotEqual(result, None, "RetrieveSystemList returned unexpected value")
+        self.assertNotEqual(result, None)
 
     def testApproveSnapshot(self):
         save_params = {'configname': 'test',
@@ -67,7 +67,7 @@ class TestMasarClient(unittest.TestCase):
                   'user': 'test',
                   'desc': 'this is a good snapshot, and I approved it.'}
         result = self.mc.updateSnapshotEvent(approve_params)
-        self.assertNotEqual(result, None, "updateSnapshostEvent returned unexpected value")
+        self.assertNotEqual(result, None)
 
     def testGetLiveMachine(self):
         pvlist = ["masarExampleCharArray",
@@ -79,21 +79,21 @@ class TestMasarClient(unittest.TestCase):
             for pv in pvlist[i:]:
                 params[pv] = pv
                 result = self.mc.getLiveMachine(params)
-                self.assertNotEqual(result, None, "getLiveMachine returned unexpected value")
+                self.assertNotEqual(result, None)
 
     def testMasarClientLifecycle(self):
         #retrieve configs
         params = {'system': 'LTD2'}
         result = self.mc.retrieveServiceConfigs(params)
-        self.assertNotEqual(result, None, "retrieveServiceConfigs returned unexpected value")
+        self.assertNotEqual(result, None)
         #retrieve list
         result = self.mc.retrieveSystemList()
-        self.assertNotEqual(result, None, "retrieveSystemList returned unexpected value")
+        self.assertNotEqual(result, None)
         #save snapshot
         params = {'configname': 'test',
                   'servicename': 'masar'}
         result = self.mc.saveSnapshot(params)
-        self.assertNotEqual(result, None, "saveSnapshot returned unexpected value")
+        self.assertNotEqual(result, None)
         #approve snapshot
         save_params = {'configname': 'test',
                        'servicename': 'masar'}
@@ -105,7 +105,7 @@ class TestMasarClient(unittest.TestCase):
                   'user': 'test',
                   'desc': 'this is a good snapshot, and I approved it.'}
         result = self.mc.updateSnapshotEvent(approve_params)
-        self.assertNotEqual(result, None, "updateSnapshostEvent returned unexpected value")
+        self.assertNotEqual(result, None)
         #retrieve snapshot
         save_params = {'configname': 'test',
                   'servicename': 'masar'}
@@ -113,11 +113,11 @@ class TestMasarClient(unittest.TestCase):
         event_id = res1[0]
         retrieve_params = {'eventid': str(event_id)}
         result = self.mc.retrieveSnapshot(retrieve_params)
-        self.assertNotEqual(result, None, "RetrieveSystemList returned unexpected value")
+        self.assertNotEqual(result, None)
         #retrieve events
         params = {'configid': '1'}
         result = self.mc.retrieveServiceEvents(params)
-        self.assertNotEqual(result, None, "retrieveServiceEvents returned unexpected value")
+        self.assertNotEqual(result, None)
         #live machine
         pvlist = ["masarExampleCharArray",
                   "masarExampleFloatArray",
@@ -127,7 +127,7 @@ class TestMasarClient(unittest.TestCase):
         for i in range(len(pvlist)):
             params[pvlist[i]] = pvlist[i]
             result = self.mc.getLiveMachine(params)
-            self.assertNotEqual(result, None, "getLiveMachine returned unexpected value")
+            self.assertNotEqual(result, None)
 
     if __name__ == '__main__':
         unittest.main()

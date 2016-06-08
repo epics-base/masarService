@@ -41,8 +41,8 @@ class TestNTNameValue(unittest.TestCase):
     def testGetName(self):
         test_ntnv_servicename = self.test_ntnv.getName()[0]
         test_ntnv_configname = self.test_ntnv.getName()[1]
-        self.assertEqual(test_ntnv_servicename, "servicename", "servicename returned incorrect default value:  " + repr(test_ntnv_servicename))
-        self.assertEqual(test_ntnv_configname, "configname", "configname returned incorrect default value:  " + repr(test_ntnv_configname))
+        self.assertEqual(test_ntnv_servicename, "servicename", "servicename returned incorrect default value:  " + str(test_ntnv_servicename))
+        self.assertEqual(test_ntnv_configname, "configname", "configname returned incorrect default value:  " + str(test_ntnv_configname))
 
     '''
     Tests getter for values, also tests default value assignment
@@ -50,8 +50,8 @@ class TestNTNameValue(unittest.TestCase):
     def testGetValue(self):
         test_ntnv_value_one = self.test_ntnv.getValue()[0]
         test_ntnv_value_two = self.test_ntnv.getValue()[1]
-        self.assertEqual(test_ntnv_value_one, "masar", "ntnv value one returned incorrect default value:  " + repr(test_ntnv_value_one))
-        self.assertEqual(test_ntnv_value_two, "sr_test", "ntnv value two returned incorrect default value:  " + repr(test_ntnv_value_two))
+        self.assertEqual(test_ntnv_value_one, "masar", "ntnv value one returned incorrect default value:  " + str(test_ntnv_value_one))
+        self.assertEqual(test_ntnv_value_two, "sr_test", "ntnv value two returned incorrect default value:  " + str(test_ntnv_value_two))
 
     '''
     NOTE: These are commented out because their responses "None" "None" appear to be incorrect

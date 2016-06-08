@@ -497,23 +497,23 @@ class Test(unittest.TestCase):
         self.assertNotEqual(eventid, None)
         with self.assertRaises(RuntimeError) as context:
             result = updateevent(self.conn,
-                                self.collection,
-                                configidx=None,
-                                comment=updated_comment,
-                                approval=updated_approval,
-                                username=updated_username)
+                                 self.collection,
+                                 configidx=None,
+                                 comment=updated_comment,
+                                 approval=updated_approval,
+                                 username=updated_username)
         self.assertEqual(context.exception.message, "Unknown MASAR event to update.")
         with self.assertRaises(RuntimeError) as context:
             result = updateevent(self.conn,
-                                self.collection,
-                                eventidx=eventid)
+                                 self.collection,
+                                 eventidx=eventid)
         self.assertEqual(context.exception.message, "No fields to update.")
         result = updateevent(self.conn,
-                              self.collection,
-                              eventidx=eventid,
-                              comment=updated_comment,
-                              approval=updated_approval,
-                              username=updated_username)
+                             self.collection,
+                             eventidx=eventid,
+                             comment=updated_comment,
+                             approval=updated_approval,
+                             username=updated_username)
         self.assertTrue(result)
 
     def testRetrieveSnapshot(self):
@@ -541,8 +541,8 @@ class Test(unittest.TestCase):
                             username=test_username)
         self.assertNotEqual(eventid, None)
         result = retrievesnapshot(self.conn,
-                                self.collection,
-                                eventidx=eventid)
+                                  self.collection,
+                                  eventidx=eventid)
         self.assertEqual(result["eventidx"], eventid)
         self.assertEqual(result["configidx"], configidx)
         self.assertEqual(result["comment"], test_comment)

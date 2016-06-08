@@ -51,9 +51,9 @@ class TestNTTable(unittest.TestCase):
         test_message = "test message"
         test_alarm.setMessage(test_message)
         self.test_nttable.getAlarm(test_alarm)
-        self.assertEqual(test_alarm.getMessage(), test_message, "Alarm.message returned an unexpected value: " + repr(test_alarm.getMessage()) + " expected " + repr(test_message))
-        self.assertEqual(test_alarm.getSeverity(), "NONE", "Alarm.severity returned an unexpected value: " + repr(test_alarm.getSeverity()) + " expected NONE ")
-        self.assertEqual(test_alarm.getStatus(), "NONE", "Alarm.status returned an unexpected value: " + repr(test_alarm.getStatus()) + " expected NONE ")
+        self.assertEqual(test_alarm.getMessage(), test_message, "Alarm.message returned an unexpected value: " + str(test_alarm.getMessage()) + " expected " + str(test_message))
+        self.assertEqual(test_alarm.getSeverity(), "NONE", "Alarm.severity returned an unexpected value: " + str(test_alarm.getSeverity()) + " expected NONE ")
+        self.assertEqual(test_alarm.getStatus(), "NONE", "Alarm.status returned an unexpected value: " + str(test_alarm.getStatus()) + " expected NONE ")
 
     '''
     Tests getter for Labels
@@ -62,7 +62,7 @@ class TestNTTable(unittest.TestCase):
         labels = self.test_nttable.getLabels()
         test_nttable_keys = self.parameters.keys()
         for i in range(len(labels)):
-            self.assertEqual(test_nttable_keys[i], labels[i], "Labels do not match given keys:  " + repr(test_nttable_keys[i]) + " != " + repr(labels[i]))
+            self.assertEqual(test_nttable_keys[i], labels[i], "Labels do not match given keys:  " + str(test_nttable_keys[i]) + " != " + str(labels[i]))
 
     '''
     Tests function for retrieving columns based on a label

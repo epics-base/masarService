@@ -50,9 +50,9 @@ class TestNTScalar(unittest.TestCase):
         test_alarm.setMessage(test_message)
         test_ntscalar = NTScalar("double")
         test_ntscalar.getAlarm(test_alarm)
-        self.assertEqual(test_alarm.getMessage(), test_message, "Alarm.message returned an unexpected value: " + repr(test_alarm.getMessage()) + " expected " + repr(test_message))
-        self.assertEqual(test_alarm.getSeverity(), "NONE", "Alarm.severity returned an unexpected value: " + repr(test_alarm.getSeverity()) + " expected NONE ")
-        self.assertEqual(test_alarm.getStatus(), "NONE", "Alarm.status returned an unexpected value: " + repr(test_alarm.getStatus()) + " expected NONE ")
+        self.assertEqual(test_alarm.getMessage(), test_message, "Alarm.message returned an unexpected value: " + str(test_alarm.getMessage()) + " expected " + str(test_message))
+        self.assertEqual(test_alarm.getSeverity(), "NONE", "Alarm.severity returned an unexpected value: " + str(test_alarm.getSeverity()) + " expected NONE ")
+        self.assertEqual(test_alarm.getStatus(), "NONE", "Alarm.status returned an unexpected value: " + str(test_alarm.getStatus()) + " expected NONE ")
 
     '''
     Tests getter for Control
@@ -68,9 +68,9 @@ class TestNTScalar(unittest.TestCase):
                                test_min_step)
         test_ntscalar = NTScalar("double")
         test_ntscalar.getControl(test_control)
-        self.assertEqual(test_control.getMinStep(), test_min_step, "Control.minStep returned an unexpected value:  " + repr(test_control.getMinStep()) + " expected " + repr(test_min_step))
-        self.assertEqual(test_control.getLimitLow(), test_limit_low, "Control.limitLow returned an unexpected value:  " + repr(test_control.getLimitLow()) + " expected " + repr(test_limit_low))
-        self.assertEqual(test_control.getLimitHigh(), test_limit_high, "Control.limitHigh returned an unexpected value:  " + repr(test_control.getLimitHigh()) + " expected " + repr(test_limit_high))
+        self.assertEqual(test_control.getMinStep(), test_min_step, "Control.minStep returned an unexpected value:  " + str(test_control.getMinStep()) + " expected " + str(test_min_step))
+        self.assertEqual(test_control.getLimitLow(), test_limit_low, "Control.limitLow returned an unexpected value:  " + str(test_control.getLimitLow()) + " expected " + str(test_limit_low))
+        self.assertEqual(test_control.getLimitHigh(), test_limit_high, "Control.limitHigh returned an unexpected value:  " + str(test_control.getLimitHigh()) + " expected " + str(test_limit_high))
 
     '''
     Tests getter for Display
@@ -92,29 +92,29 @@ class TestNTScalar(unittest.TestCase):
         test_ntscalar = NTScalar("double")
         test_ntscalar.getDisplay(test_display)
         self.assertEqual(test_display.getDescription(), test_description,
-                         "Display.description returned an unexpected value:  " + repr(test_display.getDescription()) + " expected " + repr(test_description))
+                         "Display.description returned an unexpected value:  " + str(test_display.getDescription()) + " expected " + str(test_description))
         self.assertEqual(test_display.getLimitLow(), test_limit_low,
-                         "Display.limitLow returned an unexpected value:  " + repr(test_display.getLimitLow()) + " expected " + repr(test_limit_low))
+                         "Display.limitLow returned an unexpected value:  " + str(test_display.getLimitLow()) + " expected " + str(test_limit_low))
         self.assertEqual(test_display.getLimitHigh(), test_limit_high,
-                         "Display.limitHigh returned an unexpected value:  " + repr(test_display.getLimitHigh()) + " expected " + repr(test_limit_high))
+                         "Display.limitHigh returned an unexpected value:  " + str(test_display.getLimitHigh()) + " expected " + str(test_limit_high))
         self.assertEqual(test_display.getFormat(), test_format,
-                         "Display.format returned an unexpected value:  " + repr(test_display.getFormat()) + " expected " + repr(test_format))
+                         "Display.format returned an unexpected value:  " + str(test_display.getFormat()) + " expected " + str(test_format))
         self.assertEqual(test_display.getUnits(), test_units,
-                         "Display.units returned an unexpected value:  " + repr(test_display.getUnits()) + " expected " + repr(test_units))
+                         "Display.units returned an unexpected value:  " + str(test_display.getUnits()) + " expected " + str(test_units))
 
     '''
     Tests getter for Value, also tests default value assignment
     '''
     def testGetValue(self):
         test_ntscalar = NTScalar("double")
-        self.assertEqual(test_ntscalar.getValue(), 0.0, "Value returned an unexpected value:  " + repr(test_ntscalar.getValue()) + " expected 0.0")
+        self.assertEqual(test_ntscalar.getValue(), 0.0, "Value returned an unexpected value:  " + str(test_ntscalar.getValue()) + " expected 0.0")
 
     '''
     Tests getter for Descriptor, also tests default value assignment
     '''
     def testGetDescriptor(self):
         test_ntscalar = NTScalar("double")
-        self.assertEqual(test_ntscalar.getDescriptor(), "", "Descriptor returned an unexpected value: " + repr(test_ntscalar.getDescriptor()) + " expected \"\"")
+        self.assertEqual(test_ntscalar.getDescriptor(), "", "Descriptor returned an unexpected value: " + str(test_ntscalar.getDescriptor()) + " expected \"\"")
 
     if __name__ == '__main__':
         unittest.main()
