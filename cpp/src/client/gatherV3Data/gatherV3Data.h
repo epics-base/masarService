@@ -198,7 +198,7 @@ private:
     void init();
     epics::pvAccess::ChannelProvider::shared_pointer channelProvider;
     epics::nt::NTMultiChannelPtr multiChannel;
-    size_t numberChannel;
+    const size_t numberChannel;
     epics::pvData::shared_vector<const std::string> channelName;
     epics::pvData::PVStructurePtr pvGetRequest;
     epics::pvData::PVStructurePtr pvPutRequest;

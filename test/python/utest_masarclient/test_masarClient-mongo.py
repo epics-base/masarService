@@ -38,10 +38,23 @@ class TestMasarClient(unittest.TestCase):
                   "version": 20140421,
                   }
         newid = saveconfig(self.conn, collection, name, **params)
-        res0 = retrieveconfig(self.conn, collection, name)
-        pvs = ["masarExampleDoubleArray"]
+        #res0 = retrieveconfig(self.conn, collection, name)
+        pvs = ["masarExample0000",
+               "masarExample0001",
+               #"masarExampleBoUninit",
+               "masarExampleMbboUninit",
+               "masarExample0002",
+               "masarExample0003",
+               "masarExample0004",
+               "masarExampleCharArray",
+               "masarExampleShortArray",
+               "masarExampleLongArray",
+               "masarExampleStringArray",
+               "masarExampleFloatArray",
+               "masarExampleDoubleArray",
+               "masarExampleMbboUninitTest"]
         updateconfig(self.conn, collection, name, pvlist={"names": pvs})
-        res3 = retrieveconfig(self.conn, collection, name, withpvs=True)
+        #res3 = retrieveconfig(self.conn, collection, name, withpvs=True)
 
     def tearDown(self):
         self.conn.drop_database(masarconfig.get('mongodb', 'database'))
@@ -84,19 +97,24 @@ class TestMasarClient(unittest.TestCase):
         self.assertNotEqual(result, False)
         # The following tests are for expected outputs
         self.assertEqual(result[0], 1)
-        self.assertEqual(result[1], ('masarExampleDoubleArray',))  # ChannelName
-        self.assertEqual(result[2], ((),))  # Value
-        self.assertEqual(result[3], (6,))  # DBR type
-        self.assertEqual(result[4], (1,))  # isConnected
-        self.assertEqual(result[5], (631152000,))  # SecondsPastEpoch
-        self.assertEqual(result[6], (0,))  # NanoSeconds
-        self.assertEqual(result[7], (0,))  # UserTag
-        self.assertEqual(result[8], (3,))  # Severity
-        self.assertEqual(result[9], (3,))  # Status
-        self.assertEqual(result[10], ('UDF_ALARM',))  # Message
+        self.assertEqual(result[1], ('masarExample0000', 'masarExample0001', 'masarExampleMbboUninit', 'masarExample0002', 'masarExample0003', 'masarExample0004', 'masarExampleCharArray', 'masarExampleShortArray', 'masarExampleLongArray', 'masarExampleStringArray', 'masarExampleFloatArray', 'masarExampleDoubleArray', 'masarExampleMbboUninitTest'))  # ChannelName
+        self.assertEqual(result[2], (10, 'string value', 1, 'zero', 'one', 1.9, (), (), (), (), (), (), 1))  # Value
+        self.assertEqual(result[3], (5, 0, 5, 0, 0, 6, 4, 1, 5, 0, 2, 6, 5))  # DBR type
+        self.assertEqual(result[4], (1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1))  # isConnected
+        self.assertEqual(result[5], (
+        631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000,
+        631152000, 631152000, 631152000, 631152000))  # SecondsPastEpoch
+        self.assertEqual(result[6], (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))  # NanoSeconds
+        self.assertEqual(result[7], (0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0))  # UserTag
+        self.assertEqual(result[8], (0, 0, 0, 3, 0, 0, 3, 3, 3, 3, 3, 3, 0))  # Severity
+        self.assertEqual(result[9], (3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3))  # Status
+        self.assertEqual(result[10], (
+        'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM',
+        'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM'))  # Message
 
     def testRetrieveSnapshot(self):
-        save_params = {'configname': 'SR_All_20140421'}
+        save_params = {"configname": "SR_All_20140421",
+                  "system": "SR"}
         res1 = self.mc.saveSnapshot(save_params)
         self.assertNotEqual(res1, None)
         self.assertNotEqual(res1, False)
@@ -106,19 +124,28 @@ class TestMasarClient(unittest.TestCase):
         self.assertNotEqual(result, None)
         self.assertNotEqual(result, False)
         # The following tests are for expected outputs
-        self.assertEqual(result[0], ('masarExampleDoubleArray',))  # ChannelName
-        self.assertEqual(result[1], ((),))  # Value
-        self.assertEqual(result[2], (6,))  # DBR type
-        self.assertEqual(result[3], (1,))  # isConnected
-        self.assertEqual(result[4], (631152000,))  # SecondsPastEpoch
-        self.assertEqual(result[5], (0,))  # NanoSeconds
-        self.assertEqual(result[6], (0,))  # UserTag
-        self.assertEqual(result[7], (3,))  # Severity
-        self.assertEqual(result[8], (3,))  # Status
-        self.assertEqual(result[9], ('UDF_ALARM',))  # Message
+        self.assertEqual(result[0], (
+        'masarExample0000', 'masarExample0001', 'masarExampleMbboUninit', 'masarExample0002', 'masarExample0003',
+        'masarExample0004', 'masarExampleCharArray', 'masarExampleShortArray', 'masarExampleLongArray',
+        'masarExampleStringArray', 'masarExampleFloatArray', 'masarExampleDoubleArray',
+        'masarExampleMbboUninitTest'))  # ChannelName
+        self.assertEqual(result[1], (10, 'string value', 1, 'zero', 'one', 1.9, (), (), (), (), (), (), 1))  # Value
+        self.assertEqual(result[2], (5, 0, 5, 0, 0, 6, 4, 1, 5, 0, 2, 6, 5))  # DBR type
+        self.assertEqual(result[3], (1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1))  # isConnected
+        self.assertEqual(result[4], (
+            631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000,
+            631152000, 631152000, 631152000, 631152000))  # SecondsPastEpoch
+        self.assertEqual(result[5], (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))  # NanoSeconds
+        self.assertEqual(result[6], (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))  # UserTag
+        self.assertEqual(result[7], (0, 0, 0, 3, 0, 0, 3, 3, 3, 3, 3, 3, 0))  # Severity
+        self.assertEqual(result[8], (3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3))  # Status
+        self.assertEqual(result[9], (
+            'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM',
+            'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM'))  # Message
 
-    def testApproveSnapshot(self):
-        save_params = {'configname': 'SR_All_20140421'}
+    def testUpdateSnapshotEvent(self):
+        save_params = {"configname": "SR_All_20140421",
+                  "system": "SR"}
 
         res1 = self.mc.saveSnapshot(save_params)
         self.assertNotEqual(res1, None)
@@ -131,28 +158,46 @@ class TestMasarClient(unittest.TestCase):
         result = self.mc.updateSnapshotEvent(approve_params)
         self.assertNotEqual(result, None)
         self.assertNotEqual(result, False)
-        self.assertEqual(result, True)  # Expected output
+        self.assertEqual(result, True)  # Expected output, may wish to RetrieveSnapshot and confirm changes
 
     def testGetLiveMachine(self):
-        pvlist = ["masarExampleDoubleArray"]
-        for i in range(len(pvlist)):
-            params = {}
-            for pv in pvlist[i:]:
-                params[pv] = pv
-                result = self.mc.getLiveMachine(params)
-                self.assertNotEqual(result, None)
-                self.assertNotEqual(result, False)
-                # The following tests are for expected outputs
-                self.assertEqual(result[0], ('masarExampleDoubleArray',))  # ChannelName
-                self.assertEqual(result[1], ((),))  # Value
-                self.assertEqual(result[2], (6,))  # DBR type
-                self.assertEqual(result[3], (1,))  # isConnected
-                self.assertEqual(result[4], (631152000,))  # SecondsPastEpoch
-                self.assertEqual(result[5], (0,))  # NanoSeconds
-                self.assertEqual(result[6], (0,))  # UserTag
-                self.assertEqual(result[7], (3,))  # Severity
-                self.assertEqual(result[8], (3,))  # Status
-                self.assertEqual(result[9], ('UDF_ALARM',))  # Message
+        pvlist = {"masarExample0000": "masarExample0000",
+                  "masarExample0001": "masarExample0001",
+                  "masarExampleBoUninit": "masarExampleBoUninit",
+                  "masarExampleMbboUninit": "masarExampleMbboUninit",
+                  "masarExample0002": "masarExample0002",
+                  "masarExample0003": "masarExample0003",
+                  "masarExample0004": "masarExample0004",
+                  "masarExampleCharArray": "masarExampleCharArray",
+                  "masarExampleShortArray": "masarExampleShortArray",
+                  "masarExampleLongArray": "masarExampleLongArray",
+                  "masarExampleStringArray": "masarExampleStringArray",
+                  "masarExampleFloatArray": "masarExampleFloatArray",
+                  "masarExampleDoubleArray": "masarExampleDoubleArray",
+                  "masarExampleMbboUninitTest": "masarExampleMbboUninitTest"}
+
+        result = self.mc.getLiveMachine(pvlist)
+        self.assertNotEqual(result, None)
+        self.assertNotEqual(result, False)
+        # The following tests are for expected outputs
+        self.assertEqual(result[0], (
+        'masarExampleCharArray', 'masarExample0004', 'masarExampleDoubleArray', 'masarExample0002', 'masarExample0003',
+        'masarExample0000', 'masarExample0001', 'masarExampleStringArray', 'masarExampleLongArray',
+        'masarExampleShortArray', 'masarExampleMbboUninitTest', 'masarExampleMbboUninit', 'masarExampleFloatArray',
+        'masarExampleBoUninit'))  # ChannelName
+        self.assertEqual(result[1], ((), 1.9, (), 'zero', 'one', 10, 'string value', (), (), (), 1, 1, (), 0))  # Value
+        self.assertEqual(result[2], (4, 6, 6, 0, 0, 5, 0, 0, 5, 1, 5, 5, 2, 0))  # DBR type
+        self.assertEqual(result[3], (1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1))  # isConnected
+        self.assertEqual(result[4], (
+        631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000,
+        631152000, 631152000, 631152000, 631152000))  # SecondsPastEpoch
+        self.assertEqual(result[5], (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))  # NanoSeconds
+        self.assertEqual(result[6], (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))  # UserTag
+        self.assertEqual(result[7], (3, 0, 3, 3, 0, 0, 0, 3, 3, 3, 0, 0, 3, 3))  # Severity
+        self.assertEqual(result[8], (3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3))  # Status
+        self.assertEqual(result[9], (
+        'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM',
+        'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM'))  # Message
 
     if __name__ == '__main__':
         unittest.main()

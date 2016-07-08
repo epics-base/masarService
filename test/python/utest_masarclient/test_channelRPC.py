@@ -42,7 +42,7 @@ class TestChannelRPC(unittest.TestCase):
         alarm = Alarm()
         time_stamp = TimeStamp()
         ntnv = NTNameValue(function, params)
-        self.channelRPC.issueRequest(ntnv.getNTNameValue(), False)  # Segfault
+        self.channelRPC.issueRequest(ntnv.getNTNameValue(), False)
         response = self.channelRPC.waitResponse()
         self.assertNotEqual(response, None, "ChannelRPC connection failure.")
         result = NTMultiChannel(response)

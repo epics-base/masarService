@@ -114,3 +114,7 @@ record(waveform,"masarExampleDoubleArray") {
     field(NELM,"1000")
     field(FTVL,"DOUBLE")
 }
+
+record(mbbo,"masarExampleMbboUninitTest") {
+    field(VAL,"1")
+}
