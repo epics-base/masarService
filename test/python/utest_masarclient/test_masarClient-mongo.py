@@ -53,6 +53,7 @@ class TestMasarClient(unittest.TestCase):
                "masarExampleFloatArray",
                "masarExampleDoubleArray",
                "masarExampleMbboUninitTest"]
+        # TODO: Save will fail if list contains only 1 PV
         updateconfig(self.conn, collection, name, pvlist={"names": pvs})
         #res3 = retrieveconfig(self.conn, collection, name, withpvs=True)
 

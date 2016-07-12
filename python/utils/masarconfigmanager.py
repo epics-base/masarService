@@ -117,6 +117,7 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
         self.pvgroupmodel.setHorizontalHeaderLabels(["PV Groups"])
         self.pvGroupTreeView.setModel(self.pvgroupmodel)
         self.pvGroupTreeView.setUniformRowHeights(True)
+        self.test_in_progress_flag = 0
 
     @QtCore.pyqtSlot(QtGui.QWidget)
     def comboboxSignalMapperMapped(self, comboBox):
@@ -455,8 +456,10 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
         import pymasarsqlite
         conn = pymasarsqlite.utils.connect()
         existedresult = pymasarsqlite.service.retrieveServiceConfigs(conn, servicename="masar")
-
-        newcfgdata = self._getnewconfigurationdata(existedresult)
+        if self.test_in_progress_flag == 0:
+            newcfgdata = self._getnewconfigurationdata(existedresult)
+        else:
+            newcfgdata = ['newcfgname', 'newcfgdesc', 'newmsystem', [['masarpvgroup'], ['this is my new pv group for masar service with same group name'], ['pvfiles']]]
         if newcfgdata is None:
             QMessageBox.warning(self, "Warning",
                                 "Not enough information for a new configuration.")
@@ -494,7 +497,8 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
             return
 
         pymasarsqlite.utils.save(conn)
-        QMessageBox.information(self, "Congratulation", "A new configuration has been added successfully.")
+        if self.test_in_progress_flag == 0:
+            QMessageBox.information(self, "Congratulation", "A new configuration has been added successfully.")
         pymasarsqlite.utils.close(conn)
 
     def savemasarmongodb(self):
@@ -521,7 +525,12 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
                                res['created_on'],
                                res['version'],
                                res['status']])
-        newcfgdata = self._getnewconfigurationdata(existedcfg)
+        if self.test_in_progress_flag == 0:
+            newcfgdata = self._getnewconfigurationdata(existedresult)
+        else:
+            newcfgdata = ['newcfgname', 'newcfgdesc', 'newmsystem',
+                          [['masarpvgroup'], ['this is my new pv group for masar service with same group name'],
+                           ['pvfiles']]]
         if newcfgdata is None:
             # Nothing to be added.
             raise ValueError("Empty configuration.")
@@ -535,6 +544,8 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
         for pvf in cfgdata[2]:
             if pvf is not None and os.path.isfile(pvf):
                 pvs += list(np.loadtxt(pvf, dtype=str, comments="#"))
+        if self.test_in_progress_flag == 1:
+            pvs = ['pvname']
         if pvs:
             for i, pv in enumerate(pvs):
                 pvs[i] = pv.strip()
@@ -542,7 +553,8 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
                                                          desc=desc,
                                                          system=msystem,
                                                          pvlist={"names": pvs})
-            QMessageBox.information(self, "Congratulation", "A new configuration has been added successfully.")
+            if self.test_in_progress_flag == 0:
+                QMessageBox.information(self, "Congratulation", "A new configuration has been added successfully.")
         else:
             QMessageBox.warning(self, "Warning", "No PVs available for the new configuration.")
 
@@ -694,7 +706,6 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
 
             result = pymasarmongo.pymasarmongo.pymasar.retrieveconfig(mongoconn, collection)
             pymasarmongo.db.utils.close(mongoconn)
-
             results = []
             for res in result:
                 if res["system"] not in results:

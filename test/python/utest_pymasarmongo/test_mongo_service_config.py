@@ -30,8 +30,6 @@ class test_service_config(unittest.TestCase):
                   "status": test_status,
                   "version": test_version,
                   }
-        newid = saveconfig(self.conn, "bad_collection", name, **params)
-        newid = saveconfig(self.conn, collection, "bad name", **params)
         newid = saveconfig(self.conn, collection, name, **params)
         self.assertNotEqual(None, newid)
         res0 = retrieveconfig(self.conn, collection, name)
