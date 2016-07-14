@@ -20,7 +20,7 @@ class TestChannelRPC(unittest.TestCase):
     Tests initial connection to channelRPC and establishes connections for each test
     '''
     def setUp(self):
-        self.channelRPC = ChannelRPC("masarService")
+        self.channelRPC = ChannelRPC("sqliteMasarTestService")
         self.channelRPC.issueConnect()
         if not self.channelRPC.waitConnect(2.0):
             print "error when waiting connection.", self.channelRPC.getMessage()

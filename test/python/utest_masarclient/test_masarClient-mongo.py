@@ -21,10 +21,10 @@ Unittests for masarService/python/masarclient/masarClient.py
 '''
 
 
-class TestMasarClient(unittest.TestCase):
+class TestMasarClientMongo(unittest.TestCase):
 
     def setUp(self):
-        channel = 'masarService'
+        channel = 'mongoMasarTestService'
         self.mc = masarClient.client(channelname=channel)
         # DB SETUP
         self.conn, collection = utils.conn(host=masarconfig.get('mongodb', 'host'), port=masarconfig.get('mongodb', 'port'),

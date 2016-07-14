@@ -21,7 +21,7 @@ Unittests for masarService/python/masarclient/masarClient.py
 class TestMasarClient(unittest.TestCase):
 
     def setUp(self):
-        channel = 'masarService'
+        channel = 'sqliteMasarTestService'
         self.mc = masarClient.client(channelname=channel)
         #DB SETUP
         __sqlitedb__ = os.environ["MASAR_SQLITE_DB"]

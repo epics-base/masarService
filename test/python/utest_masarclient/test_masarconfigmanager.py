@@ -1,6 +1,6 @@
 import unittest
 import sqlite3
-from masarconfigmanager import *  # TODO: May cause import issues, need to change python path
+from utils.masarconfigmanager import *
 from pymasarsqlite.service.serviceconfig import (saveServiceConfig, retrieveServiceConfigs, retrieveServiceConfigPVs, saveServicePvGroup)
 from pymasarsqlite.pvgroup.pvgroup import (savePvGroup, retrievePvGroups)
 from pymasarsqlite.pvgroup.pv import (saveGroupPvs)

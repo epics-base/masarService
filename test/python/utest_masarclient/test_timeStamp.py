@@ -95,7 +95,7 @@ class TestTimeStamp(unittest.TestCase):
                 self.assertEqual(self.test_time_stamp.getNanoseconds(), test_value_nanoseconds)
                 # Some variance is applied to the following test
                 # it appears this variance does not typically exceed +/- .00000001
-                self.assertGreaterEqual(self.test_time_stamp.toSeconds()+.1 >= test_value_seconds, self.test_time_stamp.toSeconds()-.1)
+                self.assertTrue(self.test_time_stamp.toSeconds()+.1 >= test_value_seconds >= self.test_time_stamp.toSeconds()-.1)
 
     '''
     Tests method to set current time in milliseconds, test range was chosen arbitrarily
@@ -113,8 +113,8 @@ class TestTimeStamp(unittest.TestCase):
             for test_value_nanoseconds in range(0, 100):
                 self.test_time_stamp = TimeStamp(test_value_seconds, test_value_nanoseconds)
                 self.assertEqual(self.test_time_stamp.getNanoseconds(), test_value_nanoseconds)
-                self.assertGreaterEqual(self.test_time_stamp.toSeconds()+.1 >= test_value_seconds)
-                self.assertGreaterEqual(test_value_seconds >= self.test_time_stamp.toSeconds()-.1)
+                self.assertGreaterEqual(self.test_time_stamp.toSeconds()+.1, test_value_seconds)
+                self.assertGreaterEqual(test_value_seconds, self.test_time_stamp.toSeconds()-.1)
 
     if __name__ == '__main__':
         unittest.main()

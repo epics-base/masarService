@@ -1,6 +1,6 @@
 import unittest
 import sqlite3
-from masarconfigmanager import *
+from utils.masarconfigmanager import *
 from pymasarsqlite.service.serviceconfig import (saveServiceConfig, retrieveServiceConfigs, retrieveServiceConfigPVs, saveServicePvGroup)
 from masarclient import masarClient
 from masarclient.channelRPC import epicsExit
