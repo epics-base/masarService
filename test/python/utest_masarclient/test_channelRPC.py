@@ -31,7 +31,7 @@ class TestChannelRPC(unittest.TestCase):
     Clears connection after each test
     '''
     def tearDown(self):
-        self.channelRPC.__del__()
+        self.channelRPC = None
 
     '''
     Tests retrieveSnapshot function, makes assertion for successful request and for correct results

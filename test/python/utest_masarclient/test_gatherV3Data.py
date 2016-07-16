@@ -42,7 +42,7 @@ class TestGatherV3Data(unittest.TestCase):
     Attempts gatherV3Data client disconnect
     '''
     def tearDown(self):
-        self.gatherv3data.__del__()
+        self.gatherv3data = None
 
     '''
     Tests the connection to see that it was established and allows data to be accessed
