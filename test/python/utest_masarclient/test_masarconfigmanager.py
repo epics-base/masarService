@@ -108,7 +108,9 @@ class TestConfigManager(unittest.TestCase):
         app = QtGui.QApplication(sys.argv)
         ui = dbmanagerUI()
         ui.dbsource = 0  # Called normally with menu selection
-        ui.defaultsqlitedb()
+        ui.databaseDefault.setText(os.environ["MASAR_SQLITE_DB"])
+        ui.databaseLineEdit.setText(os.environ["MASAR_SQLITE_DB"])
+        #ui.defaultsqlitedb()
         ui.showmasarconfigs()
         self.assertEqual(1, ui.masarConfigTableWidget.rowCount())
         self.assertEqual("1", ui.masarConfigTableWidget.item(0, 0).text())
@@ -121,7 +123,9 @@ class TestConfigManager(unittest.TestCase):
         app = QtGui.QApplication(sys.argv)
         ui = dbmanagerUI()
         ui.dbsource = 0  # Called normally with menu selection
-        ui.defaultsqlitedb()
+        ui.databaseDefault.setText(os.environ["MASAR_SQLITE_DB"])
+        ui.databaseLineEdit.setText(os.environ["MASAR_SQLITE_DB"])
+        #ui.defaultsqlitedb()
         ui.listpvgroups()
         self.assertEqual('masarpvgroup', ui.pvgroupmodel.takeRow(0)[0].text())
 
@@ -129,7 +133,9 @@ class TestConfigManager(unittest.TestCase):
         app = QtGui.QApplication(sys.argv)
         ui = dbmanagerUI()
         ui.dbsource = 0  # Called normally with menu selection
-        ui.defaultsqlitedb()
+        ui.databaseDefault.setText(os.environ["MASAR_SQLITE_DB"])
+        ui.databaseLineEdit.setText(os.environ["MASAR_SQLITE_DB"])
+        #ui.defaultsqlitedb()
         __sqlitedb__ = os.environ["MASAR_SQLITE_DB"]
         conn = sqlite3.connect(__sqlitedb__)
         masarconf = 'SR_All_20140421'
@@ -145,7 +151,9 @@ class TestConfigManager(unittest.TestCase):
         app = QtGui.QApplication(sys.argv)
         ui = dbmanagerUI()
         ui.dbsource = 0  # Called normally with menu selection
-        ui.defaultsqlitedb()
+        ui.databaseDefault.setText(os.environ["MASAR_SQLITE_DB"])
+        ui.databaseLineEdit.setText(os.environ["MASAR_SQLITE_DB"])
+        #ui.defaultsqlitedb()
         ui.test_in_progress_flag = 1
         ui.savemasarsqlite()
         __sqlitedb__ = os.environ["MASAR_SQLITE_DB"]
@@ -160,7 +168,9 @@ class TestConfigManager(unittest.TestCase):
         app = QtGui.QApplication(sys.argv)
         ui = dbmanagerUI()
         ui.dbsource = 0  # Called normally with menu selection
-        ui.defaultsqlitedb()
+        ui.databaseDefault.setText(os.environ["MASAR_SQLITE_DB"])
+        ui.databaseLineEdit.setText(os.environ["MASAR_SQLITE_DB"])
+        #ui.defaultsqlitedb()
         ui.updatesystemcombobox()
         self.assertEqual("SR", ui.systemComboBox.itemText(0))
 

@@ -100,8 +100,11 @@ class TestMasarClient(unittest.TestCase):
         except:
             raise
         finally:
-            conn.commit()
-            conn.close()
+            if conn:
+                conn.commit()
+                conn.close()
+            else:
+                print "Failed to connect to DB: " + str(__sqlitedb__)
         self.mc = None
 
     def testRetrieveSystemList(self):
@@ -135,10 +138,10 @@ class TestMasarClient(unittest.TestCase):
         self.assertEqual('active', result[5][0])
 
     def testRetrieveServiceEvents(self):
-        print "RetrieveServiceEvents"
+        #print "RetrieveServiceEvents"
         params = {'configid': '1'}
         result = self.mc.retrieveServiceEvents(params)
-        print "retrieveServiceEvents:  " +str(result)
+        #print "retrieveServiceEvents:  " +str(result)
         self.assertNotEqual(result, None)
         self.assertNotEqual(result, False)
 

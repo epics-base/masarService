@@ -4,9 +4,8 @@ import sys
 import time
 global kill, conf_lock
 conf = "../../python/masarserver/masarservice.conf"
-iocexecutable = "/usr/lib/epics/bin/linux-x86_64/softIoc"
-executable = "../../cpp/bin/linux-x86_64/masarServiceRun"  # TODO: get env variable for architecture
-print os.getcwd()
+iocexecutable = "/usr/lib/epics/bin/" + os.environ["EPICS_HOST_ARCH"] + "/softIoc"
+executable = "../../cpp/bin/" + os.environ["EPICS_HOST_ARCH"] + "/masarServiceRun"
 kill = 0
 conf_lock = threading.Lock()
 

@@ -2,7 +2,6 @@ import unittest
 import sqlite3
 from utils.masarconfigmanager import *
 from pymasarsqlite.service.serviceconfig import (saveServiceConfig, retrieveServiceConfigs, retrieveServiceConfigPVs, saveServicePvGroup)
-from masarclient import masarClient
 from masarclient.channelRPC import epicsExit
 from pymasarmongo.db import utils
 from pymasarmongo.config._config import masarconfig
@@ -19,8 +18,6 @@ Unittests for masarService/python/utils/masarconfigmanager.py
 
 class TestConfigManager(unittest.TestCase):
     def setUp(self):
-        channel = 'masarService'
-        self.mc = masarClient.client(channelname=channel)
         # DB SETUP
         self.conn, collection = utils.conn(host=masarconfig.get('mongodb', 'host'),
                                            port=masarconfig.get('mongodb', 'port'),
