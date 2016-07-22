@@ -65,19 +65,17 @@ class TestNTTable(unittest.TestCase):
             self.assertEqual(test_nttable_keys[i], labels[i], "Labels do not match given keys:  " + str(test_nttable_keys[i]) + " != " + str(labels[i]))
 
     '''
-    Tests function for retrieving columns based on a label
-    NOTE: Currently failing this test
+    This was a bad test, it assumed that the second value in each argument was meant to
+    be the data, when in fact it was a type declaration. No data is entered and no data is returned.
 
+    The test has been modified to check for the expected output given no data being input.
+    There should be a new test to add data and make sure it is returned correctly.
+    '''
     def testGetColumn(self):
         labels = self.test_nttable.getLabels()
         test_nttable_keys = self.parameters.keys()
         for i in range(len(labels)):
             test_column = self.test_nttable.getColumn(labels[i])
-            self.assertEqual(self.parameters[test_nttable_keys[i]], test_column,
-                             "Columns do not match given test names:  " +
-                             str(self.parameters[test_nttable_keys[i]]) +
-                             " != " +
-                             str(test_column))
-    '''
+            self.assertEqual((), test_column)
     if __name__ == '__main__':
         unittest.main()
