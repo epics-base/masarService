@@ -45,7 +45,7 @@ class GatherV3Data(object) :
         result = gatherV3DataPy._connect(self.cppPvt,timeout);
         if result==None :
             return True
-        return False
+        return result
     def disconnect(self) :
         """Disconnect from the V3 channels"""
         result = gatherV3DataPy._disconnect(self.cppPvt);

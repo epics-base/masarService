@@ -20,6 +20,7 @@ class TestGatherV3Data(unittest.TestCase):
     These names are meant to be used with the test database in its present state and may need to be changed.
     '''
     def setUp(self):
+        self.connected = False
         self.names = (
             'masarExampleBoUninit',
             'masarExampleMbboUninit',
@@ -36,7 +37,7 @@ class TestGatherV3Data(unittest.TestCase):
             'masarExampleDoubleArray',
         )
         self.gatherv3data = GatherV3Data(self.names)
-        self.gatherv3data.connect(2.0)
+        self.connected = self.gatherv3data.connect(2.0)
 
     '''
     Attempts gatherV3Data client disconnect
@@ -48,10 +49,12 @@ class TestGatherV3Data(unittest.TestCase):
     Tests the connection to see that it was established and allows data to be accessed
     '''
     def testConnection(self):
+        self.assertTrue(self.connected, "Failed to connect to any channel")
         result = self.gatherv3data.get()
         self.assertTrue(result, "Connection failed with message:  " + self.gatherv3data.getMessage())
 
     def testGetPVStructure(self):
+        self.assertTrue(self.connected, "Failed to connect to any channel")
         result = self.gatherv3data.get()
         self.assertTrue(result, "Connection failed with message:  " + self.gatherv3data.getMessage())
 
@@ -64,6 +67,7 @@ class TestGatherV3Data(unittest.TestCase):
     Note: These tests check for specific values that are present in the masarTestDB.db and will fail if that DB is not loaded
     '''
     def testNTMultiChannel(self):
+        self.assertTrue(self.connected, "Failed to connect to any channel")
         result = self.gatherv3data.get()
         self.assertTrue(result, "Connection failed with message:  " + self.gatherv3data.getMessage())
         pvstructure = self.gatherv3data.getPVStructure()
