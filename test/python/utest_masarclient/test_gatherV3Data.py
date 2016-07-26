@@ -97,7 +97,7 @@ class TestGatherV3Data(unittest.TestCase):
         test_val_list = (0, 1, 'zero', 'one', 10, 'string value', 1.9, (), (), (), (), (), ())
 
         self.assertEqual(ntmultichannel.getValue(), test_val_list,
-                         "es do not match known test DB, received:  " + str(ntmultichannel.getValue()) +
+                         "results do not match known test DB, received:  " + str(ntmultichannel.getValue()) +
                          "  EXPECTED: " + str(test_val_list))
 
         self.assertEqual(ntmultichannel.getChannelName(), self.names,
@@ -106,42 +106,42 @@ class TestGatherV3Data(unittest.TestCase):
 
         test_connected_list = (1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
         self.assertEqual(ntmultichannel.getIsConnected(), test_connected_list,
-                         "es do not match known test DB, received:  " + str(ntmultichannel.getIsConnected()) +
+                         "results do not match known test DB, received:  " + str(ntmultichannel.getIsConnected()) +
                          "  EXPECTED: " + str(test_connected_list))
 
         test_severity_list = (3, 0, 3, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3)
         self.assertEqual(ntmultichannel.getSeverity(), test_severity_list,
-                         "es do not match known test DB, received:  " + str(ntmultichannel.getSeverity()) +
+                         "results do not match known test DB, received:  " + str(ntmultichannel.getSeverity()) +
                          "  EXPECTED: " + str(test_severity_list))
 
         test_status_list = (3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3)
         self.assertEqual(ntmultichannel.getStatus(), test_status_list,
-                         "es do not match known test DB, received:  " + str(ntmultichannel.getStatus()) +
+                         "results do not match known test DB, received:  " + str(ntmultichannel.getStatus()) +
                          "  EXPECTED: " + str(test_status_list))
 
         test_message_list = ('UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM')
         self.assertEqual(ntmultichannel.getMessage(), test_message_list,
-                         "es do not match known test DB, received:  " + str(ntmultichannel.getMessage()) +
+                         "results do not match known test DB, received:  " + str(ntmultichannel.getMessage()) +
                          "  EXPECTED: " + str(test_message_list))
 
         test_dbrtype_list = (0, 5, 0, 0, 5, 0, 6, 4, 0, 1, 5, 2, 6)
         self.assertEqual(ntmultichannel.getDbrType(), test_dbrtype_list,
-                         "es do not match known test DB, received:  " + str(ntmultichannel.getDbrType()) +
+                         "results do not match known test DB, received:  " + str(ntmultichannel.getDbrType()) +
                          "  EXPECTED: " + str(test_dbrtype_list))
 
         test_secondspastepoch_list = (631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000)
         self.assertEqual(ntmultichannel.getSecondsPastEpoch(), test_secondspastepoch_list,
-                         "es do not match known test DB, received:  " + str(ntmultichannel.getSecondsPastEpoch()) +
+                         "results do not match known test DB, received:  " + str(ntmultichannel.getSecondsPastEpoch()) +
                          "  EXPECTED: " + str(test_secondspastepoch_list))
 
         test_nanoseconds_list = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
         self.assertEqual(ntmultichannel.getNanoseconds(), test_nanoseconds_list,
-                         "es do not match known test DB, received:  " + str(ntmultichannel.getNanoseconds()) +
+                         "results do not match known test DB, received:  " + str(ntmultichannel.getNanoseconds()) +
                          "  EXPECTED: " + str(test_nanoseconds_list))
 
         test_usertag_list = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
         self.assertEqual(ntmultichannel.getUserTag(), test_usertag_list,
-                         "es do not match known test DB, received:  " + str(ntmultichannel.getUserTag()) +
+                         "results do not match known test DB, received:  " + str(ntmultichannel.getUserTag()) +
                          "  EXPECTED: " + str(test_usertag_list))
 
         self.assertEqual(type(ntmultichannel.getDescriptor()), StringType, "Non-String descriptor found:  " + str(ntmultichannel.getDescriptor()) + " is of type " + str(type(ntmultichannel.getDescriptor())))

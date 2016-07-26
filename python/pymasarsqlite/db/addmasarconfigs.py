@@ -93,7 +93,7 @@ def saveMongoService(json):
 def main():
     parser = argparse.ArgumentParser(description='Add masar configurations to either MongoDB or SQLite')
     parser.add_argument('-d', '--database')
-    parser.add_argument('-o', '--overridedb')
+    parser.add_argument('-o', '--overridedbtype')
     parser.add_argument('-c', '--config')
     parser.add_argument('file')
     args = vars(parser.parse_args(args=sys.argv[1:]))
