@@ -23,9 +23,7 @@ Unittests for masarService/python/pymasarsqlite/db/addmasarconfigs.py
 class TestAddMasarConfigs(unittest.TestCase):
 
     def setUp(self):
-        file_name = "/"+__file__.split("/")[-1]
-        dir_name = __file__[:-1*len(file_name)]
-        os.chdir(dir_name)
+        os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))
         os.chdir("../../../python/pymasarsqlite/db")
         config = self.__loadmasarconfig("../../masarserver/masarservice.conf")
         self.db = config.get("Common", "database")

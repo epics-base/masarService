@@ -75,7 +75,7 @@ def readfd(fd):
 def main():
     global kill
     kill = 0
-    os.chdir("/" + __file__.strip("/setupTests.py"))  # Uses a filename, not good, also only works on linux?
+    os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))  # Uses a filename, not good, also only works on linux?
     iocfd = startIOC()
     iocthread = threading.Thread(group=None, target=readfd, args=(iocfd,), name="iocthread", kwargs={})
     iocthread.start()
