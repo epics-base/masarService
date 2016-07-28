@@ -456,10 +456,7 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
         import pymasarsqlite
         conn = pymasarsqlite.utils.connect()
         existedresult = pymasarsqlite.service.retrieveServiceConfigs(conn, servicename="masar")
-        if self.test_in_progress_flag == 0:
-            newcfgdata = self._getnewconfigurationdata(existedresult)
-        else:
-            newcfgdata = ['newcfgname', 'newcfgdesc', 'newmsystem', [['masarpvgroup'], ['this is my new pv group for masar service with same group name'], ['pvfiles']]]
+        newcfgdata = self._getnewconfigurationdata(existedresult)
         if newcfgdata is None:
             QMessageBox.warning(self, "Warning",
                                 "Not enough information for a new configuration.")
@@ -525,12 +522,7 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
                                res['created_on'],
                                res['version'],
                                res['status']])
-        if self.test_in_progress_flag == 0:
-            newcfgdata = self._getnewconfigurationdata(existedresult)
-        else:
-            newcfgdata = ['newcfgname', 'newcfgdesc', 'newmsystem',
-                          [['masarpvgroup'], ['this is my new pv group for masar service with same group name'],
-                           ['pvfiles']]]
+        newcfgdata = self._getnewconfigurationdata(existedresult)
         if newcfgdata is None:
             # Nothing to be added.
             raise ValueError("Empty configuration.")
@@ -573,6 +565,10 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
 
     def _getnewconfigurationdata(self, existedresult):
         """"""
+        if self.test_in_progress_flag != 0:
+            return ['newcfgname', 'newcfgdesc', 'newmsystem',
+                          [['masarpvgroup'], ['this is my new pv group for masar service with same group name'],
+                           ['pvfiles']]]
         newcfgname = self.newConfigurationLineEdit.text()
         if newcfgname is None or str(newcfgname) == "":
             QMessageBox.warning(self, "Warning",

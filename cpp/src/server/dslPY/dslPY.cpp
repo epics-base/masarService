@@ -183,16 +183,7 @@ static NTMultiChannelPtr getLiveMachine(shared_vector<const string> const & chan
     if(!result) {
         return noDataMultiChannel("connect failed");
     }
-    try{
-        //request appears to fail if given an array with only 1 element
-        result = gather->get();
-    }catch(std::exception& e){
-        cerr << e.what() << endl;
-        throw;
-    }catch(...){
-        cerr << "..." << endl;
-        throw;
-    }
+    result = gather->get();
     if(!result) {
         return noDataMultiChannel("get failed");
     }

@@ -21,12 +21,6 @@ class TestNTTable(unittest.TestCase):
         self.test_nttable = NTTable(self.parameters)
 
     '''
-    Ensures global NTTable value is clear after each test
-    '''
-    def tearDown(self):
-        self.test_nttable = None
-
-    '''
     Tests getter for TimeStamp
 
     PLANNING: Not sure what to be testing for here, for now I'll just make sure a TimeStamp is returned

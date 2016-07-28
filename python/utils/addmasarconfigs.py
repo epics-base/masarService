@@ -34,35 +34,33 @@ def savePvGroups(json):
         if os.path.exists(pv_file):
             with open(pv_file) as file:
                 for line in file:
-                    pvlist.append(line.strip('\n'))
+                    pvlist.append(line.strip())
         else:
             print "Pvlist file: " + str(pv_file) + " does not exist."
             # file not found
     __sqlitedb__ = os.environ["MASAR_SQLITE_DB"]
-    conn = sqlite3.connect(__sqlitedb__)
-    savePvGroup(conn, pvgname, func=pvgdesc)
-    saveGroupPvs(conn, pvgname, pvlist)
-    conn.commit()
-    conn.close()
+    with sqlite3.connect(__sqlitedb__) as conn:
+        savePvGroup(conn, pvgname, func=pvgdesc)
+        saveGroupPvs(conn, pvgname, pvlist)
+        conn.commit()
 
 def saveSQLiteServiceConfig(json):
     servicename = "masar"
     servicedesc = 'machine snapshot, archiving, and retrieve service'
     __sqlitedb__ = os.environ["MASAR_SQLITE_DB"]
-    conn = sqlite3.connect(__sqlitedb__)
-    saveService(conn, servicename, desc=servicedesc)
-    for conf in json['configs']:
-        try:
-            saveServiceConfig(conn, servicename, conf['config_name'], system=conf['system'], status='active', configdesc=conf['config_desc'])
-        except:  # TODO: This should be more specific
-            print ("configuration name (%s) exists already." % (conf['config_name']))
-    for conf in json['pvg2config']:
-        try:
-            saveServicePvGroup(conn, conf['config_name'], conf['pvgroups'])
-        except:
-            print "Service config " + str(conf['config_name']) + " already has associated pvgroups: " + str(conf['pvgroups'])
-    conn.commit()
-    conn.close()
+    with sqlite3.connect(__sqlitedb__) as conn:
+        saveService(conn, servicename, desc=servicedesc)
+        for conf in json['configs']:
+            try:
+                saveServiceConfig(conn, servicename, conf['config_name'], system=conf['system'], status='active', configdesc=conf['config_desc'])
+            except:  # TODO: This should be more specific
+                print ("configuration name (%s) exists already." % (conf['config_name']))
+        for conf in json['pvg2config']:
+            try:
+                saveServicePvGroup(conn, conf['config_name'], conf['pvgroups'])
+            except:
+                print "Service config " + str(conf['config_name']) + " already has associated pvgroups: " + str(conf['pvgroups'])
+        conn.commit()
 
 def saveMongoService(json):
     conn, collection = utils.conn(host=masarconfig.get('mongodb', 'host'), port=masarconfig.get('mongodb', 'port'),
@@ -82,7 +80,7 @@ def saveMongoService(json):
         if os.path.exists(pv_file):
             with open(pv_file) as file:
                 for line in file:
-                    pvlist.append(line.strip('\n'))
+                    pvlist.append(line.strip())
         pvgroups[pvgroup['name']] = pvlist
     for conf in json['pvg2config']:
         pvs = []
@@ -99,11 +97,7 @@ def main():
     args = vars(parser.parse_args(args=sys.argv[1:]))
     print "args: " + str(args)
     conf_name = ""
-    if args['file']==None:
-        print "Must have a filename as an argument"
-        sys.exit()
-    else:
-        file_name = args['file']
+    file_name = args['file']
     if args['config']!=None:
         conf_name = args['config']
     if args['database']!=None:

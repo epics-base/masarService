@@ -23,12 +23,6 @@ class TestNTNameValue(unittest.TestCase):
         self.test_ntnv = NTNameValue(function, params)
 
     '''
-    Cleans up test_ntnv variable after each test
-    '''
-    def tearDown(self):
-        self.test_ntnv = None
-
-    '''
     This test just confirms that a PVStructure is returned and is not equal to none
     '''
     def testGetPVStructure(self):

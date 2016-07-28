@@ -8,7 +8,7 @@ from pymasarmongo.config._config import masarconfig
 
 from pymasarmongo.pymasarmongo.pymasar import saveconfig
 from pymasarmongo.pymasarmongo.pymasar import updateconfig, retrieveconfig
-
+from unittest_utils import MONGODB_TEST_SETUP
 '''
 
 Unittests for masarService/python/utils/masarconfigmanager.py
@@ -18,37 +18,7 @@ Unittests for masarService/python/utils/masarconfigmanager.py
 
 class TestConfigManager(unittest.TestCase):
     def setUp(self):
-        # DB SETUP
-        self.conn, collection = utils.conn(host=masarconfig.get('mongodb', 'host'),
-                                           port=masarconfig.get('mongodb', 'port'),
-                                           db=masarconfig.get('mongodb', 'database'))
-
-        self.conn.drop_database(masarconfig.get('mongodb', 'database'))
-        name = "SR_All_20140421"
-        params = {"desc": "SR daily SCR setpoint without IS kick and septum: SR and RF",
-                  "system": "SR",
-                  "status": "active",
-                  "version": 20140421,
-                  }
-        newid = saveconfig(self.conn, collection, name, **params)
-        # res0 = retrieveconfig(self.conn, collection, name)
-        pvs = ["masarExample0000",
-               "masarExample0001",
-               # "masarExampleBoUninit",
-               "masarExampleMbboUninit",
-               "masarExample0002",
-               "masarExample0003",
-               "masarExample0004",
-               "masarExampleCharArray",
-               "masarExampleShortArray",
-               "masarExampleLongArray",
-               "masarExampleStringArray",
-               "masarExampleFloatArray",
-               "masarExampleDoubleArray",
-               "masarExampleMbboUninitTest"]
-        # TODO: Save will fail if list contains only 1 PV
-        updateconfig(self.conn, collection, name, pvlist={"names": pvs})
-        # res3 = retrieveconfig(self.conn, collection, name, withpvs=True)
+        self.conn = MONGODB_TEST_SETUP(self)
 
     def tearDown(self):
         self.conn.drop_database(masarconfig.get('mongodb', 'database'))

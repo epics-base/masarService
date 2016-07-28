@@ -48,7 +48,7 @@ class Test(unittest.TestCase):
             saveconfig(self.conn, self.collection, name, **params)
         self.assertEqual(context.exception.message, "Configuration (%s) exists already."%name)
 
-        name1 = '"SR-All-20140326'
+        name1 = 'SR-All-20140326'
         params1 = {"desc": "SR daily SCR setpoint: SR and IS PS, RF",
                   "system": "SR",
                   "status": "inactive",
@@ -62,7 +62,7 @@ class Test(unittest.TestCase):
                          "Expecting id %s but got %s"%(newid1, new1[0]["_id"]))
         self.assertEqual(new1[0]["configidx"]-new[0]["configidx"], 1)
         
-        name2 = '"SR-All-LTB_PS_"SRC_20131206'
+        name2 = 'SR-All-LTB_PS_"SRC_20131206'
         params2 = {"desc": "LTB power supply setpoints, for saving/comparing/restoring",
                   "system": "LTB",
                   "status": "active",
@@ -380,7 +380,7 @@ class Test(unittest.TestCase):
         #print "client: ", res3[0]['created_on']
 
     def testSaveEvents(self):
-        name = '"SR-All-20140326'
+        name = 'SR-All-20140326'
         params = {"desc": "SR daily SCR setpoint: SR and IS PS, RF",
                   "system": "SR",
                   "status": "inactive",
@@ -432,7 +432,7 @@ class Test(unittest.TestCase):
         self.assertNotEqual(eventid, None)
 
     def testRetrieveEvents(self):
-        name = '"SR-All-20140326'
+        name = 'SR-All-20140326'
         test_comment = "test"
         test_approval = True
         test_username = "name"
@@ -469,7 +469,7 @@ class Test(unittest.TestCase):
         self.assertEqual(result[0]["username"], test_username)
 
     def testUpdateEvents(self):
-        name = '"SR-All-20140326'
+        name = 'SR-All-20140326'
         test_comment = "test"
         updated_comment = "updated"
         test_approval = True
@@ -517,7 +517,7 @@ class Test(unittest.TestCase):
         self.assertTrue(result)
 
     def testRetrieveSnapshot(self):
-        name = '"SR-All-20140326'
+        name = 'SR-All-20140326'
         test_comment = "test"
         test_approval = True
         test_username = "name"

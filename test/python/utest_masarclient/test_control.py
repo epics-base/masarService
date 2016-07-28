@@ -15,8 +15,6 @@ class TestControl(unittest.TestCase):
     def setUp(self):
         self.control = Control()
 
-    def tearDown(self):
-        self.control = None
     '''
     Tests both default value assignment and getter operation for LimitLow
     '''

@@ -25,13 +25,7 @@ class TestChannelRPC(unittest.TestCase):
         if not self.channelRPC.waitConnect(2.0):
             print "error when waiting connection.", self.channelRPC.getMessage()
             # AttributeError: 'module' object has no attribute '_getMessage'
-            exit(1)
-
-    '''
-    Clears connection after each test
-    '''
-    def tearDown(self):
-        self.channelRPC = None
+            raise AttributeError()
 
     '''
     Tests retrieveSnapshot function, makes assertion for successful request and for correct results
@@ -39,28 +33,7 @@ class TestChannelRPC(unittest.TestCase):
     def testRetrieveSnapshot(self):
         function = "retrieveSnapshot"
         params = {'eventid': '365'}
-        alarm = Alarm()
-        time_stamp = TimeStamp()
-        ntnv = NTNameValue(function, params)
-        self.channelRPC.issueRequest(ntnv.getNTNameValue(), False)
-        response = self.channelRPC.waitResponse()
-        self.assertNotEqual(response, None, "ChannelRPC connection failure.")
-        result = NTMultiChannel(response)
-        result.getAlarm(alarm)
-        result.getTimeStamp(time_stamp)
-        test_stamp = TimeStamp()
-        self.assertGreaterEqual(time_stamp._diffInt(test_stamp), 0, "Unexpected time stamp value, "
-                                                                    "given time stamp is earlier than default time")
-        test_stamp.getCurrent()
-        self.assertLessEqual(time_stamp._diffInt(test_stamp), 0, "Unexpected time stamp value, "
-                                                                 "given time stamp is in the future")
-
-        self.assertTrue(alarm.getStatus() in alarm.getStatusChoices(),
-                        "Invalid alarm status, status not in StatusChoices:  " + str(
-                            alarm.getStatus()) + " not in " + str(alarm.getStatusChoices()))
-        self.assertTrue(alarm.getSeverity() in alarm.getSeverityChoices(),
-                        "Invalid alarm severity, severity not in SeverityChoices:  " + str(
-                            alarm.getSeverity()) + " not in " + str(alarm.getSeverityChoices()))
+        self.ntnv_asserts(function,params)
 
     '''
     Tests saveSnapshot function, makes assertion for successful request and for correct results
@@ -69,6 +42,10 @@ class TestChannelRPC(unittest.TestCase):
         function = "saveSnapshot"
         params = {'configname': 'wf_test',
                   'servicename': 'masar'}
+        self.ntnv_asserts(function, params)
+
+    def ntnv_asserts(self, function, params):
+
         alarm = Alarm()
         time_stamp = TimeStamp()
         ntnv = NTNameValue(function, params)
@@ -78,19 +55,10 @@ class TestChannelRPC(unittest.TestCase):
         result = NTMultiChannel(response)
         result.getAlarm(alarm)
         result.getTimeStamp(time_stamp)
-        test_stamp = TimeStamp()
-        self.assertGreaterEqual(time_stamp._diffInt(test_stamp), 0, "Unexpected time stamp value, "
-                                                                    "given time stamp is earlier than default time")
-        test_stamp.getCurrent()
-        self.assertLessEqual(time_stamp._diffInt(test_stamp), 0, "Unexpected time stamp value, "
-                                                                 "given time stamp is in the future")
+        self.assertEqual(3, len(str(time_stamp).split(":")))  # Timestamp string format test
 
-        self.assertTrue(alarm.getStatus() in alarm.getStatusChoices(),
-                        "Invalid alarm status, status not in StatusChoices:  " + str(
-                            alarm.getStatus()) + " not in " + str(alarm.getStatusChoices()))
-        self.assertTrue(alarm.getSeverity() in alarm.getSeverityChoices(),
-                        "Invalid alarm severity, severity not in SeverityChoices:  " + str(
-                            alarm.getSeverity()) + " not in " + str(alarm.getSeverityChoices()))
+        self.assertIn(alarm.getStatus(), alarm.getStatusChoices())
+        self.assertIn(alarm.getSeverity(), alarm.getSeverityChoices())
 
     '''
     Tests retrieveServiceEvents function, makes assertion for successful request and for correct results
@@ -98,31 +66,7 @@ class TestChannelRPC(unittest.TestCase):
     def testRetrieveServiceEvents(self):
         function = "retrieveServiceEvents"
         params = {'configid': '1'}
-        alarm = Alarm()
-        time_stamp = TimeStamp()
-        ntnv = NTNameValue(function, params)
-        self.channelRPC.issueRequest(ntnv.getNTNameValue(), False)
-        response = self.channelRPC.waitResponse()
-        self.assertNotEqual(response, None, "ChannelRPC connection failure.")
-        result = NTTable(response)
-        label = result.getLabels()
-        self.assertNotEqual(label, None, "Labels returned improper value: None")
-        result.getAlarm(alarm)
-        result.getTimeStamp(time_stamp)
-        test_stamp = TimeStamp()
-        self.assertGreaterEqual(time_stamp._diffInt(test_stamp), 0, "Unexpected time stamp value, "
-                                                                    "given time stamp is earlier than default time")
-
-        test_stamp.getCurrent()
-        self.assertLessEqual(time_stamp._diffInt(test_stamp), 0, "Unexpected time stamp value, "
-                                                             "given time stamp is in the future")
-
-        self.assertTrue(alarm.getStatus() in alarm.getStatusChoices(),
-                        "Invalid alarm status, status not in StatusChoices:  " + str(
-                            alarm.getStatus()) + " not in " + str(alarm.getStatusChoices()))
-        self.assertTrue(alarm.getSeverity() in alarm.getSeverityChoices(),
-                        "Invalid alarm severity, severity not in SeverityChoices:  " + str(
-                            alarm.getSeverity()) + " not in " + str(alarm.getSeverityChoices()))
+        self.nttable_asserts(function, params)
 
     '''
     Tests retrieveServiceConfigProps function, makes assertion for successful request and for correct results
@@ -131,31 +75,7 @@ class TestChannelRPC(unittest.TestCase):
         function = "retrieveServiceConfigProps"
         params = {'propname': 'system',
                   'configname': 'SR_All_SCR_20140421'}
-        alarm = Alarm()
-        time_stamp = TimeStamp()
-        ntnv = NTNameValue(function, params)
-        self.channelRPC.issueRequest(ntnv.getNTNameValue(), False)
-        response = self.channelRPC.waitResponse()
-        self.assertNotEqual(response, None, "ChannelRPC connection failure.")
-        result = NTTable(response)
-        label = result.getLabels()
-        self.assertNotEqual(label, None, "Labels returned improper value: None")
-        result.getAlarm(alarm)
-        result.getTimeStamp(time_stamp)
-        test_stamp = TimeStamp()
-        self.assertGreaterEqual(time_stamp._diffInt(test_stamp), 0, "Unexpected time stamp value, "
-                                                                    "given time stamp is earlier than default time")
-
-        test_stamp.getCurrent()
-        self.assertLessEqual(time_stamp._diffInt(test_stamp), 0, "Unexpected time stamp value, "
-                                                                 "given time stamp is in the future")
-
-        self.assertTrue(alarm.getStatus() in alarm.getStatusChoices(),
-                        "Invalid alarm status, status not in StatusChoices:  " + str(
-                            alarm.getStatus()) + " not in " + str(alarm.getStatusChoices()))
-        self.assertTrue(alarm.getSeverity() in alarm.getSeverityChoices(),
-                        "Invalid alarm severity, severity not in SeverityChoices:  " + str(
-                            alarm.getSeverity()) + " not in " + str(alarm.getSeverityChoices()))
+        self.nttable_asserts(function, params)
 
     '''
     Tests retrieveServiceConfigs function, makes assertion for successful request and for correct results
@@ -163,6 +83,9 @@ class TestChannelRPC(unittest.TestCase):
     def testRetrieveServiceConfigs(self):
         function = "retrieveServiceConfigs"
         params = {'system': 'all'}
+        self.nttable_asserts(function, params)
+
+    def nttable_asserts(self, function, params):
         alarm = Alarm()
         time_stamp = TimeStamp()
         ntnv = NTNameValue(function, params)
@@ -174,20 +97,10 @@ class TestChannelRPC(unittest.TestCase):
         self.assertNotEqual(label, None, "Labels returned improper value: None")
         result.getAlarm(alarm)
         result.getTimeStamp(time_stamp)
-        test_stamp = TimeStamp()
-        self.assertGreaterEqual(time_stamp._diffInt(test_stamp), 0, "Unexpected time stamp value, "
-                                                                    "given time stamp is earlier than default time")
+        self.assertEqual(3, len(str(time_stamp).split(":")))  # Timestamp string format test
 
-        test_stamp.getCurrent()
-        self.assertLessEqual(time_stamp._diffInt(test_stamp), 0, "Unexpected time stamp value, "
-                                                                 "given time stamp is in the future")
-
-        self.assertTrue(alarm.getStatus() in alarm.getStatusChoices(),
-                        "Invalid alarm status, status not in StatusChoices:  " + str(
-                            alarm.getStatus()) + " not in " + str(alarm.getStatusChoices()))
-        self.assertTrue(alarm.getSeverity() in alarm.getSeverityChoices(),
-                        "Invalid alarm severity, severity not in SeverityChoices:  " + str(
-                            alarm.getSeverity()) + " not in " + str(alarm.getSeverityChoices()))
+        self.assertIn(alarm.getStatus(), alarm.getStatusChoices())
+        self.assertIn(alarm.getSeverity(), alarm.getSeverityChoices())
 
     if __name__ == '__main__':
         unittest.main()

@@ -23,12 +23,6 @@ class TestTimeStamp(unittest.TestCase):
         #self.test_time_stamp.getCurrent()
 
     '''
-    Ensures test_time_stamp is cleared after each test
-    '''
-    def tearDown(self):
-        self.test_time_stamp = 0
-
-    '''
     Tests getter for time at the point of request
     '''
     def testGetCurrent(self):

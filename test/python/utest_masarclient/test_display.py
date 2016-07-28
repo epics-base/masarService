@@ -18,12 +18,6 @@ class TestDisplay(unittest.TestCase):
         self.test_display = Display()
 
     '''
-    Ensures test_display is cleared after each test.
-    '''
-    def tearDown(self):
-        self.test_display = 0
-
-    '''
     Tests getter for Units, also tests default value assignment
     '''
     def testGetLimitLow(self):

@@ -8,8 +8,7 @@ from pymasarsqlite.service.serviceconfig import (saveServiceConfig, retrieveServ
 from pymasarsqlite.pvgroup.pvgroup import (savePvGroup, retrievePvGroups)
 from pymasarsqlite.pvgroup.pv import (saveGroupPvs, retrieveGroupPvs)
 from pymasarsqlite.service.service import (saveService)
-from pymasarsqlite.masardata.masardata import (checkConnection, saveServiceEvent)
-from masarclient.channelRPC import epicsExit
+from unittest_utils import SQLITE_DB_TEST_SETUP, SQLITE_DROP_ALL_TABLES
 
 '''
 
@@ -23,89 +22,11 @@ class TestMasarClient(unittest.TestCase):
     def setUp(self):
         channel = 'sqliteMasarTestService'
         self.mc = masarClient.client(channelname=channel)
-        #DB SETUP
-        __sqlitedb__ = os.environ["MASAR_SQLITE_DB"]
-        try:
-            conn = sqlite3.connect(__sqlitedb__)
-            cur = conn.cursor()
-            __sql__ = None
-            if __sql__ is None:
-                from pymasarsqlite.db.masarsqlite import SQL
-            else:
-                sqlfile = open(__sql__)
-                SQL = sqlfile.read()
-            if SQL is None:
-                print ('SQLite script is empty. Cannot create SQLite db.')
-                sys.exit()
-            else:
-                cur.executescript(SQL)
-                cur.execute("PRAGMA main.page_size= 4096;")
-                cur.execute("PRAGMA main.default_cache_size= 10000;")
-                cur.execute("PRAGMA main.locking_mode=EXCLUSIVE;")
-                cur.execute("PRAGMA main.synchronous=NORMAL;")
-                cur.execute("PRAGMA main.journal_mode=WAL;")
-                cur.execute("PRAGMA main.temp_store = MEMORY;")
+        SQLITE_DB_TEST_SETUP()
 
-            cur.execute('select name from sqlite_master where type=\'table\'')
-            masarconf = 'SR_All_20140421'
-            servicename = 'masar'
-
-            pvgname = 'masarpvgroup'
-            pvgdesc = 'this is my new pv group for masar service with same group name'
-            pvs = ["masarExample0000",
-                  "masarExample0001",
-                  "masarExampleBoUninit",
-                  "masarExampleMbboUninit",
-                  "masarExample0002",
-                  "masarExample0003",
-                  "masarExample0004",
-                  "masarExampleCharArray",
-                  "masarExampleShortArray",
-                  "masarExampleLongArray",
-                  "masarExampleStringArray",
-                  "masarExampleFloatArray",
-                  "masarExampleDoubleArray",
-                  "masarExampleMbboUninitTest"]
-            res = savePvGroup(conn, pvgname, func=pvgdesc)
-            res = saveGroupPvs(conn, pvgname, pvs)
-            pvgroups = retrievePvGroups(conn)
-            saveService(conn, servicename, desc='test desc')
-            saveServiceConfig(conn, servicename, masarconf, system='SR', status='active',
-                              configversion=20140420, configdesc='test desc')
-
-            res = saveServicePvGroup(conn,  masarconf, [pvgname])
-            pvlist = retrieveServiceConfigPVs(conn, masarconf, servicename=servicename)
-            results = retrieveServiceConfigs(conn, servicename, masarconf)
-            conn.commit()
-            conn.close()
-        except sqlite3.Error, e:
-            print ("Error %s:" % e.args[0])
-            raise
 
     def tearDown(self):
-        __sqlitedb__ = os.environ["MASAR_SQLITE_DB"]
-        try:
-            conn = sqlite3.connect(__sqlitedb__)
-            cur = conn.cursor()
-            cur.execute("drop table if exists masar_data")
-            cur.execute("drop table if exists pv")
-            cur.execute("drop table if exists pv_pvgroup")
-            cur.execute("drop table if exists pv_group")
-            cur.execute("drop table if exists pvgroup_serviceconfig")
-            cur.execute("drop table if exists service")
-            cur.execute("drop table if exists service_config")
-            cur.execute("drop table if exists service_config_prop")
-            cur.execute("drop table if exists service_event")
-            cur.execute("drop table if exists service_event_prop")
-        except:
-            raise
-        finally:
-            if conn:
-                conn.commit()
-                conn.close()
-            else:
-                print "Failed to connect to DB: " + str(__sqlitedb__)
-        self.mc = None
+        SQLITE_DROP_ALL_TABLES()
 
     def testRetrieveSystemList(self):
         result = self.mc.retrieveSystemList()
@@ -315,6 +236,125 @@ class TestMasarClient(unittest.TestCase):
         self.assertEqual(result[7], (3, 0, 3, 3, 0, 0, 0, 3, 3, 3, 0, 0, 3, 3))  # Severity
         self.assertEqual(result[8], (3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3))  # Status
         self.assertEqual(result[9], ('UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM'))  # Message
+
+    def testMultiGroup(self):
+        # DB SETUP
+        __sqlitedb__ = os.environ["MASAR_SQLITE_DB"]
+        try:
+            conn = sqlite3.connect(__sqlitedb__)
+            pvgname1 = 'masarpvgroup1'
+            pvgdesc1 = 'this is my new pv group for masar service with same group name'
+            pvs1 = ["masarExample0000",
+                    "masarExample0001",
+                    "masarExampleBoUninit",
+                    "masarExampleMbboUninit",
+                    "masarExample0002",
+                    "masarExample0003",
+                    "masarExampleFloatArray",
+                    "masarExample0004"]
+            res1 = savePvGroup(conn, pvgname1, func=pvgdesc1)
+            res1 = saveGroupPvs(conn, pvgname1, pvs1)
+            pvgname2 = 'masarpvgroup2'
+            pvgdesc2 = 'this is my new pv group for masar service with same group name'
+            pvs2 = ["masarExample0000",
+                    "masarExample0001",
+                    "masarExample0002",
+                    "masarExample0004",
+                    "masarExampleCharArray",
+                    "masarExampleShortArray",
+                    "masarExampleLongArray",
+                    "masarExampleStringArray",
+                    "masarExampleFloatArray",
+                    "masarExampleDoubleArray",
+                    "masarExampleMbboUninitTest"]
+            res2 = savePvGroup(conn, pvgname2, func=pvgdesc2)
+            res2 = saveGroupPvs(conn, pvgname2, pvs2)
+            pvgroups = retrievePvGroups(conn)
+            self.assertEqual(pvgroups[0][1], "masarpvgroup")
+            self.assertEqual(pvgroups[1][1], "masarpvgroup1")
+            self.assertEqual(pvgroups[2][1], "masarpvgroup2")
+            pvgroups = retrieveGroupPvs(conn, 2)
+            self.assertEqual(pvgroups[0][0], "masarExample0000")
+            self.assertEqual(pvgroups[1][0], "masarExample0001")
+            self.assertEqual(pvgroups[2][0], "masarExampleBoUninit")
+            self.assertEqual(pvgroups[3][0], "masarExampleMbboUninit")
+            self.assertEqual(pvgroups[4][0], "masarExample0002")
+            self.assertEqual(pvgroups[5][0], "masarExample0003")
+            self.assertEqual(pvgroups[6][0], "masarExample0004")
+            self.assertEqual(pvgroups[7][0], "masarExampleFloatArray")
+            pvgroups = retrieveGroupPvs(conn, 3)
+            self.assertEqual(pvgroups[0][0], "masarExample0000")
+            self.assertEqual(pvgroups[1][0], "masarExample0001")
+            self.assertEqual(pvgroups[2][0], "masarExample0002")
+            self.assertEqual(pvgroups[3][0], "masarExample0004")
+            self.assertEqual(pvgroups[4][0], "masarExampleCharArray")
+            self.assertEqual(pvgroups[5][0], "masarExampleShortArray")
+            self.assertEqual(pvgroups[6][0], "masarExampleLongArray")
+            self.assertEqual(pvgroups[7][0], "masarExampleStringArray")
+            self.assertEqual(pvgroups[8][0], "masarExampleFloatArray")
+            self.assertEqual(pvgroups[9][0], "masarExampleDoubleArray")
+            self.assertEqual(pvgroups[10][0], "masarExampleMbboUninitTest")
+            servicename = "masar"
+            masarconf = "testconf"
+            saveService(conn, servicename, desc='test desc')
+            saveServiceConfig(conn, servicename, masarconf, system='SR', status='active',
+                              configversion=20140420, configdesc='test desc')
+
+            res = saveServicePvGroup(conn, masarconf, [pvgname1, pvgname2])
+            conn.commit()
+            conn.close()
+        except:
+            raise
+        save_params = {'configname': 'testconf',
+                       'servicename': 'masar'}
+        res1 = self.mc.saveSnapshot(save_params)
+        self.assertNotEqual(res1, None)
+        self.assertNotEqual(res1, False)
+        event_id = res1[0]
+        retrieve_params = {'eventid': str(event_id)}
+        result = self.mc.retrieveSnapshot(retrieve_params)
+        self.assertNotEqual(result, None)
+        self.assertNotEqual(result, False)
+        self.assertEqual(result[0][0], 'masarExample0000')  # ChannelName 0
+        self.assertEqual(result[0][1], 'masarExample0001')  # ChannelName 1
+        self.assertEqual(result[0][2], 'masarExampleBoUninit')  # ChannelName 2
+        self.assertEqual(result[0][3], 'masarExampleMbboUninit')  # ChannelName 3
+        self.assertEqual(result[0][4], 'masarExample0002')  # ChannelName 4
+        self.assertEqual(result[0][5], 'masarExample0003')  # ChannelName 5
+        self.assertEqual(result[0][6], 'masarExample0004')  # ChannelName 6
+        self.assertEqual(result[0][7], 'masarExampleCharArray')  # ChannelName 7
+        self.assertEqual(result[0][8], 'masarExampleShortArray')  # ChannelName 8
+        self.assertEqual(result[0][9], 'masarExampleLongArray')  # ChannelName 9
+        self.assertEqual(result[0][10], 'masarExampleStringArray')  # ChannelName 10
+        self.assertEqual(result[0][11], 'masarExampleFloatArray')  # ChannelName 11
+        self.assertEqual(result[0][12], 'masarExampleDoubleArray')  # ChannelName 12
+        self.assertEqual(result[0][13], 'masarExampleMbboUninitTest')  # ChannelName 13
+        self.assertEqual(result[1][0], 10)  # 0000 Value
+        self.assertEqual(result[1][1], 'string value')  # 0001 Value
+        self.assertEqual(result[1][2], '0')  # BoUninit Value (appropriately returned as string)
+        self.assertEqual(result[1][3], 1)  # MbboUninit Value
+        self.assertEqual(result[1][4], 'zero')  # 0002 Value
+        self.assertEqual(result[1][5], 'one')  # 0003 Value
+        self.assertEqual(result[1][6], 1.9)  # 0004 Value
+        self.assertEqual(result[1][7], ())  # CharArray Value
+        self.assertEqual(result[1][8], ())  # ShortArray Value
+        self.assertEqual(result[1][9], ())  # LongArray Value
+        self.assertEqual(result[1][10], ())  # StringArray Value
+        self.assertEqual(result[1][11], ())  # FloatArrayValue
+        self.assertEqual(result[1][12], ())  # DoubleArray Value
+        self.assertEqual(result[1][13], 1)  # MbboUninitTest Value
+        self.assertEqual(result[2], (5, 0, 0, 5, 0, 0, 6, 4, 1, 5, 0, 2, 6, 5))  # DBR type
+        self.assertEqual(result[3], (1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1))  # isConnected
+        self.assertEqual(result[4], (
+        631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000,
+        631152000, 631152000, 631152000, 631152000))  # SecondsPastEpoch
+        self.assertEqual(result[5], (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))  # NanoSeconds
+        self.assertEqual(result[6], (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))  # UserTag
+        self.assertEqual(result[7], (0, 0, 3, 0, 3, 0, 0, 3, 3, 3, 3, 3, 3, 0))  # Severity
+        self.assertEqual(result[8], (3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3))  # Status
+        self.assertEqual(result[9], (
+        'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM',
+        'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM'))  # Message
 
     if __name__ == '__main__':
         unittest.main()
