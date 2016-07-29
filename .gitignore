@@ -13,3 +13,4 @@ envPaths
 QtC-*
 *.so
 *.pyc
+*.local
