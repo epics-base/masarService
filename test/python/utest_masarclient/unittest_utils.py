@@ -26,7 +26,7 @@ def SQLITE_DB_TEST_SETUP():
             SQL = sqlfile.read()
         if SQL is None:
             print ('SQLite script is empty. Cannot create SQLite db.')
-            sys.exit()
+            raise IOError('SQLite script is empty. Cannot create SQLite db.')
         else:
             cur.executescript(SQL)
             cur.execute("PRAGMA main.page_size= 4096;")

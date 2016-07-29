@@ -25,7 +25,7 @@ class TestChannelRPC(unittest.TestCase):
         if not self.channelRPC.waitConnect(2.0):
             print "error when waiting connection.", self.channelRPC.getMessage()
             # AttributeError: 'module' object has no attribute '_getMessage'
-            raise AttributeError()
+            raise AttributeError(self.channelRPC.getMessage())
 
     '''
     Tests retrieveSnapshot function, makes assertion for successful request and for correct results

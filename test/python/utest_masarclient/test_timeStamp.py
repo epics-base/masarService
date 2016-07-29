@@ -110,5 +110,19 @@ class TestTimeStamp(unittest.TestCase):
                 self.assertGreaterEqual(self.test_time_stamp.toSeconds()+.1, test_value_seconds)
                 self.assertGreaterEqual(test_value_seconds, self.test_time_stamp.toSeconds()-.1)
 
+    def testNormalize(self):
+        time_stamp = TimeStamp(1, 1000000000)
+        self.assertEqual(time_stamp.getNanoseconds(), 0)
+        self.assertEqual(time_stamp.getSecondsPastEpoch(), 2)
+        time_stamp = TimeStamp(1, 999999999)
+        self.assertEqual(time_stamp.getNanoseconds(), 999999999)
+        self.assertEqual(time_stamp.getSecondsPastEpoch(), 1)
+        time_stamp = TimeStamp(1, -1000000000)
+        self.assertEqual(time_stamp.getSecondsPastEpoch(), 0)
+        self.assertEqual(time_stamp.getNanoseconds(), 0)
+        time_stamp = TimeStamp(1, -999999999)
+        self.assertEqual(time_stamp.getSecondsPastEpoch(), 0)
+        self.assertEqual(time_stamp.getNanoseconds(), 1)
+
     if __name__ == '__main__':
         unittest.main()

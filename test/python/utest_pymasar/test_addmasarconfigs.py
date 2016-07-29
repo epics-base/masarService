@@ -42,7 +42,7 @@ class TestAddMasarConfigs(unittest.TestCase):
                 SQL = sqlfile.read()
             if SQL is None:
                 print ('SQLite script is empty. Cannot create SQLite db.')
-                sys.exit()
+                raise IOError('SQLite script is empty. Cannot create SQLite db.')
             else:
                 cur.executescript(SQL)
                 cur.execute("PRAGMA main.page_size= 4096;")
@@ -108,7 +108,6 @@ class TestAddMasarConfigs(unittest.TestCase):
         self.assertEqual('BR_MG_SCR_20130419', res3[0]['name'])
         self.assertEqual(res3[0]['pvlist']['names'], [u'masarExample0000', u'masarExample0001', u'masarExampleBoUninit', u'masarExampleMbboUninit', u'masarExample0002', u'masarExample0003', u'masarExample0004', u'masarExampleCharArray', u'masarExampleShortArray', u'masarExampleLongArray', u'masarExampleStringArray', u'masarExampleFloatArray', u'masarExampleDoubleArray', u'masarExampleMbboUninitTest'])
         self.assertEqual('BR', res3[0]['system'])
-        print res3[0]['created_on']
         self.assertEqual(3, len(res3[0]['created_on'].split('-')))  # Date format test
         self.assertEqual(3, len(res3[0]['created_on'].split(':')))  # 2016-07-28 18:18:36
         self.assertEqual(None, res3[0]['version'])
