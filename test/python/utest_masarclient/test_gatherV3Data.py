@@ -58,7 +58,7 @@ class TestGatherV3Data(unittest.TestCase):
         self.assertTrue(result, "Connection failed with message:  " + self.gatherv3data.getMessage())
 
         pvstructure = self.gatherv3data.getPVStructure()
-        self.assertNotEqual(pvstructure, None, "No PVStructure returned")
+        self.assertNotEqual(pvstructure, None)
 
     '''
     Tests all values in NTMultiChannel. Condensed test to reduce connection overhead of multiple tests.

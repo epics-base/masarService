@@ -1,5 +1,4 @@
 import unittest
-import time
 from types import *
 
 from masarclient.timeStamp import TimeStamp as TimeStamp

@@ -59,10 +59,8 @@ class TestMasarClient(unittest.TestCase):
         self.assertEqual('active', result[5][0])
 
     def testRetrieveServiceEvents(self):
-        #print "RetrieveServiceEvents"
         params = {'configid': '1'}
         result = self.mc.retrieveServiceEvents(params)
-        #print "retrieveServiceEvents:  " +str(result)
         self.assertNotEqual(result, None)
         self.assertNotEqual(result, False)
 
@@ -77,43 +75,43 @@ class TestMasarClient(unittest.TestCase):
         self.assertNotEqual(result, None)
         self.assertNotEqual(result, False)
         # The following tests are for expected outputs
-        self.assertEqual(result[0], 1)
-        self.assertEqual(result[1][0], 'masarExample0000')  # ChannelName 0
-        self.assertEqual(result[1][1], 'masarExample0001')  # ChannelName 1
-        self.assertEqual(result[1][2], 'masarExampleBoUninit')  # ChannelName 2
-        self.assertEqual(result[1][3], 'masarExampleMbboUninit')  # ChannelName 3
-        self.assertEqual(result[1][4], 'masarExample0002')  # ChannelName 4
-        self.assertEqual(result[1][5], 'masarExample0003')  # ChannelName 5
-        self.assertEqual(result[1][6], 'masarExample0004')  # ChannelName 6
-        self.assertEqual(result[1][7], 'masarExampleCharArray')  # ChannelName 7
-        self.assertEqual(result[1][8], 'masarExampleShortArray')  # ChannelName 8
-        self.assertEqual(result[1][9], 'masarExampleLongArray')  # ChannelName 9
-        self.assertEqual(result[1][10], 'masarExampleStringArray')  # ChannelName 10
-        self.assertEqual(result[1][11], 'masarExampleFloatArray')  # ChannelName 11
-        self.assertEqual(result[1][12], 'masarExampleDoubleArray')  # ChannelName 12
-        self.assertEqual(result[1][13], 'masarExampleMbboUninitTest')  # ChannelName 13
-        self.assertEqual(result[2][0], 10)  # 0000 Value
-        self.assertEqual(result[2][1], 'string value')  # 0001 Value
-        self.assertEqual(result[2][2], 0)  # BoUninit Value
-        self.assertEqual(result[2][3], 1)  # MbboUninit Value
-        self.assertEqual(result[2][4], 'zero')  # 0002 Value
-        self.assertEqual(result[2][5], 'one')  # 0003 Value
-        self.assertEqual(result[2][6], 1.9)  # 0004 Value
-        self.assertEqual(result[2][7], ())  # CharArray Value
-        self.assertEqual(result[2][8], ())  # ShortArray Value
-        self.assertEqual(result[2][9], ())  # LongArray Value
-        self.assertEqual(result[2][10], ())  # StringArray Value
-        self.assertEqual(result[2][11], ())  # FloatArrayValue
-        self.assertEqual(result[2][12], ())  # DoubleArray Value
-        self.assertEqual(result[2][13], 1)  # MbboUninitTest Value
-        self.assertEqual(result[3], (5, 0, 0, 5, 0, 0, 6, 4, 1, 5, 0, 2, 6, 5))  # DBR type
-        self.assertEqual(result[4], (1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1))  # isConnected
-        self.assertEqual(result[5], (631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000))  # SecondsPastEpoch
-        self.assertEqual(result[6], (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))  # NanoSeconds
-        self.assertEqual(result[7], (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))  # UserTag
-        self.assertEqual(result[8], (0, 0, 3, 0, 3, 0, 0, 3, 3, 3, 3, 3, 3, 0))  # Severity
-        self.assertEqual(result[9], (3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3))  # Status
-        self.assertEqual(result[10], ('UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM'))  # Message
+        expected_result = (1, ('masarExample0000',  # ChannelName 0
+                                'masarExample0001',  # ChannelName 1
+                                'masarExampleBoUninit',  # ChannelName 2
+                                'masarExampleMbboUninit',  # ChannelName 3
+                                'masarExample0002',  # ChannelName 4
+                                'masarExample0003',  # ChannelName 5
+                                'masarExample0004',  # ChannelName 6
+                                'masarExampleCharArray',  # ChannelName 7
+                                'masarExampleShortArray',  # ChannelName 8
+                                'masarExampleLongArray',  # ChannelName 9
+                                'masarExampleStringArray',  # ChannelName 10
+                                'masarExampleFloatArray',  # ChannelName 11
+                                'masarExampleDoubleArray',  # ChannelName 12
+                                'masarExampleMbboUninitTest'),  # ChannelName 13
+                                (10,  # 0000 Value
+                                'string value',  # 0001 Value
+                                0,  # BoUninit Value
+                                1,  # MbboUninit Value
+                                'zero',  # 0002 Value
+                                'one',  # 0003 Value
+                                1.9,  # 0004 Value
+                                (),  # CharArray Value
+                                (),  # ShortArray Value
+                                (),  # LongArray Value
+                                (),  # StringArray Value
+                                (),  # FloatArrayValue
+                                (),  # DoubleArray Value
+                                1),  # MbboUninitTest Value
+                                (5, 0, 0, 5, 0, 0, 6, 4, 1, 5, 0, 2, 6, 5),  # DBR type
+                                (1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),  # isConnected
+                                (631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000),  # SecondsPastEpoch
+                                (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),  # NanoSeconds
+                                (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),  # UserTag
+                                (0, 0, 3, 0, 3, 0, 0, 3, 3, 3, 3, 3, 3, 0),  # Severity
+                                (3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3),  # Status
+                                ('UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM'))  # Message
+        self.assertSequenceEqual(result, expected_result)
 
     def testRetrieveSnapshot(self):
         save_params = {'configname': 'SR_All_20140421',
@@ -127,42 +125,46 @@ class TestMasarClient(unittest.TestCase):
         self.assertNotEqual(result, None)
         self.assertNotEqual(result, False)
         # The following tests are for expected outputs
-        self.assertEqual(result[0][0], 'masarExample0000')  # ChannelName 0
-        self.assertEqual(result[0][1], 'masarExample0001')  # ChannelName 1
-        self.assertEqual(result[0][2], 'masarExampleBoUninit')  # ChannelName 2
-        self.assertEqual(result[0][3], 'masarExampleMbboUninit')  # ChannelName 3
-        self.assertEqual(result[0][4], 'masarExample0002')  # ChannelName 4
-        self.assertEqual(result[0][5], 'masarExample0003')  # ChannelName 5
-        self.assertEqual(result[0][6], 'masarExample0004')  # ChannelName 6
-        self.assertEqual(result[0][7], 'masarExampleCharArray')  # ChannelName 7
-        self.assertEqual(result[0][8], 'masarExampleShortArray')  # ChannelName 8
-        self.assertEqual(result[0][9], 'masarExampleLongArray')  # ChannelName 9
-        self.assertEqual(result[0][10], 'masarExampleStringArray')  # ChannelName 10
-        self.assertEqual(result[0][11], 'masarExampleFloatArray')  # ChannelName 11
-        self.assertEqual(result[0][12], 'masarExampleDoubleArray')  # ChannelName 12
-        self.assertEqual(result[0][13], 'masarExampleMbboUninitTest')  # ChannelName 13
-        self.assertEqual(result[1][0], 10)  # 0000 Value
-        self.assertEqual(result[1][1], 'string value')  # 0001 Value
-        self.assertEqual(result[1][2], '0')  # BoUninit Value (appropriately returned as string)
-        self.assertEqual(result[1][3], 1)  # MbboUninit Value
-        self.assertEqual(result[1][4], 'zero')  # 0002 Value
-        self.assertEqual(result[1][5], 'one')  # 0003 Value
-        self.assertEqual(result[1][6], 1.9)  # 0004 Value
-        self.assertEqual(result[1][7], ())  # CharArray Value
-        self.assertEqual(result[1][8], ())  # ShortArray Value
-        self.assertEqual(result[1][9], ())  # LongArray Value
-        self.assertEqual(result[1][10], ())  # StringArray Value
-        self.assertEqual(result[1][11], ())  # FloatArrayValue
-        self.assertEqual(result[1][12], ())  # DoubleArray Value
-        self.assertEqual(result[1][13], 1)  # MbboUninitTest Value
-        self.assertEqual(result[2], (5, 0, 0, 5, 0, 0, 6, 4, 1, 5, 0, 2, 6, 5))  # DBR type
-        self.assertEqual(result[3], (1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1))  # isConnected
-        self.assertEqual(result[4], (631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000))  # SecondsPastEpoch
-        self.assertEqual(result[5], (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))  # NanoSeconds
-        self.assertEqual(result[6], (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))  # UserTag
-        self.assertEqual(result[7], (0, 0, 3, 0, 3, 0, 0, 3, 3, 3, 3, 3, 3, 0))  # Severity
-        self.assertEqual(result[8], (3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3))  # Status
-        self.assertEqual(result[9], ('UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM'))  # Message
+        expected_result = (('masarExample0000',  # ChannelName 0
+                               'masarExample0001',  # ChannelName 1
+                               'masarExampleBoUninit',  # ChannelName 2
+                               'masarExampleMbboUninit',  # ChannelName 3
+                               'masarExample0002',  # ChannelName 4
+                               'masarExample0003',  # ChannelName 5
+                               'masarExample0004',  # ChannelName 6
+                               'masarExampleCharArray',  # ChannelName 7
+                               'masarExampleShortArray',  # ChannelName 8
+                               'masarExampleLongArray',  # ChannelName 9
+                               'masarExampleStringArray',  # ChannelName 10
+                               'masarExampleFloatArray',  # ChannelName 11
+                               'masarExampleDoubleArray',  # ChannelName 12
+                               'masarExampleMbboUninitTest'),  # ChannelName 13
+                           (10,  # 0000 Value
+                            'string value',  # 0001 Value
+                            '0',  # BoUninit Value
+                            1,  # MbboUninit Value
+                            'zero',  # 0002 Value
+                            'one',  # 0003 Value
+                            1.9,  # 0004 Value
+                            (),  # CharArray Value
+                            (),  # ShortArray Value
+                            (),  # LongArray Value
+                            (),  # StringArray Value
+                            (),  # FloatArrayValue
+                            (),  # DoubleArray Value
+                            1),  # MbboUninitTest Value
+                           (5, 0, 0, 5, 0, 0, 6, 4, 1, 5, 0, 2, 6, 5),  # DBR type
+                           (1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),  # isConnected
+                           (631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000,
+                            631152000, 631152000, 631152000, 631152000, 631152000, 631152000),  # SecondsPastEpoch
+                           (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),  # NanoSeconds
+                           (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),  # UserTag
+                           (0, 0, 3, 0, 3, 0, 0, 3, 3, 3, 3, 3, 3, 0),  # Severity
+                           (3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3),  # Status
+                           ('UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM',
+                            'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM',
+                            'UDF_ALARM'))  # Message
+        self.assertSequenceEqual(result, expected_result)
 
     def testApproveSnapshot(self):
         save_params = {'configname': 'SR_All_20140421',
@@ -200,42 +202,43 @@ class TestMasarClient(unittest.TestCase):
         self.assertNotEqual(result, None)
         self.assertNotEqual(result, False)
         # The following tests are for expected outputs
-        self.assertEqual(result[0][0], 'masarExampleCharArray')  # ChannelName 0
-        self.assertEqual(result[0][1], 'masarExample0004')  # ChannelName 1
-        self.assertEqual(result[0][2], 'masarExampleDoubleArray')  # ChannelName 2
-        self.assertEqual(result[0][3], 'masarExample0002')  # ChannelName 3
-        self.assertEqual(result[0][4], 'masarExample0003')  # ChannelName 4
-        self.assertEqual(result[0][5], 'masarExample0000')  # ChannelName 5
-        self.assertEqual(result[0][6], 'masarExample0001')  # ChannelName 6
-        self.assertEqual(result[0][7], 'masarExampleStringArray')  # ChannelName 7
-        self.assertEqual(result[0][8], 'masarExampleLongArray')  # ChannelName 8
-        self.assertEqual(result[0][9], 'masarExampleShortArray')  # ChannelName 9
-        self.assertEqual(result[0][10], 'masarExampleMbboUninitTest')  # ChannelName 10
-        self.assertEqual(result[0][11], 'masarExampleMbboUninit')  # ChannelName 10
-        self.assertEqual(result[0][12], 'masarExampleFloatArray')  # ChannelName 11
-        self.assertEqual(result[0][13], 'masarExampleBoUninit')  # ChannelName 12
-        self.assertEqual(result[1][0], ())  # CharArray Value
-        self.assertEqual(result[1][1], 1.9)  # 0004 Value
-        self.assertEqual(result[1][2], ())  # DoubleArray Value
-        self.assertEqual(result[1][3], 'zero')  # 0002 Value
-        self.assertEqual(result[1][4], 'one')  # 0003 Value
-        self.assertEqual(result[1][5], 10)  # 0000 Value
-        self.assertEqual(result[1][6], 'string value')  # 0001 Value
-        self.assertEqual(result[1][7], ())  # StringArray Value
-        self.assertEqual(result[1][8], ())  # LongArray Value
-        self.assertEqual(result[1][9], ())  # ShortArray Value
-        self.assertEqual(result[1][10], 1)  # MbboUninitTest Value
-        self.assertEqual(result[1][11], 1)  # MbboUninit Value
-        self.assertEqual(result[1][12], ())  # FloatArray Value
-        self.assertEqual(result[1][13], 0)  # BoUninit Value
-        self.assertEqual(result[2], (4, 6, 6, 0, 0, 5, 0, 0, 5, 1, 5, 5, 2, 0))  # DBR type
-        self.assertEqual(result[3], (1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1))  # isConnected
-        self.assertEqual(result[4], (631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000))  # SecondsPastEpoch
-        self.assertEqual(result[5], (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))  # NanoSeconds
-        self.assertEqual(result[6], (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))  # UserTag
-        self.assertEqual(result[7], (3, 0, 3, 3, 0, 0, 0, 3, 3, 3, 0, 0, 3, 3))  # Severity
-        self.assertEqual(result[8], (3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3))  # Status
-        self.assertEqual(result[9], ('UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM'))  # Message
+        expected_result = (('masarExampleCharArray',  # ChannelName 0
+                             'masarExample0004',  # ChannelName 1
+                             'masarExampleDoubleArray',  # ChannelName 2
+                             'masarExample0002',  # ChannelName 3
+                             'masarExample0003',  # ChannelName 4
+                             'masarExample0000',  # ChannelName 5
+                             'masarExample0001',  # ChannelName 6
+                             'masarExampleStringArray',  # ChannelName 7
+                             'masarExampleLongArray',  # ChannelName 8
+                             'masarExampleShortArray',  # ChannelName 9
+                             'masarExampleMbboUninitTest',  # ChannelName 10
+                             'masarExampleMbboUninit',  # ChannelName 10
+                             'masarExampleFloatArray',  # ChannelName 11
+                             'masarExampleBoUninit'),  # ChannelName 12
+                             ((),  # CharArray Value
+                             1.9,  # 0004 Value
+                             (),  # DoubleArray Value
+                             'zero',  # 0002 Value
+                             'one',  # 0003 Value
+                             10,  # 0000 Value
+                             'string value',  # 0001 Value
+                             (),  # StringArray Value
+                             (),  # LongArray Value
+                             (),  # ShortArray Value
+                             1,  # MbboUninitTest Value
+                             1,  # MbboUninit Value
+                             (),  # FloatArray Value
+                             0),  # BoUninit Value
+                             (4, 6, 6, 0, 0, 5, 0, 0, 5, 1, 5, 5, 2, 0),  # DBR type
+                             (1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),  # isConnected
+                             (631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000),  # SecondsPastEpoch
+                             (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),  # NanoSeconds
+                             (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),  # UserTag
+                             (3, 0, 3, 3, 0, 0, 0, 3, 3, 3, 0, 0, 3, 3),  # Severity
+                             (3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3),  # Status
+                             ('UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM'))  # Message
+        self.assertSequenceEqual(result, expected_result)
 
     def testMultiGroup(self):
         # DB SETUP
@@ -315,46 +318,46 @@ class TestMasarClient(unittest.TestCase):
         result = self.mc.retrieveSnapshot(retrieve_params)
         self.assertNotEqual(result, None)
         self.assertNotEqual(result, False)
-        self.assertEqual(result[0][0], 'masarExample0000')  # ChannelName 0
-        self.assertEqual(result[0][1], 'masarExample0001')  # ChannelName 1
-        self.assertEqual(result[0][2], 'masarExampleBoUninit')  # ChannelName 2
-        self.assertEqual(result[0][3], 'masarExampleMbboUninit')  # ChannelName 3
-        self.assertEqual(result[0][4], 'masarExample0002')  # ChannelName 4
-        self.assertEqual(result[0][5], 'masarExample0003')  # ChannelName 5
-        self.assertEqual(result[0][6], 'masarExample0004')  # ChannelName 6
-        self.assertEqual(result[0][7], 'masarExampleCharArray')  # ChannelName 7
-        self.assertEqual(result[0][8], 'masarExampleShortArray')  # ChannelName 8
-        self.assertEqual(result[0][9], 'masarExampleLongArray')  # ChannelName 9
-        self.assertEqual(result[0][10], 'masarExampleStringArray')  # ChannelName 10
-        self.assertEqual(result[0][11], 'masarExampleFloatArray')  # ChannelName 11
-        self.assertEqual(result[0][12], 'masarExampleDoubleArray')  # ChannelName 12
-        self.assertEqual(result[0][13], 'masarExampleMbboUninitTest')  # ChannelName 13
-        self.assertEqual(result[1][0], 10)  # 0000 Value
-        self.assertEqual(result[1][1], 'string value')  # 0001 Value
-        self.assertEqual(result[1][2], '0')  # BoUninit Value (appropriately returned as string)
-        self.assertEqual(result[1][3], 1)  # MbboUninit Value
-        self.assertEqual(result[1][4], 'zero')  # 0002 Value
-        self.assertEqual(result[1][5], 'one')  # 0003 Value
-        self.assertEqual(result[1][6], 1.9)  # 0004 Value
-        self.assertEqual(result[1][7], ())  # CharArray Value
-        self.assertEqual(result[1][8], ())  # ShortArray Value
-        self.assertEqual(result[1][9], ())  # LongArray Value
-        self.assertEqual(result[1][10], ())  # StringArray Value
-        self.assertEqual(result[1][11], ())  # FloatArrayValue
-        self.assertEqual(result[1][12], ())  # DoubleArray Value
-        self.assertEqual(result[1][13], 1)  # MbboUninitTest Value
-        self.assertEqual(result[2], (5, 0, 0, 5, 0, 0, 6, 4, 1, 5, 0, 2, 6, 5))  # DBR type
-        self.assertEqual(result[3], (1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1))  # isConnected
-        self.assertEqual(result[4], (
-        631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000,
-        631152000, 631152000, 631152000, 631152000))  # SecondsPastEpoch
-        self.assertEqual(result[5], (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))  # NanoSeconds
-        self.assertEqual(result[6], (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))  # UserTag
-        self.assertEqual(result[7], (0, 0, 3, 0, 3, 0, 0, 3, 3, 3, 3, 3, 3, 0))  # Severity
-        self.assertEqual(result[8], (3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3))  # Status
-        self.assertEqual(result[9], (
-        'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM',
-        'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM'))  # Message
+
+        expected_results = (('masarExample0000',  # ChannelName 0
+                            'masarExample0001',  # ChannelName 1
+                            'masarExampleBoUninit',  # ChannelName 2
+                            'masarExampleMbboUninit',  # ChannelName 3
+                            'masarExample0002',  # ChannelName 4
+                            'masarExample0003',  # ChannelName 5
+                            'masarExample0004',  # ChannelName 6
+                            'masarExampleCharArray',  # ChannelName 7
+                            'masarExampleShortArray',  # ChannelName 8
+                            'masarExampleLongArray',  # ChannelName 9
+                            'masarExampleStringArray',  # ChannelName 10
+                            'masarExampleFloatArray',  # ChannelName 11
+                            'masarExampleDoubleArray',  # ChannelName 12
+                            'masarExampleMbboUninitTest'),  # ChannelName 13
+                            (10,  # 0000 Value
+                            'string value',  # 0001 Value
+                            '0',  # BoUninit Value (appropriately returned as string,
+                            1,  # MbboUninit Value
+                            'zero',  # 0002 Value
+                            'one',  # 0003 Value
+                            1.9,  # 0004 Value
+                            (),  # CharArray Value
+                            (),  # ShortArray Value
+                            (),  # LongArray Value
+                            (),  # StringArray Value
+                            (),  # FloatArrayValue
+                            (),  # DoubleArray Value
+                            1),  # MbboUninitTest Value
+                            (5, 0, 0, 5, 0, 0, 6, 4, 1, 5, 0, 2, 6, 5),  # DBR type
+                            (1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),  # isConnected
+                            (631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000, 631152000,
+                            631152000, 631152000, 631152000, 631152000),  # SecondsPastEpoch
+                            (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),  # NanoSeconds
+                            (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),  # UserTag
+                            (0, 0, 3, 0, 3, 0, 0, 3, 3, 3, 3, 3, 3, 0),  # Severity
+                            (3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3),  # Status
+                            ('UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM',
+                             'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM', 'UDF_ALARM'))  # Message
+        self.assertSequenceEqual(result, expected_results)
 
     if __name__ == '__main__':
         unittest.main()

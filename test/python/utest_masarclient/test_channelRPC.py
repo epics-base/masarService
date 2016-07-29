@@ -94,7 +94,7 @@ class TestChannelRPC(unittest.TestCase):
         self.assertNotEqual(response, None, "ChannelRPC connection failure.")
         result = NTTable(response)
         label = result.getLabels()
-        self.assertNotEqual(label, None, "Labels returned improper value: None")
+        self.assertNotEqual(label, None)
         result.getAlarm(alarm)
         result.getTimeStamp(time_stamp)
         self.assertEqual(3, len(str(time_stamp).split(":")))  # Timestamp string format test
