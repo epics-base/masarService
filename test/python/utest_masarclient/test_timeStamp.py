@@ -124,5 +124,30 @@ class TestTimeStamp(unittest.TestCase):
         self.assertEqual(time_stamp.getSecondsPastEpoch(), 0)
         self.assertEqual(time_stamp.getNanoseconds(), 1)
 
+    def testOperators(self):
+        self.assertTrue(TimeStamp(1, 0) == TimeStamp(0, 1000000000))
+        self.assertFalse(TimeStamp(1, 0) == TimeStamp(1, -1000000000))
+        self.assertFalse(TimeStamp(2, 0) == TimeStamp(3, -999999999))
+
+        self.assertTrue(TimeStamp(1, 0) != TimeStamp(1, -1000000000))
+        self.assertFalse(TimeStamp(1, 1) != TimeStamp(0, 1000000001))
+        self.assertFalse(TimeStamp(1, 0) != TimeStamp(2, -1000000000))
+
+        self.assertTrue(TimeStamp(1, 0) > TimeStamp(1, -1))
+        self.assertFalse(TimeStamp(0, 999999999) > TimeStamp(1, -1))
+        self.assertFalse(TimeStamp(1, -1) > TimeStamp(0, 1000000000))
+
+        self.assertTrue(TimeStamp(1, 1) < TimeStamp(2, -999999998))
+        self.assertFalse(TimeStamp(0, 999999999) < TimeStamp(1, -2))
+        self.assertFalse(TimeStamp(0, 999999999) < TimeStamp(1, -1))
+
+        self.assertTrue(TimeStamp(1, 0) >= TimeStamp(2, -1000000001))
+        self.assertTrue(TimeStamp(1, 0) >= TimeStamp(2, -1000000000))
+        self.assertFalse(TimeStamp(2, 0) >= TimeStamp(1, 1000000001))
+
+        self.assertTrue(TimeStamp(1, 1000000000) <= TimeStamp(1, 1000000001))
+        self.assertTrue(TimeStamp(1, -1) <= TimeStamp(2, -1000000001))
+        self.assertFalse(TimeStamp(1, 1000000001) <= TimeStamp(2, 0))
+
     if __name__ == '__main__':
         unittest.main()
