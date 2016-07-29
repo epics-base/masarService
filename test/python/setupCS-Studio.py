@@ -38,7 +38,7 @@ def sqliteSetUpService():
             from pymasarsqlite.db.masarsqlite import SQL
         else:
             sqlfile = open(__sql__)
-            SQL = sqlfile.read()
+            raise IOError('SQLite script is empty. Cannot create SQLite db.')
         if SQL is None:
             print ('SQLite script is empty. Cannot create SQLite db.')
             sys.exit()

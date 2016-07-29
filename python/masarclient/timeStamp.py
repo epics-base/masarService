@@ -163,32 +163,6 @@ class TimeStamp(object) :
         if sdiff>0 :
              return True
         return False
-    def add(self,seconds) :
-        """add to time.
-
-        seconds The number of seconds to add."""
-        newsecs = self.getSecondsPastEpoch()
-        newnano = self.getNanoseconds()
-        if isinstance(seconds,int) or isinstance(seconds,long) :
-            newsecs += seconds
-        else :
-            secs = long(seconds)
-            nano = long((seconds - secs)*1e9)
-            newnano = int(newnano + nano)
-            if newnano >TimeStamp.nanoSecPerSec :
-                newnano -= TimeStamp.nanoSecPerSec
-                newsecs += 1
-            elif newnano< -TimeStamp.nanoSecPerSec :
-                newnano += TimeStamp.nanoSecPerSec
-                newsecs -= 1
-            newsecs += secs
-        self.put(newsecs,newnano)
-        return self
-    def sub(self,other) :
-        """subtract from time.
-
-        seconds The number of seconds to subtract."""
-        return self.add(-other)
     def getMilliseconds(self) :
         """Get the number of milli seconds since the epoch as a long."""
         return long(self.getSecondsPastEpoch()*1000 + self.getNanoseconds()/1000000)
