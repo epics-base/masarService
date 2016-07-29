@@ -1,0 +1,5 @@
+#!/usr/bin/dh-exec
+cpp/bin/${EPICS_HOST_ARCH}/masarServiceRun usr/bin/
+python/masarserver/masarservice.conf etc/masarservice.conf
+masarConfigManager usr/bin/
+masarConfigTool usr/bin/
