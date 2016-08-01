@@ -47,24 +47,33 @@ def readfd(fd):
     while 1:
         print str(os.read(fd, 16384).strip("\n"))
 
+def handler(signum, frame):
+    global pids
+    for pid in pids:
+        os.kill(pid, signal.SIGKILL)
+    sys.exit()
+
 def main():
-    global kill
+    global pids
+    signal.signal(signal.SIGTERM, handler)
     os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))  # Uses a filename, not good, also only works on linux?
     iocpid, iocfd = startIOC()
+    pids = [iocpid]
     iocthread = threading.Thread(group=None, target=readfd, args=(iocfd,), name="iocthread", kwargs={})
     iocthread.start()
 
     sqlpid, sqlfd = startSQLiteService()
+    pids = [sqlpid, iocpid]  # repopulating list to force order
     sqlthread = threading.Thread(group=None, target=readfd, args=(sqlfd,), name="sqlthread", kwargs={})
     sqlthread.start()
     time.sleep(3)
     mongopid, mongofd = startMongoService()
     mongothread = threading.Thread(group=None, target=readfd, args=(mongofd,), name="mongothread", kwargs={})
     mongothread.start()
-
+    pids = [mongopid, sqlpid, iocpid]
     try:
         while 1:
-            pass
+            time.sleep(1)
     except KeyboardInterrupt:
         os.kill(sqlpid, signal.SIGKILL)
         os.kill(mongopid, signal.SIGKILL)
