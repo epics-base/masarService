@@ -1,1 +1,2 @@
-CROSS_COMPILER_TARGET_ARCHS = 
+# Set python version to use
+#PY_VER = 2.7

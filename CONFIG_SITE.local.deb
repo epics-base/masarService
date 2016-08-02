@@ -1,5 +1,0 @@
-include /usr/share/dpkg/architecture.mk
-
-CROSS_COMPILER_TARGET_ARCHS = 
-
-$(PYTHON)_DIR = /usr/lib/$(DEB_TARGET_MULTIARCH)

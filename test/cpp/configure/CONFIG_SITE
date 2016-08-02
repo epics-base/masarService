@@ -36,3 +36,5 @@ CROSS_COMPILER_TARGET_ARCHS =
 
 -include $(TOP)/../../CONFIG_SITE.local
 -include $(TOP)/../CONFIG_SITE.local
+
+PY_VER ?= 2.7
