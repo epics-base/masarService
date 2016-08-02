@@ -185,7 +185,7 @@ def updateconfig(conn, collection, name, **kwds):
     pvlist = kwds.get("pvlist", None)
     configidx = kwds.get("configidx", None)
 
-    if name is None and configidx:
+    if name is None and configidx is None:
         raise RuntimeError("Cannot identify configuration to update.")
 
     res = retrieveconfig(conn, collection, name=name, configidx=configidx, withpvs=True)

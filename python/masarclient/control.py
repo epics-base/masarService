@@ -21,7 +21,7 @@ class Control(object) :
         if(limitHigh!=0.0) :
             controlPy._setLimitHigh(self.cppPvt,limitHigh)
         if(minStep!=0.0) :
-            controlPy._setLimitLow(self.cppPvt,minStep)
+            controlPy._setMinStep(self.cppPvt,minStep)
     def __del__(self) :
         """destructor"""
         controlPy._destroy(self.cppPvt)

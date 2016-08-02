@@ -63,7 +63,7 @@ class client():
         result.getTimeStamp(timeStamp)
         return result
     
-    def __isFault(self, nttable):        
+    def __isFault(self, nttable):
         label = nttable.getLabels()
         if label[0] == 'status' and not nttable.getValue(0)[0]:
             return True

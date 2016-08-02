@@ -5,12 +5,12 @@ MASAR server uses SQLite3 as underneath relational database,
 which accesses SQLite3 through PYMASAR.
 
 Run unit test:
-trial test_doc.py
+trial test_sqlitedoc.py
 set PYTHONPATH to masarService/python.
 
-There is a doc test entry under test directory: test_doc.py. 
+There is a doc test entry under test directory: test_sqlitedoc.py. 
 The test can be done with trial like:
-$ trial test_doc.py
+$ trial test_sqlitedoc.py
 
 The result is as:
 Doctest: pymasar

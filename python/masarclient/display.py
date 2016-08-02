@@ -23,8 +23,8 @@ class Display(object) :
         if(limitHigh!=0.0) :
             displayPy._setLimitHigh(self.cppPvt,limitHigh)
         displayPy._setDescription(self.cppPvt,description)
-        displayPy._setFormat(self.cppPvt,description)
-        displayPy._setUnits(self.cppPvt,description)
+        displayPy._setFormat(self.cppPvt,displayFormat)
+        displayPy._setUnits(self.cppPvt,units)
     def __del__(self) :
         """destructor"""
         displayPy._destroy(self.cppPvt)

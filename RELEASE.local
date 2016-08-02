@@ -1,6 +1,6 @@
 PYTHON=
 PYTHON_BASE=
-$(PYTHON)_DIR = $(PYTHON_BASE)/lib/$(PYTHON)/config
+$(PYTHON)_DIR =
 
 
 EV4_BASE=

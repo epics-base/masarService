@@ -434,6 +434,9 @@ bool GatherV3Data::connect(double timeOut)
         if(oldNumber==numberCallback) break;
         timeOut = 1.0;
     }
+    if(numberCallback==0){ //case: not connected to any channels
+        return false;
+    }
     state = connected;
     multiChannel->attachTimeStamp(pvtimeStamp);
     timeStamp.getCurrent();

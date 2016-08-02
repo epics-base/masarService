@@ -1,0 +1,14 @@
+masarExample0000
+masarExample0001
+masarExampleBoUninit
+masarExampleMbboUninit
+masarExample0002
+masarExample0003
+masarExample0004
+masarExampleCharArray
+masarExampleShortArray
+masarExampleLongArray
+masarExampleStringArray
+masarExampleFloatArray
+masarExampleDoubleArray
+masarExampleMbboUninitTest
