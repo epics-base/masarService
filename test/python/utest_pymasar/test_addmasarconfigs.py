@@ -24,6 +24,7 @@ class TestAddMasarConfigs(unittest.TestCase):
     def setUp(self):
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
         os.chdir("../../../python/utils")
+        self.fdir = os.getcwd()
         json_file = "db_config.txt"
         with open(json_file) as file:
             self.parsed_json = json.load(file)
@@ -78,7 +79,7 @@ class TestAddMasarConfigs(unittest.TestCase):
             saveService(conn, servicename, desc='test desc')
             conn.commit()
             conn.close()
-            savePvGroups(self.parsed_json['pvgroups'])
+            savePvGroups(self.parsed_json['pvgroups'], self.fdir)
             saveSQLiteServiceConfig(self.parsed_json)
             conn = sqlite3.connect(__sqlitedb__)
             pvgroups = retrievePvGroups(conn)
