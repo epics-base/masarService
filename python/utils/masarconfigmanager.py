@@ -261,7 +261,7 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
             # get data from sqlite
             if self.usedefaultdb:
                 # masardb = str(self.databaseDefault.text())
-                masardb = str(self.databaseDefault.toPlainText())
+                masardb = str(self.databaseDefault.text())
             else:
                 masardb = str(self.databaseLineEdit.text())
 
@@ -278,9 +278,9 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
         elif self.dbsource == 1:
             # get data from mongodb
             if self.usedefaultdb:
-                database = str(self.databaseDefault.toPlainText())
-                host = str(self.hostDefault.toPlainText())
-                port = str(self.portDefault.toPlainText())
+                database = str(self.databaseDefault.text())
+                host = str(self.hostDefault.text())
+                port = str(self.portDefault.text())
             else:
                 database = str(self.databaseLineEdit.text())
                 host = str(self.databaseHostLineEdit.text())
@@ -364,7 +364,7 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
         if self.dbsource == 0:
             # get data from sqlite
             if self.usedefaultdb:
-                masardb = str(self.databaseDefault.toPlainText())
+                masardb = str(self.databaseDefault.text())
             else:
                 masardb = str(self.databaseLineEdit.text())
 
@@ -383,9 +383,9 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
         elif self.dbsource == 1:
             # get data from mongodb
             if self.usedefaultdb:
-                database = str(self.databaseDefault.toPlainText())
-                host = str(self.hostDefault.toPlainText())
-                port = str(self.portDefault.toPlainText())
+                database = str(self.databaseDefault.text())
+                host = str(self.hostDefault.text())
+                port = str(self.portDefault.text())
             else:
                 database = str(self.databaseLineEdit.text())
                 host = str(self.databaseHostLineEdit.text())
@@ -442,7 +442,7 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
         """"""
         # get data from sqlite
         if self.usedefaultdb:
-            masardb = str(self.databaseDefault.toPlainText())
+            masardb = str(self.databaseDefault.text())
         else:
             masardb = str(self.databaseLineEdit.text())
 
@@ -502,9 +502,9 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
         """"""
         # get data from mongodb
         if self.usedefaultdb:
-            database = str(self.databaseDefault.toPlainText())
-            host = str(self.hostDefault.toPlainText())
-            port = str(self.portDefault.toPlainText())
+            database = str(self.databaseDefault.text())
+            host = str(self.hostDefault.text())
+            port = str(self.portDefault.text())
         else:
             database = str(self.databaseLineEdit.text())
             host = str(self.databaseHostLineEdit.text())
@@ -662,7 +662,7 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
             # get data from sqlite
             if self.usedefaultdb:
                 # masardb = str(self.databaseDefault.text())
-                masardb = str(self.databaseDefault.toPlainText())
+                masardb = str(self.databaseDefault.text())
             else:
                 masardb = str(self.databaseLineEdit.text())
 
@@ -688,9 +688,9 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
         elif self.dbsource == 1:
             # get data from mongodb
             if self.usedefaultdb:
-                database = str(self.databaseDefault.toPlainText())
-                host = str(self.hostDefault.toPlainText())
-                port = str(self.portDefault.toPlainText())
+                database = str(self.databaseDefault.text())
+                host = str(self.hostDefault.text())
+                port = str(self.portDefault.text())
             else:
                 database = str(self.databaseLineEdit.text())
                 host = str(self.databaseHostLineEdit.text())
@@ -720,7 +720,7 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
             # get data from sqlite
             if self.usedefaultdb:
                 # masardb = str(self.databaseDefault.text())
-                masardb = str(self.databaseDefault.toPlainText())
+                masardb = str(self.databaseDefault.text())
             else:
                 masardb = str(self.databaseLineEdit.text())
 
@@ -758,9 +758,9 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
         elif self.dbsource == 1:
             # get data from mongodb
             if self.usedefaultdb:
-                database = str(self.databaseDefault.toPlainText())
-                host = str(self.hostDefault.toPlainText())
-                port = str(self.portDefault.toPlainText())
+                database = str(self.databaseDefault.text())
+                host = str(self.hostDefault.text())
+                port = str(self.portDefault.text())
             else:
                 database = str(self.databaseLineEdit.text())
                 host = str(self.databaseHostLineEdit.text())
@@ -789,7 +789,7 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
                 # get data from sqlite
                 if self.usedefaultdb:
                     # masardb = str(self.databaseDefault.text())
-                    masardb = str(self.databaseDefault.toPlainText())
+                    masardb = str(self.databaseDefault.text())
                 else:
                     masardb = str(self.databaseLineEdit.text())
 
@@ -809,9 +809,9 @@ class dbmanagerUI(QMainWindow, ui_dbmanager.Ui_dbmanagerUI):
             elif self.dbsource == 1:
                 # get data from mongodb
                 if self.usedefaultdb:
-                    database = str(self.databaseDefault.toPlainText())
-                    host = str(self.hostDefault.toPlainText())
-                    port = str(self.portDefault.toPlainText())
+                    database = str(self.databaseDefault.text())
+                    host = str(self.hostDefault.text())
+                    port = str(self.portDefault.text())
                 else:
                     database = str(self.databaseLineEdit.text())
                     host = str(self.databaseHostLineEdit.text())
