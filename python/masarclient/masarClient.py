@@ -65,7 +65,7 @@ class client():
     
     def __isFault(self, nttable):
         label = nttable.getLabels()
-        if label[0] == 'status' and not nttable.getValue(0)[0]:
+        if label[0] == 'status' and not nttable.getColumn(label[0])[0]:
             return True
         return False
 
