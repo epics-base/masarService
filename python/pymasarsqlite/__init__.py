@@ -4,7 +4,7 @@ This Python module is developed to support MASAR database, which is using SQLite
 
 __version__ = '0.0.1'
 
-import utils
+from . import utils
 #from utils import (checkConnection, save)
 import pvgroup
 #from pvgroup import *

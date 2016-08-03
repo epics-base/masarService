@@ -5,4 +5,4 @@ Created on Jul 25, 2014
 '''
 
 #import masardb
-import utils
+from . import utils
