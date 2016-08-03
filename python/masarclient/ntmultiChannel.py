@@ -6,7 +6,7 @@
 # Author : Guobao Shen   2012.01
 #          Marty Kraimer 2011.07
 
-import ntmultiChannelPy
+from masar import ntmultiChannelPy
 
 
 class NTMultiChannel(object):

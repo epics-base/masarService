@@ -6,7 +6,7 @@
 # Author : Guobao Shen   2012.01
 #          Marty Kraimer 2011.07
 
-import nttablePy
+from masar import nttablePy
 
 
 class NTTable(object):

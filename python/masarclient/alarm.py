@@ -6,7 +6,7 @@
 # Author : Guobao Shen   2012.01
 #          Marty Kraimer 2011.07
 
-import alarmPy
+from masar import alarmPy
 
 class Alarm(object) :
     """an alarm has a severity, status, and  message."""

@@ -7,7 +7,7 @@
 #          Marty Kraimer 2011.07
 
 import time
-import timeStampPy
+from masar import timeStampPy
 
 class TimeStamp(object) :
     """A timeStamp has secondsPastEpoch and nanoseconds within the second.

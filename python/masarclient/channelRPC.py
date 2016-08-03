@@ -7,7 +7,7 @@
 #          Marty Kraimer 2011.07
 from _epicsexit import (epicsExit, epicsExitCallAtExits)
 
-import channelRPCPy
+from masar import channelRPCPy
 
 class ChannelRPC(object) :
     """Create a ChannelRPC

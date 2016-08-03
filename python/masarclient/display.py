@@ -6,7 +6,7 @@
 # Author : Guobao Shen   2012.01
 #          Marty Kraimer 2011.07
 
-import displayPy
+from masar import displayPy
 
 class Display(object) :
     """a display has limitLow, limitHigh, description, format, and units"""

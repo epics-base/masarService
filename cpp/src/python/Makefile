@@ -2,6 +2,10 @@ TOP = ../..
 include $(TOP)/configure/CONFIG
 include $(TOP)/configure/CONFIG_PY
 
+PY_INSTALL_DIR = $(INSTALL_LOCATION)/python$(PY_VER)/$(T_A)/masar
+
+PY += __init__.py
+
 LOADABLE_LIBRARY += alarmPy
 alarmPy_SRCS += alarmPy.cpp
 
