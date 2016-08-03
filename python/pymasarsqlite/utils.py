@@ -13,7 +13,10 @@ except KeyError:
     raise
 
 def connect():
-    return sqlite3.connect(__db)
+    try:
+        return sqlite3.connect(__db)
+    except sqlite3.OperationalError as e:
+        raise RuntimeError("Failed to open DB '%s': %s"%(__db, e))
 
 def checkConnection(conn):
     """
