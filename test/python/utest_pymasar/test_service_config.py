@@ -9,7 +9,6 @@ from pymasarsqlite.pvgroup.pvgroup import (savePvGroup, retrievePvGroups)
 from pymasarsqlite.pvgroup.pv import (saveGroupPvs, retrieveGroupPvs)
 from pymasarsqlite.service.service import (saveService)
 from pymasarsqlite.masardata.masardata import (checkConnection, saveServiceEvent)
-from masarclient.channelRPC import epicsExit
 class test_service_config(unittest.TestCase):
 
     def tearDown(self):

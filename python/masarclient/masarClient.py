@@ -6,8 +6,7 @@ for data transfer.
 
 Current masar service uses SQLite as underneath relational database back-end.
 
-NOTE: Call epicsExit() before exit to avoid undesired destruction problem as below:
-      sys.exit(epicsExit())
+NOTE: Call masar.epicsExit.registerExit() before exit to avoid undesired destruction problem as below:
 
 Created on Oct 23, 2011
 

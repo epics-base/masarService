@@ -6,6 +6,9 @@ PY_INSTALL_DIR = $(INSTALL_LOCATION)/python$(PY_VER)/$(T_A)/masar
 
 PY += __init__.py
 
+LOADABLE_LIBRARY += epicsExit
+epicsExit_SRCS += epicsExit.cpp
+
 LOADABLE_LIBRARY += alarmPy
 alarmPy_SRCS += alarmPy.cpp
 
