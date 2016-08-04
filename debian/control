@@ -12,7 +12,7 @@ Build-Depends: debhelper (>= 9), epics-debhelper (>= 8.14~),
                python-dev,
 Standards-Version: 3.9.6
 XS-Python-Version: >= 2.7
-Homepage: http://some.url/
+Homepage: https://github.com/epics-base/masarService
 Vcs-Git: https://github.com/epics-base/masarService.git
 Vcs-Browser: https://github.com/epics-base/masarService
 
@@ -37,6 +37,7 @@ Architecture: any
 Depends: libmasar2.0 (= ${binary:Version}),
          python-masar (= ${binary:Version}),
          python-qt4,
+         python-cothread,
          ${python:Depends},
          ${shlibs:Depends}, ${misc:Depends},
 Description: Client component of MASAR
