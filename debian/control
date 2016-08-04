@@ -1,0 +1,75 @@
+Source: masar
+Section: admin
+Priority: extra
+Maintainer: Guobao Shen <shen@frib.msu.edu>
+Uploaders: Michael Davidsaver <mdavidsaver@gmail.com>,
+Build-Depends: debhelper (>= 9), epics-debhelper (>= 8.14~),
+               dh-exec, dh-exec-epics, dh-python,
+               epics-dev,
+               epics-pvd-dev,
+               epics-pva-dev,
+               epics-nt-dev,
+               python-dev,
+Standards-Version: 3.9.6
+XS-Python-Version: >= 2.7
+Homepage: https://github.com/epics-base/masarService
+Vcs-Git: https://github.com/epics-base/masarService.git
+Vcs-Browser: https://github.com/epics-base/masarService
+
+Package: masar-server
+Architecture: any
+Depends: libmasar2.0 (= ${binary:Version}),
+         python-masar (= ${binary:Version}),
+         ${shlibs:Depends}, ${misc:Depends},
+         ${epics:Depends},
+         ${python:Depends},
+Suggests: mongodb-server
+Description: Server component of MASAR
+ MAchine Snapshot, Archiving, and Retrieval is a tool
+ to record operating conditions for later comparison
+ and restoration.
+ .
+ This package contains the MASAR server.
+ Two backend's are available, sqlite and mongodb.
+
+Package: masar-client-qt
+Architecture: any
+Depends: libmasar2.0 (= ${binary:Version}),
+         python-masar (= ${binary:Version}),
+         python-qt4,
+         python-cothread,
+         ${python:Depends},
+         ${shlibs:Depends}, ${misc:Depends},
+Description: Client component of MASAR
+ MAchine Snapshot, Archiving, and Retrieval is a tool
+ to record operating conditions for later comparison
+ and restoration.
+ .
+ This package contains the Qt based client
+
+Package: python-masar
+Section: python
+Architecture: any
+Depends: libmasar2.0 (= ${binary:Version}),
+         ${shlibs:Depends}, ${misc:Depends},
+         ${epics:Depends},
+         ${python:Depends},
+         python-numpy,
+         python-pymongo,
+Description: Python bindings/library for MASAR
+ MAchine Snapshot, Archiving, and Retrieval is a tool
+ to record operating conditions for later comparison
+ and restoration.
+ .
+ This package contains the python bindings and supporting
+
+Package: libmasar2.0
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends},
+Description: Runtime library for MASAR
+ MAchine Snapshot, Archiving, and Retrieval is a tool
+ to record operating conditions for later comparison
+ and restoration.
+ .
+ This package contains runtime libraries

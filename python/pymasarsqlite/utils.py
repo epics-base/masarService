@@ -7,13 +7,18 @@ Created on Dec 8, 2011
 import os
 import sqlite3
 
+from .db import masarsqlite
+
 try:
     __db=os.environ['MASAR_SQLITE_DB']
 except KeyError:
-    raise
+    raise KeyError("Environment variable MASAR_SQLITE_DB not set")
 
 def connect():
-    return sqlite3.connect(__db)
+    try:
+        return masarsqlite.connect(__db)
+    except sqlite3.OperationalError as e:
+        raise RuntimeError("Failed to open DB '%s': %s"%(__db, e))
 
 def checkConnection(conn):
     """

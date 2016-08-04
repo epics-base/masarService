@@ -102,6 +102,13 @@ channels from V3 IOC, and saves the data as a snapshot event into the database.
 
 <p>This is the 2015-12-21 version of the MASAR User Manual. </p>
 
+<h2 id="quickstart">Quick Start</h2>
+
+<p>See the
+<a href="https://github.com/epics-base/masarService/blob/debpkg/README.md">README</a>
+for instructions for building/running MASAR.
+</p>
+
 <h2 id="introduction">Introduction</h2>
 
 <p>MASAR is implemented in C++ and Python. Network communication is implemented
@@ -393,98 +400,34 @@ original schema is inherited from IRMIS, and now is as below:
   </tbody>
 </table>
 
-
-<h3 id="createdb">Create Database </h3>
-
-<p>This section is for <b>SQLite3</b> database only. The files for SQL are
-located in directory:</p>
-<pre>masarService/python/pymasarsqlite/db</pre>
-
-<p>The generated data base will be stored in a place You specify. You also need
-to create a directory that holds text files that each has a list of V3 channel
-names. There is an example directory located in:</p>
-<pre>masarService/example</pre>
-
-<p>It has a subdictory pvs that has example channel list files. For example
-pvs/example.txt contains:</p>
-<pre>masarExample0000
-masarExample0001
- ...
-masarExample0999</pre>
-
-<p>The SQL file is masars-qlite.sql. File createmasardb.py is the Python script
-that create an SQLite3 database. An example of how to create a MASAR database
-is:</p>
-<pre>$cd masarService/example
-$python ../python/pymasarsqlite/db/createmasardb.py</pre>
-This creates a new MASAR database called "masar.db" that is located in the
-example directory. If there is an error like: 
-<pre>create a new SQLite db.
-Traceback (most recent call last):
-  File "../python/pymasarsqlite/db/createmasardb.py", line 109, in &lt;module&gt;
-    createMasarDb()
-  File "../python/pymasarsqlite/db/createmasardb.py", line 59, in createmasardb
-    from pymasarsqlite.db.masarsqlite import SQL
-ImportError: No module named pymasarsqlite.db.masarsqlite</pre>
-Check the PYTHONPATH setting. 
-
-<p>If the "masar.db" exists already, you will be asked </p>
-<pre>SQLite database masar.db exists already.
-Do you want to overwrite it? Yes, [N]o (default = No):</pre>
-
-<p>Choose Yes to overwrite current masar.db file, otherwise No.</p>
-
-<p>If you want to give database file a name instead of using default
-"masar.db", you can do </p>
-<pre>$ python ../python/pymasarsqlite/db/createmasardb.py -db test.db
-SQLite3 database:  test.db
-create a new SQLite db: test.db.</pre>
-
-<p>After created MASAR database, an environment variable needs to be set as
-(BASH environment) </p>
-<pre>export MASAR_SQLITE_DB=/full/path/to/masar.db</pre>
-If the database is named differently, use right database file name. 
-
 <h3 id="configdb">Database configuration </h3>
 
-<p>This section is also only for an SQLite3 database and again the files
-described below are located in:</p>
-<pre>masarService/python/pymasarsqlite/db</pre>
-
-<p>After creating the SQLite3 database, it has to be initialized, and some
-information about service configuration have to be configured in advance before
-allowing MASAR server uses it. </p>
-
-<p>The database configuration, which is an administrative work, is separated
-from MASR service, and could be done through calling PYMASAR API. A Python
-Script, configmasardb.py, initializes and configures the database. This is also
-located in:</p>
-<pre>masarService/python/pymasarsqlite/db</pre>
+<p>Configuration may be loaded into a database from a set of text files
+using the masarConfigTool.</p>
 
 <p>The following is an example showing how to configure MASAR database.</p>
 
-<p>Site-specific information is configured in settings.py, which has format as
+<p>Site-specific information is configured in JSON text file, which has format as
 below:</p>
-<pre># pv group name: [pv list file, description]
-pvgroups= {
-    'test':         ['example.txt', 'server test'],
-    'wftest':       ['exampleWf.txt', 'server test with waveform'],
-    'bigwftest':    ['exampleBigWf.txt', 'server test with big waveform']
+<pre>
+cat &lt;&lt;EOF &gt;db_config.txt
+{
+ "pvgroups": {
+    "test":         ["example.txt", "server test"],
+    "wftest":       ["exampleWf.txt", "server test with waveform"],
+    "bigwftest":    ["exampleBigWf.txt", "server test with big waveform"]
+ }. "configs": {
+    "sr_test":      ["test pv config", "test"],
+    "wf_test":      ["waveform test pv config", "test"],
+    "bwf_test":     ["big waveform test pv config", "test"]
+ }, "pvg2config": {
+    "sr_test":   ["test"],
+    "wf_test":   ["wftest"],
+    "bwf_test":  ["wftest", "bigwftest"]
+ }
 }
-
-# config name: [config desc, system]
-configs= {
-    'sr_test':      ['test pv config', 'test'],
-    'wf_test':      ['waveform test pv config', 'test'],
-    'bwf_test':     ['big waveform test pv config', 'test']
-}
-
-# config name: [pvgroup,]
-pvg2config= {
-    'sr_test':   ['test'],
-    'wf_test':   ['wftest'],
-    'bwf_test':  ['wftest', 'bigwftest']
-}</pre>
+EOF
+</pre>
 
 <p>There are 3 variables defined in settings.py </p>
 <ol>
@@ -613,30 +556,6 @@ and install missing library. For example, on a debian dist:
 
 <p>After installing all required modules and configuring the sql database the
 last step is to prepare and check the Python environment.</p>
-
-<h3 id="pythonc">Python/C module</h3>
-Python looks for the shared library to load modules. You need to create some
-symbol links if it is not done yet. 
-<pre>$ cd
-$ cd /usr/lib/epics/V4/masarService/cpp/src/python
-$ python generateSOLinks.py</pre>
-If you did not set EPICS_HOST_ARCH environment, you will be promoted as below: 
-<pre>EPICS_HOST_ARCH is not setted.
-Please specify EPICS_HOST_ARCH:</pre>
-
-<p>You can specify your host architecture here, for example, linux-x86_64 if
-you are using a 64-bit linux machine. An error will occur as below if the
-EPICS_HOST_ARCH is wrong:</p>
-<pre>EPICS_HOST_ARCH is not setted.
-Please specify EPICS_HOST_ARCH:linux-x86
-Traceback (most recent call last):
-  File "generateSOLinks.py", line 32, in &lt;module&gt;
-    fileList = os.listdir(libDir)
-OSError: [Errno 2] No such file or directory: '../../lib/linux-x86'</pre>
-
-<p>An alternative solution is to set the environment before running
-generateSOLinks.py, for example:</p>
-<pre>$ export EPICS_HOST_ARCH=linux-x86_64</pre>
 
 <h3 id="pythonpath">PYTHONPATH</h3>
 The PYTHONPATH must be defined as follows. It could be defined in .bash_profile 

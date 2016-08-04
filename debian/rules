@@ -1,0 +1,29 @@
+#!/usr/bin/make -f
+
+export DH_VERBOSE=1
+
+include /usr/share/dpkg/architecture.mk
+
+export SHRLIB_VERSION=2.0
+
+%:
+	dh $@ --with epics --with python2 -Sepicsmake --parallel
+
+override_dh_auto_clean:
+	rm -f RELEASE.local CONFIG_SITE.local
+	ln -s RELEASE.local.deb RELEASE.local
+	ln -s CONFIG_SITE.local.deb CONFIG_SITE.local
+	dh_auto_clean
+	rm -f RELEASE.local CONFIG_SITE.local
+
+override_dh_auto_build:
+	rm -f RELEASE.local CONFIG_SITE.local
+	ln -s RELEASE.local.deb RELEASE.local
+	ln -s CONFIG_SITE.local.deb CONFIG_SITE.local
+	dh_auto_build
+
+override_dh_auto_install:
+	# skip regular 'make install'
+
+override_dh_install:
+	dh_install --fail-missing

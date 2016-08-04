@@ -6,8 +6,8 @@
 # Author : Guobao Shen   2012.01
 #          Marty Kraimer 2011.07
 
-import gatherV3DataPy
-from ntmultiChannel import NTMultiChannel as NTMultiChannel
+from masar import gatherV3DataPy
+from .ntmultiChannel import NTMultiChannel as NTMultiChannel
 
 class GatherV3Data(object) :
     """Create a GatherV3Data

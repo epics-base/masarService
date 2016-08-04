@@ -86,16 +86,13 @@ bool DSL_RDB::init()
     PyGILState_STATE gstate = PyGILState_Ensure();
     PyObject * module = PyImport_ImportModule("masarserver.dslPY");
     if(module==0) {
-        string message("dslPY");
-        message += " does not exist or is not a python module";
-        cout << "DSL_RDB::init " << message << endl;
+        PyErr_Print();
+        std::cout << "Failed to import 'masarserver.dslPY'\n";
         return false;
     }
     PyObject *pclass = PyObject_GetAttrString(module, "DSL");
     if(pclass==0) {
-        string message("class DSL");
-        message += " does not exist";
-        cout << "DSL_RDB::init " << message << endl;
+        std::cout << "Module 'masarserver.dslPY' missing 'DSL'\n";
         Py_XDECREF(module);
         return false;
     }

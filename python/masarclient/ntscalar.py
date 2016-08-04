@@ -6,7 +6,7 @@
 # Author : Guobao Shen   2012.01
 #          Marty Kraimer 2011.07
 
-import ntscalarPy
+from masar import ntscalarPy
 
 class NTScalar(object) :
     """Create an NTScalar

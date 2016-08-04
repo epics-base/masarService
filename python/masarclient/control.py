@@ -6,7 +6,7 @@
 # Author : Guobao Shen   2012.01
 #          Marty Kraimer 2011.07
 
-import controlPy
+from masar import controlPy
 
 class Control(object) :
     """a control has limitLow, limitHigh, and minStep"""

@@ -2,7 +2,6 @@ import sys
 import unittest
 
 from masarclient import masarClient
-from masarclient.channelRPC import epicsExit
 from pymasarmongo.db import utils
 from pymasarmongo.config._config import masarconfig
 

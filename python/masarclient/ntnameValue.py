@@ -6,7 +6,7 @@
 # Author : Guobao Shen   2012.01
 #          Marty Kraimer 2011.07
 
-import ntnameValuePy
+from masar import ntnameValuePy
 
 class NTNameValue(object) :
     """Create a NTNameValue

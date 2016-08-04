@@ -11,6 +11,7 @@ from pymasarsqlite.service.serviceconfig import (saveServiceConfig, retrieveServ
 from pymasarsqlite.pvgroup.pvgroup import (savePvGroup, retrievePvGroups)
 from pymasarsqlite.pvgroup.pv import (saveGroupPvs, retrieveGroupPvs)
 from pymasarsqlite.service.service import (saveService)
+from pymasarsqlite.db import masarsqlite
 from pymasarmongo.pymasarmongo.pymasar import saveconfig
 from pymasarmongo.pymasarmongo.pymasar import updateconfig
 
@@ -25,21 +26,17 @@ def __loadmasarconfig(config=""):
     ])
     return cf
 
-def savePvGroups(json):
+def savePvGroups(json, basedir):
     for group in json:
         pvgname = group[u'name']
         pvgdesc = group[u'description']
         pv_file = group[u'pvlist']
         pvlist = []
-        if os.path.exists(pv_file):
-            with open(pv_file) as file:
-                for line in file:
-                    pvlist.append(line.strip())
-        else:
-            print "Pvlist file: " + str(pv_file) + " does not exist."
-            # file not found
+        with open(os.path.join(basedir, pv_file)) as file:
+            for line in file:
+                pvlist.append(line.strip())
     __sqlitedb__ = os.environ["MASAR_SQLITE_DB"]
-    with sqlite3.connect(__sqlitedb__) as conn:
+    with masarsqlite.connect(__sqlitedb__) as conn:
         savePvGroup(conn, pvgname, func=pvgdesc)
         saveGroupPvs(conn, pvgname, pvlist)
         conn.commit()
@@ -48,7 +45,7 @@ def saveSQLiteServiceConfig(json):
     servicename = "masar"
     servicedesc = 'machine snapshot, archiving, and retrieve service'
     __sqlitedb__ = os.environ["MASAR_SQLITE_DB"]
-    with sqlite3.connect(__sqlitedb__) as conn:
+    with masarsqlite.connect(__sqlitedb__) as conn:
         saveService(conn, servicename, desc=servicedesc)
         for conf in json['configs']:
             try:
@@ -91,32 +88,33 @@ def saveMongoService(json):
 def main():
     parser = argparse.ArgumentParser(description='Add masar configurations to either MongoDB or SQLite')
     parser.add_argument('-d', '--database')
-    parser.add_argument('-o', '--overridedbtype')
+    parser.add_argument('-o', '--toggledbtype', action='store_true', default=False)
     parser.add_argument('-c', '--config')
     parser.add_argument('file')
-    args = vars(parser.parse_args(args=sys.argv[1:]))
-    print "args: " + str(args)
+    args = parser.parse_args(args=sys.argv[1:])
+    print "args: ",args
     conf_name = ""
-    file_name = args['file']
-    if args['config']!=None:
+    file_name = args.file
+    if args.config!=None:
         conf_name = args['config']
-    if args['database']!=None:
-        os.environ["MASAR_SQLITE_DB"] = args['database']
+    if args.database:
+        os.environ["MASAR_SQLITE_DB"] = args.database
 
     config = __loadmasarconfig(config=conf_name)
     db = config.get("Common", "database")
 
+    fdir = os.path.dirname(file_name)
     with open(file_name) as file:
         parsed_json = json.load(file)
 
-    if args['overridedb'] != None:
+    if args.toggledbtype:
         if db == "sqlite":
             db = "mongodb"
         if db == "mongodb":
             db = "sqlite"
 
     if db == "sqlite":
-        savePvGroups(parsed_json['pvgroups'])
+        savePvGroups(parsed_json['pvgroups'], fdir)
         saveSQLiteServiceConfig(parsed_json)
     elif db == "mongodb":
         saveMongoService(parsed_json)

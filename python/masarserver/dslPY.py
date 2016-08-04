@@ -14,12 +14,13 @@ import ConfigParser
 
 def __loadmasarconfig():
     cf = ConfigParser.SafeConfigParser()
-    cf.read([
-        os.path.expanduser('~/.masarservice.conf'),
+    read = cf.read([
+        "%s/masarservice.conf" % os.path.abspath(os.path.dirname(__file__)),
         '/etc/masarservice.conf',
+        os.path.expanduser('~/.masarservice.conf'),
         'masarservice.conf',
-        "%s/masarservice.conf" % os.path.abspath(os.path.dirname(__file__))
     ])
+    print 'Read config files:', read
     return cf
 
 masarconfig = __loadmasarconfig()

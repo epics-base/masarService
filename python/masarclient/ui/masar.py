@@ -27,7 +27,7 @@ if sys.version_info[:2]>=(2,7):
     from collections import OrderedDict as odict
 else:
     print ('Python version 2.7 or higher is needed.')
-    sys.exit()
+    sys.exit(1)
 
 try:
     imp.find_module('pyOlog')
@@ -45,7 +45,6 @@ from gradualput import GradualPut
 import getmasarconfig 
 
 import masarclient.masarClient as masarClient
-from masarclient.channelRPC import epicsExit 
 
 __version__ = "1.0.1"
 
@@ -57,7 +56,7 @@ command option:
 
 masar.py v {0}. Copyright (c) 2011 Brookhaven National Laboratory. All rights reserved.
 """.format(__version__))
-    sys.exit()
+    sys.exit(1)
 
 # import this last to avoid import error on some platform and with different versions. 
 os.environ["EPICS_CA_MAX_ARRAY_BYTES"] = '40000000'
@@ -267,6 +266,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 config_ts.append(ts)
 
         except:
+            traceback.print_exc()
             QMessageBox.warning(self,
                                 "Warning",
                                 "Exception happened during retrieving configurations.")
@@ -398,6 +398,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                     lp.simple_bind_s(username, self.passWd)
                     return True
                 except:
+                    traceback.print_exc()
                     self.passWd = ""
                     QMessageBox.warning(self, 'Warning', 
 'Failed to get anthentication, you may have typed wrong password, try again if you like')   
@@ -534,6 +535,7 @@ Click Ignore if you don't want to save it to the MASAR database, Otherwise Click
         try:
             rpcResult = self.mc.saveSnapshot(params)
         except:
+            traceback.print_exc()
             QMessageBox.warning(self,
                                 "Warning",
                                 "Except happened during getting machine preview.")
@@ -664,6 +666,7 @@ with description: %s"%(self.previewId, self.previewConfName, comment[1])
         try:
             result = self.mc.updateSnapshotEvent(params)
         except:
+            traceback.print_exc()
             QMessageBox.warning(self,
                                 "Warning",
                                 "Except happened during update snapshot event.")
@@ -788,6 +791,7 @@ You may re-select the Config (click 'Select Snapshots(s)') to verify this new sa
                 try:
                     rpcResult = self.mc.retrieveServiceEvents(params)
                 except:
+                    traceback.print_exc()
                     QMessageBox.warning(self,
                                 "Warning",
                                 "Except happened during retrieving events.")
@@ -2114,24 +2118,11 @@ def main(channelname=None):
     form.show()
     app.exec_()
 
-    import atexit
-    # clean Python local objects first, especially the cothread stuff.
-    # Cothread adds a new function in catools._catools_atexit(), ca_flush_io(), since version 2.8
-    # to flush all io and do a clean up. This function registered at Python exit, and will be called 
-    # by Python exit handler.
-    # This forces the clean up has be done before calling epicsExit(). 
-    atexit._run_exitfuncs()
-
-    # it is safe to clean epics objects now.
-    epicsExit()
-    
-    # call os.exit() instead of sys.exit()
-    # os._exit(0)
-    # however, os._exit() does nothing when exiting.
-    # It would be better to call sys.exit
-    sys.exit()
+    sys.exit(0)
 
 if __name__ == '__main__':
+    from masar.epicsExit import registerExit
+    registerExit() # insert epicsAtExit into python atexit hooks
     args = sys.argv[1:]
     while args:
         arg = args.pop(0)
