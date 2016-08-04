@@ -3,3 +3,7 @@ cpp/bin/${EPICS_HOST_ARCH}/masarServiceRun usr/bin/
 python/masarserver/masarservice.conf etc/masarservice.conf
 masarConfigManager usr/bin/
 masarConfigTool usr/bin/
+python/masarutils usr/lib/python2.7/dist-packages/
+python/masarserver usr/lib/python2.7/dist-packages/
+python/pymasarsqlite usr/lib/python2.7/dist-packages/
+python/pymasarmongo usr/lib/python2.7/dist-packages/

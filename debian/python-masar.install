@@ -1,8 +1,3 @@
 #!/usr/bin/dh-exec
 cpp/python2.7/${EPICS_HOST_ARCH}/masar usr/lib/python2.7/dist-packages/
-python/masarutils usr/lib/python2.7/dist-packages/
-python/masarserver usr/lib/python2.7/dist-packages/
-python/masarclient usr/lib/python2.7/dist-packages/
-python/pymasarsqlite usr/lib/python2.7/dist-packages/
-python/pymasarmongo usr/lib/python2.7/dist-packages/
-masar usr/bin/
+python/masarclient/*.py usr/lib/python2.7/dist-packages/masarclient/
