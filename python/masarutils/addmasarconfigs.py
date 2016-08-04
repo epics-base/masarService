@@ -11,6 +11,7 @@ from pymasarsqlite.service.serviceconfig import (saveServiceConfig, retrieveServ
 from pymasarsqlite.pvgroup.pvgroup import (savePvGroup, retrievePvGroups)
 from pymasarsqlite.pvgroup.pv import (saveGroupPvs, retrieveGroupPvs)
 from pymasarsqlite.service.service import (saveService)
+from pymasarsqlite.db import masarsqlite
 from pymasarmongo.pymasarmongo.pymasar import saveconfig
 from pymasarmongo.pymasarmongo.pymasar import updateconfig
 
@@ -35,7 +36,7 @@ def savePvGroups(json, basedir):
             for line in file:
                 pvlist.append(line.strip())
     __sqlitedb__ = os.environ["MASAR_SQLITE_DB"]
-    with sqlite3.connect(__sqlitedb__) as conn:
+    with masarsqlite.connect(__sqlitedb__) as conn:
         savePvGroup(conn, pvgname, func=pvgdesc)
         saveGroupPvs(conn, pvgname, pvlist)
         conn.commit()
@@ -44,7 +45,7 @@ def saveSQLiteServiceConfig(json):
     servicename = "masar"
     servicedesc = 'machine snapshot, archiving, and retrieve service'
     __sqlitedb__ = os.environ["MASAR_SQLITE_DB"]
-    with sqlite3.connect(__sqlitedb__) as conn:
+    with masarsqlite.connect(__sqlitedb__) as conn:
         saveService(conn, servicename, desc=servicedesc)
         for conf in json['configs']:
             try:
