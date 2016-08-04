@@ -267,6 +267,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 config_ts.append(ts)
 
         except:
+            traceback.print_exc()
             QMessageBox.warning(self,
                                 "Warning",
                                 "Exception happened during retrieving configurations.")
@@ -398,6 +399,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                     lp.simple_bind_s(username, self.passWd)
                     return True
                 except:
+                    traceback.print_exc()
                     self.passWd = ""
                     QMessageBox.warning(self, 'Warning', 
 'Failed to get anthentication, you may have typed wrong password, try again if you like')   
@@ -534,6 +536,7 @@ Click Ignore if you don't want to save it to the MASAR database, Otherwise Click
         try:
             rpcResult = self.mc.saveSnapshot(params)
         except:
+            traceback.print_exc()
             QMessageBox.warning(self,
                                 "Warning",
                                 "Except happened during getting machine preview.")
@@ -664,6 +667,7 @@ with description: %s"%(self.previewId, self.previewConfName, comment[1])
         try:
             result = self.mc.updateSnapshotEvent(params)
         except:
+            traceback.print_exc()
             QMessageBox.warning(self,
                                 "Warning",
                                 "Except happened during update snapshot event.")
@@ -788,6 +792,7 @@ You may re-select the Config (click 'Select Snapshots(s)') to verify this new sa
                 try:
                     rpcResult = self.mc.retrieveServiceEvents(params)
                 except:
+                    traceback.print_exc()
                     QMessageBox.warning(self,
                                 "Warning",
                                 "Except happened during retrieving events.")
