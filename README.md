@@ -79,12 +79,13 @@ database = ${PWD}/masar.db
 EOF
 export MASAR_SQLITE_DB=${PWD}/masar.db
 # Initialize the DB
-./masarConfigTOol db_config.txt
+./masarConfigTool db_config.txt
 ```
 
 To run the daemon
 
 ```sh
+export MASAR_SQLITE_DB=${PWD}/masar.db
 ./cpp/bin/linux-*/masarServiceRun masarService
 ```
 
