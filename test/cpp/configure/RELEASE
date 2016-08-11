@@ -2,5 +2,6 @@ TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
 
 # RELEASE - Location of external support modules
 
-include $(TOP)/../../RELEASE.local
+-include $(TOP)/../../RELEASE.local
+-include $(TOP)/../../../RELEASE.local
 MASAR=$(TOP)/../../cpp

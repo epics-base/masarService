@@ -34,6 +34,7 @@ CROSS_COMPILER_TARGET_ARCHS =
 
 -include $(TOP)/configure/CONFIG_SITE.local
 
+-include $(TOP)/../../../CONFIG_SITE.local
 -include $(TOP)/../../CONFIG_SITE.local
 -include $(TOP)/../CONFIG_SITE.local
 
