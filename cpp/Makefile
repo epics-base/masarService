@@ -4,6 +4,8 @@ include $(TOP)/configure/CONFIG
 
 DIRS += configure
 
+DIRS += p4p
+p4p_DEPEND_DIRS = configure
 DIRS += src
 src_DEPEND_DIRS = configure
 
