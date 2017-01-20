@@ -1,5 +1,6 @@
 TOP = ../..
 include $(TOP)/configure/CONFIG
+include $(TOP)/configure/CONFIG_PY
 
 USR_INCLUDES += -I${PYTHON_BASE}/include/${PYTHON}
 
