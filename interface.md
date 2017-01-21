@@ -8,7 +8,7 @@ Argument encoding
 requestType = Type([
     ('function', 's'),
     ('name', 'as'),
-    ('value', 'as'),
+    ('value', 'av'),
 ])
 ```
 
@@ -115,7 +115,9 @@ def retrieveServiceConfigs(servicename=None, configname=None, configversion=None
     pass
 ```
 
-Entry point call.  Pass ```configname='all'``` to return all.
+Query for Configurations.
+Entry point call.
+Pass ```configname='all'``` to return all.
 Returned ```config_idx``` can be passed to ```retrieveServiceEvents()```.
 
 ```py
@@ -180,3 +182,48 @@ def getLiveMachine(**kws):
     # recommended to provide PV name as both key and value
     #   eg kws = dict(zip(pvs, pvs))
 ```
+
+
+Proposed Additions
+------------------
+
+```py
+configTable = NTTable.buildType([
+    ('channelName', 'as'),
+    ('readonly', 'a?'),
+    ('groupName', 'as'),
+    ('tags', 'as'),
+])
+
+@rpc(NTTable.buildType([
+    ('config_idx','ai'),
+    ('config_name','as'),
+    ('config_desc','as'),
+    ('config_create_date','as'),
+    ('config_version','as'),
+    ('status','as'),
+]))
+def storeServiceConfig(configname=None, oldidx=None, desc=None, config=None):
+    pass
+```
+
+Create/Replace an existing configuration.
+If oldidx==0 and configname does not name an existing configuration, then a new configuration is created.
+If oldidx and configname match an existing, active, configuration, then
+a new configuration is created and the matched configuration becomes inactive.
+If the matched configuration is not active, an error is returned.
+
+'config' must be a table with the column 'channelName'.
+Optional columns 'readonly', 'groupName', and 'tags'.
+
+Returns the same table as ```retrieveServiceConfigs()``` with a single row.
+
+
+```py
+@rpc(configTable)
+def loadServiceConfig(configid=None):
+    pass
+```
+
+Retrieve previously stored configuration.
+configid must match an existing configuration.
