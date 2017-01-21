@@ -96,7 +96,7 @@ def main():
     conf_name = ""
     file_name = args.file
     if args.config!=None:
-        conf_name = args['config']
+        conf_name = args.config
     if args.database:
         os.environ["MASAR_SQLITE_DB"] = args.database
 
