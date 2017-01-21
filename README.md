@@ -44,6 +44,14 @@ $ make
 Running the daemon (SQLITE)
 ---------------------------
 
+Setting Python path
+
+```sh
+export PYTHONPATH=$PWD/python2.7/linux-x86_64
+```
+
+adapt as necessary for different python version and EPICS target.
+
 Setup demo configuration.
 
 ```sh

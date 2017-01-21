@@ -1,13 +1,9 @@
 #Makefile at top of application tree
-TOP = .
+TOP = ..
 include $(TOP)/configure/CONFIG
 
-DIRS += configure
-
 DIRS += p4p
-p4p_DEPEND_DIRS = configure
 DIRS += src
-src_DEPEND_DIRS = configure
 
 include $(TOP)/configure/RULES_TOP
 

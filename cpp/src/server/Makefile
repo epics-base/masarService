@@ -1,4 +1,4 @@
-TOP = ../..
+TOP = ../../..
 include $(TOP)/configure/CONFIG
 include $(TOP)/configure/CONFIG_PY
 
@@ -8,7 +8,7 @@ INC += dsl.h
 
 LIBRARY = masarServer
 
-SERVER = $(TOP)/src/server/
+SERVER = $(TOP)/cpp/src/server/
 
 SRC_DIRS += $(SERVER)/service
 INC += masarService.h

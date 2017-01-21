@@ -1,5 +1,5 @@
 #Makefile at top of application tree
-TOP = ..
+TOP = ../..
 include $(TOP)/configure/CONFIG
 
 DIRS += util
