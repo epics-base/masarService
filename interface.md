@@ -69,6 +69,10 @@ multiType = Type(id="epics:nt/NTMultiChannel:1.0",
     ('nanoseconds', 'ai'),
     ('userTag', 'ai'),
     ('isConnected', 'a?'),
+    # added
+    ('readonly’, 'a?'),
+    ('groupName’, 'as'),
+    ('tags’, 'as'),
 ])
 ```
 
