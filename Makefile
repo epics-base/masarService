@@ -8,7 +8,7 @@ DIRS += cpp
 cpp_DEPEND_DIRS = configure
 DIRS += python
 python_DEPEND_DIRS = configure
-#DIRS += test/cpp
+DIRS += test/cpp
 test/cpp_DEPEND_DIRS = configure cpp
 
 include $(TOP)/configure/RULES_TOP

@@ -1,4 +1,4 @@
-/cpp/configure/os/
+/configure/os/
 /bin/
 /lib/
 /doc/
@@ -8,6 +8,7 @@
 /documentation/html
 /documentation/*.tag
 /python?.?/
+/test/cpp/bin/
 envPaths
 *configure/*.local
 !*configure/ExampleRELEASE.local

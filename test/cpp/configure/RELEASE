@@ -4,4 +4,7 @@ TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
 
 -include $(TOP)/../../RELEASE.local
 -include $(TOP)/../../../RELEASE.local
-MASAR=$(TOP)/../../cpp
+
+-include $(TOP)/../../configure/RELEASE.local
+-include $(TOP)/../../../RELEASE.local
+MASAR=$(TOP)/../..
