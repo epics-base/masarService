@@ -72,6 +72,13 @@ PY += pymasarsqlite/utils.py
 
 PY += pymasarsqlite/db/masar-sqlite.sql
 
+PY += minimasar/__init__.py
+PY += minimasar/db.py
+PY += minimasar/ops.py
+PY += minimasar/test/__init__.py
+PY += minimasar/test/test_db.py
+PY += minimasar/test/test_ops.py
+
 include $(TOP)/configure/RULES
 include $(TOP)/configure/RULES_PY
 
