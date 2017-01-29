@@ -170,7 +170,7 @@ before the event is finally stored.
 
 ```py
 @rpc(scalarBool)
-def updateSnapshotEvent(eventid=None, user=None, desc=None):
+def updateSnapshotEvent(eventid=None, configname=None, user=None, desc=None):
     pass
 ```
 

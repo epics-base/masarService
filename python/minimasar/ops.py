@@ -1,13 +1,16 @@
 
-import logging, time
+import logging, time, json
 _log = logging.getLogger(__name__)
 
 from itertools import izip_longest, izip, repeat
 from functools import wraps
 from operator import itemgetter
 
+import numpy
+
 from p4p.rpc import RemoteError, rpc
 from p4p.nt import NTScalar, NTMultiChannel, NTTable
+from p4p.wrapper import Value
 
 multiType = NTMultiChannel.buildType('av', extra=[
     ('dbrType', 'ai'),
@@ -16,8 +19,22 @@ multiType = NTMultiChannel.buildType('av', extra=[
     ('tags', 'as'),
 ])
 
+configType = NTTable([
+    ('channelName', 's'),
+    ('readonly', '?'),
+    ('groupName', 's'),
+    ('tags', 's'),
+])
+
+def jsonarray(val):
+    if isinstance(val, numpy.ndarray):
+        return val.tolist()
+    else:
+        raise TypeError("Can't serialize %s"%type(val))
+
 class Service(object):
-    def __init__(self, gather=None, sim=False):
+    def __init__(self, conn, gather=None, sim=False):
+        self.conn = conn
         self.gather = gather
 
         if not sim:
@@ -25,17 +42,6 @@ class Service(object):
             self.now = lambda: time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
         else:
             self.now = lambda: time.strftime('%Y-%m-%d %H:%M:%S', (2017, 1, 28, 21, 43, 28, 5, 28, 0))
-
-    @staticmethod
-    def _storeMangle(row):
-        return {
-            'config_idx':row['id'],
-            'config_name':row['name'],
-            'config_desc':row['desc'],
-            'config_create_date':row['created'],
-            'config_version':'0',
-            'status': 'active' if row['next'] is None else 'inactive',
-        }
 
     @rpc(NTTable([
         ('config_idx','i'),
@@ -45,14 +51,21 @@ class Service(object):
         ('config_version','s'),
         ('status','s'),
     ]))
-    def storeServiceConfig(self, conn, configname=None, oldidx=None, desc=None, config=None, system=None):
-        with conn:
+    def storeServiceConfig(self, configname=None, oldidx=None, desc=None, config=None, system=None):
+        with self.conn as conn:
             C = conn.cursor()
+
+            _log.debug("storeServiceConfig() %s(%s)", configname, oldidx)
 
             C.execute('insert into config(name, desc, created, system) values (?,?,?,?);', (configname, desc, self.now(), system))
             newidx = C.lastrowid
             if oldidx is not None:
-                C.execute('update config set next=? where id=?', (newidx, int(oldidx)))
+                # update existing row only if it was previously active
+                C.execute('update config set next=? where id=? and next is NULL', (newidx, int(oldidx)))
+
+            if C.execute('select count(*) from config where name=? and next is NULL', (configname,)).fetchone()[0]!=1:
+                # rollback will undo our insert
+                raise RemoteError("Provided configname and oldidx ('%s' and %s) are not consistent"%(configname, oldidx))
 
             for name, ro, group, tags in izip_longest(
                         config.value.channelName,
@@ -71,7 +84,15 @@ class Service(object):
 
             _log.info("Store configuration %s as %s (old %s)", configname, newidx, oldidx)
 
-            return map(self._storeMangle, C.fetchall())
+            return map(lambda row: {
+                            'config_idx':row['id'],
+                            'config_name':row['name'],
+                            'config_desc':row['desc'],
+                            'config_create_date':row['created'],
+                            'config_version':'0',
+                            'status': 'active' if row['next'] is None else 'inactive',
+                        },
+                        C.fetchall())
 
     @rpc(NTTable([
         ('channelName', 's'),
@@ -79,9 +100,14 @@ class Service(object):
         ('groupName', 's'),
         ('tags', 's'),
     ]))
-    def loadServiceConfig(self, conn, configid=None):
-        with conn:
+    def loadServiceConfig(self, configid=None):
+        configid = int(configid)
+        with self.conn as conn:
             C = conn.cursor()
+
+            R = C.execute('select id from config where id=?', (configid,)).fetchone()
+            if R is None:
+                raise RemoteError("Unknown configid %s"%configid)
 
             C.execute('select name as channelName, tags, groupName, readonly from config_pv where config=?;', (int(configid),))
             _log.debug("Fetch configuration %s", configid)
@@ -95,11 +121,11 @@ class Service(object):
         ('config_version','s'),
         ('status','s'),
     ]))
-    def retrieveServiceConfigs(self, conn, servicename=None, configname=None, configversion=None, system=None, eventid=None):
+    def retrieveServiceConfigs(self, servicename=None, configname=None, configversion=None, system=None, eventid=None):
         if servicename not in (None, 'masar'):
             _log.warning("Service names not supported")
             return []
-        with conn:
+        with self.conn as conn:
             C = conn.cursor()
             
             cond = []
@@ -108,17 +134,17 @@ class Service(object):
             _log.debug("retrieveServiceConfigs() configname=%s configverson=%s system=%s",
                        configname, configversion, system)
 
-            if eventid not in (None, '*'):
+            if eventid not in (None, u'*'):
                 C.execute('select config from event where id=?', (int(eventid),))
                 idx = C.fetchone()['config']
                 cond.append('id=?')
                 vals.append(idx)
 
             else:
-                if configname not in (None, '*'):
+                if configname not in (None, u'*'):
                     cond.append('name like ?')
                     vals.append(configname)
-                if system not in (None, '*'):
+                if system not in (None, u'*', u'all'):
                     cond.append('system like ?')
                     vals.append(system)
 
@@ -151,16 +177,16 @@ class Service(object):
         ('system_key','s'),
         ('system_val','s'),
     ]))
-    def retrieveServiceConfigProps(self, conn, propname=None, servicename=None, configname=None):
+    def retrieveServiceConfigProps(self, propname=None, servicename=None, configname=None):
         if servicename not in (None, '*', 'masar') or propname not in (None, '*', 'system'):
             _log.warning("Service names or non 'system' prop names not supported")
             return []
-        with conn:
+        with self.conn as conn:
             C = conn.cursor()
 
             cond = []
             vals = []
-            if configname not in (None, '*'):
+            if configname not in (None, u'*'):
                 cond.append('name like ?')
                 vals.append(configname)
 
@@ -174,6 +200,8 @@ class Service(object):
             C.execute('select id, system from config %s'%cond, vals)
             R = []
             for id, system in C.fetchall():
+                if system is None:
+                    continue
                 R.append({'config_prop_id':1,
                         'config_idx':id,
                         'system_key':'system',
@@ -188,18 +216,18 @@ class Service(object):
         ('event_time','s'),
         ('user_name','s'),
     ]))
-    def retrieveServiceEvents(self, conn, configid=None, start=None, end=None, comment=None, user=None, eventid=None):
-        with conn:
+    def retrieveServiceEvents(self, configid=None, start=None, end=None, comment=None, user=None, eventid=None):
+        with self.conn as conn:
             C = conn.cursor()
 
             cond = ['user is not NULL']
             vals = []
             
-            if user not in (None, '*'):
+            if user not in (None, u'*'):
                 cond.append('user like ?')
                 vals.append(user)
 
-            if configid not in (None, '*'):
+            if configid not in (None, u'*'):
                 cond.append('config=?')
                 vals.append(int(configid))
 
@@ -221,24 +249,31 @@ class Service(object):
             return C.fetchall()
 
     @rpc(multiType)
-    def retrieveSnapshot(self, conn, eventid=None, start=None, end=None, comment=None):
+    def retrieveSnapshot(self, eventid=None, start=None, end=None, comment=None):
         eventid = int(eventid)
-        with conn:
+        with self.conn as conn:
             C = conn.cursor()
 
             _log.debug("retrieveSnapshot() %d", eventid)
 
-            C.execute("""select name, tags, groupName, readonly, dtype, severity, status, time, timens, value
+            C.execute("""select name, tags, groupName, readonly, dtype, severity, status, time, timens,
+                        value as "value [json]"
                         from event_pv inner join config_pv on event_pv.pv = config_pv.id
-                        where config_pv.config = ?
+                        where event_pv.event = ?
                         """, (eventid,))
             L = C.fetchall()
 
             sevr = map(itemgetter('severity'), L)
 
+            def unpack(I):
+                V, dbr = I['value'], I['dtype']
+                if dbr!=0 and isinstance(V, list):
+                    V = numpy.asarray(V)
+                return V
+
             return {
                 'channelName': map(itemgetter('name'), L),
-                'value': map(itemgetter('value'), L),
+                'value': map(unpack, L),   # call to json.loads happening in sqlite3 converter
                 'severity': sevr,
                 'isConnected': map(lambda S: S<=3, sevr),
                 'status': map(itemgetter('status'), L),
@@ -254,10 +289,10 @@ class Service(object):
             }
 
     @rpc(multiType)
-    def saveSnapshot(self, conn, servicename=None, configname=None, comment=None, user=None, desc=None):
+    def saveSnapshot(self, servicename=None, configname=None, comment=None, user=None, desc=None):
         if servicename not in (None, 'masar'):
             raise RuntimeError("Bad servicename")
-        with conn:
+        with self.conn as conn:
             C = conn.cursor()
 
             C.execute('select id from config where name=? and next is NULL', (configname,))
@@ -285,24 +320,33 @@ class Service(object):
                           izip(
                               repeat(eid, len(names)),
                               pvid,
-                              ret['dbrType'],
-                              ret['severity'],
-                              ret['status'],
-                              ret['secondsPastEpoch'],
-                              ret['nanoseconds'],
-                              ret['value'],
+                              ret['dbrType'].tolist(),
+                              ret['severity'].tolist(),
+                              ret['status'].tolist(),
+                              ret['secondsPastEpoch'].tolist(),
+                              ret['nanoseconds'].tolist(),
+                              [json.dumps(V, default=jsonarray) for V in ret['value']],
                           ))
 
-            return self.retrieveSnapshot(conn, eventid=eid)
+            _log.debug("event %s with %s %s", eid, len(names), C.rowcount)
+
+        return self.retrieveSnapshot(eventid=eid)
 
     @rpc(NTScalar.buildType('?'))
-    def updateSnapshotEvent(self, conn, eventid=None, user=None, desc=None):
+    def updateSnapshotEvent(self, eventid=None, configname=None, user=None, desc=None):
         eventid = int(eventid)
         if user is None or desc is None:
             raise ValueError("must provide user name and description")
-        with conn:
+        with self.conn as conn:
             C = conn.cursor()
             _log.debug("updateSnapshotEvent() update %s with %s '%s'", eventid, user, desc[20:])
+
+            evt = C.execute('select config.name from event inner join config on event.config=config.id where event.id=?',
+                            (eventid,)).fetchone()
+            if evt is None:
+                raise RemoteError("No event")
+            elif configname is not None and configname!=evt[0]:
+                raise RemoteError('eventid and configname are inconsistent')
 
             C.execute('update event set user=?, comment=? where id=? and user is NULL and comment is NULL',
                       (user, desc, eventid))
@@ -315,3 +359,76 @@ class Service(object):
     @rpc(multiType)
     def getLiveMachine(self, **kws):
         return self.gather(kws.values())
+
+    # for troubleshooting
+
+    @rpc(NTTable.buildType([
+        ('config_idx','ai'),
+        ('config_name','as'),
+        ('config_desc','as'),
+        ('config_create_date','as'),
+        ('config_version','as'),
+        ('status','as'),
+    ]))
+    def storeTestConfig(self, **kws):
+        conf = Value(NTTable.buildType([
+            ('channelName', 'as'),
+            ('readonly', 'a?'),
+            ('groupName', 'as'),
+            ('tags', 'as'),
+        ]), {
+            'labels': ['channelName', 'readonly', 'groupName', 'tags'],
+            'value': {
+                'channelName': ['pv:flt:1', 'pv:flt:2'],
+                'readonly': [False, False],
+                'groupName': ['A', ''],
+                'tags': ['', 'a, b'],
+            },
+        })
+
+        return self.storeServiceConfig(config=conf, **kws)
+
+    @rpc(NTScalar.buildType('s'))
+    def dumpDB(self):
+        return {
+            'value': '\n'.join(self.conn.iterdump())
+        }
+
+    @rpc(NTTable.buildType([
+        ('config_idx','i'),
+        ('config_name','s'),
+        ('config_desc','s'),
+        ('config_create_date','s'),
+        ('config_version','s'),
+        ('status','s'),
+    ]))
+    def storeServiceConfigManual(self, pvs=None, ros=None, groups=None, tags=None, **kws):
+        if pvs is None:
+            raise RemoteError("Missing required pvs=")
+
+        pvs = pvs.split(u',')
+        N = len(pvs)
+        if N==0:
+            raise RemoteError("No PVs")
+        _log.debug("Load config %s", pvs)
+
+        def mangle(L, P):
+            L = (L or u'').split(u',')
+            if len(L)<N:
+                L = L + [P]*(N-len(L))
+            return L
+
+        ros, groups, tags = mangle(ros, False), mangle(groups, u''), mangle(tags, u'')
+
+        config = Value(configType.type, {
+            'labels': configType.labels,
+            'value': {
+            'channelName': pvs,
+            'readonly': numpy.asarray(ros, dtype=numpy.bool),
+            'groupName': groups,
+            'tags': tags,
+            },
+        })
+        _log.info("Load config %s", config.tolist())
+
+        return self.storeServiceConfig(config=config, **kws)

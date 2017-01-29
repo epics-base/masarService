@@ -1,10 +1,13 @@
 
 import unittest
 
-from ..db import connect
-from ..ops import Service
 from p4p.wrapper import Value, Type
 from p4p.nt import NTTable
+
+from ..db import connect
+from ..ops import Service, multiType
+
+from p4p.rpc import RemoteError
 
 import numpy
 from numpy.testing import assert_equal
@@ -12,7 +15,7 @@ from numpy.testing import assert_equal
 class TestConfig(unittest.TestCase):
     def setUp(self):
         self.conn = connect(':memory:')
-        self.S = Service(sim=True)
+        self.S = Service(conn=self.conn, sim=True)
 
     def tearDown(self):
         self.conn.close()
@@ -34,7 +37,7 @@ class TestConfig(unittest.TestCase):
         })
 
         ######### Store
-        R = self.S.storeServiceConfig(self.conn, configname='first', desc='desc', config=conf, system='xx')
+        R = self.S.storeServiceConfig(configname='first', desc='desc', config=conf, system='xx')
 
         self.assertIsInstance(R, Value)
         self.assertListEqual(R.labels, [u'config_idx',
@@ -44,29 +47,31 @@ class TestConfig(unittest.TestCase):
                                     u'config_version',
                                     u'status'])
 
-        self.assertListEqual(R.value.tolist(), [
-            ('config_idx', numpy.asarray([1])),
+        configid = int(R.value.config_idx[0]) # numpy.int32 -> int (so sqlite can bind it)
+
+        self.assertListEqual([
+            ('config_idx', numpy.asarray([configid], dtype='i4')),
             ('config_name', [u'first']),
             ('config_desc', [u'desc']),
             ('config_create_date', [u'2017-01-28 21:43:28']),
             ('config_version', [u'0']),
             ('status', [u'active'])
-        ])
+        ], R.value.tolist())
 
         ######### verify DB
-        R = self.conn.execute('select * from config;').fetchone()
-        self.assertEqual(R['id'], 1)
+        R = self.conn.execute('select * from config where id is not NULL;').fetchone()
+        self.assertEqual(R['id'], configid)
         self.assertEqual(R['name'], 'first')
         self.assertIsNone(R['next'])
 
-        R = map(tuple, self.conn.execute('select name, readonly, groupName, tags from config_pv where config=?;', (1,)).fetchall())
+        R = map(tuple, self.conn.execute('select name, readonly, groupName, tags from config_pv where config=?;', (configid,)).fetchall())
         self.assertListEqual(R, [
             (u'one', 0, u'A', u''),
             (u'two', 1, u'', u'a, b'),
         ])
 
         ######### Load
-        R = self.S.loadServiceConfig(self.conn, configid='1')
+        R = self.S.loadServiceConfig(configid=str(configid))
         self.assertIsInstance(R, Value)
         self.assertListEqual(R.labels, conf.labels)
 
@@ -76,7 +81,7 @@ class TestConfig(unittest.TestCase):
         self.assertListEqual(R.value.tags, conf.value.tags)
 
         ######### Query
-        R = self.S.retrieveServiceConfigs(self.conn, configname='*')
+        R = self.S.retrieveServiceConfigs(configname='*')
 
         self.assertIsInstance(R, Value)
         self.assertListEqual(R.labels, [u'config_idx',
@@ -87,7 +92,7 @@ class TestConfig(unittest.TestCase):
                                     u'status'])
 
         self.assertListEqual(R.value.tolist(), [
-            ('config_idx', numpy.asarray([1])),
+            ('config_idx', numpy.asarray([configid])),
             ('config_name', [u'first']),
             ('config_desc', [u'desc']),
             ('config_create_date', [u'2017-01-28 21:43:28']),
@@ -95,7 +100,7 @@ class TestConfig(unittest.TestCase):
             ('status', [u'active'])
         ])
 
-        R = self.S.retrieveServiceConfigProps(self.conn)
+        R = self.S.retrieveServiceConfigProps()
         self.assertIsInstance(R, Value)
         self.assertListEqual(R.labels, [u'config_prop_id',
                                     u'config_idx',
@@ -104,11 +109,98 @@ class TestConfig(unittest.TestCase):
 
         self.assertListEqual(R.value.tolist(), [
             ('config_prop_id', numpy.asarray([1], dtype=numpy.int32)),
-            ('config_idx', numpy.asarray([1], dtype=numpy.int32)),
+            ('config_idx', numpy.asarray([configid], dtype=numpy.int32)),
             ('system_key', [u'system']),
             ('system_val', [u'xx']),
         ])
 
+    def testStoreUpdate(self):
+        oldidx = self.conn.execute('insert into config(name, created, desc) values ("foo","","")').lastrowid
+
+        conf = Value(NTTable.buildType([
+            ('channelName', 'as'),
+            ('readonly', 'a?'),
+            ('groupName', 'as'),
+            ('tags', 'as'),
+        ]), {
+            'labels': ['channelName', 'readonly', 'groupName', 'tags'],
+            'value': {
+                'channelName': ['one', 'two'],
+                'readonly': [False, True],
+                'groupName': ['A', ''],
+                'tags': ['', 'a, b'],
+            },
+        })
+
+        R = self.S.storeServiceConfig(configname='foo', oldidx=str(oldidx),
+                                      desc='desc', config=conf, system='xx')
+        configid = int(R.value.config_idx[0]) # numpy.int32 -> int (so sqlite can bind it)
+
+        self.assertListEqual([
+            ('config_idx', numpy.asarray([configid], dtype='i4')),
+            ('config_name', [u'foo']),
+            ('config_desc', [u'desc']),
+            ('config_create_date', [u'2017-01-28 21:43:28']),
+            ('config_version', [u'0']),
+            ('status', [u'active'])
+        ], R.value.tolist())
+
+        self.assertNotEqual(oldidx, configid)
+
+        self.assertListEqual(map(tuple, self.conn.execute('select id, name, next from config order by id').fetchall()), [
+            (oldidx, u'foo', configid), # inactive
+            (configid, u'foo', None), # active
+        ])
+
+    def testStoreUpdate1Bad(self):
+        "Attempt to use the name of an existing config"
+        oldidx = self.conn.execute('insert into config(name, created, desc) values ("foo","","")').lastrowid
+
+        conf = Value(NTTable.buildType([
+            ('channelName', 'as'),
+            ('readonly', 'a?'),
+            ('groupName', 'as'),
+            ('tags', 'as'),
+        ]), {
+            'labels': ['channelName', 'readonly', 'groupName', 'tags'],
+            'value': {
+                'channelName': ['one', 'two'],
+                'readonly': [False, True],
+                'groupName': ['A', ''],
+                'tags': ['', 'a, b'],
+            },
+        })
+
+        self.assertRaises(RemoteError, 
+            self.S.storeServiceConfig, configname='foo',
+                                      desc='desc', config=conf, system='xx')
+
+    def testStoreUpdate2Bad(self):
+        "Attempt to replace an inactive config"
+        oldidx = self.conn.executescript("""
+            insert into config(id, name, next, created, desc) values (3,"foo",NULL,"","");
+            insert into config(id, name, next, created, desc) values (2,"foo",3,"","");
+        """)
+        oldidx = 2
+
+        conf = Value(NTTable.buildType([
+            ('channelName', 'as'),
+            ('readonly', 'a?'),
+            ('groupName', 'as'),
+            ('tags', 'as'),
+        ]), {
+            'labels': ['channelName', 'readonly', 'groupName', 'tags'],
+            'value': {
+                'channelName': ['one', 'two'],
+                'readonly': [False, True],
+                'groupName': ['A', ''],
+                'tags': ['', 'a, b'],
+            },
+        })
+
+        self.assertRaises(RemoteError, 
+            self.S.storeServiceConfig, configname='foo', oldidx=str(oldidx),
+                                      desc='desc', config=conf, system='xx')
 
 class TestEvents(unittest.TestCase):
     def gather(self, pvs):
@@ -141,24 +233,25 @@ class TestEvents(unittest.TestCase):
                 ret['status'].append(0)
                 ret['dbrType'].append(6)
                 ret['isConnected'].append(False)
-        return ret
+        return Value(multiType, ret)
 
     def setUp(self):
         self.conn = connect(':memory:')
-        self.S = Service(gather=self.gather, sim=True)
+        self.S = Service(conn=self.conn, gather=self.gather, sim=True)
+
         self.conn.execute('insert into config(id,name,created,desc) values (?,?,?,?)',
-                          (1, 'configname', self.S.now(), 'description'))
+                          (2, 'configname', self.S.now(), 'description'))
         self.conn.executemany('insert into config_pv(id,config,name) values (?,?,?)', [
-            (1, 1, 'pv:flt:1'),
-            (2, 1, 'pv:flt:2'),
-            (3, 1, 'pv:bad:3'),
+            (1, 2, 'pv:flt:1'),
+            (2, 2, 'pv:flt:2'),
+            (3, 2, 'pv:bad:3'),
         ])
 
     def tearDown(self):
         self.conn.close()
 
     def testFetchNone(self):
-        R = self.S.retrieveServiceEvents(self.conn, configid='1')
+        R = self.S.retrieveServiceEvents(configid='1')
         self.assertListEqual(R.labels, [u'event_id', u'config_id', u'comments', u'event_time', u'user_name'])
         self.assertListEqual(R.value.user_name, [])
 
@@ -180,23 +273,23 @@ class TestEvents(unittest.TestCase):
             'value': [1.2, 1.2, 0]
         }
 
-        R = self.S.saveSnapshot(self.conn, configname='configname')
+        R = self.S.saveSnapshot(configname='configname')
 
         self.assertDictEqual(R, expect)
 
         # won't find as user name not set
-        R = self.S.retrieveServiceEvents(self.conn, configid='1')
+        R = self.S.retrieveServiceEvents(configid='2')
         self.assertListEqual(R.labels, [u'event_id', u'config_id', u'comments', u'event_time', u'user_name'])
         self.assertListEqual(R.value.user_name, [])
 
-        R = self.S.updateSnapshotEvent(self.conn, eventid='1', user='someone', desc='it works')
+        R = self.S.updateSnapshotEvent(eventid='1', user='someone', desc='it works')
         self.assertEqual(R['value'], True)
 
-        R = self.S.retrieveServiceEvents(self.conn, configid='1')
+        R = self.S.retrieveServiceEvents(configid='2')
         self.assertListEqual(R.labels, [u'event_id', u'config_id', u'comments', u'event_time', u'user_name'])
         self.assertListEqual(R.value.user_name, [
             'someone',
         ])
 
-        R = self.S.retrieveSnapshot(self.conn, eventid='1')
+        R = self.S.retrieveSnapshot(eventid='1')
         self.assertDictEqual(R, expect)

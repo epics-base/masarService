@@ -1,5 +1,10 @@
 
-import sqlite3
+import logging
+_log = logging.getLogger(__name__)
+
+import sqlite3, json
+
+sqlite3.register_converter('json', json.loads)
 
 def connect(fname):
     conn = sqlite3.connect(fname,
@@ -12,15 +17,25 @@ def connect(fname):
         C.execute("PRAGMA user_version;")
         ver = C.fetchone()[0]
         if ver==0:
+            _log.info("Initialize new database")
             C.executescript(_schema)
         elif ver!=1:
             raise RuntimeError(".db has newer schema version %d"%ver)
+        else:
+            _log.debug("Use existing database")
         C.execute("PRAGMA user_version=1;")
     except:
         conn.close()
         raise
     else:
         return conn
+
+# We would like to add 'UNIQUE(name, next)' to config,
+# but this is difficult for sqlite to handle w/ update and distinct-ness of NULL
+#
+# so this must be ensured by our logic (cf. storeServiceConfig())
+#
+#  https://www.sqlite.org/nulls.html
 
 _schema = """
 CREATE TABLE config (
@@ -29,11 +44,10 @@ CREATE TABLE config (
   next REFERENCES config(id) ON DELETE CASCADE,
   created TEXT NOT NULL,
   desc TEXT NOT NULL,
-  system TEXT,
-  UNIQUE(name, next)
+  system TEXT
 );
 CREATE INDEX config_name ON config(name);
-CREATE UNIQUE INDEX config_name_supercede ON config(name, next);
+CREATE INDEX config_name_supercede ON config(name, next);
 
 CREATE TABLE config_pv (
   id INTEGER PRIMARY KEY,
@@ -66,7 +80,7 @@ CREATE TABLE event_pv (
   status INTEGER NOT NULL,
   time INTEGER NOT NULL,
   timens INTEGER NOT NULL,
-  value,
+  value TEXT,
   UNIQUE(event, pv)
 );
 CREATE INDEX event_pv_event ON event_pv(event);
