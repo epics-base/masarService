@@ -2,7 +2,7 @@
 import logging, time
 _log = logging.getLogger(__name__)
 
-from itertools import izip_longest, izip
+from itertools import izip_longest, izip, repeat
 from functools import wraps
 from operator import itemgetter
 
@@ -45,11 +45,11 @@ class Service(object):
         ('config_version','s'),
         ('status','s'),
     ]))
-    def storeServiceConfig(self, conn, configname=None, oldidx=None, desc=None, config=None):
+    def storeServiceConfig(self, conn, configname=None, oldidx=None, desc=None, config=None, system=None):
         with conn:
             C = conn.cursor()
 
-            C.execute('insert into config(name, desc, created) values (?,?,?);', (configname, desc, self.now()))
+            C.execute('insert into config(name, desc, created, system) values (?,?,?,?);', (configname, desc, self.now(), system))
             newidx = C.lastrowid
             if oldidx is not None:
                 C.execute('update config set next=? where id=?', (newidx, int(oldidx)))
@@ -123,7 +123,7 @@ class Service(object):
                     vals.append(system)
 
             if len(cond)>0:
-                cond = 'where '+(' '.join(cond))
+                cond = 'where '+(', '.join(cond))
             else:
                 cond = ''
 
@@ -145,15 +145,15 @@ class Service(object):
                 })
             return ret
 
-    @rpc(NTTable.buildType([
-        ('config_prop_id','ai'),
-        ('config_idx','ai'),
-        ('system_key','as'),
-        ('system_val','as'),
+    @rpc(NTTable([
+        ('config_prop_id','i'),
+        ('config_idx','i'),
+        ('system_key','s'),
+        ('system_val','s'),
     ]))
     def retrieveServiceConfigProps(self, conn, propname=None, servicename=None, configname=None):
-        if servicename not in (None, 'masar') or propname!='system':
-            _log.warning("Service names not supported")
+        if servicename not in (None, '*', 'masar') or propname not in (None, '*', 'system'):
+            _log.warning("Service names or non 'system' prop names not supported")
             return []
         with conn:
             C = conn.cursor()
@@ -165,9 +165,11 @@ class Service(object):
                 vals.append(configname)
 
             if len(cond)>0:
-                cond = 'where '+(' '.join(cond))
+                cond = 'where '+(', '.join(cond))
             else:
                 cond = ''
+
+            _log.debug("retrieveServiceConfigProps() %s %s", cond, vals)
 
             C.execute('select id, system from config %s'%cond, vals)
             R = []
@@ -179,18 +181,18 @@ class Service(object):
                         })
             return R
 
-    @rpc(NTTable.buildType([
-        ('event_id','ai'),
-        ('config_id','ai'),
-        ('comments','as'),
-        ('event_time','as'),
-        ('user_name','as'),
+    @rpc(NTTable([
+        ('event_id','i'),
+        ('config_id','i'),
+        ('comments','s'),
+        ('event_time','s'),
+        ('user_name','s'),
     ]))
     def retrieveServiceEvents(self, conn, configid=None, start=None, end=None, comment=None, user=None, eventid=None):
         with conn:
             C = conn.cursor()
 
-            cond = []
+            cond = ['user is not NULL']
             vals = []
             
             if user not in (None, '*'):
@@ -202,10 +204,12 @@ class Service(object):
                 vals.append(int(configid))
 
             if len(cond)>0:
-                cond = 'where '+(' '.join(cond))
+                cond = 'where '+(' and  '.join(cond))
             else:
                 cond = ''
-            
+
+            _log.debug("retrieveServiceEvents() %s %s", cond, vals)
+
             C.execute("""select id as event_id,
                                 config as config_id,
                                 comment as comments,
@@ -217,14 +221,17 @@ class Service(object):
             return C.fetchall()
 
     @rpc(multiType)
-    def retrieveSnapshot(self, eventid=None, start=None, end=None, comment=None):
+    def retrieveSnapshot(self, conn, eventid=None, start=None, end=None, comment=None):
         eventid = int(eventid)
         with conn:
             C = conn.cursor()
 
+            _log.debug("retrieveSnapshot() %d", eventid)
+
             C.execute("""select name, tags, groupName, readonly, dtype, severity, status, time, timens, value
                         from event_pv inner join config_pv on event_pv.pv = config_pv.id
-                        """)
+                        where config_pv.config = ?
+                        """, (eventid,))
             L = C.fetchall()
 
             sevr = map(itemgetter('severity'), L)
@@ -241,6 +248,9 @@ class Service(object):
                 'groupName': map(itemgetter('groupName'), L),
                 'readonly': map(itemgetter('readonly'), L),
                 'tags': map(itemgetter('tags'), L),
+                'timeStamp': {'userTag': eventid},
+                'userTag': [0]*len(L),
+                'message': ['']*len(L),
             }
 
     @rpc(multiType)
@@ -250,27 +260,31 @@ class Service(object):
         with conn:
             C = conn.cursor()
 
-            C.execute('select id from config where name=? and next=NULL', (configname,))
+            C.execute('select id from config where name=? and next is NULL', (configname,))
             cid = C.fetchone()
             if cid is None:
                 raise ValueError("Unknown config '%s'"%configname)
+            cid = cid[0]
+            _log.debug("saveSnapshot() for '%s'(%s)", configname, cid)
 
-            C.execute('select id, name, tags, groupName, readonly from event_pv where config=?', (cid,))
+            C.execute('select id, name, tags, groupName, readonly from config_pv where config=?', (cid,))
             config = C.fetchall()
 
             pvid  = map(itemgetter('id'), config)
             names = map(itemgetter('name'), config)
 
             ret = self.gather(names)
+            _log.debug("Gather complete")
 
-            C.execute('insert into event(config, user, comment) values (?)', (cid, user, desc))
+            C.execute('insert into event(config, user, comment, created) values (?,?,?,?)', (cid, user, desc, self.now()))
             eid = C.lastrowid
+            _log.debug("Create event %s", eid)
 
             C.executemany("""insert into event_pv(event, pv, dtype, severity, status, time, timens, value)
                                          values  (?    , ? , ?    , ?       , ?     , ?   , ?     , ?    );""",
                           izip(
+                              repeat(eid, len(names)),
                               pvid,
-                              names,
                               ret['dbrType'],
                               ret['severity'],
                               ret['status'],
@@ -279,21 +293,24 @@ class Service(object):
                               ret['value'],
                           ))
 
-            ret['tags'] = map(itemgetter('tags'), config)
-            ret['groupName'] = map(itemgetter('groupName'), config)
-            ret['readonly'] = map(itemgetter('readonly'), config)
-
-            ret['timeStamp'] = {'userTag': eid}
-
-            return ret
+            return self.retrieveSnapshot(conn, eventid=eid)
 
     @rpc(NTScalar.buildType('?'))
-    def updateSnapshotEvent(self, eventid=None, user=None, desc=None):
+    def updateSnapshotEvent(self, conn, eventid=None, user=None, desc=None):
         eventid = int(eventid)
+        if user is None or desc is None:
+            raise ValueError("must provide user name and description")
         with conn:
             C = conn.cursor()
+            _log.debug("updateSnapshotEvent() update %s with %s '%s'", eventid, user, desc[20:])
 
-            C.execute('update event set user=?, comment=? where id=?', (user, desc, eventid))
+            C.execute('update event set user=?, comment=? where id=? and user is NULL and comment is NULL',
+                      (user, desc, eventid))
+
+            _log.debug("changed %s", C.rowcount)
+            return {
+                'value': C.rowcount==1,
+            }
 
     @rpc(multiType)
     def getLiveMachine(self, **kws):
