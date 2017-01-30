@@ -17,7 +17,7 @@ def getargs():
     P.add_argument('db', help='File name of sqlite .db file (or ":memory:")')
     P.add_argument('--name', default='masarService', help='Service name')
     P.add_argument('-L', '--log-level', default='INFO', help='Level name (eg. ERROR, WARN, INFO, DEBUG)')
-    P.add_argument('-G', '--gather', default='sim', help='PV value gathering backend')
+    P.add_argument('-G', '--gather', default='ca', help='PV value gathering backend')
     return P.parse_args()
 
 def main(args):

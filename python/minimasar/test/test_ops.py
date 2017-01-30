@@ -64,7 +64,7 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(R['name'], 'first')
         self.assertIsNone(R['next'])
 
-        R = map(tuple, self.conn.execute('select name, readonly, groupName, tags from config_pv where config=?;', (configid,)).fetchall())
+        R = list(map(tuple, self.conn.execute('select name, readonly, groupName, tags from config_pv where config=?;', (configid,)).fetchall()))
         self.assertListEqual(R, [
             (u'one', 0, u'A', u''),
             (u'two', 1, u'', u'a, b'),
@@ -147,7 +147,7 @@ class TestConfig(unittest.TestCase):
 
         self.assertNotEqual(oldidx, configid)
 
-        self.assertListEqual(map(tuple, self.conn.execute('select id, name, next from config order by id').fetchall()), [
+        self.assertListEqual(list(map(tuple, self.conn.execute('select id, name, next from config order by id').fetchall())), [
             (oldidx, u'foo', configid), # inactive
             (configid, u'foo', None), # active
         ])
@@ -261,7 +261,7 @@ class TestEvents(unittest.TestCase):
             'dbrType': [6, 6, 6],
             'groupName': [u'', u'', u''],
             'isConnected': [True, True, False],
-            'message': ['', '', ''],
+            'message': [u'', u'', u''],
             'nanoseconds': [0, 0, 0],
             'readonly': [0, 0, 0],
             'secondsPastEpoch': [12345678, 12345678, 12345678],

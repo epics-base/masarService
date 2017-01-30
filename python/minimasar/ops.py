@@ -2,7 +2,11 @@
 import logging, time, json
 _log = logging.getLogger(__name__)
 
-from itertools import izip_longest, izip, repeat
+try:
+    from itertools import izip_longest, izip, repeat
+except ImportError:
+    from itertools import (zip_longest as izip_longest, repeat)
+    izip = zip
 from functools import wraps
 from operator import itemgetter
 
@@ -263,30 +267,30 @@ class Service(object):
                         """, (eventid,))
             L = C.fetchall()
 
-            sevr = map(itemgetter('severity'), L)
+        sevr = list(map(itemgetter('severity'), L))
 
-            def unpack(I):
-                V, dbr = I['value'], I['dtype']
-                if dbr!=0 and isinstance(V, list):
-                    V = numpy.asarray(V)
-                return V
+        def unpack(I):
+            V, dbr = I['value'], I['dtype']
+            if dbr!=0 and isinstance(V, list):
+                V = numpy.asarray(V)
+            return V
 
-            return {
-                'channelName': map(itemgetter('name'), L),
-                'value': map(unpack, L),   # call to json.loads happening in sqlite3 converter
-                'severity': sevr,
-                'isConnected': map(lambda S: S<=3, sevr),
-                'status': map(itemgetter('status'), L),
-                'secondsPastEpoch': map(itemgetter('time'), L),
-                'nanoseconds': map(itemgetter('timens'), L),
-                'dbrType': map(itemgetter('dtype'), L),
-                'groupName': map(itemgetter('groupName'), L),
-                'readonly': map(itemgetter('readonly'), L),
-                'tags': map(itemgetter('tags'), L),
-                'timeStamp': {'userTag': eventid},
-                'userTag': [0]*len(L),
-                'message': ['']*len(L),
-            }
+        return {
+            'channelName': list(map(itemgetter('name'), L)),
+            'value': list(map(unpack, L)),   # call to json.loads happening in sqlite3 converter
+            'severity': sevr,
+            'isConnected': list(map(lambda S: S<=3, sevr)),
+            'status': list(map(itemgetter('status'), L)),
+            'secondsPastEpoch': list(map(itemgetter('time'), L)),
+            'nanoseconds': list(map(itemgetter('timens'), L)),
+            'dbrType': list(map(itemgetter('dtype'), L)),
+            'groupName': list(map(itemgetter('groupName'), L)),
+            'readonly': list(map(itemgetter('readonly'), L)),
+            'tags': list(map(itemgetter('tags'), L)),
+            'timeStamp': {'userTag': eventid},
+            'userTag': [0]*len(L),
+            'message': ['']*len(L),
+        }
 
     @rpc(multiType)
     def saveSnapshot(self, servicename=None, configname=None, comment=None, user=None, desc=None):
@@ -305,8 +309,8 @@ class Service(object):
             C.execute('select id, name, tags, groupName, readonly from config_pv where config=?', (cid,))
             config = C.fetchall()
 
-            pvid  = map(itemgetter('id'), config)
-            names = map(itemgetter('name'), config)
+            pvid  = list(map(itemgetter('id'), config))
+            names = list(map(itemgetter('name'), config))
 
             ret = self.gather(names)
             _log.debug("Gather complete")
@@ -358,7 +362,7 @@ class Service(object):
 
     @rpc(multiType)
     def getLiveMachine(self, **kws):
-        return self.gather(kws.values())
+        return self.gather(list(kws.values()))
 
     # for troubleshooting
 
@@ -379,10 +383,10 @@ class Service(object):
         ]), {
             'labels': ['channelName', 'readonly', 'groupName', 'tags'],
             'value': {
-                'channelName': ['pv:flt:1', 'pv:flt:2'],
-                'readonly': [False, False],
-                'groupName': ['A', ''],
-                'tags': ['', 'a, b'],
+                'channelName': ['pv:f64:1', 'pv:i32:2', 'pv:str:3', 'pv:bad:4'],
+                'readonly':    [False,      False,      False,      False],
+                'groupName':   ['A',        '',         '',         ''],
+                'tags':        ['',         'a, b',     '',         ''],
             },
         })
 

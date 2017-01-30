@@ -2,9 +2,18 @@
 import logging
 _log = logging.getLogger(__name__)
 
-import sqlite3, json
+import sqlite3, json, sys
 
-sqlite3.register_converter('json', json.loads)
+if sys.version_info>=(3,0,0):
+    def loads(V):
+        try:
+            return json.loads(V.decode('ascii'))
+        except:
+            _log.exception("JSON serialization error: \"%s\""%V)
+            raise
+    sqlite3.register_converter('json', loads)
+else:
+    sqlite3.register_converter('json', json.loads)
 
 def connect(fname):
     conn = sqlite3.connect(fname,
@@ -80,7 +89,7 @@ CREATE TABLE event_pv (
   status INTEGER NOT NULL,
   time INTEGER NOT NULL,
   timens INTEGER NOT NULL,
-  value TEXT,
+  value TEXT NOT NULL,
   UNIQUE(event, pv)
 );
 CREATE INDEX event_pv_event ON event_pv(event);

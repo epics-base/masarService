@@ -12,3 +12,5 @@ DIRS += test/cpp
 test/cpp_DEPEND_DIRS = configure cpp
 
 include $(TOP)/configure/RULES_TOP
+
+UNINSTALL_DIRS += $(INSTALL_LOCATION)/python$(PY_VER)
