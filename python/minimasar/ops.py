@@ -145,7 +145,7 @@ class Service(object):
                 vals.append(idx)
 
             else:
-                if configname not in (None, u'*'):
+                if configname not in (None, u'*', u'all'):
                     cond.append('name like ?')
                     vals.append(configname)
                 if system not in (None, u'*', u'all'):
