@@ -152,10 +152,10 @@ class Service(object):
 
             else:
                 if configname not in (None, u'*', u'all'):
-                    cond.append('name like ?')
+                    cond.append('name glob ?')
                     vals.append(configname)
                 if system not in (None, u'*', u'all'):
-                    cond.append('system like ?')
+                    cond.append('system glob ?')
                     vals.append(system)
 
             if len(cond)>0:
@@ -197,7 +197,7 @@ class Service(object):
             cond = []
             vals = []
             if configname not in (None, u'*'):
-                cond.append('name like ?')
+                cond.append('name glob ?')
                 vals.append(configname)
 
             if len(cond)>0:
@@ -234,7 +234,7 @@ class Service(object):
             vals = []
             
             if user not in (None, u'*'):
-                cond.append('user like ?')
+                cond.append('user glob ?')
                 vals.append(user)
 
             if configid not in (None, u'*'):
