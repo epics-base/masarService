@@ -79,6 +79,7 @@ CREATE TABLE event (
   approve INTEGER
 );
 CREATE INDEX event_config ON event(config);
+CREATE INDEX event_config_created ON event(config,created);
 
 CREATE TABLE event_pv (
   id INTEGER PRIMARY KEY,

@@ -36,6 +36,11 @@ def jsonarray(val):
     else:
         raise TypeError("Can't serialize %s"%type(val))
 
+def normtime(tstr):
+    'Normalize user provided time string'
+    T = time.strptime(tstr, '%Y-%m-%d %H:%M:%S')
+    return time.strftime('%Y-%m-%d %H:%M:%S', T)
+
 class Service(object):
     def __init__(self, conn, gather=None, sim=False):
         self.conn = conn
@@ -45,7 +50,8 @@ class Service(object):
             # current time string (UTC)
             self.now = lambda: time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
         else:
-            self.now = lambda: time.strftime('%Y-%m-%d %H:%M:%S', (2017, 1, 28, 21, 43, 28, 5, 28, 0))
+            self.simtime = (2017, 1, 28, 21, 43, 28, 5, 28, 0)
+            self.now = lambda self=self: time.strftime('%Y-%m-%d %H:%M:%S', self.simtime)
 
     @rpc(NTTable([
         ('config_idx','i'),
@@ -235,6 +241,17 @@ class Service(object):
                 cond.append('config=?')
                 vals.append(int(configid))
 
+            # HACK instead of using julianday(), use lexial comparison,
+            # which should produce the same result as we always store time
+            # as "YYYY-MM-DD HH:MM:SS"
+            if start is not None:
+                cond.append("event_time>=?")
+                vals.append(normtime(start))
+
+            if end is not None:
+                cond.append("event_time<?")
+                vals.append(normtime(end))
+
             if len(cond)>0:
                 cond = 'where '+(' and  '.join(cond))
             else:
@@ -249,6 +266,7 @@ class Service(object):
                                 user as user_name
                                 from event
                                 %s
+                                order by config_id, event_time
                 """%cond, vals)
             return C.fetchall()
 

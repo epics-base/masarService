@@ -293,3 +293,87 @@ class TestEvents(unittest.TestCase):
 
         R = self.S.retrieveSnapshot(eventid='1')
         self.assertDictEqual(R, expect)
+
+class TestRetrieve(unittest.TestCase):
+    def gather(self, pvs):
+        ret = {
+            'value':[5],
+            'channelName':['one'],
+            'severity': [0],
+            'status': [0],
+            'message': [''],
+            'secondsPastEpoch': [12345678],
+            'nanoseconds': [0],
+            'userTag': [0],
+            'isConnected': [True],
+            'dbrType': [0],
+            'readonly': [False],
+            'groupName': [''],
+            'tags': [''],
+        }
+        return Value(multiType, ret)
+
+    def setUp(self):
+        self.conn = connect(':memory:')
+        self.S = Service(conn=self.conn, gather=self.gather, sim=True)
+        self.S.simtime = (2017, 1, 28, 21, 43, 28, 5, 28, 0)
+
+        conf = Value(NTTable.buildType([
+            ('channelName', 'as'),
+            ('readonly', 'a?'),
+            ('groupName', 'as'),
+            ('tags', 'as'),
+        ]), {
+            'labels': ['channelName', 'readonly', 'groupName', 'tags'],
+            'value': {
+                'channelName': ['one'],
+                'readonly': [False],
+                'groupName': [''],
+                'tags': [''],
+            },
+        })
+
+        R = self.S.storeServiceConfig(configname='first', desc='desc', config=conf, system='xx')
+        self.configid = int(R.value.config_idx[0]) # numpy.int32 -> int (so sqlite can bind it)
+
+        S = self.S.saveSnapshot(configname='first', user='foo', desc='bar')
+        self.eid1 = S['timeStamp']['userTag']
+
+        self.S.simtime = (2017, 1, 28, 21, 44, 28, 5, 28, 0)
+
+        S = self.S.saveSnapshot(configname='first', user='foo', desc='bar')
+        self.eid2 = S['timeStamp']['userTag']
+
+        self.S.simtime = (2017, 1, 28, 21, 45, 28, 5, 28, 0)
+
+        S = self.S.saveSnapshot(configname='first', user='foo', desc='bar')
+        self.eid3 = S['timeStamp']['userTag']
+
+    def tearDown(self):
+        self.conn.close()
+
+    def testAll(self):
+        evts = self.S.retrieveServiceEvents(configid=self.configid)
+        assert_equal(evts.value.event_id, [ self.eid1, self.eid2, self.eid3])
+
+    def testAfter(self):
+        evts = self.S.retrieveServiceEvents(configid=self.configid,
+                                            start='2017-01-28 21:44:00')
+        assert_equal(evts.value.event_id, [ self.eid2, self.eid3])
+
+    def testBefore(self):
+        evts = self.S.retrieveServiceEvents(configid=self.configid,
+                                            end='2017-01-28 21:44:00')
+        assert_equal(evts.value.event_id, [ self.eid1])
+
+    def testDuring(self):
+        evts = self.S.retrieveServiceEvents(configid=self.configid,
+                                            start='2017-01-28 21:44:00',
+                                            end=  '2017-01-28 21:45:00')
+        assert_equal(evts.value.event_id, [ self.eid2])
+
+    def testDuring2(self):
+        evts = self.S.retrieveServiceEvents(configid=self.configid,
+                                            start='2017-1-28 21:44:00',
+                                            end=  '2017-01-28 21:45:0')
+        assert_equal(evts.value.event_id, [ self.eid2])
