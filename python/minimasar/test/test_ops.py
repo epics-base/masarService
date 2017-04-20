@@ -268,7 +268,11 @@ class TestEvents(unittest.TestCase):
             'severity': [0, 0, 4],
             'status': [0, 0, 0],
             'tags': [u'', u'', u''],
-            'timeStamp': {'userTag': 1},
+            'timeStamp': {
+                'secondsPastEpoch':1485639808,
+                'nanoseconds':0,
+                'userTag': 1
+            },
             'userTag': [0, 0, 0],
             'value': [1.2, 1.2, 0]
         }

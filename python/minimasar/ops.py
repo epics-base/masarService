@@ -1,5 +1,6 @@
 
 import logging, time, json
+from calendar import timegm
 _log = logging.getLogger(__name__)
 
 try:
@@ -41,6 +42,12 @@ def normtime(tstr):
     T = time.strptime(tstr, '%Y-%m-%d %H:%M:%S')
     return time.strftime('%Y-%m-%d %H:%M:%S', T)
 
+def timestr2tuple(tstr):
+    'time string to PVD time tuple'
+    T = time.strptime(tstr, '%Y-%m-%d %H:%M:%S')
+    S, NS = divmod(timegm(T), 1.0)
+    return int(S), int(NS*1e9)
+
 class Service(object):
     def __init__(self, conn, gather=None, sim=False):
         self.conn = conn
@@ -50,6 +57,7 @@ class Service(object):
             # current time string (UTC)
             self.now = lambda: time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
         else:
+            # posix time 1485639808
             self.simtime = (2017, 1, 28, 21, 43, 28, 5, 28, 0)
             self.now = lambda self=self: time.strftime('%Y-%m-%d %H:%M:%S', self.simtime)
 
@@ -272,11 +280,15 @@ class Service(object):
 
     @rpc(multiType)
     def retrieveSnapshot(self, eventid=None, start=None, end=None, comment=None):
+        # start, end, and comment ignored
         eventid = int(eventid)
         with self.conn as conn:
             C = conn.cursor()
 
             _log.debug("retrieveSnapshot() %d", eventid)
+
+            C.execute('select created from event where id=?', (eventid,))
+            S, NS = timestr2tuple(C.fetchone()[0])
 
             C.execute("""select name, tags, groupName, readonly, dtype, severity, status, time, timens,
                         value as "value [json]"
@@ -305,9 +317,13 @@ class Service(object):
             'groupName': list(map(itemgetter('groupName'), L)),
             'readonly': list(map(itemgetter('readonly'), L)),
             'tags': list(map(itemgetter('tags'), L)),
-            'timeStamp': {'userTag': eventid},
+            'timeStamp': {
+                'secondsPastEpoch':S,
+                'nanoseconds':NS,
+                'userTag': eventid
+            },
             'userTag': [0]*len(L),
-            'message': ['']*len(L),
+            'message': [u'']*len(L),
         }
 
     @rpc(multiType)
