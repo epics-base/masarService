@@ -258,11 +258,12 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                   "configname": self.currentConfigFilter}
         try:
             rpcResult = self.mc.retrieveServiceConfigs(params)
+            print("self.mc.retrieveServiceConfigs ->", rpcResult)
             utctimes = rpcResult[3]
             config_ts = []
             for ut in utctimes:
-                ts = str(datetime.datetime.fromtimestamp(time.mktime(time.strptime(ut, self.time_format))) 
-                         - self.UTC_OFFSET_TIMEDELTA)
+                ts = str(datetime.datetime.fromtimestamp(time.mktime(time.strptime(ut, "%Y-%m-%d %H:%M:%S"))) 
+                         )
                 config_ts.append(ts)
 
         except:
