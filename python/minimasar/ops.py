@@ -31,6 +31,16 @@ configType = NTTable([
     ('tags', 's'),
 ])
 
+configTable = NTTable([
+    ('config_idx','i'),
+    ('config_name','s'),
+    ('config_desc','s'),
+    ('config_create_date','s'),
+    ('config_version','s'),
+    ('status','s'),
+    ('system', 's'),
+])
+
 def jsonarray(val):
     if isinstance(val, numpy.ndarray):
         return val.tolist()
@@ -61,14 +71,7 @@ class Service(object):
             self.simtime = (2017, 1, 28, 21, 43, 28, 5, 28, 0)
             self.now = lambda self=self: time.strftime('%Y-%m-%d %H:%M:%S', self.simtime)
 
-    @rpc(NTTable([
-        ('config_idx','i'),
-        ('config_name','s'),
-        ('config_desc','s'),
-        ('config_create_date','s'),
-        ('config_version','s'),
-        ('status','s'),
-    ]))
+    @rpc(configTable)
     def storeServiceConfig(self, configname=None, oldidx=None, desc=None, config=None, system=None):
         with self.conn as conn:
             C = conn.cursor()
@@ -95,7 +98,7 @@ class Service(object):
                 C.execute('insert into config_pv(config, name, readonly, groupName, tags) VALUES (?,?,?,?,?);',
                         (newidx, name, int(ro) or 0, group or '', tags or ''))
 
-            C.execute("""select id, name, desc, created, next
+            C.execute("""select id, name, desc, created, next, system
                                 from config
                                 where id=?;
                 """, (newidx,))
@@ -109,6 +112,7 @@ class Service(object):
                             'config_create_date':row['created'],
                             'config_version':'0',
                             'status': 'active' if row['next'] is None else 'inactive',
+                            'system': row['system'] or '',
                         },
                         C.fetchall())
 
@@ -131,15 +135,7 @@ class Service(object):
             _log.debug("Fetch configuration %s", configid)
             return C.fetchall()
 
-    @rpc(NTTable([
-        ('config_idx','i'),
-        ('config_name','s'),
-        ('config_desc','s'),
-        ('config_create_date','s'),
-        ('config_version','s'),
-        ('status','s'),
-        ('system', 's'),
-    ]))
+    @rpc(configTable)
     def retrieveServiceConfigs(self, servicename=None, configname=None, configversion=None, system=None, eventid=None, status=None):
         if servicename not in (None, 'masar'):
             _log.warning("Service names not supported")

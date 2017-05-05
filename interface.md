@@ -103,7 +103,7 @@ Methods
 -------
 
 ```py
-@rpc(NTTable.buildType([
+configInfo = NTTable.buildType([
     ('config_idx','ai'),
     ('config_name','as'),
     ('config_desc','as'),
@@ -111,7 +111,9 @@ Methods
     ('config_version','as'),
     ('status','as'),
     ('system','as'),
-]))
+])
+
+@rpc(configInfo)
 def retrieveServiceConfigs(servicename=None, configname=None, configversion=None, system=None, eventid=None, status=None):
     pass
 ```
@@ -195,14 +197,7 @@ configTable = NTTable.buildType([
     ('tags', 'as'),
 ])
 
-@rpc(NTTable.buildType([
-    ('config_idx','ai'),
-    ('config_name','as'),
-    ('config_desc','as'),
-    ('config_create_date','as'),
-    ('config_version','as'),
-    ('status','as'),
-]))
+@rpc(configInfo)
 def storeServiceConfig(configname=None, oldidx=None, desc=None, config=None, system=None):
     pass
 ```

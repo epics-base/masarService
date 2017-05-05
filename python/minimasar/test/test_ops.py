@@ -45,7 +45,8 @@ class TestConfig(unittest.TestCase):
                                     u'config_desc',
                                     u'config_create_date',
                                     u'config_version',
-                                    u'status'])
+                                    u'status',
+                                    u'system'])
 
         configid = int(R.value.config_idx[0]) # numpy.int32 -> int (so sqlite can bind it)
 
@@ -55,7 +56,8 @@ class TestConfig(unittest.TestCase):
             ('config_desc', [u'desc']),
             ('config_create_date', [u'2017-01-28 21:43:28']),
             ('config_version', [u'0']),
-            ('status', [u'active'])
+            ('status', [u'active']),
+            ('system', [u'xx']),
         ], R.value.tolist())
 
         ######### verify DB
@@ -144,7 +146,8 @@ class TestConfig(unittest.TestCase):
             ('config_desc', [u'desc']),
             ('config_create_date', [u'2017-01-28 21:43:28']),
             ('config_version', [u'0']),
-            ('status', [u'active'])
+            ('status', [u'active']),
+            ('system', [u'xx']),
         ], R.value.tolist())
 
         self.assertNotEqual(oldidx, configid)
