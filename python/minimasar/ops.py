@@ -245,6 +245,10 @@ class Service(object):
                 cond.append('user glob ?')
                 vals.append(user)
 
+            if comment not in (None, u'*'):
+                cond.append('comment glob ?')
+                vals.append(comment)
+
             if configid not in (None, u'*'):
                 cond.append('config=?')
                 vals.append(int(configid))
