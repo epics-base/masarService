@@ -222,3 +222,14 @@ def loadServiceConfig(configid=None):
 
 Retrieve previously stored configuration.
 configid must match an existing configuration.
+
+
+```py
+@rpc(configInfo)
+def modifyServiceConfig(configname=None, configid=None, status=None):
+    pass
+```
+
+Allows changes to be made to an existing configuration without replacing it.
+Currently only 'status' may be changed to allow an active configuration to be forced inactive,
+or for a configuration which has previously been forced inactive to be returned to active status.

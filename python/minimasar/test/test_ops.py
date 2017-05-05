@@ -182,7 +182,7 @@ class TestConfig(unittest.TestCase):
 
     def testStoreUpdate2Bad(self):
         "Attempt to replace an inactive config"
-        oldidx = self.conn.executescript("""
+        self.conn.executescript("""
             insert into config(id, name, next, created, desc) values (3,"foo",NULL,"","");
             insert into config(id, name, next, created, desc) values (2,"foo",3,"","");
         """)
@@ -206,6 +206,27 @@ class TestConfig(unittest.TestCase):
         self.assertRaises(RemoteError, 
             self.S.storeServiceConfig, configname='foo', oldidx=str(oldidx),
                                       desc='desc', config=conf, system='xx')
+
+    def testStoreUpdateActive(self):
+        "Make a configuration inactive"
+        idx = self.conn.execute('insert into config(name, created, desc) values ("foo","","")').lastrowid
+
+        self.assertEqual(1, self.conn.execute('select active from config where id=?', (idx,)).fetchone()[0])
+
+        R = self.S.modifyServiceConfig(configid=idx, status='active')
+        self.assertEqual('active', R.value.status[0])
+
+        self.assertEqual(1, self.conn.execute('select active from config where id=?', (idx,)).fetchone()[0])
+
+        R = self.S.modifyServiceConfig(configid=idx, status='inactive')
+        self.assertEqual('inactive', R.value.status[0])
+
+        self.assertEqual(0, self.conn.execute('select active from config where id=?', (idx,)).fetchone()[0])
+
+        R = self.S.modifyServiceConfig(configid=idx, status='active')
+        self.assertEqual('active', R.value.status[0])
+
+        self.assertEqual(1, self.conn.execute('select active from config where id=?', (idx,)).fetchone()[0])
 
 class TestEvents(unittest.TestCase):
     def gather(self, pvs):

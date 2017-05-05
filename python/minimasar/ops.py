@@ -71,6 +71,21 @@ class Service(object):
             self.simtime = (2017, 1, 28, 21, 43, 28, 5, 28, 0)
             self.now = lambda self=self: time.strftime('%Y-%m-%d %H:%M:%S', self.simtime)
 
+    def _getConfig(self, C):
+        # expect previous 'select' with: id, name, created, active, next, desc, system
+        ret = []
+        for id, name, created, active, next, desc, system in C.fetchall():
+            ret.append({
+                'config_idx':id,
+                'config_name':name,
+                'config_create_date':created,
+                'config_desc':desc,
+                'config_version':u'0',
+                'status': 'active' if next is None and active!=0 else 'inactive',
+                'system': system or '',
+            })
+        return ret
+
     @rpc(configTable)
     def storeServiceConfig(self, configname=None, oldidx=None, desc=None, config=None, system=None):
         with self.conn as conn:
@@ -84,7 +99,7 @@ class Service(object):
                 # update existing row only if it was previously active
                 C.execute('update config set next=? where id=? and next is NULL', (newidx, int(oldidx)))
 
-            if C.execute('select count(*) from config where name=? and next is NULL', (configname,)).fetchone()[0]!=1:
+            if C.execute('select count(*) from config where name=? and next is NULL and active=1', (configname,)).fetchone()[0]!=1:
                 # rollback will undo our insert
                 raise RemoteError("Provided configname and oldidx ('%s' and %s) are not consistent"%(configname, oldidx))
 
@@ -98,23 +113,14 @@ class Service(object):
                 C.execute('insert into config_pv(config, name, readonly, groupName, tags) VALUES (?,?,?,?,?);',
                         (newidx, name, int(ro) or 0, group or '', tags or ''))
 
-            C.execute("""select id, name, desc, created, next, system
+            C.execute("""select id, name, created, active, next, desc, system
                                 from config
                                 where id=?;
                 """, (newidx,))
 
             _log.info("Store configuration %s as %s (old %s)", configname, newidx, oldidx)
 
-            return map(lambda row: {
-                            'config_idx':row['id'],
-                            'config_name':row['name'],
-                            'config_desc':row['desc'],
-                            'config_create_date':row['created'],
-                            'config_version':'0',
-                            'status': 'active' if row['next'] is None else 'inactive',
-                            'system': row['system'] or '',
-                        },
-                        C.fetchall())
+            return self._getConfig(C)
 
     @rpc(NTTable([
         ('channelName', 's'),
@@ -136,6 +142,40 @@ class Service(object):
             return C.fetchall()
 
     @rpc(configTable)
+    def modifyServiceConfig(self, configid=None, status=None):
+        configid = int(configid)
+        if status not in (None, 'active', 'inactive'):
+            raise RemoteError("Unsupported status '%s'"%status)
+        with self.conn as conn:
+            C = conn.cursor()
+
+            R = C.execute('select active, next from config where id=?', (int(configid),)).fetchone()
+            if R is None:
+                raise RemoteError("Unknown configid %s"%configid)
+            if R['next'] is not None:
+                raise RemoteError("Can't modify superceeded configuration")
+
+            cond = []
+            vals = [configid]
+
+            if status=='active':
+                cond.append('active=1')
+            elif status=='inactive':
+                cond.append('active=0')
+
+            if len(cond)>0:
+                cond = ', '.join(cond)
+
+                C.execute('update config set %s where id=? and next is NULL'%cond, vals)
+
+            C.execute("""select id, name, created, active, next, desc, system
+                                from config
+                                where id=?;
+                """, (configid,))
+
+            return self._getConfig(C)
+
+    @rpc(configTable)
     def retrieveServiceConfigs(self, servicename=None, configname=None, configversion=None, system=None, eventid=None, status=None):
         if servicename not in (None, 'masar'):
             _log.warning("Service names not supported")
@@ -144,7 +184,7 @@ class Service(object):
             return []
         with self.conn as conn:
             C = conn.cursor()
-            
+
             cond = []
             vals = []
 
@@ -178,22 +218,11 @@ class Service(object):
 
             _log.debug('retrieveServiceConfigs() w/ %s %s', cond, vals)
 
-            C.execute("""select id, name, created, next, desc, system
+            C.execute("""select id, name, created, active, next, desc, system
                                 from config
                                 %s;
                 """%cond, vals)
-            ret = []
-            for id, name, created, next, desc, system in C.fetchall():
-                ret.append({
-                    'config_idx':id,
-                    'config_name':name,
-                    'config_create_date':created,
-                    'config_desc':desc,
-                    'config_version':u'0',
-                    'status': 'active' if next is None else 'inactive',
-                    'system': system or '',
-                })
-            return ret
+            return self._getConfig(C)
 
     @rpc(NTTable([
         ('config_prop_id','i'),
@@ -343,7 +372,7 @@ class Service(object):
         with self.conn as conn:
             C = conn.cursor()
 
-            C.execute('select id from config where name=? and next is NULL', (configname,))
+            C.execute('select id from config where name=? and next is NULL and active=1', (configname,))
             cid = C.fetchone()
             if cid is None:
                 raise RemoteError("Unknown config '%s'"%configname)

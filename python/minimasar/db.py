@@ -52,6 +52,7 @@ CREATE TABLE config (
   name TEXT NOT NULL,
   next REFERENCES config(id) ON DELETE CASCADE,
   created TEXT NOT NULL,
+  active INTEGER NOT NULL DEFAULT 1,
   desc TEXT NOT NULL,
   system TEXT
 );
