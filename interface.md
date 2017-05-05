@@ -110,6 +110,7 @@ Methods
     ('config_create_date','as'),
     ('config_version','as'),
     ('status','as'),
+    ('system','as'),
 ]))
 def retrieveServiceConfigs(servicename=None, configname=None, configversion=None, system=None, eventid=None):
     pass
@@ -200,7 +201,7 @@ configTable = NTTable.buildType([
     ('config_version','as'),
     ('status','as'),
 ]))
-def storeServiceConfig(configname=None, oldidx=None, desc=None, config=None):
+def storeServiceConfig(configname=None, oldidx=None, desc=None, config=None, system=None):
     pass
 ```
 

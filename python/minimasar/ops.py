@@ -138,6 +138,7 @@ class Service(object):
         ('config_create_date','s'),
         ('config_version','s'),
         ('status','s'),
+        ('system', 's'),
     ]))
     def retrieveServiceConfigs(self, servicename=None, configname=None, configversion=None, system=None, eventid=None):
         if servicename not in (None, 'masar'):
@@ -173,12 +174,12 @@ class Service(object):
 
             _log.debug('retrieveServiceConfigs() w/ %s %s', cond, vals)
 
-            C.execute("""select id, name, created, next, desc
+            C.execute("""select id, name, created, next, desc, system
                                 from config
                                 %s;
                 """%cond, vals)
             ret = []
-            for id, name, created, next, desc in C.fetchall():
+            for id, name, created, next, desc, system in C.fetchall():
                 ret.append({
                     'config_idx':id,
                     'config_name':name,
@@ -186,6 +187,7 @@ class Service(object):
                     'config_desc':desc,
                     'config_version':u'0',
                     'status': 'active' if next is None else 'inactive',
+                    'system': system,
                 })
             return ret
 

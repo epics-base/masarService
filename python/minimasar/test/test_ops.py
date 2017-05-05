@@ -89,7 +89,8 @@ class TestConfig(unittest.TestCase):
                                     u'config_desc',
                                     u'config_create_date',
                                     u'config_version',
-                                    u'status'])
+                                    u'status',
+                                    u'system'])
 
         self.assertListEqual(R.value.tolist(), [
             ('config_idx', numpy.asarray([configid])),
@@ -97,7 +98,8 @@ class TestConfig(unittest.TestCase):
             ('config_desc', [u'desc']),
             ('config_create_date', [u'2017-01-28 21:43:28']),
             ('config_version', [u'0']),
-            ('status', [u'active'])
+            ('status', [u'active']),
+            ('system', [u'xx']),
         ])
 
         R = self.S.retrieveServiceConfigProps()
