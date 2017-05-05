@@ -187,7 +187,7 @@ class Service(object):
                     'config_desc':desc,
                     'config_version':u'0',
                     'status': 'active' if next is None else 'inactive',
-                    'system': system,
+                    'system': system or '',
                 })
             return ret
 
