@@ -112,7 +112,7 @@ Methods
     ('status','as'),
     ('system','as'),
 ]))
-def retrieveServiceConfigs(servicename=None, configname=None, configversion=None, system=None, eventid=None):
+def retrieveServiceConfigs(servicename=None, configname=None, configversion=None, system=None, eventid=None, status=None):
     pass
 ```
 
@@ -120,6 +120,8 @@ Query for Configurations.
 Entry point call.
 Pass ```configname='all'``` to return all.
 Returned ```config_idx``` can be passed to ```retrieveServiceEvents()```.
+
+The argument 'status' may be None (aka all), 'active', or 'inactive'
 
 ```py
 @rpc(NTTable.buildType([

@@ -140,9 +140,11 @@ class Service(object):
         ('status','s'),
         ('system', 's'),
     ]))
-    def retrieveServiceConfigs(self, servicename=None, configname=None, configversion=None, system=None, eventid=None):
+    def retrieveServiceConfigs(self, servicename=None, configname=None, configversion=None, system=None, eventid=None, status=None):
         if servicename not in (None, 'masar'):
             _log.warning("Service names not supported")
+            return []
+        if status not in (None, 'active', 'inactive'):
             return []
         with self.conn as conn:
             C = conn.cursor()
@@ -160,9 +162,15 @@ class Service(object):
                 vals.append(idx)
 
             else:
+                if status=='active':
+                    cond.append('next is NULL')
+                elif status=='inactive':
+                    cond.append('next is not NULL')
+
                 if configname not in (None, u'*', u'all'):
                     cond.append('name glob ?')
                     vals.append(configname)
+
                 if system not in (None, u'*', u'all'):
                     cond.append('system glob ?')
                     vals.append(system)
