@@ -81,6 +81,24 @@
 </ul>
 </div>
 
+<h2 class="nocount">New Server</h2>
+
+<p>A second alternative server is available as an alternative to the "classic" server
+described below.  This new server (
+<a href="https://github.com/epics-base/masarService/blob/python/minimasar/README.md">minimasar</a>
+) uses sqlite3 for storage, but with a different
+<a href="https://github.com/epics-base/masarService/blob/python/minimasar/db.py">schema</a>
+which is not compatible with the classic schema.
+A conversion tool does not yet exist.
+</p>
+
+<p>The minimasar server provides an RPC interface which is compatible with the
+classic server, with some additional calls.  See the
+<a href="https://github.com/epics-base/masarService/blob/interface.md">interface specification</a>
+for details.
+</p>
+
+
 <h2 class="nocount" id="abstract">Abstract</h2>
 
 <p>MASAR (MAchine Snapshot, Archiving, and Retrieve) is an EPICS V4 service.
@@ -105,7 +123,7 @@ channels from V3 IOC, and saves the data as a snapshot event into the database.
 <h2 id="quickstart">Quick Start</h2>
 
 <p>See the
-<a href="https://github.com/epics-base/masarService/blob/debpkg/README.md">README</a>
+<a href="https://github.com/epics-base/masarService/blob/README.md">README</a>
 for instructions for building/running MASAR.
 </p>
 

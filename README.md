@@ -94,7 +94,7 @@ To run the daemon
 
 ```sh
 export MASAR_SQLITE_DB=${PWD}/masar.db
-./cpp/bin/linux-*/masarServiceRun masarService
+./bin/linux-*/masarServiceRun masarService
 ```
 
 Running the Qt client

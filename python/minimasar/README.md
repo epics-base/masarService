@@ -1,3 +1,5 @@
+MINIMASAR Server
+================
 
 ```sh
 $ git clone https://github.com/mdavidsaver/masarService.git
@@ -11,6 +13,10 @@ EPICS_BASE=.../epics-base
 EOF
 $ make
 ```
+
+In addition to the EPICS dependenecies listed,
+minimasar also needs
+the [cothread python module](http://controls.diamond.ac.uk/downloads/python/cothread/).
 
 Run automatic tests
 

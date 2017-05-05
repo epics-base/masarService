@@ -184,9 +184,6 @@ def getLiveMachine(**kws):
 ```
 
 
-Proposed Additions
-------------------
-
 ```py
 configTable = NTTable.buildType([
     ('channelName', 'as'),
