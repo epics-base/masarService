@@ -343,14 +343,14 @@ class Service(object):
     @rpc(multiType)
     def saveSnapshot(self, servicename=None, configname=None, comment=None, user=None, desc=None):
         if servicename not in (None, 'masar'):
-            raise RuntimeError("Bad servicename")
+            raise RemoteError("Bad servicename")
         with self.conn as conn:
             C = conn.cursor()
 
             C.execute('select id from config where name=? and next is NULL', (configname,))
             cid = C.fetchone()
             if cid is None:
-                raise ValueError("Unknown config '%s'"%configname)
+                raise RemoteError("Unknown config '%s'"%configname)
             cid = cid[0]
             _log.debug("saveSnapshot() for '%s'(%s)", configname, cid)
 
@@ -388,7 +388,7 @@ class Service(object):
     def updateSnapshotEvent(self, eventid=None, configname=None, user=None, desc=None):
         eventid = int(eventid)
         if user is None or desc is None:
-            raise ValueError("must provide user name and description")
+            raise RemoteError("must provide user name and description")
         with self.conn as conn:
             C = conn.cursor()
             _log.debug("updateSnapshotEvent() update %s with %s '%s'", eventid, user, desc[20:])
