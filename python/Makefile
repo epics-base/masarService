@@ -76,6 +76,7 @@ PY += minimasar/__init__.py
 PY += minimasar/db.py
 PY += minimasar/ops.py
 PY += minimasar/server.py
+PY += minimasar/client.py
 PY += minimasar/gather/__init__.py
 PY += minimasar/gather/sim.py
 PY += minimasar/gather/ca.py
