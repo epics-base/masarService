@@ -74,6 +74,7 @@ PY += pymasarsqlite/db/masar-sqlite.sql
 
 PY += minimasar/__init__.py
 PY += minimasar/db.py
+PY += minimasar/convert.py
 PY += minimasar/ops.py
 PY += minimasar/server.py
 PY += minimasar/client.py

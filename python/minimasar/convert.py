@@ -9,8 +9,8 @@ import logging
 _log = logging.getLogger(__name__)
 
 import sqlite3 as sqlite
-from db import connect, encodeValue
-from ops import normtime, jsonarray
+from db import connect, encodeValue, ConcatUnique
+from ops import normtime
 import pickle, json
 
 def getargs():
@@ -170,7 +170,7 @@ def eventpvEntry (masar, pvid, eventid):
         elif masar['dbr_type'] in [2,6]: value = masar['d_value']
         else: value = masar['l_value']
 
-    value = json.dumps(value, default=jsonarray)
+    value = encodeValue(value)
  
     ret = {
         'event': eventid,
@@ -186,8 +186,7 @@ def eventpvEntry (masar, pvid, eventid):
     
     return ret
     
-def eventpvAdd (eventpv, cTarget):
-    _log.debug("eventpvAdd() masar_data_id: %s", eventpv['oldid'])
+def eventpvAdd (eventpvs, cTarget):
     
     """
     id	*auto*	INTEGER
@@ -201,10 +200,10 @@ def eventpvAdd (eventpv, cTarget):
     value	masar_data\d_value, s_value, l_value, array_value	TEXT
     """
     
-    cTarget.execute("""
+    cTarget.executemany("""
         INSERT INTO event_pv(event, pv, dtype, severity, status, time, timens, value)
         VALUES (:event, :pv, :dtype, :severity, :status, :time, :timens, :value)
-        """, eventpv)
+        """, eventpvs)
     
     return cTarget.lastrowid
     
@@ -217,6 +216,8 @@ def main(args):
 
     connSource = sqlite.connect(args.source)
     connSource.row_factory = sqlite.Row
+    connSource.create_aggregate('py_concat_unique', 1, ConcatUnique)
+
     connTarget = connect(args.target)
     cTarget = connTarget.cursor()
     
@@ -231,16 +232,18 @@ def main(args):
                 service_config_desc, service_config_status, service_config_id
             FROM service_config
             """).fetchall()):
-            print 'config %d/%d'%(confn, numconf)
+            print 'config %s %d/%d'%(ServiceConfig['service_config_name'], confn, numconf)
  
              # Build config entry, enter it, return new id (needed by config_pv and event)
             newConfigID = configAdd(configEntry(ServiceConfig), cTarget)
+
+            name2id = {}
 
             # Loop through all pVs in config          
             for pv in connSource.execute("""
                 SELECT pv.pv_id, pv.pv_name, 
                     pvgroup__serviceconfig.service_config_id,
-                    group_concat(pv_group.pv_group_name) AS pv_group_name
+                    py_concat_unique(pv_group.pv_group_name) AS pv_group_name
                 FROM pv
                     JOIN pv__pvgroup
                         ON pv.pv_id = pv__pvgroup.pv_id
@@ -251,11 +254,11 @@ def main(args):
                 WHERE pvgroup__serviceconfig.service_config_id=?
                 GROUP BY pv.pv_id
                 """, (ServiceConfig['service_config_id'],)).fetchall():
-                 
+
                 # print ('p', end='') 
-                pvAdd(pvEntry(pv, newConfigID), cTarget)
+                name2id[pv['pv_name']] = pvAdd(pvEntry(pv, newConfigID), cTarget)
                 
-            for event in connSource.execute("""
+            for eventn, event in enumerate(connSource.execute("""
                 SELECT service_event_UTC_time,
                     service_event_user_name,
                     service_event_user_tag,
@@ -263,10 +266,15 @@ def main(args):
                     service_event_id
                 FROM service_event
                 WHERE service_config_id=?
-                """, (ServiceConfig['service_config_id'], )).fetchall():
-                    
+                """, (ServiceConfig['service_config_id'], )).fetchall()):
+
+                if eventn%20==0:
+                    print 'event', eventn
+
                 newEventID = eventAdd(eventEntry(event, newConfigID), cTarget)
-                
+
+                rows = []
+
                 for masar in connSource.execute("""
                     SELECT dbr_type, severity, status, ioc_timestamp,
                         ioc_timestamp_nano, dbr_type, d_value, s_value, l_value,
@@ -276,17 +284,15 @@ def main(args):
                     """, (event['service_event_id'],)).fetchall():
                     
                     # convert pv_name to new pv id number
-                    newpvID = connTarget.execute("""
-                        SELECT id
-                        FROM config_pv
-                        WHERE name=?
-                        """, (masar['pv_name'],)).fetchone()
-                    
+                    newpvID = name2id.get(masar['pv_name'])
+
                     if newpvID is None:
-                        print ("{} exists in the masar_data table, but not in the pv table".format(masar['pv_name']))
-                        pv_missing += pv_missing
+                        print ("Warning: {} exists in the masar_data table, but not in the pv table".format(masar['pv_name']))
+                        pv_missing += 1
                     else:
-                        eventpvAdd (eventpvEntry (masar, newpvID['id'], newEventID), cTarget)
+                        rows.append(eventpvEntry (masar, newpvID, newEventID))
+
+                eventpvAdd (rows, cTarget)
 
     finally:
         connTarget.commit()
