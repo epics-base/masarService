@@ -2,24 +2,48 @@
 import logging
 _log = logging.getLogger(__name__)
 
-import sqlite3, json, sys
+from types import NoneType
+import sqlite3, json, sys, zlib
 
-if sys.version_info>=(3,0,0):
-    def loads(V):
-        try:
-            return json.loads(V.decode('ascii'))
-        except:
-            _log.exception("JSON serialization error: \"%s\""%V)
-            raise
-    sqlite3.register_converter('json', loads)
-else:
-    sqlite3.register_converter('json', json.loads)
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
+
+import numpy
+
+# like buildin group_concat() which also does de-duplication, but doesn't preserve order
+class ConcatUnique(object):
+    def __init__(self):
+        self.values = set()
+    def step(self, V):
+        self.values.add(str(V))
+    def finalize(self):
+        return ', '.join(map(str,self.values))
+
+def encodeValue(V):
+    """Mangle python type for storage in event_pv.value
+    """
+    if isinstance(V, (int, long, float, unicode, bytes, NoneType)):
+        return V # store directly
+    elif isinstance(V, (list, tuple, numpy.ndarray)):
+        return buffer(zlib.compress(pickle.dumps(numpy.asarray(V))))
+    else:
+        _log.exception("Error encoding %s", V)
+        raise ValueError("Can't encode type %s"%type(V))
+
+def decodeValue(S):
+    if isinstance(S, buffer):
+        return pickle.loads(zlib.decompress(S))
+    else:
+        return S
 
 def connect(fname):
     conn = sqlite3.connect(fname,
                            isolation_level='DEFERRED',
                            detect_types=sqlite3.PARSE_COLNAMES)
     try:
+        conn.create_aggregate('py_concat_unique', 1, ConcatUnique)
         conn.execute("PRAGMA foreign_keys = ON;")
         conn.row_factory = sqlite3.Row
         C = conn.cursor()
@@ -91,7 +115,7 @@ CREATE TABLE event_pv (
   status INTEGER NOT NULL,
   time INTEGER NOT NULL,
   timens INTEGER NOT NULL,
-  value TEXT NOT NULL,
+  value NOT NULL,
   UNIQUE(event, pv)
 );
 CREATE INDEX event_pv_event ON event_pv(event);

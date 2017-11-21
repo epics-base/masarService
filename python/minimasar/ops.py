@@ -1,5 +1,5 @@
 
-import logging, time, json
+import logging, time
 from calendar import timegm
 _log = logging.getLogger(__name__)
 
@@ -16,6 +16,8 @@ import numpy
 from p4p.rpc import RemoteError, rpc
 from p4p.nt import NTScalar, NTMultiChannel, NTTable
 from p4p.wrapper import Value
+
+from .db import encodeValue, decodeValue
 
 multiType = NTMultiChannel.buildType('av', extra=[
     ('dbrType', 'ai'),
@@ -40,12 +42,6 @@ configTable = NTTable([
     ('status','s'),
     ('system', 's'),
 ])
-
-def jsonarray(val):
-    if isinstance(val, numpy.ndarray):
-        return val.tolist()
-    else:
-        raise TypeError("Can't serialize %s"%type(val))
 
 def normtime(tstr):
     'Normalize user provided time string'
@@ -330,7 +326,7 @@ class Service(object):
             S, NS = timestr2tuple(C.fetchone()[0])
 
             C.execute("""select name, tags, groupName, readonly, dtype, severity, status, time, timens,
-                        value as "value [json]"
+                        value
                         from event_pv inner join config_pv on event_pv.pv = config_pv.id
                         where event_pv.event = ?
                         """, (eventid,))
@@ -339,14 +335,14 @@ class Service(object):
         sevr = list(map(itemgetter('severity'), L))
 
         def unpack(I):
-            V, dbr = I['value'], I['dtype']
-            if dbr!=0 and isinstance(V, list):
-                V = numpy.asarray(V)
-            return V
+            try:
+                return decodeValue(I['value'])
+            except:
+                raise ValueError("Error decoding %s", type(I['value']))
 
         return {
             'channelName': list(map(itemgetter('name'), L)),
-            'value': list(map(unpack, L)),   # call to json.loads happening in sqlite3 converter
+            'value': list(map(unpack, L)),
             'severity': sevr,
             'isConnected': list(map(lambda S: S<=3, sevr)),
             'status': list(map(itemgetter('status'), L)),
@@ -402,7 +398,7 @@ class Service(object):
                               ret['status'].tolist(),
                               ret['secondsPastEpoch'].tolist(),
                               ret['nanoseconds'].tolist(),
-                              [json.dumps(V, default=jsonarray) for V in ret['value']],
+                              [encodeValue(V) for V in ret['value']],
                           ))
 
             _log.debug("event %s with %s %s", eid, len(names), C.rowcount)
