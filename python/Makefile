@@ -9,7 +9,6 @@ PY += masarclient/control.py
 PY += masarclient/display.py
 PY += masarclient/gatherV3Data.py
 PY += masarclient/masarClient.py
-PY += masarclient/masarClient2.py
 PY += masarclient/ntmultiChannel.py
 PY += masarclient/ntnameValue.py
 PY += masarclient/ntscalar.py
