@@ -48,7 +48,7 @@ def main(args):
     S = Server(providers="masar masarnturi")
 
     _log.info("Run server")
-    S.start()
+    #S.start()
     _log.info("Started")
 
     try:
