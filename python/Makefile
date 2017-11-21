@@ -31,47 +31,6 @@ PY += masarclient/ui/ui_commentdiag.py
 PY += masarclient/ui/ui_masar.py
 PY += masarclient/ui/verifysetpoint.py
 
-PY += masarserver/__init__.py
-PY += masarserver/dslPY.py
-PY += masarserver/dslPYMongo.py
-PY += masarserver/dslPYSQLite.py
-
-PY += masarutils/__init__.py
-PY += masarutils/addmasarconfigs.py
-PY += masarutils/masarconfigmanager.py
-PY += masarutils/migratesqlite2mongo.py
-PY += masarutils/ui_dbmanager.py
-
-PY += pymasarmongo/__init__.py
-PY += pymasarmongo/config/__init__.py
-PY += pymasarmongo/config/_config.py
-PY += pymasarmongo/db/__init__.py
-PY += pymasarmongo/db/utils.py
-PY += pymasarmongo/pymasarmongo/__init__.py
-PY += pymasarmongo/pymasarmongo/_logger.py
-PY += pymasarmongo/pymasarmongo/pymasar.py
-PY += pymasarmongo/utils/__init__.py
-
-PY += pymasarsqlite/__init__.py
-PY += pymasarsqlite/db/__init__.py
-PY += pymasarsqlite/db/configmasardb.py
-PY += pymasarsqlite/db/createmasardb.py
-PY += pymasarsqlite/db/masarsqlite.py
-PY += pymasarsqlite/db/settings.py
-PY += pymasarsqlite/masardata/__init__.py
-PY += pymasarsqlite/masardata/masardata.py
-PY += pymasarsqlite/pvgroup/__init__.py
-PY += pymasarsqlite/pvgroup/pv.py
-PY += pymasarsqlite/pvgroup/pvgroup.py
-PY += pymasarsqlite/service/__init__.py
-PY += pymasarsqlite/service/service.py
-PY += pymasarsqlite/service/serviceconfig.py
-PY += pymasarsqlite/service/serviceconfigprop.py
-PY += pymasarsqlite/service/serviceevent.py
-PY += pymasarsqlite/utils.py
-
-PY += pymasarsqlite/db/masar-sqlite.sql
-
 PY += minimasar/__init__.py
 PY += minimasar/db.py
 PY += minimasar/convert.py
