@@ -145,10 +145,10 @@ class client():
         return (R.channelName,
                 R.value,
                 R.dbrType,
-                R.userTag,
                 R.isConnected,
                 R.secondsPastEpoch,
                 R.nanoseconds,
+                R.userTag,
                 R.severity,
                 R.status,
                 R.message)
