@@ -173,10 +173,11 @@ class Service(object):
 
     @rpc(configTable)
     def retrieveServiceConfigs(self, servicename=None, configname=None, configversion=None, system=None, eventid=None, status=None):
-        if servicename not in (None, 'masar'):
+        if servicename not in (None, u'masar'):
             _log.warning("Service names not supported")
             return []
-        if status not in (None, 'active', 'inactive'):
+        if status not in (None, u'', u'active', u'inactive'):
+            _log.warning("Request matching unknown status %s", status)
             return []
         with self.conn as conn:
             C = conn.cursor()
@@ -187,23 +188,23 @@ class Service(object):
             _log.debug("retrieveServiceConfigs() configname=%s configverson=%s system=%s",
                        configname, configversion, system)
 
-            if eventid not in (None, u'*'):
+            if eventid not in (None, u'', u'*', 0):
                 C.execute('select config from event where id=?', (int(eventid),))
                 idx = C.fetchone()['config']
                 cond.append('id=?')
                 vals.append(idx)
 
             else:
-                if status=='active':
+                if status==u'active':
                     cond.append('next is NULL')
-                elif status=='inactive':
+                elif status==u'inactive':
                     cond.append('next is not NULL')
 
-                if configname not in (None, u'*', u'all'):
+                if configname not in (None, u'', u'*', u'all'):
                     cond.append('name glob ?')
                     vals.append(configname)
 
-                if system not in (None, u'*', u'all'):
+                if system not in (None, u'', u'*', u'all'):
                     cond.append('system glob ?')
                     vals.append(system)
 
@@ -228,14 +229,14 @@ class Service(object):
     ]))
     def retrieveServiceConfigProps(self, propname=None, servicename=None, configname=None):
         if servicename not in (None, '*', 'masar') or propname not in (None, '*', 'system'):
-            _log.warning("Service names or non 'system' prop names not supported")
+            _log.warning("Service names or non 'system' prop names not supported (%s, %s)", servicename, propname)
             return []
         with self.conn as conn:
             C = conn.cursor()
 
             cond = []
             vals = []
-            if configname not in (None, u'*'):
+            if configname not in (None, u'', u'*'):
                 cond.append('name glob ?')
                 vals.append(configname)
 
@@ -272,11 +273,11 @@ class Service(object):
             cond = ['user is not NULL']
             vals = []
             
-            if user not in (None, u'*'):
+            if user not in (None, u'', u'*'):
                 cond.append('user glob ?')
                 vals.append(user)
 
-            if comment not in (None, u'*'):
+            if comment not in (None, u'', u'*'):
                 cond.append('comment glob ?')
                 vals.append(comment)
 
@@ -287,11 +288,11 @@ class Service(object):
             # HACK instead of using julianday(), use lexial comparison,
             # which should produce the same result as we always store time
             # as "YYYY-MM-DD HH:MM:SS"
-            if start is not None:
+            if start not in (None, u''):
                 cond.append("event_time>=?")
                 vals.append(normtime(start))
 
-            if end is not None:
+            if end not in (None, u''):
                 cond.append("event_time<?")
                 vals.append(normtime(end))
 

@@ -68,7 +68,7 @@ class MASAR(object):
         """
         pass
     @rpccall("%ssaveSnapshot")
-    def saveSnapshot(configname='s', user='s', desc='s'):
+    def saveSnapshot(configname='s', user='s', desc='s', servicename='s'):
         """Take a new snapshot.
         
         Returns the same as retrieveSnapshot().
