@@ -10,6 +10,9 @@ from __future__ import division
 from __future__ import print_function
 #from __future__ import unicode_literals
 
+import logging
+_log = logging.getLogger(__name__)
+
 import os, sys, time, datetime, re, fnmatch, imp, traceback, platform
 
 from PyQt4.QtGui import (QApplication, QMainWindow, QMessageBox, QTableWidgetItem, QTableWidget,
@@ -1021,7 +1024,7 @@ Double click to view waveform data")
         try:
             rpcResult = self.mc.retrieveSnapshot(params)
         except:
-            return rpcResult
+            raise
         if not rpcResult:
             return False
         pvnames = rpcResult[0]
@@ -1662,6 +1665,7 @@ Or scroll down the SnapshotTab table if you like" %len(disConnectedPVs))
         try:
             rpcResult = self.mc.getLiveMachine(params, resp_time=30.0) # timeout after 30 seconds
         except:
+            _log.exception("Failed getLiveMachine")
             QMessageBox.warning(self,
                                 "Warning",
                                 "Except happened during getting live machine.")
@@ -2105,6 +2109,7 @@ Please refer Welcome to MASAR tab for help, then re-enter your search pattern.")
 
 
 def main(channelname=None):
+    logging.basicConfig(level=logging.INFO)
     app = QApplication(sys.argv)
     app.setOrganizationName("NSLS II")
     app.setOrganizationDomain("BNL")
