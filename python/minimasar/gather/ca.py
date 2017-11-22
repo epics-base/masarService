@@ -56,7 +56,7 @@ class Gatherer(object):
                 else:
                     ret['severity'].append(0)
                     ret['status'].append(0)
-                    ret['dbrType'].append(6)
+                    ret['dbrType'].append(7)
                     sec = int(time.time())
                     nsec = 0
 

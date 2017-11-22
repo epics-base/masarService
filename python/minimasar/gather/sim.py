@@ -101,7 +101,7 @@ class Gatherer(object):
                 ret['value'].append(0)
                 ret['severity'].append(4)
                 ret['status'].append(0)
-                ret['dbrType'].append(6) # DBF_DOUBLE
+                ret['dbrType'].append(7)
                 ret['isConnected'].append(False)
 
         return Value(multiType, ret)
