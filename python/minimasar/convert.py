@@ -38,7 +38,7 @@ def configEntry (config):
         'created': normtime(config['service_config_create_date']),
         'active': active,
         'desc': config['service_config_desc'],
-        'system': None,
+        'system': config['system'] or 'default',
         'oldid': config['service_config_id']
             }
 
@@ -229,8 +229,11 @@ def main(args):
         # Loop through all configurations
         for confn, ServiceConfig in enumerate(connSource.execute("""
             SELECT service_config_name, service_config_create_date, 
-                service_config_desc, service_config_status, service_config_id
+                service_config_desc, service_config_status, service_config.service_config_id,
+                service_config_prop.service_config_prop_value as system
             FROM service_config
+            LEFT OUTER JOIN service_config_prop ON service_config_prop.service_config_id=service_config.service_config_id
+            WHERE service_config_prop.service_config_prop_name='system'
             """).fetchall()):
             print 'config %s %d/%d'%(ServiceConfig['service_config_name'], confn, numconf)
  
