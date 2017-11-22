@@ -4,7 +4,7 @@ from p4p.rpc import rpcproxy, rpccall
 @rpcproxy
 class MASAR(object):
     @rpccall("%sretrieveServiceConfigs")
-    def retrieveServiceConfigs(configname='s', system='s', eventid='I', status='s'):
+    def retrieveServiceConfigs(configname='s', system='s', eventid='I', status='s', servicename='s'):
         """Entry point call
         
         Returns a table with columns: ::
@@ -68,7 +68,7 @@ class MASAR(object):
         """
         pass
     @rpccall("%ssaveSnapshot")
-    def saveSnapshot(configname=None, user=None, desc=None):
+    def saveSnapshot(configname='s', user='s', desc='s'):
         """Take a new snapshot.
         
         Returns the same as retrieveSnapshot().
@@ -79,8 +79,14 @@ class MASAR(object):
         """
         pass
     @rpccall("%supdateSnapshotEvent")
-    def updateSnapshotEvent(eventid=None, user=None, desc=None):
+    def updateSnapshotEvent(eventid='I', user='s', desc='s'):
         """Legacy method to complete a snapshot.
+        """
+        pass
+
+    @rpccall("%sgetCurrentValue")
+    def getCurrentValue(names='as'):
+        """Fetch current values of a list of PV names
         """
         pass
 

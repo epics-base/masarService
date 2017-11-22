@@ -430,6 +430,10 @@ class Service(object):
             }
 
     @rpc(multiType)
+    def getCurrentValue(self, names=None):
+        return self.gather(list(names))
+
+    @rpc(multiType)
     def getLiveMachine(self, **kws):
         return self.gather(list(kws.values()))
 
