@@ -4,16 +4,9 @@ include $(TOP)/configure/CONFIG_PY
 
 PY += masarclient/__init__.py
 PY += masarclient/alarm.py
-PY += masarclient/channelRPC.py
 PY += masarclient/control.py
 PY += masarclient/display.py
-PY += masarclient/gatherV3Data.py
 PY += masarclient/masarClient.py
-PY += masarclient/ntmultiChannel.py
-PY += masarclient/ntnameValue.py
-PY += masarclient/ntscalar.py
-PY += masarclient/nttable.py
-PY += masarclient/timeStamp.py
 PY += masarclient/ui/__init__.py
 PY += masarclient/ui/authendlg.py
 PY += masarclient/ui/commentdetail.py
