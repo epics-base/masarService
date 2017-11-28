@@ -12,11 +12,11 @@ Required dependencies
 * [PVDataCPP](http://epics-pvdata.sourceforge.net/)
 * [PVAccessCPP](http://epics-pvdata.sourceforge.net/)
 * [p4p](https://mdavidsaver.github.io/p4p/)
+* [cothread](http://controls.diamond.ac.uk/downloads/python/cothread/)
 
 Needed by Qt client UI
 
 * [PyQt4](http://www.riverbankcomputing.co.uk/software/pyqt/)
-* [cothread](http://controls.diamond.ac.uk/downloads/python/cothread/)
 
 
 ```sh
@@ -63,6 +63,7 @@ $ python -m minimasar.server --name masarService -L DEBUG ':memory:' -G sim
 ```
 
 Run daemon in CA client mode and store in ```masar.db```.
+The database file will be created if it does not exist.
 
 ```sh
 $ python -m minimasar.server --name masarService -L DEBUG masar.db -G ca
