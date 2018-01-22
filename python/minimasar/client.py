@@ -1,6 +1,8 @@
 
 from p4p.rpc import rpcproxy, rpccall
 
+from .ops import configType
+
 @rpcproxy
 class MASAR(object):
     @rpccall("%sretrieveServiceConfigs")
@@ -91,7 +93,7 @@ class MASAR(object):
         pass
 
     @rpccall("%sstoreServiceConfig")
-    def createServiceConfig(configname='s', desc='s', system='s', config='s'):
+    def createServiceConfig(configname='s', desc='s', system='s', config=configType.type):
         """Create a configuration.
 
         Returns the same as retrieveServiceConfigs()
@@ -111,7 +113,7 @@ class MASAR(object):
         """
         pass
     @rpccall("%sstoreServiceConfig")
-    def replaceServiceConfig(configname='s', oldidx='I', desc='s', system='s', config='s'):
+    def replaceServiceConfig(configname='s', oldidx='I', desc='s', system='s', config=configType.type):
         """Update a configuration.
 
         Provided 'configname' must exist, and provided 'oldidx' must be the 'config_idx'
