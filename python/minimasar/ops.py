@@ -107,7 +107,7 @@ class Service(object):
                     ):
 
                 C.execute('insert into config_pv(config, name, readonly, groupName, tags) VALUES (?,?,?,?,?);',
-                        (newidx, name, int(ro) or 0, group or '', tags or ''))
+                        (newidx, name, int(ro or 0), group or '', tags or ''))
 
             C.execute("""select id, name, created, active, next, desc, system
                                 from config
