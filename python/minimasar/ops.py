@@ -160,7 +160,7 @@ class Service(object):
                 cond.append('active=0')
 
             if len(cond)>0:
-                cond = ', '.join(cond)
+                cond = ' and '.join(cond)
 
                 C.execute('update config set %s where id=? and next is NULL'%cond, vals)
 
@@ -173,7 +173,7 @@ class Service(object):
 
     @rpc(configTable)
     def retrieveServiceConfigs(self, servicename=None, configname=None, configversion=None, system=None, eventid=None, status=None):
-        if servicename not in (None, u'masar'):
+        if servicename not in (None, u'', u'masar'):
             _log.warning("Service names not supported")
             return []
         if status not in (None, u'', u'active', u'inactive'):
@@ -209,7 +209,7 @@ class Service(object):
                     vals.append(system)
 
             if len(cond)>0:
-                cond = 'where '+(', '.join(cond))
+                cond = 'where '+(' and '.join(cond))
             else:
                 cond = ''
 
@@ -241,7 +241,7 @@ class Service(object):
                 vals.append(configname)
 
             if len(cond)>0:
-                cond = 'where '+(', '.join(cond))
+                cond = 'where '+(' and '.join(cond))
             else:
                 cond = ''
 
