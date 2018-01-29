@@ -21,12 +21,8 @@ for row in NTTable.unwrap(M.retrieveServiceConfigs(configname='example', status=
     assert oldidx is None, oldidx
     oldidx = row['config_idx']
 
-if oldidx is None:
-    print 'Create new config example'
-    newConf = M.createServiceConfig(configname='example', config=conf)
-else:
-    print 'Replace config', oldidx
-    newConf = M.replaceServiceConfig(configname='example', oldidx=oldidx, config=conf)
+print 'Create/Update config example'
+newConf = M.storeServiceConfig(configname='example', oldidx=oldidx, config=conf)
 
 idx = newConf.value.config_idx[0]
 

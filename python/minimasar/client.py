@@ -92,34 +92,25 @@ class MASAR(object):
         """
         pass
 
+    def createServiceConfig(*args, **kws):
+        'Deprecated in favor of storeServiceConfig()'
+        return self.storeServiceConfig(*args, **kws)
+    def replaceServiceConfig(*args, **kws):
+        'Deprecated in favor of storeServiceConfig()'
+        return self.storeServiceConfig(*args, **kws)
+
     @rpccall("%sstoreServiceConfig")
-    def createServiceConfig(configname='s', desc='s', system='s', config=configType.type):
-        """Create a configuration.
+    def storeServiceConfig(configname='s', oldidx='I', desc='s', system='s', config=configType.type):
+        """Create or Update a configuration.
 
-        Returns the same as retrieveServiceConfigs()
+        To create a configuration call with oldidx=None.  Will fail if provided configname
+        is already in use.
 
-        Fails if 'configname' already exists.
-
-        'config' must be a NTTable with: ::
-
-            configType = NTTable([
-                ('channelName', 's'),
-                ('readonly', '?'),
-                ('groupName', 's'),
-                ('tags', 's'),
-            ])
-
-        The 'channelName' column is mandatory.  The others are optional.
-        """
-        pass
-    @rpccall("%sstoreServiceConfig")
-    def replaceServiceConfig(configname='s', oldidx='I', desc='s', system='s', config=configType.type):
-        """Update a configuration.
-
-        Provided 'configname' must exist, and provided 'oldidx' must be the 'config_idx'
-        of the 'active' configuration with this name.
-
-        Otherwise the same as createServiceConfig()
+        To update a configuration, first call retrieveServiceConfigs() w/ configname, and status='active'.
+        The returned Value will include a single row containing a 'config_idx'.
+        Pass this 'config_idx' as oldidx to this method to replace the currently active config
+        with the newly provided config.  Will fail if oldidx no longer identies the active
+        version.
         """
         pass
 

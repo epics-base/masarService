@@ -83,7 +83,7 @@ class Service(object):
         return ret
 
     @rpc(configTable)
-    def storeServiceConfig(self, configname=None, oldidx=None, desc=None, config=None, system=None):
+    def storeServiceConfig(self, configname, oldidx=None, desc='', config=None, system=None):
         with self.conn as conn:
             C = conn.cursor()
 
