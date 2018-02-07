@@ -1,14 +1,7 @@
 
-import logging, zlib, numpy
-
-import ops_base
-
+import logging
+from minimasar import ops_base
 _log = logging.getLogger(__name__)
-
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
 
 try:
     from itertools import izip_longest, izip, repeat
@@ -17,60 +10,106 @@ except ImportError:
     izip = zip
 from operator import itemgetter
 
+import numpy
+import psycopg2
+
+from psycopg2 import extras
+import psycopg2.extensions
+#psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
+
+import json
+
 
 from p4p.rpc import RemoteError, rpc
 from p4p.nt import NTScalar, NTTable
 
 from types import NoneType
+
 from ops_base import ServiceBase
 
 class Service(ServiceBase):
     
-    parameterPlaceholder = "?"
-    userColumnName = 'user'
-    descriptionColumnName = 'desc'
-    
+    parameterPlaceholder = '%s'
+    userColumnName = 'userName'
+    descriptionColumnName = 'description'
+     
     def __init__(self, conn, gather=None, sim=False):
         
         super(Service, self).__init__(conn, gather, sim)
         
-    
     def encodeValue(self, V):
-        """Mangle python type for storage in event_pv.value
+        """Value always stored as json string. 
         """
-        if isinstance(V, (int, long, float, unicode, bytes, NoneType)):
-            return V # store directly
-        elif isinstance(V, (list, tuple, numpy.ndarray)):
-            return buffer(zlib.compress(pickle.dumps(numpy.asarray(V))))
+        #if isinstance(V, (int, long, float, unicode, bytes, list, tuple, NoneType)):
+        #    return V # store directly
+        if isinstance(V, (int, long, float, unicode, bytes, list, tuple, NoneType, numpy.ndarray)):
+            return json.dumps(numpy.asarray(V).tolist())
         else:
             _log.exception("Error encoding %s", V)
             raise ValueError("Can't encode type %s"%type(V))
 
-    def decodeValue(self, S):
-        if isinstance(S, buffer):
-            return pickle.loads(zlib.decompress(S))
-        elif isinstance(S, unicode):
-            return S
-        else:
-            return float(S)
+    def decodeValue(self, V):
+        array = numpy.asarray(json.loads(V))
+        if array.size == 1:
+            return array.item(0)
+        return array
         
+  
+    @rpc(ops_base.configTable)
+    def storeServiceConfig(self, configname=None, oldidx=None, desc=None, config=None, system=None):
+        with self.conn as conn:
+        
+            C = conn.cursor()
+          
+            _log.debug("storeServiceConfig() %s(%s)", configname, oldidx)
+
+            C.execute('insert into config(name, description, created, system) values (%s,%s,%s,%s) returning id;', (configname, desc, self.now(), system))
+            newidx = C.fetchone()[0]
+            
+            if oldidx is not None:
+                # update existing row only if it was previously active
+                C.execute('update config set next=%s where id=%s and next is NULL', (newidx, int(oldidx)))
+                #conn.commit()
+
+            #if C.execute('select count(*) from config where name=%s and next is NULL and active=1', (configname,)).fetchone()[0]!=1:
+            C.execute('select count(*) from config where name=%s and next is NULL and active=1', (configname,))
+            
+            if(C.fetchone()[0] != 1):
+                # rollback will undo our insert
+                raise RemoteError("Provided configname and oldidx ('%s' and %s) are not consistent"%(configname, oldidx))
+
+            for name, ro, group, tags in izip_longest(
+                        config.value.channelName,
+                        config.get('value.readonly', []),
+                        config.get('value.groupName', []),
+                        config.get('value.tags', []),
+                    ):
+
+                C.execute('insert into config_pv(config, name, readonly, groupName, tags) VALUES (%s,%s,%s,%s,%s);',
+                        (newidx, name, int(ro) or 0, group or '', tags or ''))
+
+            C.execute('select id, name, created, active, next, description, system from config where id=%s;', (newidx,))
+
+            _log.info("Store configuration %s as %s (old %s)", configname, newidx, oldidx)
+
+            return self._getConfig(C)
+
+  
     @rpc(ops_base.configType)     
     def loadServiceConfig(self, configid=None):
         configid = int(configid)
         with self.conn as conn:
-            C = conn.cursor()
+            C = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-            R = C.execute('select id from config where id=?;', (configid,)).fetchone()
+            C.execute('select id from config where id=%s', (configid,))
+            R = C.fetchone()
             if R is None:
                 raise RemoteError("Unknown configid %s"%configid)
 
-            C.execute('select name as channelName, tags, groupName, readonly from config_pv where config=?;', (int(configid),))
+            C.execute('select name as "channelName", readonly, groupName as "groupName", tags from config_pv where config=%s;', (int(configid),))
             _log.debug("Fetch configuration %s", configid)
             
-            tmp = C.fetchall()
-            print tmp
-            
-            return tmp
+            return C.fetchall()
         
     @rpc(ops_base.configTable)
     def retrieveServiceConfigs(self, servicename=None, configname=None, configversion=None, system=None, eventid=None, status=None):
@@ -90,7 +129,7 @@ class Service(ServiceBase):
                        configname, configversion, system)
 
             if eventid not in (None, u'', u'*', 0):
-                C.execute('select config from event where id=' + self.parameterPlaceholder, (int(eventid),))
+                C.execute('select config from event where id=%s', (int(eventid),))
                 idx = C.fetchone()['config']
                 cond.append('id=' + self.parameterPlaceholder)
                 vals.append(idx)
@@ -102,11 +141,11 @@ class Service(ServiceBase):
                     cond.append('next is not NULL')
 
                 if configname not in (None, u'', u'*', u'all'):
-                    cond.append('name glob ?')
+                    cond.append('name like %s')
                     vals.append(configname)
 
                 if system not in (None, u'', u'*', u'all'):
-                    cond.append('system glob ?')
+                    cond.append('system like %s')
                     vals.append(system)
 
             if len(cond)>0:
@@ -116,7 +155,7 @@ class Service(ServiceBase):
 
             _log.debug('retrieveServiceConfigs() w/ %s %s', cond, vals)
 
-            C.execute("""select id, name, created, active, next, desc, system
+            C.execute("""select id, name, created, active, next, description, system
                                 from config
                                 %s;
                 """%cond, vals)
@@ -138,7 +177,7 @@ class Service(ServiceBase):
             cond = []
             vals = []
             if configname not in (None, u'', u'*'):
-                cond.append('name glob ?')
+                cond.append('name like %s')
                 vals.append(configname)
 
             if len(cond)>0:
@@ -159,59 +198,29 @@ class Service(ServiceBase):
                         'system_val':system,
                         })
             return R
-    
-    @rpc(ops_base.configTable)
-    def storeServiceConfig(self, configname=None, oldidx=None, desc=None, config=None, system=None):
-        with self.conn as conn:
-            C = conn.cursor()
-
-            _log.debug("storeServiceConfig() %s(%s)", configname, oldidx)
-            
-            C.execute('insert into config(name, desc, created, system) values (?,?,?,?);', (configname, desc, self.now(), system))
-            newidx = C.lastrowid
-            
-            if oldidx is not None:
-                # update existing row only if it was previously active
-                C.execute('update config set next=? where id=? and next is NULL', (newidx, int(oldidx)))
-
-            if C.execute('select count(*) from config where name=? and next is NULL and active=1', (configname,)).fetchone()[0]!=1:
-                # rollback will undo our insert
-                raise RemoteError("Provided configname and oldidx ('%s' and %s) are not consistent"%(configname, oldidx))
-
-            for name, ro, group, tags in izip_longest(
-                        config.value.channelName,
-                        config.get('value.readonly', []),
-                        config.get('value.groupName', []),
-                        config.get('value.tags', []),
-                    ):
-
-                C.execute('insert into config_pv(config, name, readonly, groupName, tags) VALUES (?,?,?,?,?);',
-                        (newidx, name, int(ro) or 0, group or '', tags or ''))
-
-            C.execute('select id, name, created, active, next, desc, system from config where id=?;', (newidx,))
-
-            _log.info("Store configuration %s as %s (old %s)", configname, newidx, oldidx)
-
-            return self._getConfig(C)
-    
-
+        
+        
     @rpc(ops_base.configTable)
     def modifyServiceConfig(self, configid=None, status=None):
         configid = int(configid)
         if status not in (None, 'active', 'inactive'):
             raise RemoteError("Unsupported status '%s'"%status)
         with self.conn as conn:
-            C = conn.cursor()
+            C = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-            R = C.execute('select active, next from config where id=?', (int(configid),)).fetchone()
+            C.execute('select active, next from config where id=%s', (int(configid),))
+            R = C.fetchone()
             if R is None:
                 raise RemoteError("Unknown configid %s"%configid)
             if R['next'] is not None:
                 raise RemoteError("Can't modify superceeded configuration")
+            
+            C.close()
+            
+            C = conn.cursor()
 
             cond = []
-            vals = [configid]
-
+            
             if status=='active':
                 cond.append('active=1')
             elif status=='inactive':
@@ -219,18 +228,14 @@ class Service(ServiceBase):
 
             if len(cond)>0:
                 cond = ', '.join(cond)
+                 
+                C.execute("update config set {} where id={} and next is NULL".format(cond, configid))
 
-                C.execute('update config set %s where id=? and next is NULL'%cond, vals)
-
-            C.execute("""select id, name, created, active, next, desc, system
-                                from config
-                                where id=?;
-                """, (configid,))
+            C.execute('select id, name, created, active, next, description, system from config where id=%s;', (configid,))
 
             return self._getConfig(C)
 
 
-   
     @rpc(NTTable([
         ('event_id','i'),
         ('config_id','i'),
@@ -240,69 +245,75 @@ class Service(ServiceBase):
     ]))
     def retrieveServiceEvents(self, configid=None, start=None, end=None, comment=None, user=None, eventid=None):
         with self.conn as conn:
-            C = conn.cursor()
+            C = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-            cond = ['user is not NULL']
+            cond = ['userName is not NULL']
             vals = []
             
             if user not in (None, u'', u'*'):
-                cond.append('user glob ?')
+                cond.append('userName like %s')
                 vals.append(user)
 
             if comment not in (None, u'', u'*'):
-                cond.append('comment glob ?')
+                cond.append('comment like %s')
                 vals.append(comment)
 
             if configid not in (None, u'*'):
-                cond.append('config=?')
-                vals.append(int(configid))
+                cond.append('config=%s')
+                vals.append(configid)
 
             # HACK instead of using julianday(), use lexial comparison,
             # which should produce the same result as we always store time
             # as "YYYY-MM-DD HH:MM:SS"
             if start not in (None, u''):
-                cond.append("event_time>=?")
+                cond.append("created>=%s")
                 vals.append(ops_base.normtime(start))
 
             if end not in (None, u''):
-                cond.append("event_time<?")
+                cond.append("created<%s")
                 vals.append(ops_base.normtime(end))
 
             if len(cond)>0:
-                cond = 'where '+(' and  '.join(cond))
+                cond = 'where '+(' and '.join(cond))
             else:
                 cond = ''
 
             _log.debug("retrieveServiceEvents() %s %s", cond, vals)
-
+            
+            # NOTE: the string inserted into the {} placeholder may in turn contain multiple placeholders.
+            #tmp = "select id as event_id, config as config_id, comment as comments, created as event_time, userName as user_name from event {} order by config_id, event_time".format(cond)
+            #tmp2 = tmp.format(vals)
+            
+            #C.execute(tmp, vals)
+            
             C.execute("""select id as event_id,
                                 config as config_id,
                                 comment as comments,
                                 created as event_time,
-                                user as user_name
+                                userName as user_name
                                 from event
                                 %s
                                 order by config_id, event_time
-                """%cond, vals)
+                   """%cond, vals)
             return C.fetchall()
-         
+        
 
     @rpc(ops_base.multiType)
     def retrieveSnapshot(self, eventid=None, start=None, end=None, comment=None):
         # start, end, and comment ignored
         eventid = int(eventid)
         with self.conn as conn:
-            C = conn.cursor()
+            C = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
             _log.debug("retrieveSnapshot() %d", eventid)
 
-            C.execute('select created from event where id=?', (eventid,))
+            C.execute('select created from event where id=%s', (eventid,))
             S, NS = ops_base.timestr2tuple(C.fetchone()[0])
 
-            C.execute("""select name, tags, groupName, readonly, dtype, severity, status, time, timens,
+            C.execute("""select name, tags, groupname, readonly, dtype, severity, status, time, timens,
                         value
                         from event_pv inner join config_pv on event_pv.pv = config_pv.id
-                        where event_pv.event = ?
+                        where event_pv.event = %s
                         """, (eventid,))
             L = C.fetchall()
 
@@ -323,7 +334,7 @@ class Service(ServiceBase):
             'secondsPastEpoch': list(map(itemgetter('time'), L)),
             'nanoseconds': list(map(itemgetter('timens'), L)),
             'dbrType': list(map(itemgetter('dtype'), L)),
-            'groupName': list(map(itemgetter('groupName'), L)),
+            'groupName': list(map(itemgetter('groupname'), L)),
             'readonly': list(map(itemgetter('readonly'), L)),
             'tags': list(map(itemgetter('tags'), L)),
             'timeStamp': {
@@ -340,30 +351,32 @@ class Service(ServiceBase):
         if servicename not in (None, 'masar'):
             raise RemoteError("Bad servicename")
         with self.conn as conn:
-            C = conn.cursor()
+            C = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-            C.execute('select id from config where name=? and next is NULL and active=1;', (configname,))
+            C.execute('select id from config where name=%s and next is NULL and active=1;', (configname,))
             cid = C.fetchone()
+          
             if cid is None:
                 raise RemoteError("Unknown config '%s'"%configname)
-            cid = cid[0]
-            _log.debug("saveSnapshot() for '%s'(%s)", configname, cid)
+            _cid = cid[0]
+            _log.debug("saveSnapshot() for '%s'(%s)", configname, _cid)
 
-            C.execute('select id, name, tags, groupName, readonly from config_pv where config=?;', (cid,))
+            C.execute('select id, name, tags, groupName, readonly from config_pv where config=%s;', (_cid,))
             config = C.fetchall()
-
+             
             pvid  = list(map(itemgetter('id'), config))
             names = list(map(itemgetter('name'), config))
-
+           
             ret = self.gather(names)
             _log.debug("Gather complete")
 
-            C.execute('insert into event(config, user, comment, created) values (?,?,?,?);', (cid, user, desc, self.now()))
-            eid = C.lastrowid
+            C.execute('insert into event(config, userName, comment, created) values (%s,%s,%s,%s) returning id;', (_cid, user, desc, self.now()))
+            
+            eid = C.fetchone()[0]
             _log.debug("Create event %s", eid)
 
             C.executemany("""insert into event_pv(event, pv, dtype, severity, status, time, timens, value)
-                                         values  (?    , ? , ?    , ?       , ?     , ?   , ?     , ?    );""",
+                                         values  (%s    , %s , %s    , %s       , %s     , %s   , %s     , %s    );""",
                           izip(
                               repeat(eid, len(names)),
                               pvid,
@@ -388,14 +401,16 @@ class Service(ServiceBase):
             C = conn.cursor()
             _log.debug("updateSnapshotEvent() update %s with %s '%s'", eventid, user, desc[20:])
 
-            evt = C.execute('select config.name from event inner join config on event.config=config.id where event.id=?',
-                            (eventid,)).fetchone()
+            C.execute('select config.name from event inner join config on event.config=config.id where event.id=%s',
+                            (eventid,))
+            evt = C.fetchone()
+            
             if evt is None:
                 raise RemoteError("No event")
             elif configname is not None and configname!=evt[0]:
                 raise RemoteError('eventid and configname are inconsistent')
 
-            C.execute('update event set user=?, comment=? where id=? and user is NULL and comment is NULL',
+            C.execute('update event set userName=%s, comment=%s where id=%s and userName is NULL and comment is NULL',
                       (user, desc, eventid))
 
             _log.debug("changed %s", C.rowcount)

@@ -1,25 +1,54 @@
 
+
 import unittest
 
-from p4p.wrapper import Value, Type
+from p4p.wrapper import Value
 from p4p.nt import NTTable
 
-from minimasar.db import connect
-from minimasar.ops import Service
+from minimasar.db_postgres import connect
+from minimasar.ops_postgres import Service
 
 from p4p.rpc import RemoteError
 
 import numpy
 from numpy.testing import assert_equal
-from minimasar import ops_base
+from minimasar import ops_base, db_postgres
+
+#import dbsettings_postgres
+
+import testing.postgresql
+from sqlalchemy import create_engine
+import psycopg2
+
+    # Generate Postgresql class which shares the generated database
+Postgresql = testing.postgresql.PostgresqlFactory(cache_initialized_db=True)
 
 class TestConfig(unittest.TestCase):
     def setUp(self):
-        self.conn = connect(':memory:')
-        self.S = Service(conn=self.conn, sim=True)
+        #with testing.postgresql.Postgresql() as postgresql:
+        # Use the generated Postgresql class instead of testing.postgresql.Postgresql
+        
+        self.postgresql = Postgresql()
+        self.conn = psycopg2.connect(**(self.postgresql).dsn())
+        
+        cursor = self.conn.cursor()
+        
+        for command in db_postgres._commands:
+            cursor.execute(command)
+                
+        cursor.close()
+        self.conn.commit()
+        
+        self.S = Service(conn=self.conn, sim=True) 
+        
 
     def tearDown(self):
-        self.conn.close()
+        #print 'closing connection'
+        #print self.conn
+        #self.conn.close()
+        # clear cached database at end of tests
+        Postgresql.clear_cache()
+        #return
 
     def testStoreFirst(self):
         conf = Value(NTTable.buildType([
@@ -62,16 +91,22 @@ class TestConfig(unittest.TestCase):
         ], R.value.tolist())
 
         ######### verify DB
-        R = self.conn.execute('select * from config where id is not NULL;').fetchone()
+        C = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        C.execute('select * from config where id is not NULL;')
+        R = C.fetchone()
         self.assertEqual(R['id'], configid)
         self.assertEqual(R['name'], 'first')
         self.assertIsNone(R['next'])
+        
+        C.execute('select name, readonly, groupName, tags from config_pv where config=%s;', (configid,))
 
-        R = list(map(tuple, self.conn.execute('select name, readonly, groupName, tags from config_pv where config=?;', (configid,)).fetchall()))
+        R = list(map(tuple, C.fetchall()))
         self.assertListEqual(R, [
             (u'one', 0, u'A', u''),
             (u'two', 1, u'', u'a, b'),
         ])
+        
+        C.close()
 
         ######### Load
         R = self.S.loadServiceConfig(configid=str(configid))
@@ -119,8 +154,11 @@ class TestConfig(unittest.TestCase):
             ('system_val', [u'xx']),
         ])
 
+    
     def testStoreUpdate(self):
-        oldidx = self.conn.execute('insert into config(name, created, desc) values ("foo","","")').lastrowid
+        C = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        C.execute('insert into config(name, created, description) values (\'foo\',\'\',\'\') returning id')
+        oldidx = C.fetchone()[0]
 
         conf = Value(NTTable.buildType([
             ('channelName', 'as'),
@@ -152,16 +190,23 @@ class TestConfig(unittest.TestCase):
         ], R.value.tolist())
 
         self.assertNotEqual(oldidx, configid)
+        
+        C.execute('select id, name, next from config order by id')
 
-        self.assertListEqual(list(map(tuple, self.conn.execute('select id, name, next from config order by id').fetchall())), [
+        self.assertListEqual(list(map(tuple, C.fetchall())), [
             (oldidx, u'foo', configid), # inactive
             (configid, u'foo', None), # active
         ])
+        
+        C.close()
 
+    
     def testStoreUpdate1Bad(self):
         "Attempt to use the name of an existing config"
-        oldidx = self.conn.execute('insert into config(name, created, desc) values ("foo","","")').lastrowid
-
+        
+        C = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        C.execute('insert into config(name, created, description) values (\'foo\',\'\',\'\') returning id')
+    
         conf = Value(NTTable.buildType([
             ('channelName', 'as'),
             ('readonly', 'a?'),
@@ -180,13 +225,15 @@ class TestConfig(unittest.TestCase):
         self.assertRaises(RemoteError, 
             self.S.storeServiceConfig, configname='foo',
                                       desc='desc', config=conf, system='xx')
+        C.close()
 
+    
     def testStoreUpdate2Bad(self):
         "Attempt to replace an inactive config"
-        self.conn.executescript("""
-            insert into config(id, name, next, created, desc) values (3,"foo",NULL,"","");
-            insert into config(id, name, next, created, desc) values (2,"foo",3,"","");
-        """)
+        C = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        C.execute('insert into config(id, name, next, created, description) values (3,\'foo\',NULL,\'\',\'\');')
+        C.execute('insert into config(id, name, next, created, description) values (2,\'foo\',3,\'\',\'\');')
+        
         oldidx = 2
 
         conf = Value(NTTable.buildType([
@@ -207,27 +254,41 @@ class TestConfig(unittest.TestCase):
         self.assertRaises(RemoteError, 
             self.S.storeServiceConfig, configname='foo', oldidx=str(oldidx),
                                       desc='desc', config=conf, system='xx')
+        
+        C.close()
 
+    
     def testStoreUpdateActive(self):
         "Make a configuration inactive"
-        idx = self.conn.execute('insert into config(name, created, desc) values ("foo","","")').lastrowid
+        C = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        C.execute('insert into config(name, created, description) values (\'foo\',\'\',\'\') returning id')
+        idx = C.fetchone()[0]
+        
+        C.execute('select active from config where id=%s', (idx,))
 
-        self.assertEqual(1, self.conn.execute('select active from config where id=?', (idx,)).fetchone()[0])
+        self.assertEqual(1, C.fetchone()[0])
 
         R = self.S.modifyServiceConfig(configid=idx, status='active')
         self.assertEqual('active', R.value.status[0])
 
-        self.assertEqual(1, self.conn.execute('select active from config where id=?', (idx,)).fetchone()[0])
+        C.execute('select active from config where id=%s', (idx,))
+        self.assertEqual(1, C.fetchone()[0])
 
         R = self.S.modifyServiceConfig(configid=idx, status='inactive')
         self.assertEqual('inactive', R.value.status[0])
 
-        self.assertEqual(0, self.conn.execute('select active from config where id=?', (idx,)).fetchone()[0])
+
+        C.execute('select active from config where id=%s', (idx,))
+        self.assertEqual(0, C.fetchone()[0])
 
         R = self.S.modifyServiceConfig(configid=idx, status='active')
         self.assertEqual('active', R.value.status[0])
 
-        self.assertEqual(1, self.conn.execute('select active from config where id=?', (idx,)).fetchone()[0])
+        C.execute('select active from config where id=%s', (idx,))
+        self.assertEqual(1, C.fetchone()[0])
+        
+        C.close()
+    
 
 class TestEvents(unittest.TestCase):
     def gather(self, pvs):
@@ -263,19 +324,31 @@ class TestEvents(unittest.TestCase):
         return Value(ops_base.multiType, ret)
 
     def setUp(self):
-        self.conn = connect(':memory:')
+        #with testing.postgresql.Postgresql() as postgresql:
+        self.postgresql = Postgresql()
+        self.conn = psycopg2.connect(**(self.postgresql).dsn())
         self.S = Service(conn=self.conn, gather=self.gather, sim=True)
+        
+        cursor = self.conn.cursor()
+        
+        for command in db_postgres._commands:
+            cursor.execute(command)
 
-        self.conn.execute('insert into config(id,name,created,desc) values (?,?,?,?)',
+        cursor.execute('insert into config(id,name,created,description) values (%s,%s,%s,%s)',
                           (2, 'configname', self.S.now(), 'description'))
-        self.conn.executemany('insert into config_pv(id,config,name) values (?,?,?)', [
+        cursor.executemany('insert into config_pv(id,config,name) values (%s,%s,%s)', [
             (1, 2, 'pv:flt:1'),
             (2, 2, 'pv:flt:2'),
             (3, 2, 'pv:bad:3'),
         ])
+        
+        self.conn.commit()
+        
+        cursor.close()
 
     def tearDown(self):
-        self.conn.close()
+        #self.conn.close()
+        Postgresql.clear_cache()
 
     def testFetchNone(self):
         R = self.S.retrieveServiceEvents(configid='1')
@@ -325,6 +398,7 @@ class TestEvents(unittest.TestCase):
         R = self.S.retrieveSnapshot(eventid='1')
         self.assertDictEqual(R, expect)
 
+
 class TestRetrieve(unittest.TestCase):
     def gather(self, pvs):
         ret = {
@@ -345,8 +419,16 @@ class TestRetrieve(unittest.TestCase):
         return Value(ops_base.multiType, ret)
 
     def setUp(self):
-        self.conn = connect(':memory:')
+        #with testing.postgresql.Postgresql() as postgresql:
+        self.postgresql = Postgresql()
+        self.conn = psycopg2.connect(**(self.postgresql).dsn())
         self.S = Service(conn=self.conn, gather=self.gather, sim=True)
+        
+        cursor = self.conn.cursor()
+        
+        for command in db_postgres._commands:
+            cursor.execute(command)
+            
         self.S.simtime = (2017, 1, 28, 21, 43, 28, 5, 28, 0)
 
         conf = Value(NTTable.buildType([
@@ -381,7 +463,8 @@ class TestRetrieve(unittest.TestCase):
         self.eid3 = S['timeStamp']['userTag']
 
     def tearDown(self):
-        self.conn.close()
+        #self.conn.close()
+        Postgresql.clear_cache()
 
     def testAll(self):
         evts = self.S.retrieveServiceEvents(configid=self.configid)

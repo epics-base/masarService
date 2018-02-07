@@ -10,7 +10,7 @@ from cothread.catools import caget, FORMAT_TIME
 
 from p4p.rpc import RemoteError
 from p4p.wrapper import Value
-from ..ops import multiType
+import minimasar.ops_base
 
 class Gatherer(object):
     def __init__(self, queue=None):
@@ -66,7 +66,7 @@ class Gatherer(object):
                 ret['nanoseconds'].append(nsec)
                 ret['userTag'].append(0)
 
-            return Value(multiType, ret)
+            return Value(minimasar.ops_base.multiType, ret)
         except Exception as e:
             _log.exception("Failed to gather: %s", pvs)
             raise RemoteError("Error while fetching PV values")

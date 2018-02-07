@@ -2,17 +2,12 @@
 import logging
 _log = logging.getLogger(__name__)
 
-from types import NoneType
-import sqlite3, json, sys, zlib
 
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
+import sqlite3
 
-import numpy
 
 # like buildin group_concat() which also does de-duplication, but doesn't preserve order
+
 class ConcatUnique(object):
     def __init__(self):
         self.values = set()
@@ -21,22 +16,6 @@ class ConcatUnique(object):
     def finalize(self):
         return ', '.join(map(str,self.values))
 
-def encodeValue(V):
-    """Mangle python type for storage in event_pv.value
-    """
-    if isinstance(V, (int, long, float, unicode, bytes, NoneType)):
-        return V # store directly
-    elif isinstance(V, (list, tuple, numpy.ndarray)):
-        return buffer(zlib.compress(pickle.dumps(numpy.asarray(V))))
-    else:
-        _log.exception("Error encoding %s", V)
-        raise ValueError("Can't encode type %s"%type(V))
-
-def decodeValue(S):
-    if isinstance(S, buffer):
-        return pickle.loads(zlib.decompress(S))
-    else:
-        return S
 
 def connect(fname):
     conn = sqlite3.connect(fname,
