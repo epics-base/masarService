@@ -1,0 +1,49 @@
+#############################################
+#       Using Postgresql with Masar         #
+#############################################
+
+SUMMARY
+=======
+
+Changes and additions to "minimasar" have been made to support PostgreSQL as
+the underlying DB engine. Unfortunately differences between sqlite3 and
+PostgreSQL are significant enough to justify a high degree of code duplication.
+A DB abstraction layer would of course be a more elegant solution.
+
+Added support for Postgresql maintains compatibility such that existing clients
+should need to change anything. Consequently the default DB engine is sqlite.
+
+Development and verification was done using PostgreSQL 9.6.
+
+To switch to PostgreSQL, make sure to have the DB engine on the system. Then
+edit the file dbsettings_postgres.py accordingly. The command line to start
+the Masar service takes a new (optional) switch: --dbengine [sqlite | postgres].
+
+NOTE: The command line parameter specifying the file name of the sqlite database
+is required even if PostgreSQL is used. It is then ignored, but this will on
+the other hand maintain backwards compatibility such that command lines for
+sqlite need not be changed.
+
+DEVELOPMENT NOTES
+=================
+
+Some code common to sqlite and PostgreSQL has been put into the ops_base.py
+file. This also contains a base ops class with abstract methods implemented
+in the classes found in ops.py (sqlite) and ops_postgres.
+
+To cater for differences in syntax and the set of reserved identifiers in
+sqlite and PostgreSQL, a separate db_postgres.py file is needed.
+
+UNIT TESTING
+============
+
+A separate unit test for ops_postgres.py uses the testing.postgres module,
+which hence must exist on the system fir the test case to run. It may be
+installed using
+>pip install testing.postgres
+
+Further, the PostgreSQL commands postgres and initdb must be on the PATH in
+order for the test_ops_postgres.py file to execute correctly.
+
+The unit test creates (and destroys) a temporary database, so any existing
+PostgreSQL database is untouched.
