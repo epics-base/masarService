@@ -2,7 +2,6 @@
 import logging
 _log = logging.getLogger(__name__)
 
-from types import NoneType
 import sqlite3, json, sys, zlib
 
 try:
@@ -11,6 +10,8 @@ except ImportError:
     import pickle
 
 import numpy
+
+NoneType = type(None)
 
 # like buildin group_concat() which also does de-duplication, but doesn't preserve order
 class ConcatUnique(object):
