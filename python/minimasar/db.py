@@ -2,7 +2,17 @@
 import logging
 _log = logging.getLogger(__name__)
 
-import sqlite3, json, sys, zlib
+import sys, sqlite3, json, sys, zlib
+
+# sqlite module for py2 and py3 maps types a little differently.
+#  py2 maps both str and unicode to TEXT, and buffer to BLOB
+#  py3 maps str (aka unicode) to TEXT and bytes to BLOB
+if sys.version_info>=(3,0):
+    plain_types = (int, float, str, type(None))
+    blob_type = bytes
+else:
+    plain_types = (int, long, float, unicode, bytes, type(None))
+    blob_type = buffer
 
 try:
     import cPickle as pickle
@@ -25,16 +35,16 @@ class ConcatUnique(object):
 def encodeValue(V):
     """Mangle python type for storage in event_pv.value
     """
-    if isinstance(V, (int, long, float, unicode, bytes, NoneType)):
+    if isinstance(V, plain_types):
         return V # store directly
     elif isinstance(V, (list, tuple, numpy.ndarray)):
-        return buffer(zlib.compress(pickle.dumps(numpy.asarray(V))))
+        return blob_type(zlib.compress(pickle.dumps(numpy.asarray(V))))
     else:
         _log.exception("Error encoding %s", V)
         raise ValueError("Can't encode type %s"%type(V))
 
 def decodeValue(S):
-    if isinstance(S, buffer):
+    if isinstance(S, blob_type):
         return pickle.loads(zlib.decompress(S))
     else:
         return S

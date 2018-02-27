@@ -338,8 +338,8 @@ class Service(object):
         def unpack(I):
             try:
                 return decodeValue(I['value'])
-            except:
-                raise ValueError("Error decoding %s", type(I['value']))
+            except Exception as e:
+                raise ValueError("Error decoding %s: %s"%(type(I['value']), e))
 
         return {
             'channelName': list(map(itemgetter('name'), L)),
