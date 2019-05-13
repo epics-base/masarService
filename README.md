@@ -11,21 +11,16 @@ Required dependencies
 * [EPICS Base](http://www.aps.anl.gov/epics/)
 * [PVDataCPP](http://epics-pvdata.sourceforge.net/)
 * [PVAccessCPP](http://epics-pvdata.sourceforge.net/)
-* [NormativeTypesCPP](http://epics-pvdata.sourceforge.net/)
-* [pymongo](http://api.mongodb.org/python/)
+* [p4p](https://mdavidsaver.github.io/p4p/)
+* [cothread](http://controls.diamond.ac.uk/downloads/python/cothread/)
 
 Needed by Qt client UI
 
 * [PyQt4](http://www.riverbankcomputing.co.uk/software/pyqt/)
-* [cothread](http://controls.diamond.ac.uk/downloads/python/cothread/)
 
-Needed by Server when using MongoDB storage backend
-(not need for sqlite backend)
-
-* [mongodb](http://www.mongodb.org)
 
 ```sh
-# apt-get install epics-dev epics-pvd-dev epics-pva-dev epics-nt-dev \
+# apt-get install epics-dev epics-pvd-dev epics-pva-dev \
   python-dev python-qt4 python-cothread
 ```
 
@@ -37,57 +32,65 @@ and fill in the paths for all EPICS module dependencies.
 If using Debian packages then copy ```RELEASE.local.deb```
 instead.
 
+Only EPICS Base is needed to build.
+
 ```sh
 $ make
 ```
 
-Running the daemon (SQLITE)
----------------------------
+Running the daemon
+------------------
 
-Setup demo configuration.
-
-```sh
-# one list of fake PV names
-cat <<EOF >pvs-list1.txt
-examplepv1
-examplepv2
-examplepv3
-examplepv4
-EOF
-# Associate the list (aka group) with a MASAR config
-cat <<EOF > db_config.txt
-{
-"pvgroups": [{ "name": "groupname1",
-             "pvlist": "pvs-list1.txt",
-             "description": "Booster magnet power supply set points"
-           }],
-"configs": [{"config_name": "exampleconfig",
-             "config_desc": "BR ramping PS daily SCR setpoint",
-             "system": "BR"
-           }],
-"pvg2config": [{ "config_name": "exampleconfig",
-                 "pvgroups": ["groupname1"]
-              }]
-}
-EOF
-# Backend config
-cat <<EOF > masarservice.conf
-[Common]
-database = sqlite
-[sqlite]
-database = ${PWD}/masar.db
-EOF
-export MASAR_SQLITE_DB=${PWD}/masar.db
-# Initialize the DB
-./masarConfigTool db_config.txt
-```
-
-To run the daemon
+Setting Python path.
+The 'p4p' module must appear in the search path.
+If '$P4P_DIR' is the source directory then:
 
 ```sh
-export MASAR_SQLITE_DB=${PWD}/masar.db
-./cpp/bin/linux-*/masarServiceRun masarService
+export PYTHONPATH=$PWD/python2.7/linux-x86_64:$P4P_DIR/python2.7/linux-x86_64
 ```
+
+
+Run automatic tests
+
+```sh
+$ nosetests minimasar
+```
+
+Run daemon in simulated client mode with in-memory database.
+
+```sh
+$ python -m minimasar.server --name masarService -L DEBUG ':memory:' -G sim
+```
+
+Run daemon in CA client mode and store in ```masar.db```.
+The database file will be created if it does not exist.
+
+```sh
+$ python -m minimasar.server --name masarService -L DEBUG masar.db -G ca
+```
+
+Some testing can be done with the ```eget``` utility build with the pvAccessCPP module.
+
+```sh
+## Load pre-defined configuration
+## On success, a new configid is printed
+$ eget -s masarService:storeTestConfig -a configname=test -a desc=testing
+## Read-back configuration
+$ eget -s masarService:loadServiceConfig -a configid=<configid>
+
+$ eget -s masarService:retrieveServiceConfigs
+
+$ eget -s masarService:saveSnapshot -a configname=test
+$ eget -s masarService:updateSnapshotEvent -a eventid=<eventid> -a user=me -a desc=snap
+
+$ eget -s masarService:retrieveServiceEvents -a configid=<configid>
+
+$ eget -s masarService:retrieveSnapshot -a eventid=eventid>
+
+$ eget -s masarService:dumpDB
+```
+
+See [interface.md](interface.md) for a description of supported RPC calls.
 
 Running the Qt client
 ---------------------

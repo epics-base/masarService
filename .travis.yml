@@ -1,0 +1,24 @@
+sudo: false
+dist: trusty
+language: python
+compiler:
+  - gcc
+addons:
+  apt:
+    packages:
+    - libreadline6-dev
+    - libncurses5-dev
+    - perl
+install:
+ - pip install -r requirements-${PROF}.txt
+ - ./build-deps.sh
+script:
+ - PYTHONPATH="$PYTHONPATH:$HOME/.source/p4p/$TARGET:$PWD/python" python -m nose minimasar
+matrix:
+  include:
+  - python: "2.7"
+    env: BRBASE=3.16 BRPVD=master BRPVA=master PROF=deb8 TARGET=python2.7/linux-x86_64
+  - python: "3.4"
+    env: BRBASE=3.16 BRPVD=master BRPVA=master PROF=deb8 TARGET=python3.4m/linux-x86_64
+  - python: "3.6"
+    env: BRBASE=3.16 BRPVD=master BRPVA=master PROF=deb9 TARGET=python3.6m/linux-x86_64

@@ -1,9 +1,12 @@
 #Makefile at top of application tree
-TOP = ./cpp
+TOP = .
 include $(TOP)/configure/CONFIG
 
-DIRS += cpp
-DIRS += test/cpp
-test/cpp_DEPEND_DIRS = cpp
+DIRS += configure
+
+DIRS += python
+python_DEPEND_DIRS = configure
 
 include $(TOP)/configure/RULES_TOP
+
+UNINSTALL_DIRS += $(INSTALL_LOCATION)/python$(PY_VER)

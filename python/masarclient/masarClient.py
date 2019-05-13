@@ -13,14 +13,8 @@ Created on Oct 23, 2011
 @author: shengb
 """
 
-from channelRPC import ChannelRPC
-from ntnameValue import NTNameValue
-from nttable import NTTable
-from alarm import Alarm
-from timeStamp import TimeStamp
-from ntscalar import NTScalar
-from ntmultiChannel import NTMultiChannel
-
+from p4p.client.thread import Context
+from minimasar.client import MASAR
 
 class client():
     def __init__(self, channelname = 'masarService'):
@@ -28,45 +22,8 @@ class client():
         masar service client library. Default channel name is masarService.
         """
         self.channelname = channelname
-
-    def __clientRPC(self, function, params, conn_time=1.0, resp_time=5.0):
-        """
-        internal library for pvAccess channel RPC.
-        
-        conn_time: waiting time for connection, 1.0 by default;
-        resp_time: waiting time for response, 5.0 by default
-        """
-        alarm = Alarm()
-        timeStamp = TimeStamp()
-
-        ntnv = NTNameValue(function, params)
-        
-        # now do issue + wait
-        channelRPC = ChannelRPC(self.channelname)
-        channelRPC.issueConnect()
-        if not channelRPC.waitConnect(conn_time):
-            #print channelRPC.getMessage()
-            raise Exception(channelRPC.getMessage())
-        channelRPC.issueRequest(ntnv.getNTNameValue(), False)
-        result = channelRPC.waitResponse(resp_time)
-        if result is None:
-            #print channelRPC.getMessage()
-            raise Exception(channelRPC.getMessage())
-        if function in ["retrieveSnapshot", "getLiveMachine", "saveSnapshot"]:
-            result = NTMultiChannel(result)
-        elif function in ["retrieveServiceEvents", "retrieveServiceConfigs", "retrieveServiceConfigProps"]:
-            result = NTTable(result)
-        elif function == "updateSnapshotEvent":
-            result = NTScalar(result)
-        result.getAlarm(alarm)
-        result.getTimeStamp(timeStamp)
-        return result
-    
-    def __isFault(self, nttable):
-        label = nttable.getLabels()
-        if label[0] == 'status' and not nttable.getColumn(label[0])[0]:
-            return True
-        return False
+        self._pva_context = Context('pva')
+        self._proxy = MASAR(context=self._pva_context, format=channelname+':')
 
     def retrieveSystemList(self):
         """
@@ -75,17 +32,8 @@ class client():
         Parameters: None
         Result:     list with all system name, otherwise, False if nothing is found.
         """
-        function = 'retrieveServiceConfigProps'
-        params = {}
-        nttable = self.__clientRPC(function, params)
-
-        if not isinstance(nttable, NTTable):
-            raise RuntimeError("Wrong returned data type")
-        if self.__isFault(nttable):
-            return False
-        results = nttable.getColumn(nttable.getLabels()[-1])
-
-        return (sorted(set(results)))
+        nttable = self._proxy.retrieveServiceConfigProps()
+        return sorted(set(nttable.value.system_val))
     
     def retrieveServiceConfigs(self, params):
         """
@@ -109,21 +57,13 @@ class client():
                     
                     otherwise, False if nothing is found.
         """
-        function = 'retrieveServiceConfigs'
-        nttable = self.__clientRPC(function, params)
-        labels = nttable.getLabels()
-
-        if not isinstance(nttable, NTTable):
-            raise RuntimeError("Wrong returned data type")
-        if self.__isFault(nttable):
-            return False
-
-        return (nttable.getColumn(labels[0]),
-                nttable.getColumn(labels[1]),
-                nttable.getColumn(labels[2]),
-                nttable.getColumn(labels[3]),
-                nttable.getColumn(labels[4]),
-                nttable.getColumn(labels[5]))
+        nttable = self._proxy.retrieveServiceConfigs(**params)
+        return (nttable.value.config_idx,
+                nttable.value.config_name,
+                nttable.value.config_desc,
+                nttable.value.config_create_date,
+                nttable.value.config_version,
+                nttable.value.status)
     
     def retrieveServiceEvents(self, params):
         """
@@ -149,25 +89,11 @@ class client():
                     
                     otherwise, False if nothing is found.
         """
-        function = 'retrieveServiceEvents'
-        nttable = self.__clientRPC(function, params)
-
-        if not isinstance(nttable, NTTable):
-            raise RuntimeError("Wrong returned data type")
-        if self.__isFault(nttable):
-            return False
-        
-        # 0: service_event_id,
-        # 1: service_config_id,
-        # 2: service_event_user_tag,
-        # 3: service_event_UTC_time,
-        # 4: service_event_user_name
-        labels = nttable.getLabels()
-
-        return (nttable.getColumn(labels[0]),
-                nttable.getColumn(labels[2]),
-                nttable.getColumn(labels[3]),
-                nttable.getColumn(labels[4]))
+        nttable = self._proxy.retrieveServiceEvents(**params)
+        return (nttable.value.event_id,
+                nttable.value.comments,
+                nttable.value.event_time,
+                nttable.value.user_name)
     
     def retrieveSnapshot(self, params):
         """
@@ -215,32 +141,17 @@ class client():
                             
                     otherwise, False if nothing is found.
         """
-        function = 'retrieveSnapshot'
-        ntmultichannels = self.__clientRPC(function, params)
-        # check fault
-        if not isinstance(ntmultichannels, NTMultiChannel):
-            raise RuntimeError("Wrong returned data type")
-        if ntmultichannels.getNumberChannel() == 0:
-            # No returned value. 
-            return False
-
-        # alarm and timestamp is not needed for now
-        # alarm = Alarm()
-        # ntmultichannels.getAlarm(alarm)
-        # [pv name, value,
-        #  isConnected, secondsPastEpoch, nanoSeconds, timeStampTag,
-        #  alarmSeverity, alarmStatus, alarmMessage]
-
-        return (ntmultichannels.getChannelName(),
-                ntmultichannels.getValue(),
-                ntmultichannels.getDbrType(),
-                ntmultichannels.getIsConnected(),
-                ntmultichannels.getSecondsPastEpoch(),
-                ntmultichannels.getNanoseconds(),
-                ntmultichannels.getUserTag(),
-                ntmultichannels.getSeverity(),
-                ntmultichannels.getStatus(),
-                ntmultichannels.getMessage())
+        R = self._proxy.retrieveSnapshot(**params)
+        return (R.channelName,
+                R.value,
+                R.dbrType,
+                R.isConnected,
+                R.secondsPastEpoch,
+                R.nanoseconds,
+                R.userTag,
+                R.severity,
+                R.status,
+                R.message)
         
     def saveSnapshot(self, params):
         """
@@ -271,32 +182,19 @@ class client():
 
                     otherwise, False if nothing is found.
         """
-        function = 'saveSnapshot'
-        ntmultichannels = self.__clientRPC(function, params)
-
-        # check fault
-        if not isinstance(ntmultichannels, NTMultiChannel):
-            raise RuntimeError("Wrong returned data type")
-        if ntmultichannels.getNumberChannel() == 0:
-            # No returned value. 
-            return False
-
-        ts = TimeStamp()
-        ntmultichannels.getTimeStamp(ts)
-        # [pv name, value,
-        #  isConnected, secondsPastEpoch, nanoSeconds, timeStampTag,
-        #  alarmSeverity, alarmStatus, alarmMessage]
-        return (ts.getUserTag(),
-                ntmultichannels.getChannelName(),
-                ntmultichannels.getValue(),
-                ntmultichannels.getDbrType(),
-                ntmultichannels.getIsConnected(),
-                ntmultichannels.getSecondsPastEpoch(),
-                ntmultichannels.getNanoseconds(),
-                ntmultichannels.getUserTag(),
-                ntmultichannels.getSeverity(),
-                ntmultichannels.getStatus(),
-                ntmultichannels.getMessage())
+        print "saveSnapshot", params
+        R = self._proxy.saveSnapshot(**params)
+        return (R.timeStamp.userTag, # actually new event #
+                R.channelName,
+                R.value,
+                R.dbrType,
+                R.userTag,
+                R.isConnected,
+                R.secondsPastEpoch,
+                R.nanoseconds,
+                R.severity,
+                R.status,
+                R.message)
 
     def updateSnapshotEvent(self, params):
         """
@@ -309,12 +207,8 @@ class client():
 
         result:     True, otherwise, False if operation failed.
         """
-        function = 'updateSnapshotEvent'
-        result = self.__clientRPC(function, params)
-        if not isinstance(result, NTScalar):
-            raise RuntimeError("Wrong returned data type.")
-
-        return bool(result.getValue())
+        R = self._proxy.saveSnapshot(**params)
+        return R.value
     
     def getLiveMachine(self, params, conn_time=1.0, resp_time=5.0):
         """
@@ -343,26 +237,15 @@ class client():
                     alarmMessage []:     EPICS IOC pv status message
 
                     otherwise, False if operation failed.
-        """        
-        function = 'getLiveMachine'
-        ntmultichannels = self.__clientRPC(function, params, conn_time=conn_time, resp_time=resp_time)
-
-        # check fault
-        if not isinstance(ntmultichannels, NTMultiChannel):
-            raise RuntimeError("Wrong returned data type")
-        if ntmultichannels.getNumberChannel() == 0:
-             return False
-        
-        # [pv name, value,
-        #  isConnected, secondsPastEpoch, nanoSeconds, timeStampTag,
-        #  alarmSeverity, alarmStatus, alarmMessage]
-        return (ntmultichannels.getChannelName(),
-                ntmultichannels.getValue(),
-                ntmultichannels.getDbrType(),
-                ntmultichannels.getIsConnected(),
-                ntmultichannels.getSecondsPastEpoch(),
-                ntmultichannels.getNanoseconds(),
-                ntmultichannels.getUserTag(),
-                ntmultichannels.getSeverity(),
-                ntmultichannels.getStatus(),
-                ntmultichannels.getMessage())
+        """
+        R = self._proxy.getCurrentValue(names=params)
+        return (R.channelName,
+                R.value,
+                R.dbrType,
+                R.userTag,
+                R.isConnected,
+                R.secondsPastEpoch,
+                R.nanoseconds,
+                R.severity,
+                R.status,
+                R.message)
