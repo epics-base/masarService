@@ -39,25 +39,24 @@ def main(args):
 
     _log.info("Install provider")
     M = Service(db, gather=gather.gather)
-    # provide MASAR style calls through a single PV (args.name)
-    installProvider("masar", MASARDispatcher(Q, target=M, channels=[args.name]))
-    # provide NTRUI style calls, one PV per method, with a common prefix (args.name+':')
-    installProvider("masarnturi", NTURIDispatcher(Q, target=M, prefix=args.name+':'))
 
     _log.info("Prepare server")
-    S = Server(providers="masar masarnturi")
+    S = Server(providers=[
+        # provide MASAR style calls through a single PV (args.name)
+        MASARDispatcher(Q, target=M, name='masar', channels=[args.name]),
+        # provide NTRUI style calls, one PV per method, with a common prefix (args.name+':')
+        NTURIDispatcher(Q, target=M, name='masaruri', prefix=args.name+':'),
+    ])
 
-    _log.info("Run server")
-    #S.start()
-    _log.info("Started")
+    with S:
+        _log.info("Run server")
 
-    try:
-        Q.handle()
-    except KeyboardInterrupt:
-        pass
+        try:
+            Q.handle()
+        except KeyboardInterrupt:
+            pass
 
-    _log.info("Stop")
-    S.stop()
+        _log.info("Stop")
     _log.info("Done")
 
     db.close()
