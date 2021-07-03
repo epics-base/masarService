@@ -9,4 +9,13 @@ python_DEPEND_DIRS = configure
 
 include $(TOP)/configure/RULES_TOP
 
-UNINSTALL_DIRS += $(INSTALL_LOCATION)/python$(PY_VER)
+UNINSTALL_DIRS += $(wildcard $(INSTALL_LOCATION)/python*.*)
+
+nose.%: all
+	$(MAKE) -C python/O.$(EPICS_HOST_ARCH) $@ PYTHON=$(PYTHON)
+nose.%: all
+	$(MAKE) -C python/O.$(EPICS_HOST_ARCH) $@ PYTHON=$(PYTHON)
+
+nose: nose.minimasar
+
+.PHONY: nose

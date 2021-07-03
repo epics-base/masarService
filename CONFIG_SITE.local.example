@@ -1,2 +1,5 @@
-# Set python version to use
-#PY_VER = 2.7
+# Select python intepreter to use.
+# May be in $PATH
+#PYTHON = python3
+# or by absolute
+#PYTHON = /opt/special/bin/python3.7

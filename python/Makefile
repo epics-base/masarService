@@ -39,3 +39,8 @@ PY += minimasar/test/test_ops.py
 include $(TOP)/configure/RULES
 include $(TOP)/configure/RULES_PY
 
+ifneq (,$(T_A))
+nose.%:
+	[ -d "$(P4P)/python$(PY_LD_VER)/$(T_A)/p4p" ]
+	PYTHONPATH="${PYTHONPATH}:$(abspath $(P4P))/python$(PY_LD_VER)/$(T_A):$(abspath $(TOP))/python$(PY_LD_VER)/$(T_A)" $(PYTHON) -m nose -P -v $* $(NOSEFLAGS)
+endif

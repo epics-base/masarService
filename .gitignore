@@ -7,8 +7,7 @@
 /dbd/
 /documentation/html
 /documentation/*.tag
-/python?.?/
-/test/cpp/bin/
+/python*.*/
 envPaths
 *configure/*.local
 !*configure/ExampleRELEASE.local
