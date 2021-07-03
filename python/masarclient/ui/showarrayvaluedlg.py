@@ -9,16 +9,13 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from PyQt4.QtGui import (QDialog, QTableView, QGridLayout, QLabel, QPushButton)
-from PyQt4.QtCore import (QString, SIGNAL, QAbstractTableModel, QVariant, Qt)
+from PyQt4.QtCore import (SIGNAL, QAbstractTableModel, QVariant, Qt)
 
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
 
-try:
-    _fromUtf8 = QString.fromUtf8
-except AttributeError:
-    _fromUtf8 = lambda s: s
+_fromUtf8 = lambda s: s
     
 class ShowArrayValueDlg(QDialog):
     def __init__(self, pvname, savedValue, liveValue=None, parent=None):

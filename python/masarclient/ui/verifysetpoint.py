@@ -10,14 +10,11 @@ from __future__ import unicode_literals
 
 from PyQt4.QtGui import (QDialog, QGridLayout, QTableWidget, QLineEdit, QPushButton, QBrush, 
                          QLabel, QSizePolicy, QTableWidgetItem, QDesktopWidget)
-from PyQt4.QtCore import (QString, QObject, SIGNAL, Qt, QSize)
+from PyQt4.QtCore import (QObject, SIGNAL, Qt, QSize)
 import cothread
 from cothread.catools import caget, camonitor, FORMAT_TIME, connect
 import threading, time, traceback
-try:
-    _fromUtf8 = QString.fromUtf8
-except AttributeError:
-    _fromUtf8 = lambda s: s
+_fromUtf8 = lambda s: s
     
 class VerifySetpoint(QDialog):
     def __init__(self, configFile, rowCount, verifyWindowDict, parent=None):

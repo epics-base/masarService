@@ -10,14 +10,11 @@ from __future__ import unicode_literals
 
 from PyQt4.QtGui import (QDialog, QGridLayout, QDialogButtonBox, QLineEdit, QPushButton, 
                          QLabel, QMessageBox)
-from PyQt4.QtCore import (QString, QObject, SIGNAL, Qt)
+from PyQt4.QtCore import (QObject, SIGNAL, Qt)
 import cothread
 from cothread.catools import caget, caput
 import traceback
-try:
-    _fromUtf8 = QString.fromUtf8
-except AttributeError:
-    _fromUtf8 = lambda s: s
+_fromUtf8 = lambda s: s
 
 
 class GradualPut(QDialog):

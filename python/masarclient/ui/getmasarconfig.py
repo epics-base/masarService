@@ -9,7 +9,10 @@ Created on Apr 28, 2014
 
 import os
 import platform
-import ConfigParser
+try:
+    from configparser import SafeConfigParser as ConfigParser
+except ImportError:
+    from ConfigParser import SafeConfigParser as ConfigParser
 
 def getmasarconfig():
     '''Get configuration file for MASAR service which enables service integration for Olog and channel finder for example.
@@ -29,7 +32,7 @@ def getmasarconfig():
     '''
     system = platform.system()
 
-    config = ConfigParser.ConfigParser()
+    config = ConfigParser()
     if system == 'Windows':
         raise RuntimeError("Does not support Windows platform yet.")
 
@@ -55,4 +58,4 @@ def getmasarconfig():
     return masarconfig
 
 if __name__ == "__main__":
-    print getmasarconfig()
+    print(getmasarconfig())
