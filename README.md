@@ -69,25 +69,28 @@ The database file will be created if it does not exist.
 $ python -m minimasar.server --name masarService -L DEBUG masar.db -G ca
 ```
 
-Some testing can be done with the ```eget``` utility build with the pvAccessCPP module.
+Some testing can be done with the `pvcall` utility provided by the pvAccessCPP module.
 
 ```sh
 ## Load pre-defined configuration
 ## On success, a new configid is printed
-$ eget -s masarService:storeTestConfig -a configname=test -a desc=testing
+$ pvcall masarService:storeTestConfig configname=test desc=testing
+<undefined>                
+config_idx config_name config_desc    config_create_date config_version status system
+         1        test     testing "2021-07-03 16:47:19"              0 active       
 ## Read-back configuration
-$ eget -s masarService:loadServiceConfig -a configid=<configid>
+$ pvcall masarService:loadServiceConfig configid=<configid>
 
-$ eget -s masarService:retrieveServiceConfigs
+$ pvcall masarService:retrieveServiceConfigs
 
-$ eget -s masarService:saveSnapshot -a configname=test
-$ eget -s masarService:updateSnapshotEvent -a eventid=<eventid> -a user=me -a desc=snap
+$ pvcall masarService:saveSnapshot configname=test
+$ pvcall masarService:updateSnapshotEvent eventid=<eventid> user=me desc=snap
 
-$ eget -s masarService:retrieveServiceEvents -a configid=<configid>
+$ pvcall masarService:retrieveServiceEvents configid=<configid>
 
-$ eget -s masarService:retrieveSnapshot -a eventid=eventid>
+$ pvcall masarService:retrieveSnapshot eventid=eventid>
 
-$ eget -s masarService:dumpDB
+$ pvcall masarService:dumpDB
 ```
 
 See [interface.md](interface.md) for a description of supported RPC calls.
