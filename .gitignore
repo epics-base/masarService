@@ -13,6 +13,8 @@ envPaths
 !*configure/ExampleRELEASE.local
 O.*/
 QtC-*
+ui_*.py
+*_rc.py
 *.so
 *.pyc
 __pycache__/

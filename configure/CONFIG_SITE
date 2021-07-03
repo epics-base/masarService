@@ -45,3 +45,8 @@ USR_INCLUDES += -I $(INSTALL_LOCATION)/include
 # default if not set
 PYTHON ?= python
 
+PYRCC ?= pyrcc4
+
+PYRCCFLAGS_NO = -py2
+PYRCCFLAGS_YES = -py3
+PYRCCFLAGS = $(PYRCCFLAGS_$(PY_IS3)) $(CMD_PYRCCFLAGS)
