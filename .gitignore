@@ -15,4 +15,5 @@ O.*/
 QtC-*
 *.so
 *.pyc
+__pycache__/
 *.local
