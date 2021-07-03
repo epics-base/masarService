@@ -5,12 +5,14 @@ Created on Thu Nov 16 11:19:06 2017
 @author: Michael Dalesio
 """
 
+from __future__ import print_function
+
 import logging
 _log = logging.getLogger(__name__)
 
 import sqlite3 as sqlite
-from db import connect, encodeValue, ConcatUnique
-from ops import normtime
+from .db import connect, encodeValue, ConcatUnique
+from .ops import normtime
 import pickle, json
 
 def getargs():
@@ -235,7 +237,7 @@ def main(args):
             LEFT OUTER JOIN service_config_prop ON service_config_prop.service_config_id=service_config.service_config_id
             WHERE service_config_prop.service_config_prop_name='system'
             """).fetchall()):
-            print 'config %s %d/%d'%(ServiceConfig['service_config_name'], confn, numconf)
+            print('config %s %d/%d'%(ServiceConfig['service_config_name'], confn, numconf))
  
              # Build config entry, enter it, return new id (needed by config_pv and event)
             newConfigID = configAdd(configEntry(ServiceConfig), cTarget)
@@ -258,7 +260,7 @@ def main(args):
                 GROUP BY pv.pv_id
                 """, (ServiceConfig['service_config_id'],)).fetchall():
 
-                # print ('p', end='') 
+                # print('p', end='') 
                 name2id[pv['pv_name']] = pvAdd(pvEntry(pv, newConfigID), cTarget)
                 
             for eventn, event in enumerate(connSource.execute("""
@@ -272,7 +274,7 @@ def main(args):
                 """, (ServiceConfig['service_config_id'], )).fetchall()):
 
                 if eventn%20==0:
-                    print 'event', eventn
+                    print('event', eventn)
 
                 newEventID = eventAdd(eventEntry(event, newConfigID), cTarget)
 
@@ -290,7 +292,7 @@ def main(args):
                     newpvID = name2id.get(masar['pv_name'])
 
                     if newpvID is None:
-                        print ("Warning: {} exists in the masar_data table, but not in the pv table".format(masar['pv_name']))
+                        print("Warning: {} exists in the masar_data table, but not in the pv table".format(masar['pv_name']))
                         pv_missing += 1
                     else:
                         rows.append(eventpvEntry (masar, newpvID, newEventID))
