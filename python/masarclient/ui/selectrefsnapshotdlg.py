@@ -10,12 +10,9 @@ from __future__ import unicode_literals
 
 from PyQt4.QtGui import (QDialog, QVBoxLayout, QGridLayout, QLabel, QGroupBox,QRadioButton,
                          QDialogButtonBox)
-from PyQt4.QtCore import (QString, QObject, SIGNAL,Qt)
+from PyQt4.QtCore import (QObject, SIGNAL,Qt)
 
-try:
-    _fromUtf8 = QString.fromUtf8
-except AttributeError:
-    _fromUtf8 = lambda s: s
+_fromUtf8 = lambda s: s
     
 class ShowSelectRefDlg(QDialog):
     def __init__(self, eventIDs, parent=None):

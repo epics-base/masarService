@@ -182,7 +182,7 @@ class client():
 
                     otherwise, False if nothing is found.
         """
-        print "saveSnapshot", params
+        print("saveSnapshot", params)
         R = self._proxy.saveSnapshot(**params)
         return (R.timeStamp.userTag, # actually new event #
                 R.channelName,

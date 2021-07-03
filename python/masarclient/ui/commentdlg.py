@@ -8,7 +8,7 @@ import os
 from PyQt4.QtCore import (pyqtSignature)
 from PyQt4.QtGui import (QApplication, QDialog, QDialogButtonBox)
 
-import ui_commentdiag
+from . import ui_commentdiag
 
 class CommentDlg(QDialog,
         ui_commentdiag.Ui_commentdlg):

@@ -42,6 +42,11 @@ except ImportError:
 print('TARGET_CFLAGS +=',get_config_var('BASECFLAGS'), file=out)
 print('TARGET_CXXFLAGS +=',get_config_var('BASECFLAGS'), file=out)
 
+if tuple(int(comp) for comp in get_config_var('VERSION').split('.')) >= (3,0):
+    print('PY_IS3 := YES', file=out)
+else:
+    print('PY_IS3 := NO', file=out)
+
 print('PY_VER :=',get_config_var('VERSION'), file=out)
 ldver = get_config_var('LDVERSION')
 if ldver is None:

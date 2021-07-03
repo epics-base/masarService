@@ -9,13 +9,10 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from PyQt4.QtGui import (QDialog, QGridLayout, QLineEdit, QPushButton, QBrush, QLabel)
-from PyQt4.QtCore import (QString, QObject, SIGNAL, Qt)
+from PyQt4.QtCore import (QObject, SIGNAL, Qt)
 import re, fnmatch
 #from masar import masarUI #ImportError: cannot import name masarUI
-try:
-    _fromUtf8 = QString.fromUtf8
-except AttributeError:
-    _fromUtf8 = lambda s: s
+_fromUtf8 = lambda s: s
     
 class FindDlg(QDialog):
     #def __init__(self, info, parent=None):

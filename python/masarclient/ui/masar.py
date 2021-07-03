@@ -18,13 +18,10 @@ import os, sys, time, datetime, re, fnmatch, imp, traceback, platform
 from PyQt4.QtGui import (QApplication, QMainWindow, QMessageBox, QTableWidgetItem, QTableWidget,
                         QFileDialog, QColor, QBrush, QTabWidget, QShortcut, QKeySequence,
                         QDialog, QGridLayout, QLineEdit, QPushButton, QLabel, QDialogButtonBox)
-from PyQt4.QtCore import (QDateTime, Qt, QString, QObject, SIGNAL, QThread, QEventLoop)
+from PyQt4.QtCore import (QDateTime, Qt, QObject, SIGNAL, QThread, QEventLoop)
 #import PyQt4.QTest as QTest
 
-try:
-    _fromUtf8 = QString.fromUtf8
-except AttributeError:
-    _fromUtf8 = lambda s: s
+_fromUtf8 = lambda s: s
 
 if sys.version_info[:2]>=(2,7):
     from collections import OrderedDict as odict
@@ -38,14 +35,14 @@ try:
 except ImportError:
     pyOlogExisting = False
 
-import ui_masar
-import commentdlg
-from showarrayvaluedlg import ShowArrayValueDlg
-from selectrefsnapshotdlg import ShowSelectRefDlg
-from finddlg import FindDlg
-from verifysetpoint import VerifySetpoint
-from gradualput import GradualPut
-import getmasarconfig 
+from . import ui_masar
+from . import commentdlg
+from .showarrayvaluedlg import ShowArrayValueDlg
+from .selectrefsnapshotdlg import ShowSelectRefDlg
+from .finddlg import FindDlg
+from .verifysetpoint import VerifySetpoint
+from .gradualput import GradualPut
+from . import getmasarconfig 
 
 import masarclient.masarClient as masarClient
 
@@ -293,13 +290,14 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         The data has to be an ordered dictionary, and table is a QtGui.QTableWidget
         Here is an example to construct an ordered dictionary.
         """
+        datavalues = list(data.values())
         if data:
-            length = len(data.values()[0])
+            length = len(datavalues[0])
         else:
             print ('data is empty, exit.')
             return
-        for i in range(1, len(data.values())):
-            if length != len(data.values()[i]):
+        for i in range(1, len(datavalues)):
+            if length != len(datavalues[i]):
                 QMessageBox.warning(self,
                                     "Warning",
                                     "Data length are not consistent.")
@@ -307,19 +305,19 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 return
 
         if isinstance(data, odict) and isinstance(table, QTableWidget):
-            nrows = len(data.values()[0])
+            nrows = len(datavalues[0])
             ncols = len(data)
             table.setRowCount(nrows)
             table.setColumnCount(ncols)
             # Removes all items in the view, and also all selections
             table.clear()
-            table.setHorizontalHeaderLabels(data.keys())
+            table.setHorizontalHeaderLabels(list(data.keys()))
             
             n = 0
             for key in data:
                 m = 0
                 for item in data[key]:
-                    if not isinstance(item, basestring):
+                    if not isinstance(item, str):
                         item = str(item)
                     if item:
                         newitem = QTableWidgetItem(item)
@@ -344,7 +342,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
         types of tables in snapshotTab: comment(Welcome page), ordinary(double-click on event table), 
         preview, compare, filter
         """
-        if self.tabWindowDict.has_key(str(eventID)):
+        if str(eventID) in self.tabWindowDict:
             tableWidget = self.tabWindowDict[str(eventID)]
         else:
             tableWidget = QTableWidget()
@@ -427,7 +425,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
                 #import requests
                 #print("requests version: %s"%requests.__version__) 
                 from pyOlog import OlogClient, Tag, Logbook, LogEntry  
-                if 'https_proxy' in os.environ.keys():
+                if 'https_proxy' in os.environ:
                     #print("unset https_proxy: %s"%(os.environ['https_proxy']))
                     del os.environ['https_proxy']   
                          
@@ -496,7 +494,7 @@ class masarUI(QMainWindow, ui_masar.Ui_masar):
             self.data4eid[str(eid)] = data
             self.e2cDict[str(self.previewId)] = [configID, configDesc, cname]#needed for configTab
 
-            label = QString.fromUtf8((cname+': Preview: '+str(eid)))
+            label = ((cname+': Preview: '+str(eid)))
             tabWidget = self.createNewTableWidget('preview', label)
             self.setSnapshotTable(data, tabWidget, eid)
             #sort the table by "Connection"
@@ -952,7 +950,7 @@ You may have typed one invalid ID"%eventId)
                                     "Can't get snapshot data for eventId:%s"%eventIds[i])
             
             ts = eventTs[i].split('.')[0] 
-            label = QString.fromUtf8((eventNames[i]+': ' +eventIds[i]+": "+ ts))            
+            label = ((eventNames[i]+': ' +eventIds[i]+": "+ ts))            
             tableWidget = self.createNewTableWidget(eventIds[i], label)        
             self.setSnapshotTable(data, tableWidget, eventIds[i])
 
@@ -1011,7 +1009,7 @@ Double click to view waveform data")
 
     def __find_key(self, dic, val):
         """return the key of dictionary dic given the value"""
-        return [k for k, v in dic.iteritems() if v == val][0]
+        return [k for k, v in dic.items() if v == val][0]
     
     def retrieveMasarData(self, eventid=None):
         """
@@ -1073,14 +1071,15 @@ Double click to view waveform data")
         called by setSnapshotTabWindow(), saveMachineSnapshot()(preview table), and searchPV() 
         This table is different from compareSnapshotsTable, see setCompareSnapshotsTable()
         """
+        datavalues = list(data.values())
         if data:
-            length = len(data.values()[0])
+            length = len(datavalues[0])
         else:
             print ('data is empty, exit.')
             return
         
-        for i in range(1, len(data.values())):
-            if length != len(data.values()[i]):
+        for i in range(1, len(datavalues)):
+            if length != len(datavalues[i]):
                 QMessageBox.warning(self,
                                     "Warning",
                                     "Data length are not consistent.")
@@ -1090,7 +1089,7 @@ Double click to view waveform data")
             table.setSortingEnabled(False)
             table.clear()
         
-            nrows = len(data.values()[0])
+            nrows = len(datavalues[0])
             keys = ['PV Name', 'Saved Connection', 'Not Restore', 'Saved Value', 'Live Value', 'Diff',
                     'Saved Timestamp', 'Saved Status', 'Saved Severity',
                     'Live Connection', 'Live Timestamp', 'Live Status', 'Live Severity']
@@ -1440,7 +1439,7 @@ review the restored PV values by clicking the button Compare Live Machine")
         configFile = dirPath + '/configure/' + self.e2cDict[eid][2] + '.cfg'
         if not os.path.isfile(configFile):
             return
-        if not self.verifyWindowDict.has_key(configFile):
+        if configFile not in self.verifyWindowDict:
             verifyWin = VerifySetpoint(configFile, rowCount, self.verifyWindowDict, self)
             verifyWin.show()
             self.verifyWindowDict[configFile] = verifyWin  
@@ -1872,7 +1871,7 @@ Otherwise click Change the ref. snapshot ..."%eventIds[0])
         #data[i]['keyword'] is a tuple; data[i]['keyword'][index] is the element value in the tuple                   
 
         #try:
-        if self.tabWindowDict.has_key('compare'):
+        if 'compare' in self.tabWindowDict:
             tableWidget = self.tabWindowDict['compare']
         else:
             tableWidget = QTableWidget()
@@ -1882,7 +1881,7 @@ Otherwise click Change the ref. snapshot ..."%eventIds[0])
         labelText = ""
         for eventId in eventIds:
             labelText += '_' + eventId
-        label = QString.fromUtf8("Compare Snapshots: IDs" + labelText)
+        label = ("Compare Snapshots: IDs" + labelText)
         self.snapshotTabWidget.addTab(tableWidget, label)
         self.snapshotTabWidget.setTabText(self.snapshotTabWidget.count(), label)
         self.snapshotTabWidget.setCurrentIndex(self.snapshotTabWidget.count())
